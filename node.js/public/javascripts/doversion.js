@@ -1,3 +1,10 @@
+/*
+ * 
+ * v1.3.2 add support to WR1004JLD
+ * 
+ * 
+ * 
+ */
 (function($) {
 	
 	$(function() {
@@ -24,18 +31,18 @@
 				   '<table>'+
 				    '<tr><td><label>版本hash值：</label></td><td>'+
 				    
-				    '<label>b9603af59886a5c99a3048319e14c98dc48b7815</label>'+
+				    '<label>51a3c13b42ffbb357eb541e26c9e0b8ad1cb6788</label>'+
 				    
 				   '</td></tr>'+
 				   '<tr><td><label>版本号:：</label></td><td>'+
 				   
-				    '<label>v1.3.0</label>'+
+				    '<label>v1.3.2</label>'+
 				    
 				   '</td></tr>'+
 				   '</td></tr>'+
 				   '<tr><td><label>发布时间:：</label></td><td>'+
 				   
-				    '<label>2014-10-24</label>'+
+				    '<label>2015-1-22</label>'+
 				    
 				   '</td></tr>'+
 				   '</div>'

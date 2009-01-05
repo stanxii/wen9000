@@ -524,10 +524,9 @@ public class TrapReceiverBean {
 						index1 = index2;
 						othertype = message.substring(index1 + 1);
 						msgheart.put("othertype"+i, othertype);						
-					}
-					
+					}	
 
-					flag += ((String) hearthash.get("cnusys")).indexOf("]", index1)+1;
+					flag += message.length() + 1;
 					//doheartcnu(cbatmac, cnumac, cnutype, cltindex, cnuindex, active);
 				} catch (Exception e) {
 					e.printStackTrace();					

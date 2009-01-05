@@ -2152,10 +2152,13 @@
 		   active = "设备失去连接";
 		   style = "color:red";
 	   }
+	   if(jsondata.devicetype == null){
+		   jsondata.devicetype = jsondata.devicemodal;
+	   }
 	   if(jsondata.flag =="menu"){
 		   $("#content").empty();
 		   //多线卡设备和单线卡设备划分
-		   if(jsondata.devicetype == "WR1004JL" || jsondata.devicetype == "WR1004SJL"){
+		   if(jsondata.devicetype == "WR1004JL" || jsondata.devicetype == "WR1004SJL"|| jsondata.devicetype == "WR1004JLD"){
 			   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">头端设备信息</h3>'+
 					   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
 					   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
@@ -2421,13 +2424,15 @@
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
 				}else if(jsondata.devicemodal == "WR1004SJL"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004SJL.jpg";
+				}else if(jsondata.devicemodal == "WR1004JLD"){
+					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004SJL.jpg";
 				}else if(jsondata.devicemodal == "WR1004JL"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004JL.jpg";
 				}
 	   }else{
 		   $("#dialog-devinfo").empty();
 		   //多线卡设备和单线卡设备划分
-		   if(jsondata.devicetype == "WR1004JL" || jsondata.devicetype == "WR1004SJL"){
+		   if(jsondata.devicetype == "WR1004JL" || jsondata.devicetype == "WR1004SJL"|| jsondata.devicetype == "WR1004JLD"){
 			   $("#dialog-devinfo").append('<div id="devinfo"><h3 style="background-color:#ccc">头端设备信息</h3>'+
 					   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
 					   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
@@ -2692,6 +2697,8 @@
 				}else if(jsondata.devicemodal == "WEC9720EK SD220"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
 				}else if(jsondata.devicemodal == "WR1004SJL"){
+					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004SJL.jpg";
+				}else if(jsondata.devicemodal == "WR1004JLD"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004SJL.jpg";
 				}else if(jsondata.devicemodal == "WR1004JL"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004JL.jpg";

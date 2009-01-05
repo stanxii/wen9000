@@ -2393,6 +2393,7 @@ public class ServiceController {
 			jedis.set("global:WEC9720EK-XD25", "WEC9720EK XD25");
 			jedis.set("global:WR1004JL", "WR1004JL");
 			jedis.set("global:WR1004SJL", "WR1004SJL");
+			jedis.set("global:WR1004JLD", "WR1004JLD");
 			jedis.set("global:3702I-E4", "WEC-3702I E4");
 			jedis.set("global:WEC701-E4", "WEC701 E4");
 			jedis.set("global:WEC701-L4", "WEC701 L4");
@@ -3355,6 +3356,9 @@ public class ServiceController {
 				case 27:
 					cbatjson.put("devicetype", jedis.get("global:WR1004SJL"));
 					break;
+				case 28:
+					cbatjson.put("devicetype", "WR1004JLD");
+					break;
 				case 36:
 					cbatjson.put("devicetype", "WEC701 M0");
 					break;
@@ -3745,7 +3749,8 @@ public class ServiceController {
 					|| devicetype.equalsIgnoreCase("40")
 					|| devicetype.equalsIgnoreCase("41")
 					|| devicetype.equalsIgnoreCase("26")
-					|| devicetype.equalsIgnoreCase("27")) {
+					|| devicetype.equalsIgnoreCase("27")
+					|| devicetype.equalsIgnoreCase("28")) {
 				//74系列设备或无SNMP版本
 				if(!sendjsonconfig(Integer.valueOf(proid), cip, cnumac,
 						jedis)){
@@ -4147,7 +4152,8 @@ public class ServiceController {
 				|| devtype.equalsIgnoreCase("40")
 				|| devtype.equalsIgnoreCase("41")
 				|| devtype.equalsIgnoreCase("26")
-				|| devtype.equalsIgnoreCase("27")) {
+				|| devtype.equalsIgnoreCase("27")
+				|| devtype.equalsIgnoreCase("28")) {
 			if(!cnujsonconfig(jsondata, cbatip, jsondata.get("mac").toString(),
 					jedis)){
 				jedis.publish("node.tree.cnu_sub", "");
@@ -4287,7 +4293,8 @@ public class ServiceController {
 				|| cbattype.equalsIgnoreCase("40")
 				|| cbattype.equalsIgnoreCase("41")
 				|| cbattype.equalsIgnoreCase("26")
-				|| cbattype.equalsIgnoreCase("27")) {
+				|| cbattype.equalsIgnoreCase("27")
+				|| cbattype.equalsIgnoreCase("28")) {
 			
 			jedis.publish("node.tree.cnusync", getJsonCnu(message,jedis,cbatip,key).toJSONString());
 
@@ -5332,6 +5339,12 @@ public class ServiceController {
 			cbatjson.put("clt2", jedis.hget(cbatkey, "clt2"));
 			cbatjson.put("clt3", jedis.hget(cbatkey, "clt3"));
 			cbatjson.put("clt4", jedis.hget(cbatkey, "clt4"));
+			break;
+		case 28:
+			result = jedis.get("global:WR1004JLD");// "WR1004SJL";
+			cbatjson.put("devicemodal", "WR1004JLD");
+			cbatjson.put("clt1", jedis.hget(cbatkey, "clt1"));
+			cbatjson.put("clt2", jedis.hget(cbatkey, "clt2"));
 			break;
 		case 36:
 			result = "WEC701 M0";
