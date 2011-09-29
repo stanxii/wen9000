@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<!-- saved from url=(0050)http://www.hujuntao.com/archives/css-gradient.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="keywords" content="chrome,css,css gradient,css3.0,gradient,linear,radial,css">
+<title></title>
+<link rel="stylesheet" type="text/css" media="all" href="css/style.css">
+
+
+<!--jqGrid -->
+<script type="text/javascript" src="js/jquery-1.6.4.min.js"></script>                
+	<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="css/jqueryui/themes/flick/jquery-ui.css"/>
+	<link rel="stylesheet" type="text/css" href="css/ui.jqgrid.css"/>       		
+	<script type="text/javascript" src="js/i18n/grid.locale-cn.js"></script>        
+	<script type="text/javascript" src="js/jquery.jqGrid.min.js"></script>
+        
+
+<!-- Include the required JavaScript libraries: -->
+    	
+	<script src="js/jquery.cookie.js" type="text/javascript"></script>
+
+	<link rel="stylesheet" href="css/qunit.css" type="text/css" media="screen" />
+	<link href="skin/ui.dynatree.css" rel="stylesheet" type="text/css">
+	
+	<script type="text/javascript" src="js/qunit.js"></script>	
+	<script src="js/jquery.dynatree.js" type="text/javascript"></script>
+	<script src="js/test-dynatree.js" type="text/javascript" charset="gb2312"></script>
+    
+    
+  <script type="text/javascript">
+  	  $(function (a) {  	  	
+  	  	
+  	 	   jQuery("#list4").jqGrid({
+	datatype: "local",
+	autowidth: true, 
+	height: 250,
+   	colNames:['Inv No','Date', 'Client', 'Amount','Tax','Total','Notes'],
+   	colModel:[
+   		{name:'id',index:'id', width:60, sorttype:"int"},
+   		{name:'invdate',index:'invdate', width:90, sorttype:"date"},
+   		{name:'name',index:'name', width:100},
+   		{name:'amount',index:'amount', width:80, align:"right",sorttype:"float"},
+   		{name:'tax',index:'tax', width:80, align:"right",sorttype:"float"},		
+   		{name:'total',index:'total', width:80,align:"right",sorttype:"float"},		
+   		{name:'note',index:'note', width:150, sortable:false}		
+   	],
+   	multiselect: true,
+   	caption: "Manipulating Array Data"
+});
+var mydata = [
+		{id:"1",invdate:"2007-10-01",name:"test",note:"note",amount:"200.00",tax:"10.00",total:"210.00"},
+		{id:"2",invdate:"2007-10-02",name:"test2",note:"note2",amount:"300.00",tax:"20.00",total:"320.00"},
+		{id:"3",invdate:"2007-09-01",name:"test3",note:"note3",amount:"400.00",tax:"30.00",total:"430.00"},
+		{id:"4",invdate:"2007-10-04",name:"test",note:"note",amount:"200.00",tax:"10.00",total:"210.00"},
+		{id:"5",invdate:"2007-10-05",name:"test2",note:"note2",amount:"300.00",tax:"20.00",total:"320.00"},
+		{id:"6",invdate:"2007-09-06",name:"test3",note:"note3",amount:"400.00",tax:"30.00",total:"430.00"},
+		{id:"7",invdate:"2007-10-04",name:"test",note:"note",amount:"200.00",tax:"10.00",total:"210.00"},
+		{id:"8",invdate:"2007-10-03",name:"test2",note:"note2",amount:"300.00",tax:"20.00",total:"320.00"},
+		{id:"9",invdate:"2007-09-01",name:"test3",note:"note3",amount:"400.00",tax:"30.00",total:"430.00"}
+		];
+for(var i=0;i<=mydata.length;i++)
+	jQuery("#list4").jqGrid('addRowData',i+1,mydata[i]);
+	
+	
+	
+	
+	
+		//drop down menu
+  	  	a(".menu li").hover(function(){a("ul",this).slideDown(300)},function(){a("ul",this).slideUp(1)}),a(".signin-box input").live("focus",function(){b='<strong>\u63d0\u793a</strong>:还没有注册? <a href="/login?action=register" title="\u514d\u8d39\u6ce8\u518c">\u514d\u8d39\u6ce8\u518c</a>',a("#log").val()==""&&a("#pwd").val()==""&&(a("#login_err").length>0?a("#login_err").slideDown(300).html(b):a(".signin-box").append('<div id="login_err">'+b+"</div>"))}),a(".holding input").live("paste cut keydown keyup focus",function(){a(this).parent().addClass("hasome")}),a(".holding input").blur(function(){a.trim(a(this).val())==""&&a(this).parent().removeClass("hasome")}),$(".signin-box").live("keydown",function(a){a.keyCode==13&&$(".signin-box button")[0].click()}),a(".signin-box button").click(function(){var b=a.trim(a("input[name='log']").val()),c=a.trim(a("input[name='pwd']").val());if(b==""||c=="")return!1;a.post("../wp-content/themes/rabbit/includes/ajax.php",{action:"login",log:b,pwd:c},function(b){b.indexOf("<strong>\u9519\u8bef</strong>")>-1?a("#login_err").length>0?a("#login_err").slideDown(300).html(b):a(".signin-box").append('<div id="login_err">'+b+"</div>"):a(".signin-box").replaceWith('<div class="signon-box">'+b+"</div>")})}),a("#login_err").live("click",function(){a(this).slideUp(300)}),a(".signon-box").live("click",function(){a(this).addClass("active")}),a(".signon-box").live("mouseleave",function(){a(this).removeClass("active")}),a("#comment").live("click",function(){a("#comment-smiley").slideDown(300)}).autoTextarea({maxHeight:150,minHeight:$("#comment").height()}),a("#comment-smiley img").live("click",function(){a("#comment").insertAtCaret(" "+a(this).attr("alt")+" ")}),a(".format-weibo .blog-content a").click(function(){return window.location=$(this).parents("article").find(".perma-link").attr("href"),!1}),a(".toolbar a").live("click",function(){a(this).hasClass("gotop")?a("html, body").animate({scrollTop:0},1500):a("html, body").animate({scrollTop:a(document).height()},1500)}),$(".blog-title a").click(function(){$(this).html("\u6b63\u5728\u52aa\u529b\u52a0\u8f7d\u4e2d...")}),(new RecentComment).init();if(a(".tool-content").length>0){var c=getQueryString(location.href,"action");c==""&&(c="csspacker"),a(".tool-content").load("/wp-content/themes/rabbit/tools/"+c+".php"),a("#"+c).addClass("active")}try{a(".picBox a,.videoBox a,.galleryBox a").fancybox()}catch(d){}
+  	  
+  	   });
+  	</script>  
+
+<!--–[if lte IE 9]-->
+<script type="text/javascript">
+	var html5Tags=['header','hgroup','footer','article','nav' ,'section','aside'];
+	for(var i=0;i<html5Tags.length;i++){
+    	document.createElement(html5Tags[i]);
+	}
+</script>
+<!--[endif]–-->
+</head>
+<body class="single single-post postid-56 single-format-standard">
+<header>
+  <div class="top-bar">
+   <hgroup>
+      <h1 class="logo"><a href="http://www.hujuntao.com" title="设计蜂巢" rel="home">设计蜂巢</a></h1>
+      <p>专注Web前端开发，关注Web新型技术</p>
+    </hgroup>
+    <nav>
+      <ul id="menu" class="menu"><li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-11"><a href="#">首页</a></li>
+<li id="menu-item-293" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor menu-item-293"><a href="#">设备搜索</a>
+<ul class="sub-menu" style="display: none; ">
+	<li id="menu-item-294" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent menu-item-294"><a href="#">css</a></li>
+	<li id="menu-item-295" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-295"><a href="#">html</a></li>
+	<li id="menu-item-296" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-296"><a href="#">javascript</a></li>
+	<li id="menu-item-297" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-297"><a href="#">jquery</a></li>
+</ul>
+</li>
+<li id="menu-item-298" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-298"><a href="#">拓扑显示</a>
+</li>
+<li id="menu-item-290" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-290"><a href="#">业务管理</a>
+<ul class="sub-menu" style="display: none; ">
+	<li id="menu-item-291" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-291"><a href="#">wordPress主题</a></li>
+	<li id="menu-item-292" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-292"><a href="#">wordpress插件</a></li>
+</ul>
+</li>
+<li id="menu-item-152" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-152"><a href="#">批量配置</a></li>
+<li id="menu-item-514" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-514"><a href="#">告警信息</a></li>
+<li id="menu-item-489" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-489"><a href="#">数据备份</a>
+<ul class="sub-menu" style="display: none; ">
+	<li id="menu-item-490" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-490"><a href="#">Css压缩/格式化</a></li>
+	<li id="menu-item-559" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-559"><a href="#">Css代码优化</a></li>
+	<li id="menu-item-491" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-491"><a href="#">JS代码格式化</a></li>
+	<li id="menu-item-492" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-492"><a href="#">JS代码压缩/加密</a></li>
+	<li id="menu-item-503" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-503"><a href="#">正则表达式检测</a></li>
+</ul>
+</li>
+</ul>    </nav>
+        <div class="signin-box clearfix">
+      <form action="http://www.hujuntao.com/wp-login.php" method="post">
+        <div class="holding username">
+          <label class="holder" for="log">用户名/邮箱</label>
+          <input type="text" value="" name="log" id="log" title="用户名或邮箱">
+        </div>
+        <div class="holding password">
+          <label class="holder" for="pwd">密码</label>
+          <input type="password" value="" name="pwd" id="pwd" title="密码">
+        </div>
+        <input name="rememberme" type="hidden" value="forever" checked="checked">
+        <input type="hidden" name="redirect_to" value="/archives/css-gradient.html">
+        <button type="button" class="signin">登录</button>
+      </form>
+    </div>
+      </div>
+</header>
+<section id="container">
+<section class="content">
+    
+  <article id="post-56" class="post-56 post type-post status-publish format-standard hentry category-css tag-chrome tag-css tag-css-gradient tag-css3-0 tag-gradient tag-linear tag-radial">
+  <div class="blog-head">
+    <div class="author-face"><a href="#"><img alt="" src="./images/demo-cbat.jpg" class="avatar avatar-45 photo" height="45" width="45"></a></div>
+    <h2 class="blog-title">WEN9000 EOC + HFC 网络管理系统</h2>
+    
+  </div>
+  <div class="blog-content">
+    <h2>关于WEN9000网络管理系统</h2>
+    <p/>
+<p>简单的一句就是EOC网络管理系统和HFC网络管理系统的集成，合一的统一网络管理系统！</p>
+
+
+<h3>产品特色</h3>
+<div class="blockcode">
+<ol>
+<li>EoC网管系统采用 SNMP协议，符合广电标准
+</li>
+<li>Eoc网管系统支持国际化，支持中文，英文等多国语言！
+</li>
+<li>EOC+HFC 集成统一网络管理系统
+</li>
+<li> 网络拓扑支持自动发现，和手动发现，拓扑图自动显示
+</li>
+<li>安装使用方便，无需客户端安装，使用Web浏览器便可使用
+</li>
+<li>基于Java开发，跨平台支持Windows,Linux等多个操作系统
+</li>
+<li>界面简洁美观，支持换肤功能
+</li>
+<li>系统安全可靠，支持7/24小时不间断运营</li>
+<li>无CNU数量限制,设计可支持10000+CNU同时在线</li>
+</ol>
+</div>
+
+
+
+</section>
+<aside>
+  <section><form method="get" id="searchform" action="#">
+  <div class="holding searchform">
+    <label for="s" class="holder">关键字</label>
+    <input type="text" name="s" id="s">
+    <button type="submit" id="searchsubmit"><i>搜索</i></button>
+  </div>
+</form>
+</section>		
+
+<section>		
+		<h3>设备列表</h3>			
+			
+		<!-- Add a <div> element where the tree should appear: -->
+		<div id="eoctree" ></div>
+</section>
+</aside>
+</section>
+<section class="widget-area">		
+        
+ <table id="list4" ></table>
+         
+
+   </section>
+<footer>
+
+
+<div class="copyright"><p>Copyright © 2011 - 2012 <a href="http://www.prevail.com/" title="EOC团队设计">EOC团队设计</a>. All Rights Reserved. Powered By WordPress. Designed by <a href="http://www.prevail.com/">EOC团队设计</a></p>
+</div>
+</footer>
+
+</body></html>
