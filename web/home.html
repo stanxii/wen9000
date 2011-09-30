@@ -31,7 +31,60 @@
     
   <script type="text/javascript">
   	  $(function (a) {  	  	
-  	  	
+  	  	 
+  	  	 $(".paging").show();
+				$(".paging a:first").addClass("active");
+				
+				var imageWidth = $(".view_window").width();
+				var imageSum = $(".img_reel img").size();
+				var imageReelWidth = imageWidth * imageSum;
+				
+				$(".img_reel").css({'width' : imageReelWidth});
+				
+				rotate = function(){
+		    var triggerID = $active.attr("rel") - 1;
+		    var image_reelPosition = triggerID * imageWidth;
+		
+		    $(".paging a").removeClass('active'); 
+		    $active.addClass('active');
+		
+		    $(".img_reel").animate({
+		        left: -image_reelPosition
+		    }, 500 );
+		
+		}; 
+		
+		rotateSwitch = function(){
+		    play = setInterval(function(){ 
+		        $active = $('.paging a.active').next(); 
+		        if ( $active.length === 0) { 
+		            $active = $('.paging a:first'); 
+		        }
+		        rotate(); 
+		    }, 3000); 
+		};
+		
+		rotateSwitch(); 
+    		
+    		$(".img_reel a").hover(function() {
+			    clearInterval(play);
+			}, function() {
+			    rotateSwitch();
+			});	
+			
+			$(".paging a").click(function() {
+			    $active = $(this);
+
+			    clearInterval(play); 
+			    rotate(); 
+			    rotateSwitch();
+			    return false;
+			});
+  	  	 
+  	  	 
+  	  	 
+  	  	 
+  	  	 
   	 	   jQuery("#list4").jqGrid({
 	datatype: "local",
 	autowidth: true, 
@@ -141,14 +194,25 @@ for(var i=0;i<=mydata.length;i++)
     
   <article id="post-56" class="post-56 post type-post status-publish format-standard hentry category-css tag-chrome tag-css tag-css-gradient tag-css3-0 tag-gradient tag-linear tag-radial">
   <div class="blog-head">
-    <div class="author-face"><a href="#"><img alt="" src="./images/demo-cbat.jpg" class="avatar avatar-45 photo" height="45" width="45"></a></div>
+    
     <h2 class="blog-title">WEN9000 EOC + HFC 网络管理系统</h2>
     
   </div>
   <div class="blog-content">
-    <h2>关于WEN9000网络管理系统</h2>
-    <p/>
-<p>简单的一句就是EOC网络管理系统和HFC网络管理系统的集成，合一的统一网络管理系统！</p>
+    <div class="view_window">
+			<div class="img_reel">
+				<a href="#"><img src="./images/wec-3501.png"></img></a>
+				<a href="#"><img src="./images/3702i.png"></img></a>
+				<a href="#"><img src="./images/receiver.png"></img></a>
+				<a href="#"><img src="./images/guangfang.png"></img></a>
+			</div>
+		</div>
+		<div class="paging">
+			<a href="#" rel="1">1</a>
+			<a href="#" rel="2">2</a>
+			<a href="#" rel="3">3</a>
+			<a href="#" rel="4">4</a>
+		</div>
 
 
 <h3>产品特色</h3>

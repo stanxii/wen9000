@@ -1292,3 +1292,53 @@ border-color: #F2F2F2 #A7ACB2 #A7ACB2 #F2F2F2;
 .rc-navi .rc-newer{float:left}
 .rc-navi .rc-older{float:right}
 .rc-navi .rc-loading{}
+
+
+.view_window{
+	height:	250px;
+	width: 600px;
+	overflow: hidden;
+	position: relative;
+}
+
+.img_reel{
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.img_reel img{
+	float: left;
+}
+
+.paging{
+	position: absolute;
+	top: 340px;
+	right: 240px;
+	width: 178px;
+	height: 47px;
+	z-index: 10000;
+	text-align: center;
+	line-height: 40px;
+	display: none;
+	background: url(../images/paging_bg2.png)
+}
+
+.paging a{
+	padding: 5px;
+	text-decoration: none;
+	color: #fff;
+}
+
+.paging a.active{
+	font-weight: bold;
+	background: #920000;
+	border: 1px solid #610000;
+	-moz-border-radius: 3px;
+	-khtml-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
+
+.paging a:hover{
+	font-weight: bold;
+}
