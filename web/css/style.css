@@ -1294,6 +1294,7 @@ border-color: #F2F2F2 #A7ACB2 #A7ACB2 #F2F2F2;
 .rc-navi .rc-loading{}
 
 
+<<<<<<< HEAD
 .view_window{
 	height:	250px;
 	width: 600px;
@@ -1341,4 +1342,8 @@ border-color: #F2F2F2 #A7ACB2 #A7ACB2 #F2F2F2;
 
 .paging a:hover{
 	font-weight: bold;
+=======
+#eoctree {
+ height:501px;  overflow:auto; zoom:1; 
+>>>>>>> cdeaeb9515db87055e2cc417e01888f90b9ed79d
 }
