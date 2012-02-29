@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:field="urn:jsptagdir:/WEB-INF/tags/form/fields" xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:page="urn:jsptagdir:/WEB-INF/tags/form" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+    <page:show id="ps_com_stan_wen9000_domain_Cbat" object="${cbat}" path="/cbats" z="DGgK7GhwvJCn/rqyvmjhUHOGW2s=">
+        <field:display field="active" id="s_com_stan_wen9000_domain_Cbat_active" object="${cbat}" z="XFci8QMlNRgHr6lUgYy1w79ticg="/>
+        <field:display field="ip" id="s_com_stan_wen9000_domain_Cbat_ip" object="${cbat}" z="S1Fu5app7xQdYjkWMTayrKCYhqU="/>
+        <field:display field="mac" id="s_com_stan_wen9000_domain_Cbat_mac" object="${cbat}" z="UnPpVy6uZukcC2bXJVjdN+6SkL0="/>
+        <field:display field="label" id="s_com_stan_wen9000_domain_Cbat_label" object="${cbat}" z="lQnbFuK74K9qADzKGQ1ms0g/Zhg="/>
+        <field:display field="deviceType" id="s_com_stan_wen9000_domain_Cbat_deviceType" object="${cbat}" z="9kpi1V9+be309VIVntIgqAQy4BM="/>
+        <field:display field="cbatinfo" id="s_com_stan_wen9000_domain_Cbat_cbatinfo" object="${cbat}" z="H9E8y0WfucpNaIonb11Y/kxqygc="/>
+    </page:show>
+</div>

@@ -1,0 +1,84 @@
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-02-29 15:59:07
+project --topLevelPackage com.stan.wen9000
+jpa setup --provider HIBERNATE --database MYSQL
+database properties set --key database.password --value 888888
+database properties set --key database.username --value root
+database properties set --key database.url --value jdbc:mysql://192.168.1.249:3306/stan?useUnicode=true&characterEncoding=UTF-8
+database properties set --key database.driverClassName --value com.mysql.jdbc.Driver 
+enum type --class ~.reference.EocDeviceType
+enum constant --name WEC_3501I 
+enum constant --name WEC_3501I_E31 
+enum type --class ~.reference.HfcDeviceType
+enum constant --name WEC8602
+enum type --class ~.reference.HfcClass
+enum constant --name OpticalTranslater 
+enum constant --name OpticalReceiver
+enum constant --name OpticalAmplifier
+entity jpa --class ~.domain.Cbatinfo --activeRecord false --equals --testAutomatically
+field number --fieldName agentPort --type java.lang.Integer --value  161
+field string --fieldName appVer 
+field string --fieldName bootVer --value "1.0.0"
+field number --fieldName mvId --type java.lang.Long
+field boolean --fieldName mvStatus --value false
+field string --fieldName address --notNull --value "na"
+field string --fieldName contact --notNull --value "na"
+field string --fieldName label --notNull --value "eoc master"
+field string --fieldName phone --notNull --value "na"
+repository jpa --interface ~.domain.CbatinfoRepository
+entity jpa --class ~.domain.Cbat --activeRecord false --equals --testAutomatically
+field boolean --fieldName active --notNull false
+field string --fieldName ip --notNull 
+field string --fieldName mac --notNull
+field string --fieldName label --notNull --value "na"
+field enum --fieldName deviceType --type ~.reference.EocDeviceType --notNull 
+field reference --fieldName cbatinfo --type ~.domain.Cbatinfo --cardinality ONE_TO_ONE 
+repository jpa --interface ~.domain.CbatRepository
+entity jpa --class ~.domain.Profile --activeRecord false --equals --testAutomatically
+field boolean --fieldName port0enable --notNull --value enable 
+field boolean --fieldName port1enable --notNull --value enable 
+field boolean --fieldName port2enable --notNull --value enable 
+field boolean --fieldName port3enable --notNull --value enable 
+field number --fieldName port0rxrate --type java.lang.Integer --notNull 
+field number --fieldName port1rxrate --type java.lang.Integer --notNull 
+field number --fieldName port2rxrate --type java.lang.Integer --notNull 
+field number --fieldName port3rxrate --type java.lang.Integer --notNull 
+field number --fieldName port0txrate --type java.lang.Integer --notNull 
+field number --fieldName port1txrate --type java.lang.Integer --notNull 
+field number --fieldName port2txrate --type java.lang.Integer --notNull 
+field number --fieldName port3txrate --type java.lang.Integer --notNull 
+field number --fieldName port0vid --type java.lang.Integer --notNull 
+field number --fieldName port1vid --type java.lang.Integer --notNull 
+field number --fieldName port2vid --type java.lang.Integer --notNull 
+field number --fieldName port3vid --type java.lang.Integer --notNull 
+field boolean --fieldName rxlimitsts --notNull --value false
+field boolean --fieldName txlimitsts --notNull --value false
+field boolean --fieldName vlanenable --notNull --value  false
+field string --fieldName profilename --notNull --value "na"
+repository jpa --interface ~.domain.ProfileRepository
+entity jpa --class ~.domain.Cnu --activeRecord false --equals --testAutomatically
+field string --fieldName mac --notNull 
+field string --fieldName label --notNull --value "na"
+field reference --fieldName cbat --type ~.domain.Cbat
+field reference --fieldName profile --type ~.domain.Profile
+repository jpa --interface ~.domain.CnuRepository
+entity jpa --class ~.domain.Hfc --activeRecord false --equals --testAutomatically
+field enum --fieldName deviceType --type ~.reference.HfcDeviceType
+field enum --fieldName hfcType --type ~.reference.HfcClass
+field string --fieldName ip --notNull 
+field string --fieldName mac --notNull 
+field string --fieldName label --notNull 
+repository jpa --interface ~.domain.HfcRepository
+web mvc json setup
+web mvc json all --package ~.web
+web mvc all --package ~.web
+web mvc controller ~.web.DiscoveryController --preferredMapping /discovery
+web mvc language --code en
+web mvc language --code de
+logging setup --level WARN --package WEB 
+security setup
+perform eclipse
+exit
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-02-29 16:00:35
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-02-29 16:00:35
+// script --file e:\seamprojects\eocnms\log.roo
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-02-29 16:00:35

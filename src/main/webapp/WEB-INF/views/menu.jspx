@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:menu="urn:jsptagdir:/WEB-INF/tags/menu" id="menu" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+    <menu:menu id="_menu" z="nZaf43BjUg1iM0v70HJVEsXDopc=">
+        <menu:category id="c_hfc" z="vKrKy9uKAu5o3bp4C7+G7pb+qtY=">
+            <menu:item id="i_hfc_new" messageCode="global_menu_new" url="/hfcs?form" z="G5jyYp6nsdi+ADMQH7Q9y/f6pqw="/>
+            <menu:item id="i_hfc_list" messageCode="global_menu_list" url="/hfcs?page=1&amp;size=${empty param.size ? 10 : param.size}" z="KhKj4jbrBQVsXwAAAEvEd+qTDWo="/>
+        </menu:category>
+        <menu:category id="c_cnu" z="yF8QXBDMtOhGk5WhdCaIfGLMn5Q=">
+            <menu:item id="i_cnu_new" messageCode="global_menu_new" url="/cnus?form" z="rWus0FNjWE5Mc3mO5hQz6L+4WT8="/>
+            <menu:item id="i_cnu_list" messageCode="global_menu_list" url="/cnus?page=1&amp;size=${empty param.size ? 10 : param.size}" z="663dlfs16AkDsmGUkLnrUQsDG54="/>
+        </menu:category>
+        <menu:category id="c_cbatinfo" z="GFlAVu76uHAJU/WYPJHwWqIt+kA=">
+            <menu:item id="i_cbatinfo_new" messageCode="global_menu_new" url="/cbatinfoes?form" z="M6XW+5Rcn/5RRLnXh9W5g/FmMCc="/>
+            <menu:item id="i_cbatinfo_list" messageCode="global_menu_list" url="/cbatinfoes?page=1&amp;size=${empty param.size ? 10 : param.size}" z="XwcZ+08+3LPSJzqVbdYL3I7Q/6Q="/>
+        </menu:category>
+        <menu:category id="c_profile" z="7+DSGeUy45gwkQx/NptxyQe7XpY=">
+            <menu:item id="i_profile_new" messageCode="global_menu_new" url="/profiles?form" z="5CN+Gy9le00bCK9RJj72N/fBXsM="/>
+            <menu:item id="i_profile_list" messageCode="global_menu_list" url="/profiles?page=1&amp;size=${empty param.size ? 10 : param.size}" z="Xn953x2DUSQIcljOjuowLDd1gRc="/>
+        </menu:category>
+        <menu:category id="c_cbat" z="G1SvCJ71c/zwD4xPDoLHDY88Mig=">
+            <menu:item id="i_cbat_new" messageCode="global_menu_new" url="/cbats?form" z="u8gsWtLvN4RPZIEZgfj4vrEjnkk="/>
+            <menu:item id="i_cbat_list" messageCode="global_menu_list" url="/cbats?page=1&amp;size=${empty param.size ? 10 : param.size}" z="ntVN/YVkKlTd3eZHYWX0oJq/COA="/>
+        </menu:category>
+        <menu:category id="c_controller" z="nj8Dm3hojIyIEyPkwE1UMDIs+K8=">
+            <menu:item id="i_controller__discoveryindex_id" messageCode="global_generic" url="/discovery/index" z="oA7PVjXtmach4m9RA/rFpX7VdG4="/>
+        </menu:category>
+    </menu:menu>
+</div>

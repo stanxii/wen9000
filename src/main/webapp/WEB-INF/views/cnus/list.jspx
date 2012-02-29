@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:page="urn:jsptagdir:/WEB-INF/tags/form" xmlns:table="urn:jsptagdir:/WEB-INF/tags/form/fields" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+    <page:list id="pl_com_stan_wen9000_domain_Cnu" items="${cnus}" z="rJMbm1wEpWi/wwWvic7PVpkmoIc=">
+        <table:table data="${cnus}" id="l_com_stan_wen9000_domain_Cnu" path="/cnus" z="QS7Rqe3N1itrpcQkE3sPEr3Sedg=">
+            <table:column id="c_com_stan_wen9000_domain_Cnu_mac" property="mac" z="6i1BK1piLwmMPHhwXKTRMopTJ6M="/>
+            <table:column id="c_com_stan_wen9000_domain_Cnu_label" property="label" z="x8d+Gr+elguMz/Myj6YWc3Ho2YU="/>
+            <table:column id="c_com_stan_wen9000_domain_Cnu_cbat" property="cbat" z="XEfC6Swdg2uIiIfbO6qpvLU3Ok4="/>
+            <table:column id="c_com_stan_wen9000_domain_Cnu_profile" property="profile" z="scPwWJKkHZhFt43p1A8D8hhvXAo="/>
+        </table:table>
+    </page:list>
+</div>

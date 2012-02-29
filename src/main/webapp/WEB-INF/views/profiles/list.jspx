@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:page="urn:jsptagdir:/WEB-INF/tags/form" xmlns:table="urn:jsptagdir:/WEB-INF/tags/form/fields" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+    <page:list id="pl_com_stan_wen9000_domain_Profile" items="${profiles}" z="O/991DQ6TfyTSR67jXJ4y1bnhfE=">
+        <table:table data="${profiles}" id="l_com_stan_wen9000_domain_Profile" path="/profiles" z="iVvTZk4XThmRVUMbNLQfO3SoGao=">
+            <table:column id="c_com_stan_wen9000_domain_Profile_port0enable" property="port0enable" z="aNmtTCebQ+FTUq5WT+ylF3qLtyo="/>
+            <table:column id="c_com_stan_wen9000_domain_Profile_port1enable" property="port1enable" z="zy3amEhnFFw0T93U5AeUBg5bRAg="/>
+            <table:column id="c_com_stan_wen9000_domain_Profile_port2enable" property="port2enable" z="vw9SaL16B3ZzvMAveW5pxrFFIT4="/>
+            <table:column id="c_com_stan_wen9000_domain_Profile_port3enable" property="port3enable" z="TbqNOIWOsPjtJXmxUGXJSfO2GAg="/>
+            <table:column id="c_com_stan_wen9000_domain_Profile_port0rxrate" property="port0rxrate" z="jFvFD0GRmoF3EZSgpUj9UhC/JeQ="/>
+            <table:column id="c_com_stan_wen9000_domain_Profile_port1rxrate" property="port1rxrate" z="OERedy1JttKWCazXTpqcqKZTTjQ="/>
+        </table:table>
+    </page:list>
+</div>
