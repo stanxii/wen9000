@@ -10,6 +10,7 @@ import com.stan.wen9000.domain.CnuDataOnDemand;
 import com.stan.wen9000.domain.CnuRepository;
 import com.stan.wen9000.domain.Profile;
 import com.stan.wen9000.domain.ProfileDataOnDemand;
+import com.stan.wen9000.service.CnuService;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,6 +34,9 @@ privileged aspect CnuDataOnDemand_Roo_DataOnDemand {
     
     @Autowired
     private ProfileDataOnDemand CnuDataOnDemand.profileDataOnDemand;
+    
+    @Autowired
+    CnuService CnuDataOnDemand.cnuService;
     
     @Autowired
     CnuRepository CnuDataOnDemand.cnuRepository;
@@ -76,14 +80,14 @@ privileged aspect CnuDataOnDemand_Roo_DataOnDemand {
         }
         Cnu obj = data.get(index);
         Long id = obj.getId();
-        return cnuRepository.findOne(id);
+        return cnuService.findCnu(id);
     }
     
     public Cnu CnuDataOnDemand.getRandomCnu() {
         init();
         Cnu obj = data.get(rnd.nextInt(data.size()));
         Long id = obj.getId();
-        return cnuRepository.findOne(id);
+        return cnuService.findCnu(id);
     }
     
     public boolean CnuDataOnDemand.modifyCnu(Cnu obj) {
@@ -93,7 +97,7 @@ privileged aspect CnuDataOnDemand_Roo_DataOnDemand {
     public void CnuDataOnDemand.init() {
         int from = 0;
         int to = 10;
-        data = cnuRepository.findAll(new org.springframework.data.domain.PageRequest(from / to, to)).getContent();
+        data = cnuService.findCnuEntries(from, to);
         if (data == null) {
             throw new IllegalStateException("Find entries implementation for 'Cnu' illegally returned null");
         }
@@ -105,7 +109,7 @@ privileged aspect CnuDataOnDemand_Roo_DataOnDemand {
         for (int i = 0; i < 10; i++) {
             Cnu obj = getNewTransientCnu(i);
             try {
-                cnuRepository.save(obj);
+                cnuService.saveCnu(obj);
             } catch (ConstraintViolationException e) {
                 StringBuilder msg = new StringBuilder();
                 for (Iterator<ConstraintViolation<?>> iter = e.getConstraintViolations().iterator(); iter.hasNext();) {

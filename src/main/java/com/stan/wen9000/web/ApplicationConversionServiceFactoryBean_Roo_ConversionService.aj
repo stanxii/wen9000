@@ -3,14 +3,16 @@
 
 package com.stan.wen9000.web;
 
+import com.stan.wen9000.domain.Cbat;
 import com.stan.wen9000.domain.Cbatinfo;
-import com.stan.wen9000.domain.CbatinfoRepository;
 import com.stan.wen9000.domain.Cnu;
-import com.stan.wen9000.domain.CnuRepository;
 import com.stan.wen9000.domain.Hfc;
-import com.stan.wen9000.domain.HfcRepository;
 import com.stan.wen9000.domain.Profile;
-import com.stan.wen9000.domain.ProfileRepository;
+import com.stan.wen9000.service.CbatService;
+import com.stan.wen9000.service.CbatinfoService;
+import com.stan.wen9000.service.CnuService;
+import com.stan.wen9000.service.HfcService;
+import com.stan.wen9000.service.ProfileService;
 import com.stan.wen9000.web.ApplicationConversionServiceFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -22,16 +24,43 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     declare @type: ApplicationConversionServiceFactoryBean: @Configurable;
     
     @Autowired
-    CbatinfoRepository ApplicationConversionServiceFactoryBean.cbatinfoRepository;
+    CbatService ApplicationConversionServiceFactoryBean.cbatService;
     
     @Autowired
-    CnuRepository ApplicationConversionServiceFactoryBean.cnuRepository;
+    CbatinfoService ApplicationConversionServiceFactoryBean.cbatinfoService;
     
     @Autowired
-    HfcRepository ApplicationConversionServiceFactoryBean.hfcRepository;
+    CnuService ApplicationConversionServiceFactoryBean.cnuService;
     
     @Autowired
-    ProfileRepository ApplicationConversionServiceFactoryBean.profileRepository;
+    HfcService ApplicationConversionServiceFactoryBean.hfcService;
+    
+    @Autowired
+    ProfileService ApplicationConversionServiceFactoryBean.profileService;
+    
+    public Converter<Cbat, String> ApplicationConversionServiceFactoryBean.getCbatToStringConverter() {
+        return new org.springframework.core.convert.converter.Converter<com.stan.wen9000.domain.Cbat, java.lang.String>() {
+            public String convert(Cbat cbat) {
+                return new StringBuilder().append(cbat.getIp()).append(" ").append(cbat.getMac()).append(" ").append(cbat.getLabel()).toString();
+            }
+        };
+    }
+    
+    public Converter<Long, Cbat> ApplicationConversionServiceFactoryBean.getIdToCbatConverter() {
+        return new org.springframework.core.convert.converter.Converter<java.lang.Long, com.stan.wen9000.domain.Cbat>() {
+            public com.stan.wen9000.domain.Cbat convert(java.lang.Long id) {
+                return cbatService.findCbat(id);
+            }
+        };
+    }
+    
+    public Converter<String, Cbat> ApplicationConversionServiceFactoryBean.getStringToCbatConverter() {
+        return new org.springframework.core.convert.converter.Converter<java.lang.String, com.stan.wen9000.domain.Cbat>() {
+            public com.stan.wen9000.domain.Cbat convert(String id) {
+                return getObject().convert(getObject().convert(id, Long.class), Cbat.class);
+            }
+        };
+    }
     
     public Converter<Cbatinfo, String> ApplicationConversionServiceFactoryBean.getCbatinfoToStringConverter() {
         return new org.springframework.core.convert.converter.Converter<com.stan.wen9000.domain.Cbatinfo, java.lang.String>() {
@@ -44,7 +73,7 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     public Converter<Long, Cbatinfo> ApplicationConversionServiceFactoryBean.getIdToCbatinfoConverter() {
         return new org.springframework.core.convert.converter.Converter<java.lang.Long, com.stan.wen9000.domain.Cbatinfo>() {
             public com.stan.wen9000.domain.Cbatinfo convert(java.lang.Long id) {
-                return cbatinfoRepository.findOne(id);
+                return cbatinfoService.findCbatinfo(id);
             }
         };
     }
@@ -68,7 +97,7 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     public Converter<Long, Cnu> ApplicationConversionServiceFactoryBean.getIdToCnuConverter() {
         return new org.springframework.core.convert.converter.Converter<java.lang.Long, com.stan.wen9000.domain.Cnu>() {
             public com.stan.wen9000.domain.Cnu convert(java.lang.Long id) {
-                return cnuRepository.findOne(id);
+                return cnuService.findCnu(id);
             }
         };
     }
@@ -92,7 +121,7 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     public Converter<Long, Hfc> ApplicationConversionServiceFactoryBean.getIdToHfcConverter() {
         return new org.springframework.core.convert.converter.Converter<java.lang.Long, com.stan.wen9000.domain.Hfc>() {
             public com.stan.wen9000.domain.Hfc convert(java.lang.Long id) {
-                return hfcRepository.findOne(id);
+                return hfcService.findHfc(id);
             }
         };
     }
@@ -116,7 +145,7 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     public Converter<Long, Profile> ApplicationConversionServiceFactoryBean.getIdToProfileConverter() {
         return new org.springframework.core.convert.converter.Converter<java.lang.Long, com.stan.wen9000.domain.Profile>() {
             public com.stan.wen9000.domain.Profile convert(java.lang.Long id) {
-                return profileRepository.findOne(id);
+                return profileService.findProfile(id);
             }
         };
     }
@@ -130,6 +159,9 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     }
     
     public void ApplicationConversionServiceFactoryBean.installLabelConverters(FormatterRegistry registry) {
+        registry.addConverter(getCbatToStringConverter());
+        registry.addConverter(getIdToCbatConverter());
+        registry.addConverter(getStringToCbatConverter());
         registry.addConverter(getCbatinfoToStringConverter());
         registry.addConverter(getIdToCbatinfoConverter());
         registry.addConverter(getStringToCbatinfoConverter());

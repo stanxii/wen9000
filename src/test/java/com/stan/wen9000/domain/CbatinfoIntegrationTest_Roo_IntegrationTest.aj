@@ -6,6 +6,7 @@ package com.stan.wen9000.domain;
 import com.stan.wen9000.domain.CbatinfoDataOnDemand;
 import com.stan.wen9000.domain.CbatinfoIntegrationTest;
 import com.stan.wen9000.domain.CbatinfoRepository;
+import com.stan.wen9000.service.CbatinfoService;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,44 +28,47 @@ privileged aspect CbatinfoIntegrationTest_Roo_IntegrationTest {
     private CbatinfoDataOnDemand CbatinfoIntegrationTest.dod;
     
     @Autowired
+    CbatinfoService CbatinfoIntegrationTest.cbatinfoService;
+    
+    @Autowired
     CbatinfoRepository CbatinfoIntegrationTest.cbatinfoRepository;
     
     @Test
-    public void CbatinfoIntegrationTest.testCount() {
+    public void CbatinfoIntegrationTest.testCountAllCbatinfoes() {
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to initialize correctly", dod.getRandomCbatinfo());
-        long count = cbatinfoRepository.count();
+        long count = cbatinfoService.countAllCbatinfoes();
         Assert.assertTrue("Counter for 'Cbatinfo' incorrectly reported there were no entries", count > 0);
     }
     
     @Test
-    public void CbatinfoIntegrationTest.testFind() {
+    public void CbatinfoIntegrationTest.testFindCbatinfo() {
         Cbatinfo obj = dod.getRandomCbatinfo();
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to initialize correctly", obj);
         Long id = obj.getId();
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to provide an identifier", id);
-        obj = cbatinfoRepository.findOne(id);
+        obj = cbatinfoService.findCbatinfo(id);
         Assert.assertNotNull("Find method for 'Cbatinfo' illegally returned null for id '" + id + "'", obj);
         Assert.assertEquals("Find method for 'Cbatinfo' returned the incorrect identifier", id, obj.getId());
     }
     
     @Test
-    public void CbatinfoIntegrationTest.testFindAll() {
+    public void CbatinfoIntegrationTest.testFindAllCbatinfoes() {
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to initialize correctly", dod.getRandomCbatinfo());
-        long count = cbatinfoRepository.count();
+        long count = cbatinfoService.countAllCbatinfoes();
         Assert.assertTrue("Too expensive to perform a find all test for 'Cbatinfo', as there are " + count + " entries; set the findAllMaximum to exceed this value or set findAll=false on the integration test annotation to disable the test", count < 250);
-        List<Cbatinfo> result = cbatinfoRepository.findAll();
+        List<Cbatinfo> result = cbatinfoService.findAllCbatinfoes();
         Assert.assertNotNull("Find all method for 'Cbatinfo' illegally returned null", result);
         Assert.assertTrue("Find all method for 'Cbatinfo' failed to return any data", result.size() > 0);
     }
     
     @Test
-    public void CbatinfoIntegrationTest.testFindEntries() {
+    public void CbatinfoIntegrationTest.testFindCbatinfoEntries() {
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to initialize correctly", dod.getRandomCbatinfo());
-        long count = cbatinfoRepository.count();
+        long count = cbatinfoService.countAllCbatinfoes();
         if (count > 20) count = 20;
         int firstResult = 0;
         int maxResults = (int) count;
-        List<Cbatinfo> result = cbatinfoRepository.findAll(new org.springframework.data.domain.PageRequest(firstResult / maxResults, maxResults)).getContent();
+        List<Cbatinfo> result = cbatinfoService.findCbatinfoEntries(firstResult, maxResults);
         Assert.assertNotNull("Find entries method for 'Cbatinfo' illegally returned null", result);
         Assert.assertEquals("Find entries method for 'Cbatinfo' returned an incorrect number of entries", count, result.size());
     }
@@ -75,7 +79,7 @@ privileged aspect CbatinfoIntegrationTest_Roo_IntegrationTest {
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to initialize correctly", obj);
         Long id = obj.getId();
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to provide an identifier", id);
-        obj = cbatinfoRepository.findOne(id);
+        obj = cbatinfoService.findCbatinfo(id);
         Assert.assertNotNull("Find method for 'Cbatinfo' illegally returned null for id '" + id + "'", obj);
         boolean modified =  dod.modifyCbatinfo(obj);
         Integer currentVersion = obj.getVersion();
@@ -84,41 +88,41 @@ privileged aspect CbatinfoIntegrationTest_Roo_IntegrationTest {
     }
     
     @Test
-    public void CbatinfoIntegrationTest.testSaveUpdate() {
+    public void CbatinfoIntegrationTest.testUpdateCbatinfoUpdate() {
         Cbatinfo obj = dod.getRandomCbatinfo();
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to initialize correctly", obj);
         Long id = obj.getId();
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to provide an identifier", id);
-        obj = cbatinfoRepository.findOne(id);
+        obj = cbatinfoService.findCbatinfo(id);
         boolean modified =  dod.modifyCbatinfo(obj);
         Integer currentVersion = obj.getVersion();
-        Cbatinfo merged = cbatinfoRepository.save(obj);
+        Cbatinfo merged = cbatinfoService.updateCbatinfo(obj);
         cbatinfoRepository.flush();
         Assert.assertEquals("Identifier of merged object not the same as identifier of original object", merged.getId(), id);
         Assert.assertTrue("Version for 'Cbatinfo' failed to increment on merge and flush directive", (currentVersion != null && obj.getVersion() > currentVersion) || !modified);
     }
     
     @Test
-    public void CbatinfoIntegrationTest.testSave() {
+    public void CbatinfoIntegrationTest.testSaveCbatinfo() {
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to initialize correctly", dod.getRandomCbatinfo());
         Cbatinfo obj = dod.getNewTransientCbatinfo(Integer.MAX_VALUE);
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to provide a new transient entity", obj);
         Assert.assertNull("Expected 'Cbatinfo' identifier to be null", obj.getId());
-        cbatinfoRepository.save(obj);
+        cbatinfoService.saveCbatinfo(obj);
         cbatinfoRepository.flush();
         Assert.assertNotNull("Expected 'Cbatinfo' identifier to no longer be null", obj.getId());
     }
     
     @Test
-    public void CbatinfoIntegrationTest.testDelete() {
+    public void CbatinfoIntegrationTest.testDeleteCbatinfo() {
         Cbatinfo obj = dod.getRandomCbatinfo();
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to initialize correctly", obj);
         Long id = obj.getId();
         Assert.assertNotNull("Data on demand for 'Cbatinfo' failed to provide an identifier", id);
-        obj = cbatinfoRepository.findOne(id);
-        cbatinfoRepository.delete(obj);
+        obj = cbatinfoService.findCbatinfo(id);
+        cbatinfoService.deleteCbatinfo(obj);
         cbatinfoRepository.flush();
-        Assert.assertNull("Failed to remove 'Cbatinfo' with identifier '" + id + "'", cbatinfoRepository.findOne(id));
+        Assert.assertNull("Failed to remove 'Cbatinfo' with identifier '" + id + "'", cbatinfoService.findCbatinfo(id));
     }
     
 }

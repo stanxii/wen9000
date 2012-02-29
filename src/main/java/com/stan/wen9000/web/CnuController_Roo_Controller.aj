@@ -3,10 +3,10 @@
 
 package com.stan.wen9000.web;
 
-import com.stan.wen9000.domain.CbatRepository;
 import com.stan.wen9000.domain.Cnu;
-import com.stan.wen9000.domain.CnuRepository;
-import com.stan.wen9000.domain.ProfileRepository;
+import com.stan.wen9000.service.CbatService;
+import com.stan.wen9000.service.CnuService;
+import com.stan.wen9000.service.ProfileService;
 import com.stan.wen9000.web.CnuController;
 import java.io.UnsupportedEncodingException;
 import javax.servlet.http.HttpServletRequest;
@@ -24,13 +24,13 @@ import org.springframework.web.util.WebUtils;
 privileged aspect CnuController_Roo_Controller {
     
     @Autowired
-    CnuRepository CnuController.cnuRepository;
+    CnuService CnuController.cnuService;
     
     @Autowired
-    CbatRepository CnuController.cbatRepository;
+    CbatService CnuController.cbatService;
     
     @Autowired
-    ProfileRepository CnuController.profileRepository;
+    ProfileService CnuController.profileService;
     
     @RequestMapping(method = RequestMethod.POST, produces = "text/html")
     public String CnuController.create(@Valid Cnu cnu, BindingResult bindingResult, Model uiModel, HttpServletRequest httpServletRequest) {
@@ -39,7 +39,7 @@ privileged aspect CnuController_Roo_Controller {
             return "cnus/create";
         }
         uiModel.asMap().clear();
-        cnuRepository.save(cnu);
+        cnuService.saveCnu(cnu);
         return "redirect:/cnus/" + encodeUrlPathSegment(cnu.getId().toString(), httpServletRequest);
     }
     
@@ -51,7 +51,7 @@ privileged aspect CnuController_Roo_Controller {
     
     @RequestMapping(value = "/{id}", produces = "text/html")
     public String CnuController.show(@PathVariable("id") Long id, Model uiModel) {
-        uiModel.addAttribute("cnu", cnuRepository.findOne(id));
+        uiModel.addAttribute("cnu", cnuService.findCnu(id));
         uiModel.addAttribute("itemId", id);
         return "cnus/show";
     }
@@ -61,11 +61,11 @@ privileged aspect CnuController_Roo_Controller {
         if (page != null || size != null) {
             int sizeNo = size == null ? 10 : size.intValue();
             final int firstResult = page == null ? 0 : (page.intValue() - 1) * sizeNo;
-            uiModel.addAttribute("cnus", cnuRepository.findAll(new org.springframework.data.domain.PageRequest(firstResult / sizeNo, sizeNo)).getContent());
-            float nrOfPages = (float) cnuRepository.count() / sizeNo;
+            uiModel.addAttribute("cnus", cnuService.findCnuEntries(firstResult, sizeNo));
+            float nrOfPages = (float) cnuService.countAllCnus() / sizeNo;
             uiModel.addAttribute("maxPages", (int) ((nrOfPages > (int) nrOfPages || nrOfPages == 0.0) ? nrOfPages + 1 : nrOfPages));
         } else {
-            uiModel.addAttribute("cnus", cnuRepository.findAll());
+            uiModel.addAttribute("cnus", cnuService.findAllCnus());
         }
         return "cnus/list";
     }
@@ -77,20 +77,20 @@ privileged aspect CnuController_Roo_Controller {
             return "cnus/update";
         }
         uiModel.asMap().clear();
-        cnuRepository.save(cnu);
+        cnuService.updateCnu(cnu);
         return "redirect:/cnus/" + encodeUrlPathSegment(cnu.getId().toString(), httpServletRequest);
     }
     
     @RequestMapping(value = "/{id}", params = "form", produces = "text/html")
     public String CnuController.updateForm(@PathVariable("id") Long id, Model uiModel) {
-        populateEditForm(uiModel, cnuRepository.findOne(id));
+        populateEditForm(uiModel, cnuService.findCnu(id));
         return "cnus/update";
     }
     
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = "text/html")
     public String CnuController.delete(@PathVariable("id") Long id, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "size", required = false) Integer size, Model uiModel) {
-        Cnu cnu = cnuRepository.findOne(id);
-        cnuRepository.delete(cnu);
+        Cnu cnu = cnuService.findCnu(id);
+        cnuService.deleteCnu(cnu);
         uiModel.asMap().clear();
         uiModel.addAttribute("page", (page == null) ? "1" : page.toString());
         uiModel.addAttribute("size", (size == null) ? "10" : size.toString());
@@ -99,8 +99,8 @@ privileged aspect CnuController_Roo_Controller {
     
     void CnuController.populateEditForm(Model uiModel, Cnu cnu) {
         uiModel.addAttribute("cnu", cnu);
-        uiModel.addAttribute("cbats", cbatRepository.findAll());
-        uiModel.addAttribute("profiles", profileRepository.findAll());
+        uiModel.addAttribute("cbats", cbatService.findAllCbats());
+        uiModel.addAttribute("profiles", profileService.findAllProfiles());
     }
     
     String CnuController.encodeUrlPathSegment(String pathSegment, HttpServletRequest httpServletRequest) {

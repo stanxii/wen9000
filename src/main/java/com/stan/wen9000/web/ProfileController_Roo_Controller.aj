@@ -4,7 +4,7 @@
 package com.stan.wen9000.web;
 
 import com.stan.wen9000.domain.Profile;
-import com.stan.wen9000.domain.ProfileRepository;
+import com.stan.wen9000.service.ProfileService;
 import com.stan.wen9000.web.ProfileController;
 import java.io.UnsupportedEncodingException;
 import javax.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ import org.springframework.web.util.WebUtils;
 privileged aspect ProfileController_Roo_Controller {
     
     @Autowired
-    ProfileRepository ProfileController.profileRepository;
+    ProfileService ProfileController.profileService;
     
     @RequestMapping(method = RequestMethod.POST, produces = "text/html")
     public String ProfileController.create(@Valid Profile profile, BindingResult bindingResult, Model uiModel, HttpServletRequest httpServletRequest) {
@@ -31,7 +31,7 @@ privileged aspect ProfileController_Roo_Controller {
             return "profiles/create";
         }
         uiModel.asMap().clear();
-        profileRepository.save(profile);
+        profileService.saveProfile(profile);
         return "redirect:/profiles/" + encodeUrlPathSegment(profile.getId().toString(), httpServletRequest);
     }
     
@@ -43,7 +43,7 @@ privileged aspect ProfileController_Roo_Controller {
     
     @RequestMapping(value = "/{id}", produces = "text/html")
     public String ProfileController.show(@PathVariable("id") Long id, Model uiModel) {
-        uiModel.addAttribute("profile", profileRepository.findOne(id));
+        uiModel.addAttribute("profile", profileService.findProfile(id));
         uiModel.addAttribute("itemId", id);
         return "profiles/show";
     }
@@ -53,11 +53,11 @@ privileged aspect ProfileController_Roo_Controller {
         if (page != null || size != null) {
             int sizeNo = size == null ? 10 : size.intValue();
             final int firstResult = page == null ? 0 : (page.intValue() - 1) * sizeNo;
-            uiModel.addAttribute("profiles", profileRepository.findAll(new org.springframework.data.domain.PageRequest(firstResult / sizeNo, sizeNo)).getContent());
-            float nrOfPages = (float) profileRepository.count() / sizeNo;
+            uiModel.addAttribute("profiles", profileService.findProfileEntries(firstResult, sizeNo));
+            float nrOfPages = (float) profileService.countAllProfiles() / sizeNo;
             uiModel.addAttribute("maxPages", (int) ((nrOfPages > (int) nrOfPages || nrOfPages == 0.0) ? nrOfPages + 1 : nrOfPages));
         } else {
-            uiModel.addAttribute("profiles", profileRepository.findAll());
+            uiModel.addAttribute("profiles", profileService.findAllProfiles());
         }
         return "profiles/list";
     }
@@ -69,20 +69,20 @@ privileged aspect ProfileController_Roo_Controller {
             return "profiles/update";
         }
         uiModel.asMap().clear();
-        profileRepository.save(profile);
+        profileService.updateProfile(profile);
         return "redirect:/profiles/" + encodeUrlPathSegment(profile.getId().toString(), httpServletRequest);
     }
     
     @RequestMapping(value = "/{id}", params = "form", produces = "text/html")
     public String ProfileController.updateForm(@PathVariable("id") Long id, Model uiModel) {
-        populateEditForm(uiModel, profileRepository.findOne(id));
+        populateEditForm(uiModel, profileService.findProfile(id));
         return "profiles/update";
     }
     
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = "text/html")
     public String ProfileController.delete(@PathVariable("id") Long id, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "size", required = false) Integer size, Model uiModel) {
-        Profile profile = profileRepository.findOne(id);
-        profileRepository.delete(profile);
+        Profile profile = profileService.findProfile(id);
+        profileService.deleteProfile(profile);
         uiModel.asMap().clear();
         uiModel.addAttribute("page", (page == null) ? "1" : page.toString());
         uiModel.addAttribute("size", (size == null) ? "10" : size.toString());

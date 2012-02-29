@@ -6,6 +6,7 @@ package com.stan.wen9000.domain;
 import com.stan.wen9000.domain.Profile;
 import com.stan.wen9000.domain.ProfileDataOnDemand;
 import com.stan.wen9000.domain.ProfileRepository;
+import com.stan.wen9000.service.ProfileService;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,6 +24,9 @@ privileged aspect ProfileDataOnDemand_Roo_DataOnDemand {
     private Random ProfileDataOnDemand.rnd = new SecureRandom();
     
     private List<Profile> ProfileDataOnDemand.data;
+    
+    @Autowired
+    ProfileService ProfileDataOnDemand.profileService;
     
     @Autowired
     ProfileRepository ProfileDataOnDemand.profileRepository;
@@ -162,14 +166,14 @@ privileged aspect ProfileDataOnDemand_Roo_DataOnDemand {
         }
         Profile obj = data.get(index);
         Long id = obj.getId();
-        return profileRepository.findOne(id);
+        return profileService.findProfile(id);
     }
     
     public Profile ProfileDataOnDemand.getRandomProfile() {
         init();
         Profile obj = data.get(rnd.nextInt(data.size()));
         Long id = obj.getId();
-        return profileRepository.findOne(id);
+        return profileService.findProfile(id);
     }
     
     public boolean ProfileDataOnDemand.modifyProfile(Profile obj) {
@@ -179,7 +183,7 @@ privileged aspect ProfileDataOnDemand_Roo_DataOnDemand {
     public void ProfileDataOnDemand.init() {
         int from = 0;
         int to = 10;
-        data = profileRepository.findAll(new org.springframework.data.domain.PageRequest(from / to, to)).getContent();
+        data = profileService.findProfileEntries(from, to);
         if (data == null) {
             throw new IllegalStateException("Find entries implementation for 'Profile' illegally returned null");
         }
@@ -191,7 +195,7 @@ privileged aspect ProfileDataOnDemand_Roo_DataOnDemand {
         for (int i = 0; i < 10; i++) {
             Profile obj = getNewTransientProfile(i);
             try {
-                profileRepository.save(obj);
+                profileService.saveProfile(obj);
             } catch (ConstraintViolationException e) {
                 StringBuilder msg = new StringBuilder();
                 for (Iterator<ConstraintViolation<?>> iter = e.getConstraintViolations().iterator(); iter.hasNext();) {

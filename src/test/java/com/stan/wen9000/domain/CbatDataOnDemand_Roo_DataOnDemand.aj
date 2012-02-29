@@ -9,6 +9,7 @@ import com.stan.wen9000.domain.CbatRepository;
 import com.stan.wen9000.domain.Cbatinfo;
 import com.stan.wen9000.domain.CbatinfoDataOnDemand;
 import com.stan.wen9000.reference.EocDeviceType;
+import com.stan.wen9000.service.CbatService;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,6 +30,9 @@ privileged aspect CbatDataOnDemand_Roo_DataOnDemand {
     
     @Autowired
     private CbatinfoDataOnDemand CbatDataOnDemand.cbatinfoDataOnDemand;
+    
+    @Autowired
+    CbatService CbatDataOnDemand.cbatService;
     
     @Autowired
     CbatRepository CbatDataOnDemand.cbatRepository;
@@ -84,14 +88,14 @@ privileged aspect CbatDataOnDemand_Roo_DataOnDemand {
         }
         Cbat obj = data.get(index);
         Long id = obj.getId();
-        return cbatRepository.findOne(id);
+        return cbatService.findCbat(id);
     }
     
     public Cbat CbatDataOnDemand.getRandomCbat() {
         init();
         Cbat obj = data.get(rnd.nextInt(data.size()));
         Long id = obj.getId();
-        return cbatRepository.findOne(id);
+        return cbatService.findCbat(id);
     }
     
     public boolean CbatDataOnDemand.modifyCbat(Cbat obj) {
@@ -101,7 +105,7 @@ privileged aspect CbatDataOnDemand_Roo_DataOnDemand {
     public void CbatDataOnDemand.init() {
         int from = 0;
         int to = 10;
-        data = cbatRepository.findAll(new org.springframework.data.domain.PageRequest(from / to, to)).getContent();
+        data = cbatService.findCbatEntries(from, to);
         if (data == null) {
             throw new IllegalStateException("Find entries implementation for 'Cbat' illegally returned null");
         }
@@ -113,7 +117,7 @@ privileged aspect CbatDataOnDemand_Roo_DataOnDemand {
         for (int i = 0; i < 10; i++) {
             Cbat obj = getNewTransientCbat(i);
             try {
-                cbatRepository.save(obj);
+                cbatService.saveCbat(obj);
             } catch (ConstraintViolationException e) {
                 StringBuilder msg = new StringBuilder();
                 for (Iterator<ConstraintViolation<?>> iter = e.getConstraintViolations().iterator(); iter.hasNext();) {

@@ -6,6 +6,7 @@ package com.stan.wen9000.domain;
 import com.stan.wen9000.domain.Cbatinfo;
 import com.stan.wen9000.domain.CbatinfoDataOnDemand;
 import com.stan.wen9000.domain.CbatinfoRepository;
+import com.stan.wen9000.service.CbatinfoService;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,6 +24,9 @@ privileged aspect CbatinfoDataOnDemand_Roo_DataOnDemand {
     private Random CbatinfoDataOnDemand.rnd = new SecureRandom();
     
     private List<Cbatinfo> CbatinfoDataOnDemand.data;
+    
+    @Autowired
+    CbatinfoService CbatinfoDataOnDemand.cbatinfoService;
     
     @Autowired
     CbatinfoRepository CbatinfoDataOnDemand.cbatinfoRepository;
@@ -96,14 +100,14 @@ privileged aspect CbatinfoDataOnDemand_Roo_DataOnDemand {
         }
         Cbatinfo obj = data.get(index);
         Long id = obj.getId();
-        return cbatinfoRepository.findOne(id);
+        return cbatinfoService.findCbatinfo(id);
     }
     
     public Cbatinfo CbatinfoDataOnDemand.getRandomCbatinfo() {
         init();
         Cbatinfo obj = data.get(rnd.nextInt(data.size()));
         Long id = obj.getId();
-        return cbatinfoRepository.findOne(id);
+        return cbatinfoService.findCbatinfo(id);
     }
     
     public boolean CbatinfoDataOnDemand.modifyCbatinfo(Cbatinfo obj) {
@@ -113,7 +117,7 @@ privileged aspect CbatinfoDataOnDemand_Roo_DataOnDemand {
     public void CbatinfoDataOnDemand.init() {
         int from = 0;
         int to = 10;
-        data = cbatinfoRepository.findAll(new org.springframework.data.domain.PageRequest(from / to, to)).getContent();
+        data = cbatinfoService.findCbatinfoEntries(from, to);
         if (data == null) {
             throw new IllegalStateException("Find entries implementation for 'Cbatinfo' illegally returned null");
         }
@@ -125,7 +129,7 @@ privileged aspect CbatinfoDataOnDemand_Roo_DataOnDemand {
         for (int i = 0; i < 10; i++) {
             Cbatinfo obj = getNewTransientCbatinfo(i);
             try {
-                cbatinfoRepository.save(obj);
+                cbatinfoService.saveCbatinfo(obj);
             } catch (ConstraintViolationException e) {
                 StringBuilder msg = new StringBuilder();
                 for (Iterator<ConstraintViolation<?>> iter = e.getConstraintViolations().iterator(); iter.hasNext();) {

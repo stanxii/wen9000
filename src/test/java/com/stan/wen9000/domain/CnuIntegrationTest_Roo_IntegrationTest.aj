@@ -6,6 +6,7 @@ package com.stan.wen9000.domain;
 import com.stan.wen9000.domain.CnuDataOnDemand;
 import com.stan.wen9000.domain.CnuIntegrationTest;
 import com.stan.wen9000.domain.CnuRepository;
+import com.stan.wen9000.service.CnuService;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,44 +28,47 @@ privileged aspect CnuIntegrationTest_Roo_IntegrationTest {
     private CnuDataOnDemand CnuIntegrationTest.dod;
     
     @Autowired
+    CnuService CnuIntegrationTest.cnuService;
+    
+    @Autowired
     CnuRepository CnuIntegrationTest.cnuRepository;
     
     @Test
-    public void CnuIntegrationTest.testCount() {
+    public void CnuIntegrationTest.testCountAllCnus() {
         Assert.assertNotNull("Data on demand for 'Cnu' failed to initialize correctly", dod.getRandomCnu());
-        long count = cnuRepository.count();
+        long count = cnuService.countAllCnus();
         Assert.assertTrue("Counter for 'Cnu' incorrectly reported there were no entries", count > 0);
     }
     
     @Test
-    public void CnuIntegrationTest.testFind() {
+    public void CnuIntegrationTest.testFindCnu() {
         Cnu obj = dod.getRandomCnu();
         Assert.assertNotNull("Data on demand for 'Cnu' failed to initialize correctly", obj);
         Long id = obj.getId();
         Assert.assertNotNull("Data on demand for 'Cnu' failed to provide an identifier", id);
-        obj = cnuRepository.findOne(id);
+        obj = cnuService.findCnu(id);
         Assert.assertNotNull("Find method for 'Cnu' illegally returned null for id '" + id + "'", obj);
         Assert.assertEquals("Find method for 'Cnu' returned the incorrect identifier", id, obj.getId());
     }
     
     @Test
-    public void CnuIntegrationTest.testFindAll() {
+    public void CnuIntegrationTest.testFindAllCnus() {
         Assert.assertNotNull("Data on demand for 'Cnu' failed to initialize correctly", dod.getRandomCnu());
-        long count = cnuRepository.count();
+        long count = cnuService.countAllCnus();
         Assert.assertTrue("Too expensive to perform a find all test for 'Cnu', as there are " + count + " entries; set the findAllMaximum to exceed this value or set findAll=false on the integration test annotation to disable the test", count < 250);
-        List<Cnu> result = cnuRepository.findAll();
+        List<Cnu> result = cnuService.findAllCnus();
         Assert.assertNotNull("Find all method for 'Cnu' illegally returned null", result);
         Assert.assertTrue("Find all method for 'Cnu' failed to return any data", result.size() > 0);
     }
     
     @Test
-    public void CnuIntegrationTest.testFindEntries() {
+    public void CnuIntegrationTest.testFindCnuEntries() {
         Assert.assertNotNull("Data on demand for 'Cnu' failed to initialize correctly", dod.getRandomCnu());
-        long count = cnuRepository.count();
+        long count = cnuService.countAllCnus();
         if (count > 20) count = 20;
         int firstResult = 0;
         int maxResults = (int) count;
-        List<Cnu> result = cnuRepository.findAll(new org.springframework.data.domain.PageRequest(firstResult / maxResults, maxResults)).getContent();
+        List<Cnu> result = cnuService.findCnuEntries(firstResult, maxResults);
         Assert.assertNotNull("Find entries method for 'Cnu' illegally returned null", result);
         Assert.assertEquals("Find entries method for 'Cnu' returned an incorrect number of entries", count, result.size());
     }
@@ -75,7 +79,7 @@ privileged aspect CnuIntegrationTest_Roo_IntegrationTest {
         Assert.assertNotNull("Data on demand for 'Cnu' failed to initialize correctly", obj);
         Long id = obj.getId();
         Assert.assertNotNull("Data on demand for 'Cnu' failed to provide an identifier", id);
-        obj = cnuRepository.findOne(id);
+        obj = cnuService.findCnu(id);
         Assert.assertNotNull("Find method for 'Cnu' illegally returned null for id '" + id + "'", obj);
         boolean modified =  dod.modifyCnu(obj);
         Integer currentVersion = obj.getVersion();
@@ -84,41 +88,41 @@ privileged aspect CnuIntegrationTest_Roo_IntegrationTest {
     }
     
     @Test
-    public void CnuIntegrationTest.testSaveUpdate() {
+    public void CnuIntegrationTest.testUpdateCnuUpdate() {
         Cnu obj = dod.getRandomCnu();
         Assert.assertNotNull("Data on demand for 'Cnu' failed to initialize correctly", obj);
         Long id = obj.getId();
         Assert.assertNotNull("Data on demand for 'Cnu' failed to provide an identifier", id);
-        obj = cnuRepository.findOne(id);
+        obj = cnuService.findCnu(id);
         boolean modified =  dod.modifyCnu(obj);
         Integer currentVersion = obj.getVersion();
-        Cnu merged = cnuRepository.save(obj);
+        Cnu merged = cnuService.updateCnu(obj);
         cnuRepository.flush();
         Assert.assertEquals("Identifier of merged object not the same as identifier of original object", merged.getId(), id);
         Assert.assertTrue("Version for 'Cnu' failed to increment on merge and flush directive", (currentVersion != null && obj.getVersion() > currentVersion) || !modified);
     }
     
     @Test
-    public void CnuIntegrationTest.testSave() {
+    public void CnuIntegrationTest.testSaveCnu() {
         Assert.assertNotNull("Data on demand for 'Cnu' failed to initialize correctly", dod.getRandomCnu());
         Cnu obj = dod.getNewTransientCnu(Integer.MAX_VALUE);
         Assert.assertNotNull("Data on demand for 'Cnu' failed to provide a new transient entity", obj);
         Assert.assertNull("Expected 'Cnu' identifier to be null", obj.getId());
-        cnuRepository.save(obj);
+        cnuService.saveCnu(obj);
         cnuRepository.flush();
         Assert.assertNotNull("Expected 'Cnu' identifier to no longer be null", obj.getId());
     }
     
     @Test
-    public void CnuIntegrationTest.testDelete() {
+    public void CnuIntegrationTest.testDeleteCnu() {
         Cnu obj = dod.getRandomCnu();
         Assert.assertNotNull("Data on demand for 'Cnu' failed to initialize correctly", obj);
         Long id = obj.getId();
         Assert.assertNotNull("Data on demand for 'Cnu' failed to provide an identifier", id);
-        obj = cnuRepository.findOne(id);
-        cnuRepository.delete(obj);
+        obj = cnuService.findCnu(id);
+        cnuService.deleteCnu(obj);
         cnuRepository.flush();
-        Assert.assertNull("Failed to remove 'Cnu' with identifier '" + id + "'", cnuRepository.findOne(id));
+        Assert.assertNull("Failed to remove 'Cnu' with identifier '" + id + "'", cnuService.findCnu(id));
     }
     
 }

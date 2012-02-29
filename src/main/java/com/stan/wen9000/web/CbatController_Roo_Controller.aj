@@ -4,9 +4,9 @@
 package com.stan.wen9000.web;
 
 import com.stan.wen9000.domain.Cbat;
-import com.stan.wen9000.domain.CbatRepository;
-import com.stan.wen9000.domain.CbatinfoRepository;
 import com.stan.wen9000.reference.EocDeviceType;
+import com.stan.wen9000.service.CbatService;
+import com.stan.wen9000.service.CbatinfoService;
 import com.stan.wen9000.web.CbatController;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -25,10 +25,10 @@ import org.springframework.web.util.WebUtils;
 privileged aspect CbatController_Roo_Controller {
     
     @Autowired
-    CbatRepository CbatController.cbatRepository;
+    CbatService CbatController.cbatService;
     
     @Autowired
-    CbatinfoRepository CbatController.cbatinfoRepository;
+    CbatinfoService CbatController.cbatinfoService;
     
     @RequestMapping(method = RequestMethod.POST, produces = "text/html")
     public String CbatController.create(@Valid Cbat cbat, BindingResult bindingResult, Model uiModel, HttpServletRequest httpServletRequest) {
@@ -37,7 +37,7 @@ privileged aspect CbatController_Roo_Controller {
             return "cbats/create";
         }
         uiModel.asMap().clear();
-        cbatRepository.save(cbat);
+        cbatService.saveCbat(cbat);
         return "redirect:/cbats/" + encodeUrlPathSegment(cbat.getId().toString(), httpServletRequest);
     }
     
@@ -49,7 +49,7 @@ privileged aspect CbatController_Roo_Controller {
     
     @RequestMapping(value = "/{id}", produces = "text/html")
     public String CbatController.show(@PathVariable("id") Long id, Model uiModel) {
-        uiModel.addAttribute("cbat", cbatRepository.findOne(id));
+        uiModel.addAttribute("cbat", cbatService.findCbat(id));
         uiModel.addAttribute("itemId", id);
         return "cbats/show";
     }
@@ -59,11 +59,11 @@ privileged aspect CbatController_Roo_Controller {
         if (page != null || size != null) {
             int sizeNo = size == null ? 10 : size.intValue();
             final int firstResult = page == null ? 0 : (page.intValue() - 1) * sizeNo;
-            uiModel.addAttribute("cbats", cbatRepository.findAll(new org.springframework.data.domain.PageRequest(firstResult / sizeNo, sizeNo)).getContent());
-            float nrOfPages = (float) cbatRepository.count() / sizeNo;
+            uiModel.addAttribute("cbats", cbatService.findCbatEntries(firstResult, sizeNo));
+            float nrOfPages = (float) cbatService.countAllCbats() / sizeNo;
             uiModel.addAttribute("maxPages", (int) ((nrOfPages > (int) nrOfPages || nrOfPages == 0.0) ? nrOfPages + 1 : nrOfPages));
         } else {
-            uiModel.addAttribute("cbats", cbatRepository.findAll());
+            uiModel.addAttribute("cbats", cbatService.findAllCbats());
         }
         return "cbats/list";
     }
@@ -75,20 +75,20 @@ privileged aspect CbatController_Roo_Controller {
             return "cbats/update";
         }
         uiModel.asMap().clear();
-        cbatRepository.save(cbat);
+        cbatService.updateCbat(cbat);
         return "redirect:/cbats/" + encodeUrlPathSegment(cbat.getId().toString(), httpServletRequest);
     }
     
     @RequestMapping(value = "/{id}", params = "form", produces = "text/html")
     public String CbatController.updateForm(@PathVariable("id") Long id, Model uiModel) {
-        populateEditForm(uiModel, cbatRepository.findOne(id));
+        populateEditForm(uiModel, cbatService.findCbat(id));
         return "cbats/update";
     }
     
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = "text/html")
     public String CbatController.delete(@PathVariable("id") Long id, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "size", required = false) Integer size, Model uiModel) {
-        Cbat cbat = cbatRepository.findOne(id);
-        cbatRepository.delete(cbat);
+        Cbat cbat = cbatService.findCbat(id);
+        cbatService.deleteCbat(cbat);
         uiModel.asMap().clear();
         uiModel.addAttribute("page", (page == null) ? "1" : page.toString());
         uiModel.addAttribute("size", (size == null) ? "10" : size.toString());
@@ -97,7 +97,7 @@ privileged aspect CbatController_Roo_Controller {
     
     void CbatController.populateEditForm(Model uiModel, Cbat cbat) {
         uiModel.addAttribute("cbat", cbat);
-        uiModel.addAttribute("cbatinfoes", cbatinfoRepository.findAll());
+        uiModel.addAttribute("cbatinfoes", cbatinfoService.findAllCbatinfoes());
         uiModel.addAttribute("eocdevicetypes", Arrays.asList(EocDeviceType.values()));
     }
     

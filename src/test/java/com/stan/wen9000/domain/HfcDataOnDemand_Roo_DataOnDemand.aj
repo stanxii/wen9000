@@ -8,6 +8,7 @@ import com.stan.wen9000.domain.HfcDataOnDemand;
 import com.stan.wen9000.domain.HfcRepository;
 import com.stan.wen9000.reference.HfcClass;
 import com.stan.wen9000.reference.HfcDeviceType;
+import com.stan.wen9000.service.HfcService;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -25,6 +26,9 @@ privileged aspect HfcDataOnDemand_Roo_DataOnDemand {
     private Random HfcDataOnDemand.rnd = new SecureRandom();
     
     private List<Hfc> HfcDataOnDemand.data;
+    
+    @Autowired
+    HfcService HfcDataOnDemand.hfcService;
     
     @Autowired
     HfcRepository HfcDataOnDemand.hfcRepository;
@@ -74,14 +78,14 @@ privileged aspect HfcDataOnDemand_Roo_DataOnDemand {
         }
         Hfc obj = data.get(index);
         Long id = obj.getId();
-        return hfcRepository.findOne(id);
+        return hfcService.findHfc(id);
     }
     
     public Hfc HfcDataOnDemand.getRandomHfc() {
         init();
         Hfc obj = data.get(rnd.nextInt(data.size()));
         Long id = obj.getId();
-        return hfcRepository.findOne(id);
+        return hfcService.findHfc(id);
     }
     
     public boolean HfcDataOnDemand.modifyHfc(Hfc obj) {
@@ -91,7 +95,7 @@ privileged aspect HfcDataOnDemand_Roo_DataOnDemand {
     public void HfcDataOnDemand.init() {
         int from = 0;
         int to = 10;
-        data = hfcRepository.findAll(new org.springframework.data.domain.PageRequest(from / to, to)).getContent();
+        data = hfcService.findHfcEntries(from, to);
         if (data == null) {
             throw new IllegalStateException("Find entries implementation for 'Hfc' illegally returned null");
         }
@@ -103,7 +107,7 @@ privileged aspect HfcDataOnDemand_Roo_DataOnDemand {
         for (int i = 0; i < 10; i++) {
             Hfc obj = getNewTransientHfc(i);
             try {
-                hfcRepository.save(obj);
+                hfcService.saveHfc(obj);
             } catch (ConstraintViolationException e) {
                 StringBuilder msg = new StringBuilder();
                 for (Iterator<ConstraintViolation<?>> iter = e.getConstraintViolations().iterator(); iter.hasNext();) {

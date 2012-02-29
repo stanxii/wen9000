@@ -1,4 +1,4 @@
-// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-02-29 15:59:07
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-02-29 16:32:06
 project --topLevelPackage com.stan.wen9000
 jpa setup --provider HIBERNATE --database MYSQL
 database properties set --key database.password --value 888888
@@ -24,7 +24,9 @@ field string --fieldName address --notNull --value "na"
 field string --fieldName contact --notNull --value "na"
 field string --fieldName label --notNull --value "eoc master"
 field string --fieldName phone --notNull --value "na"
+json add --class ~.domain.Cbatinfo
 repository jpa --interface ~.domain.CbatinfoRepository
+service --interface ~.service.CbatinfoService --entity ~.domain.Cbatinfo
 entity jpa --class ~.domain.Cbat --activeRecord false --equals --testAutomatically
 field boolean --fieldName active --notNull false
 field string --fieldName ip --notNull 
@@ -32,7 +34,9 @@ field string --fieldName mac --notNull
 field string --fieldName label --notNull --value "na"
 field enum --fieldName deviceType --type ~.reference.EocDeviceType --notNull 
 field reference --fieldName cbatinfo --type ~.domain.Cbatinfo --cardinality ONE_TO_ONE 
+json add --class ~.domain.Cbat
 repository jpa --interface ~.domain.CbatRepository
+service --interface ~.service.CbatService --entity ~.domain.Cbat
 entity jpa --class ~.domain.Profile --activeRecord false --equals --testAutomatically
 field boolean --fieldName port0enable --notNull --value enable 
 field boolean --fieldName port1enable --notNull --value enable 
@@ -54,20 +58,27 @@ field boolean --fieldName rxlimitsts --notNull --value false
 field boolean --fieldName txlimitsts --notNull --value false
 field boolean --fieldName vlanenable --notNull --value  false
 field string --fieldName profilename --notNull --value "na"
+json add --class ~.domain.Profile
 repository jpa --interface ~.domain.ProfileRepository
+service --interface ~.service.ProfileService --entity ~.domain.Profile
 entity jpa --class ~.domain.Cnu --activeRecord false --equals --testAutomatically
 field string --fieldName mac --notNull 
 field string --fieldName label --notNull --value "na"
 field reference --fieldName cbat --type ~.domain.Cbat
 field reference --fieldName profile --type ~.domain.Profile
+json add --class ~.domain.Cnu
 repository jpa --interface ~.domain.CnuRepository
+service --interface ~.service.CnuService --entity ~.domain.Cnu
 entity jpa --class ~.domain.Hfc --activeRecord false --equals --testAutomatically
 field enum --fieldName deviceType --type ~.reference.HfcDeviceType
 field enum --fieldName hfcType --type ~.reference.HfcClass
 field string --fieldName ip --notNull 
 field string --fieldName mac --notNull 
 field string --fieldName label --notNull 
+json add --class ~.domain.Hfc
 repository jpa --interface ~.domain.HfcRepository
+service --interface ~.service.HfcService --entity ~.domain.Hfc
+service --interface ~.service.DiscoveryService
 web mvc json setup
 web mvc json all --package ~.web
 web mvc all --package ~.web
@@ -78,7 +89,7 @@ logging setup --level WARN --package WEB
 security setup
 perform eclipse
 exit
-// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-02-29 16:00:35
-// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-02-29 16:00:35
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-02-29 16:33:28
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-02-29 16:33:28
 // script --file e:\seamprojects\eocnms\log.roo
-// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-02-29 16:00:35
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-02-29 16:33:28

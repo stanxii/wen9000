@@ -4,7 +4,7 @@
 package com.stan.wen9000.web;
 
 import com.stan.wen9000.domain.Cbatinfo;
-import com.stan.wen9000.domain.CbatinfoRepository;
+import com.stan.wen9000.service.CbatinfoService;
 import com.stan.wen9000.web.CbatinfoController;
 import java.io.UnsupportedEncodingException;
 import javax.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ import org.springframework.web.util.WebUtils;
 privileged aspect CbatinfoController_Roo_Controller {
     
     @Autowired
-    CbatinfoRepository CbatinfoController.cbatinfoRepository;
+    CbatinfoService CbatinfoController.cbatinfoService;
     
     @RequestMapping(method = RequestMethod.POST, produces = "text/html")
     public String CbatinfoController.create(@Valid Cbatinfo cbatinfo, BindingResult bindingResult, Model uiModel, HttpServletRequest httpServletRequest) {
@@ -31,7 +31,7 @@ privileged aspect CbatinfoController_Roo_Controller {
             return "cbatinfoes/create";
         }
         uiModel.asMap().clear();
-        cbatinfoRepository.save(cbatinfo);
+        cbatinfoService.saveCbatinfo(cbatinfo);
         return "redirect:/cbatinfoes/" + encodeUrlPathSegment(cbatinfo.getId().toString(), httpServletRequest);
     }
     
@@ -43,7 +43,7 @@ privileged aspect CbatinfoController_Roo_Controller {
     
     @RequestMapping(value = "/{id}", produces = "text/html")
     public String CbatinfoController.show(@PathVariable("id") Long id, Model uiModel) {
-        uiModel.addAttribute("cbatinfo", cbatinfoRepository.findOne(id));
+        uiModel.addAttribute("cbatinfo", cbatinfoService.findCbatinfo(id));
         uiModel.addAttribute("itemId", id);
         return "cbatinfoes/show";
     }
@@ -53,11 +53,11 @@ privileged aspect CbatinfoController_Roo_Controller {
         if (page != null || size != null) {
             int sizeNo = size == null ? 10 : size.intValue();
             final int firstResult = page == null ? 0 : (page.intValue() - 1) * sizeNo;
-            uiModel.addAttribute("cbatinfoes", cbatinfoRepository.findAll(new org.springframework.data.domain.PageRequest(firstResult / sizeNo, sizeNo)).getContent());
-            float nrOfPages = (float) cbatinfoRepository.count() / sizeNo;
+            uiModel.addAttribute("cbatinfoes", cbatinfoService.findCbatinfoEntries(firstResult, sizeNo));
+            float nrOfPages = (float) cbatinfoService.countAllCbatinfoes() / sizeNo;
             uiModel.addAttribute("maxPages", (int) ((nrOfPages > (int) nrOfPages || nrOfPages == 0.0) ? nrOfPages + 1 : nrOfPages));
         } else {
-            uiModel.addAttribute("cbatinfoes", cbatinfoRepository.findAll());
+            uiModel.addAttribute("cbatinfoes", cbatinfoService.findAllCbatinfoes());
         }
         return "cbatinfoes/list";
     }
@@ -69,20 +69,20 @@ privileged aspect CbatinfoController_Roo_Controller {
             return "cbatinfoes/update";
         }
         uiModel.asMap().clear();
-        cbatinfoRepository.save(cbatinfo);
+        cbatinfoService.updateCbatinfo(cbatinfo);
         return "redirect:/cbatinfoes/" + encodeUrlPathSegment(cbatinfo.getId().toString(), httpServletRequest);
     }
     
     @RequestMapping(value = "/{id}", params = "form", produces = "text/html")
     public String CbatinfoController.updateForm(@PathVariable("id") Long id, Model uiModel) {
-        populateEditForm(uiModel, cbatinfoRepository.findOne(id));
+        populateEditForm(uiModel, cbatinfoService.findCbatinfo(id));
         return "cbatinfoes/update";
     }
     
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = "text/html")
     public String CbatinfoController.delete(@PathVariable("id") Long id, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "size", required = false) Integer size, Model uiModel) {
-        Cbatinfo cbatinfo = cbatinfoRepository.findOne(id);
-        cbatinfoRepository.delete(cbatinfo);
+        Cbatinfo cbatinfo = cbatinfoService.findCbatinfo(id);
+        cbatinfoService.deleteCbatinfo(cbatinfo);
         uiModel.asMap().clear();
         uiModel.addAttribute("page", (page == null) ? "1" : page.toString());
         uiModel.addAttribute("size", (size == null) ? "10" : size.toString());

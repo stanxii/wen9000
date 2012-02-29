@@ -4,9 +4,9 @@
 package com.stan.wen9000.web;
 
 import com.stan.wen9000.domain.Hfc;
-import com.stan.wen9000.domain.HfcRepository;
 import com.stan.wen9000.reference.HfcClass;
 import com.stan.wen9000.reference.HfcDeviceType;
+import com.stan.wen9000.service.HfcService;
 import com.stan.wen9000.web.HfcController;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -25,7 +25,7 @@ import org.springframework.web.util.WebUtils;
 privileged aspect HfcController_Roo_Controller {
     
     @Autowired
-    HfcRepository HfcController.hfcRepository;
+    HfcService HfcController.hfcService;
     
     @RequestMapping(method = RequestMethod.POST, produces = "text/html")
     public String HfcController.create(@Valid Hfc hfc, BindingResult bindingResult, Model uiModel, HttpServletRequest httpServletRequest) {
@@ -34,7 +34,7 @@ privileged aspect HfcController_Roo_Controller {
             return "hfcs/create";
         }
         uiModel.asMap().clear();
-        hfcRepository.save(hfc);
+        hfcService.saveHfc(hfc);
         return "redirect:/hfcs/" + encodeUrlPathSegment(hfc.getId().toString(), httpServletRequest);
     }
     
@@ -46,7 +46,7 @@ privileged aspect HfcController_Roo_Controller {
     
     @RequestMapping(value = "/{id}", produces = "text/html")
     public String HfcController.show(@PathVariable("id") Long id, Model uiModel) {
-        uiModel.addAttribute("hfc", hfcRepository.findOne(id));
+        uiModel.addAttribute("hfc", hfcService.findHfc(id));
         uiModel.addAttribute("itemId", id);
         return "hfcs/show";
     }
@@ -56,11 +56,11 @@ privileged aspect HfcController_Roo_Controller {
         if (page != null || size != null) {
             int sizeNo = size == null ? 10 : size.intValue();
             final int firstResult = page == null ? 0 : (page.intValue() - 1) * sizeNo;
-            uiModel.addAttribute("hfcs", hfcRepository.findAll(new org.springframework.data.domain.PageRequest(firstResult / sizeNo, sizeNo)).getContent());
-            float nrOfPages = (float) hfcRepository.count() / sizeNo;
+            uiModel.addAttribute("hfcs", hfcService.findHfcEntries(firstResult, sizeNo));
+            float nrOfPages = (float) hfcService.countAllHfcs() / sizeNo;
             uiModel.addAttribute("maxPages", (int) ((nrOfPages > (int) nrOfPages || nrOfPages == 0.0) ? nrOfPages + 1 : nrOfPages));
         } else {
-            uiModel.addAttribute("hfcs", hfcRepository.findAll());
+            uiModel.addAttribute("hfcs", hfcService.findAllHfcs());
         }
         return "hfcs/list";
     }
@@ -72,20 +72,20 @@ privileged aspect HfcController_Roo_Controller {
             return "hfcs/update";
         }
         uiModel.asMap().clear();
-        hfcRepository.save(hfc);
+        hfcService.updateHfc(hfc);
         return "redirect:/hfcs/" + encodeUrlPathSegment(hfc.getId().toString(), httpServletRequest);
     }
     
     @RequestMapping(value = "/{id}", params = "form", produces = "text/html")
     public String HfcController.updateForm(@PathVariable("id") Long id, Model uiModel) {
-        populateEditForm(uiModel, hfcRepository.findOne(id));
+        populateEditForm(uiModel, hfcService.findHfc(id));
         return "hfcs/update";
     }
     
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = "text/html")
     public String HfcController.delete(@PathVariable("id") Long id, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "size", required = false) Integer size, Model uiModel) {
-        Hfc hfc = hfcRepository.findOne(id);
-        hfcRepository.delete(hfc);
+        Hfc hfc = hfcService.findHfc(id);
+        hfcService.deleteHfc(hfc);
         uiModel.asMap().clear();
         uiModel.addAttribute("page", (page == null) ? "1" : page.toString());
         uiModel.addAttribute("size", (size == null) ? "10" : size.toString());
