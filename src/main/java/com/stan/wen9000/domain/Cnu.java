@@ -13,7 +13,7 @@ import org.springframework.roo.addon.tostring.RooToString;
 @RooToString
 @RooJpaEntity
 @RooEquals
-@RooJson
+@RooJson(deepSerialize = true)
 public class Cnu {
 
     @NotNull

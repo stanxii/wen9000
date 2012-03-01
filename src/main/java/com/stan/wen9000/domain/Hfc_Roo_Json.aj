@@ -13,7 +13,7 @@ import java.util.List;
 privileged aspect Hfc_Roo_Json {
     
     public String Hfc.toJson() {
-        return new JSONSerializer().exclude("*.class").serialize(this);
+        return new JSONSerializer().exclude("*.class").deepSerialize(this);
     }
     
     public static Hfc Hfc.fromJsonToHfc(String json) {
@@ -21,7 +21,7 @@ privileged aspect Hfc_Roo_Json {
     }
     
     public static String Hfc.toJsonArray(Collection<Hfc> collection) {
-        return new JSONSerializer().exclude("*.class").serialize(collection);
+        return new JSONSerializer().exclude("*.class").deepSerialize(collection);
     }
     
     public static Collection<Hfc> Hfc.fromJsonArrayToHfcs(String json) {

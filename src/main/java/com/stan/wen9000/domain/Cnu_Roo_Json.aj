@@ -13,7 +13,7 @@ import java.util.List;
 privileged aspect Cnu_Roo_Json {
     
     public String Cnu.toJson() {
-        return new JSONSerializer().exclude("*.class").serialize(this);
+        return new JSONSerializer().exclude("*.class").deepSerialize(this);
     }
     
     public static Cnu Cnu.fromJsonToCnu(String json) {
@@ -21,7 +21,7 @@ privileged aspect Cnu_Roo_Json {
     }
     
     public static String Cnu.toJsonArray(Collection<Cnu> collection) {
-        return new JSONSerializer().exclude("*.class").serialize(collection);
+        return new JSONSerializer().exclude("*.class").deepSerialize(collection);
     }
     
     public static Collection<Cnu> Cnu.fromJsonArrayToCnus(String json) {

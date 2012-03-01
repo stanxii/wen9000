@@ -13,7 +13,7 @@ import java.util.List;
 privileged aspect Cbatinfo_Roo_Json {
     
     public String Cbatinfo.toJson() {
-        return new JSONSerializer().exclude("*.class").serialize(this);
+        return new JSONSerializer().exclude("*.class").deepSerialize(this);
     }
     
     public static Cbatinfo Cbatinfo.fromJsonToCbatinfo(String json) {
@@ -21,7 +21,7 @@ privileged aspect Cbatinfo_Roo_Json {
     }
     
     public static String Cbatinfo.toJsonArray(Collection<Cbatinfo> collection) {
-        return new JSONSerializer().exclude("*.class").serialize(collection);
+        return new JSONSerializer().exclude("*.class").deepSerialize(collection);
     }
     
     public static Collection<Cbatinfo> Cbatinfo.fromJsonArrayToCbatinfoes(String json) {

@@ -13,7 +13,7 @@ import java.util.List;
 privileged aspect Profile_Roo_Json {
     
     public String Profile.toJson() {
-        return new JSONSerializer().exclude("*.class").serialize(this);
+        return new JSONSerializer().exclude("*.class").deepSerialize(this);
     }
     
     public static Profile Profile.fromJsonToProfile(String json) {
@@ -21,7 +21,7 @@ privileged aspect Profile_Roo_Json {
     }
     
     public static String Profile.toJsonArray(Collection<Profile> collection) {
-        return new JSONSerializer().exclude("*.class").serialize(collection);
+        return new JSONSerializer().exclude("*.class").deepSerialize(collection);
     }
     
     public static Collection<Profile> Profile.fromJsonArrayToProfiles(String json) {
