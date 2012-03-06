@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:spring="http://www.springframework.org/tags" xmlns:util="urn:jsptagdir:/WEB-INF/tags/util" version="2.0">
+  <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+  <jsp:output omit-xml-declaration="yes"/>
+ 
+ 
+ 
+ 
+    <p/>
+    <p/>
+    <p/>
+    
+     <form id="discoveryForm" action="/wen9000/discovery/search" method="post" >
+     	StartIp: <input type="text" name="startip" value="192.168.223.2" /> <br/>
+     	StopIp:  <input type="text" name="stopip"  value="192.168.223.250" /> <br/>
+     	<input type="submit"  value="搜索"/>
+     </form>
+    
+    
+    
+</div>

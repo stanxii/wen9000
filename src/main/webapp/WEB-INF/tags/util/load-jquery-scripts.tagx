@@ -1,0 +1,48 @@
+<jsp:root xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:fn="http://java.sun.com/jsp/jstl/functions" xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:spring="http://www.springframework.org/tags" version="2.0">
+
+  <jsp:output omit-xml-declaration="yes" />
+
+ 
+  
+  
+  <spring:url value="/resources/js/jquery-1.7.1.min.js" var="jquery_url" />
+  <spring:url value="/resources/js/jquery-ui-1.8.18.custom.min.js" var="jquery_ui_url" />  
+  
+  
+  
+  
+  
+  
+  <spring:url value="/resources/css/standard.css" var="standard_css_url" />
+  <spring:url value="/resources/css/jqueryui/themes/custom-theme/jquery-ui-1.8.18.custom.css" var="jqueryui_css_url" />
+  
+  
+  <spring:url value="/resources/images/favicon.ico" var="favicon" />
+  
+  
+     <![CDATA[
+  
+  <script src="${jquery_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${jquery_ui_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>  
+  
+  
+ ]]> 
+ 
+  
+  <link rel="stylesheet" type="text/css" href="${standard_css_url}" />
+  <link rel="stylesheet" type="text/css" href="${jqueryui_css_url}" /> 
+    
+  
+  <link rel="SHORTCUT ICON" href="${favicon}" />
+
+  <!-- Get the user local from the page context (it was set by Spring MVC's locale resolver) -->
+  <c:set var="userLocale">
+    <c:set var="plocale">${pageContext.response.locale}</c:set>
+    <c:out value="${fn:replace(plocale, '_', '-')}" default="en" />
+  </c:set>
+
+  <script type="text/javascript">var djConfig = {parseOnLoad: false, isDebug: false, locale: '${fn:toLowerCase(userLocale)}'};</script>
+
+  
+
+</jsp:root>
