@@ -68,4 +68,39 @@
         <property name="persistenceUnitName" value="persistenceUnit"/>
         <property name="dataSource" ref="dataSource"/>
     </bean>
+    
+    <bean id="executor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+	 <property name="corePoolSize" value="10" />
+	 <property name="maxPoolSize" value="100" />
+	 <property name="queueCapacity" value="500" />
+	</bean>
+	
+	<!-- 业务对象 -->
+	<bean id="discoveryWorkerJob" class="com.stan.wen9000.quartz.DiscoveryWorkerJob" />
+	
+	<!-- 调度业务 -->
+	<bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="discoveryWorkerJob" />
+	 <property name="targetMethod"  value="doIt"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	
+	<bean id="simpleTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="jobDetail" />
+	 <property name="startDelay" value="10000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="255" />		
+	  	 
+	</bean>
+	
+	<!-- 设置调度 -->
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+	 <property name="configLocation" value="classpath:quartz.properties"/>	 
+	 <property name="triggers">
+	  <list>
+	   <ref bean="simpleTrigger" />
+	  </list>
+	 </property>	 
+	</bean>
+    
 </beans>

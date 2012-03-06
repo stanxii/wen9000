@@ -16,6 +16,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.stan.wen9000.domain.Cbat;
@@ -30,8 +31,9 @@ public class DiscoveryController {
 
     //@Autowired
      //CbatController cbatctl;
-    
-    @Autowired
+	
+
+	@Autowired
     CnuController cnuctl;
     
     @RequestMapping(method = RequestMethod.POST, value = "{id}")
@@ -43,7 +45,7 @@ public class DiscoveryController {
         return "discovery/index";
     }
     
-    @RequestMapping(value = "search",  headers = "Accept=application/json")
+    @RequestMapping(value = "searchresult",  headers = "Accept=application/json")
     @ResponseBody
     public ResponseEntity<String> searchListAll() {
         HttpHeaders headers = new HttpHeaders();
@@ -52,4 +54,13 @@ public class DiscoveryController {
         List<Cnu>  result = cnuctl.cnuService.findAllCnus();
         return new ResponseEntity<String>(Cnu.toJsonArray(result), headers, HttpStatus.OK);
     }
+    
+    @RequestMapping(value = "search", method = RequestMethod.POST)      
+    public String discoveryProductor(@RequestParam(value = "startip", required = false) String startip, @RequestParam(value = "startip", required = false) String stopip ) {
+               
+    	System.out.println("startip=" + startip +" stop=" + stopip);
+    	
+    	return "discovery/index";
+    }
+    
 }

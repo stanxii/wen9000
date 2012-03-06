@@ -4,4 +4,7 @@
     <definition extends="default" name="discovery/index">
         <put-attribute name="body" value="/WEB-INF/views/discovery/index.jspx"/>
     </definition>
+    <definition extends="default" name="discovery/discovery">
+        <put-attribute name="body" value="/WEB-INF/views/discovery/discovery.jspx"/>
+    </definition>
 </tiles-definitions>
