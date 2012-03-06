@@ -100,3 +100,9 @@ exit
 // Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-01 09:56:52
 // script --file log.roo
 // Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-01 09:56:52
+// Spring Roo 1.2.0.RELEASE [rev 39eb957] log opened at 2012-03-05 13:50:39
+perform tests
+perform tests
+// [failed] test stub --class 
+test stub --class ~.domain.CbatIntegrationTest
+perform tests
