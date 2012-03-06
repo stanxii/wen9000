@@ -2,7 +2,7 @@
   <jsp:directive.page contentType="text/html;charset=UTF-8" />
   <jsp:output omit-xml-declaration="yes" />
 
-    <script>
+  		<script>
       		<![CDATA[
   		    $(document).ready(function(){  
  
@@ -27,28 +27,34 @@
 		      
 		    });  
 		]]>
-</script>
 		
-  <div class="top-bar">   	 
+		</script>
+  <div class="top-bar"> 	   
    	   <ul class="topnav">     	   	
-        <li><a href="/wen9000">首页</a></li>  
+        <li><a href="/wen9000/">首页</a></li>  
         <li>  
-            <a href="#">设备发现</a>  
+            <a href="#">设备管理</a>
             <ul class="subnav">  
-                <li><a href="/wen9000/nav/discovery">设备发现</a></li>  
-                <li><a href="#">属性设置</a></li>                  
+                <li><a href="/wen9000/nav/search">设备发现</a></li>  
+                <li><a href="/wen9000/nav/discovery">批量开户</a></li>  
+                <li><a href="#">批量销户</a></li> 
+                <li><a href="#">设备预开户</a></li>
+            </ul>   
+        </li>  
+        <li>  
+            <a href="#">Wen9000管理</a>  
+            <ul class="subnav">  
+                <li><a href="#">全局配置</a></li>  
+                <li><a href="#">数据导入/导出</a></li>  
             </ul>  
-        </li>        
-        <li><a href="#">批量开户</a></li>           
-        <li><a href="#">数据库备份恢复</a></li>  
-        <li><a href="#">拓扑显示</a></li>  
+        </li>  
+        <li><a href="#">用户管理</a></li>  
+        <li><a href="#">告警信息</a></li>  
+        <li><a href="#">关于我们</a></li>  
     </ul>  
     <div id="userinfo">
-    	<p><a href="#">登录</a></p>
+    	<p>用户名：管理员[<a href="#">注销</a>]</p>
     </div>
       
   </div>
-  
-
-
 </div> 

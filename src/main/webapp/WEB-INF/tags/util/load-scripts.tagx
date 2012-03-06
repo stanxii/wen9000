@@ -2,28 +2,31 @@
 
   <jsp:output omit-xml-declaration="yes" />
 
-  <spring:theme code="styleSheet" var="roo_css" />
   <spring:url value="/${roo_css}" var="roo_css_url" />
-  <spring:url value="/resources/dojo/dojo.js" var="dojo_url" />
-  <spring:url value="/resources/dijit/themes/tundra/tundra.css" var="tundra_url" />
-  <spring:url value="/resources/spring/Spring.js" var="spring_url" />
-  <spring:url value="/resources/spring/Spring-Dojo.js" var="spring_dojo_url" />
+  <spring:url value="/resources/js/jquery-1.6.2.min.js" var="jquerymin_url" />
+  <spring:url value="/resources/js/jquery-1.6.2.js" var="jquery_url" />
+  <spring:url value="/resources/js/jquery.cookie.js" var="jquerycookie_url" />
+  <spring:url value="/resources/js/jquery-ui-1.8.16.custom.min.js" var="jqueryui_url" />
+  <spring:url value="/resources/js/jquery.dataTables.js" var="datatable_url" />
+  <spring:url value="/resources/js/jquery.dynatree.js" var="dynatree_url" />
+
+  <spring:url value="/resources/css/flick/jquery-ui-1.8.17.custom.css" var="flcik_url" />
+  <spring:url value="/resources/css/jquery.dataTables.css" var="datatablescss_url" />
+  <spring:url value="/resources/css/ui.dynatree.css" var="dynatreecss_url" />
+
+  <spring:url value="/resources/css/core.css" var="core_url" />
   <spring:url value="/resources/images/favicon.ico" var="favicon" />
-  <link rel="stylesheet" type="text/css" href="${tundra_url}" />
-  <link rel="stylesheet" type="text/css" media="screen" href="${roo_css_url}" />
+  <link rel="stylesheet" type="text/css" href="${flcik_url}" />
+  <link rel="stylesheet" type="text/css" href="${core_url}" />
+  <link rel="stylesheet" type="text/css" href="${datatablescss_url}" />
+   <link rel="stylesheet" type="text/css" href="${dynatreecss_url}" />
+
   <link rel="SHORTCUT ICON" href="${favicon}" />
 
-  <!-- Get the user local from the page context (it was set by Spring MVC's locale resolver) -->
-  <c:set var="userLocale">
-    <c:set var="plocale">${pageContext.response.locale}</c:set>
-    <c:out value="${fn:replace(plocale, '_', '-')}" default="en" />
-  </c:set>
-
-  <script type="text/javascript">var djConfig = {parseOnLoad: false, isDebug: false, locale: '${fn:toLowerCase(userLocale)}'};</script>
-
-  <script src="${dojo_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
-  <script src="${spring_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
-  <script src="${spring_dojo_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
-  <script language="JavaScript" type="text/javascript">dojo.require("dojo.parser");</script>
-
+  <script src="${jquerymin_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${jquery_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${jquerycookie_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${jqueryui_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${datatable_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${dynatree_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
 </jsp:root>

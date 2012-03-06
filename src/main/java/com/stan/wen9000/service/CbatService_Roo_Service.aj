@@ -11,7 +11,8 @@ privileged aspect CbatService_Roo_Service {
     
     public abstract long CbatService.countAllCbats();    
     public abstract void CbatService.deleteCbat(Cbat cbat);    
-    public abstract Cbat CbatService.findCbat(Long id);    
+    public abstract Cbat CbatService.findCbat(Long id); 
+    public abstract Cbat CbatService.findCbat(String mac);  
     public abstract List<Cbat> CbatService.findAllCbats();    
     public abstract List<Cbat> CbatService.findCbatEntries(int firstResult, int maxResults);    
     public abstract void CbatService.saveCbat(Cbat cbat);    
