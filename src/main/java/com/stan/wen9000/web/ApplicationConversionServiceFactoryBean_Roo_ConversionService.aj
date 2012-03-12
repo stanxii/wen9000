@@ -3,12 +3,10 @@
 
 package com.stan.wen9000.web;
 
-import com.stan.wen9000.domain.Cbat;
 import com.stan.wen9000.domain.Cbatinfo;
 import com.stan.wen9000.domain.Cnu;
 import com.stan.wen9000.domain.Hfc;
 import com.stan.wen9000.domain.Profile;
-import com.stan.wen9000.service.CbatService;
 import com.stan.wen9000.service.CbatinfoService;
 import com.stan.wen9000.service.CnuService;
 import com.stan.wen9000.service.HfcService;
@@ -24,9 +22,6 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     declare @type: ApplicationConversionServiceFactoryBean: @Configurable;
     
     @Autowired
-    CbatService ApplicationConversionServiceFactoryBean.cbatService;
-    
-    @Autowired
     CbatinfoService ApplicationConversionServiceFactoryBean.cbatinfoService;
     
     @Autowired
@@ -37,30 +32,6 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     
     @Autowired
     ProfileService ApplicationConversionServiceFactoryBean.profileService;
-    
-    public Converter<Cbat, String> ApplicationConversionServiceFactoryBean.getCbatToStringConverter() {
-        return new org.springframework.core.convert.converter.Converter<com.stan.wen9000.domain.Cbat, java.lang.String>() {
-            public String convert(Cbat cbat) {
-                return new StringBuilder().append(cbat.getIp()).append(" ").append(cbat.getMac()).append(" ").append(cbat.getLabel()).toString();
-            }
-        };
-    }
-    
-    public Converter<Long, Cbat> ApplicationConversionServiceFactoryBean.getIdToCbatConverter() {
-        return new org.springframework.core.convert.converter.Converter<java.lang.Long, com.stan.wen9000.domain.Cbat>() {
-            public com.stan.wen9000.domain.Cbat convert(java.lang.Long id) {
-                return cbatService.findCbat(id);
-            }
-        };
-    }
-    
-    public Converter<String, Cbat> ApplicationConversionServiceFactoryBean.getStringToCbatConverter() {
-        return new org.springframework.core.convert.converter.Converter<java.lang.String, com.stan.wen9000.domain.Cbat>() {
-            public com.stan.wen9000.domain.Cbat convert(String id) {
-                return getObject().convert(getObject().convert(id, Long.class), Cbat.class);
-            }
-        };
-    }
     
     public Converter<Cbatinfo, String> ApplicationConversionServiceFactoryBean.getCbatinfoToStringConverter() {
         return new org.springframework.core.convert.converter.Converter<com.stan.wen9000.domain.Cbatinfo, java.lang.String>() {
@@ -159,9 +130,6 @@ privileged aspect ApplicationConversionServiceFactoryBean_Roo_ConversionService 
     }
     
     public void ApplicationConversionServiceFactoryBean.installLabelConverters(FormatterRegistry registry) {
-        registry.addConverter(getCbatToStringConverter());
-        registry.addConverter(getIdToCbatConverter());
-        registry.addConverter(getStringToCbatConverter());
         registry.addConverter(getCbatinfoToStringConverter());
         registry.addConverter(getIdToCbatinfoConverter());
         registry.addConverter(getStringToCbatinfoConverter());

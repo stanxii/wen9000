@@ -109,43 +109,43 @@ public class SnmpUtil {
 								break;
 						}
 
-						if (bstatus == true) {
-							System.out
-									.println("Snmping "
-											+ host
-											+ " devtype="
-											+ devtype
-											+ "Snmpping Tong-- Snmpping Tong----------------------------------------");
-						} else {
-							System.out
-									.println("Snmping "
-											+ host
-											+ " devtype="
-											+ devtype
-											+ "Snmpping Tong-- Snmpping Tong-But Devtype is not ok---------------------------------------");
-						}
+//						if (bstatus == true) {
+//							System.out
+//									.println("Snmping "
+//											+ host
+//											+ " devtype="
+//											+ devtype
+//											+ "Snmpping Tong-- Snmpping Tong----------------------------------------");
+//						} else {
+//							System.out
+//									.println("Snmping "
+//											+ host
+//											+ " devtype="
+//											+ devtype
+//											+ "Snmpping Tong-- Snmpping Tong-But Devtype is not ok---------------------------------------");
+//						}
 					}
 
 				} else {
 
-					System.out.println("get error:"
-							+ response.getErrorStatusText());
-
-					System.out
-							.println("Snmping "
-									+ host
-									+ "XXXXX Bu Tong-- Bu Bu Bu Bu  Tong----------------------------");
+//					System.out.println("get error:"
+//							+ response.getErrorStatusText());
+//
+//					System.out
+//							.println("Snmping "
+//									+ host
+//									+ "XXXXX Bu Tong-- Bu Bu Bu Bu  Tong----------------------------");
 					bstatus = false;
 
 				}
 
 			} else {
 
-				System.out.println("get response error");
-				System.out
-						.println("Snmping "
-								+ host
-								+ "XXXXX Bu Tong-- Bu Bu Bu Bu  Tong----------------------------");
+//				System.out.println("get response error");
+//				System.out
+//						.println("Snmping "
+//								+ host
+//								+ "XXXXX Bu Tong-- Bu Bu Bu Bu  Tong----------------------------");
 
 				bstatus = false;
 

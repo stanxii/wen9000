@@ -67,7 +67,6 @@
     <bean class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" id="entityManagerFactory">
         <property name="persistenceUnitName" value="persistenceUnit"/>
         <property name="dataSource" ref="dataSource"/>
-<<<<<<< HEAD
     </bean>
     
     <bean id="executor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
@@ -76,21 +75,45 @@
 	 <property name="queueCapacity" value="500" />
 	</bean>
 	
+	
+	
+	
 	<!-- 业务对象 -->
-	<bean id="discoveryWorkerJob" class="com.stan.wen9000.quartz.DiscoveryWorkerJob" />
+	<bean id="workerDiscoveryProcessor" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" />
 	
 	<!-- 调度业务 -->
-	<bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-	 <property name="targetObject" ref="discoveryWorkerJob" />
-	 <property name="targetMethod"  value="doIt"/>
+	<bean id="jobDetail0" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="workerDiscoveryProcessor" />
+	 <property name="targetMethod"  value="execute"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
 	
 	<bean id="simpleTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
-	 <property name="jobDetail" ref="jobDetail" />
-	 <property name="startDelay" value="10000" />
+	 <property name="jobDetail" ref="jobDetail0" />
+	 <property name="startDelay" value="3000" />
 	 <property name="repeatInterval" value="5" />
-	 <property name="repeatCount" value="255" />		
+	 <property name="repeatCount" value="0" />		
+	  	 
+	</bean>
+	
+	
+	
+	
+	<!-- 业务对象 -->
+	<bean id="serviceDiscoveryProcessor" class="com.stan.wen9000.web.ServiceDiscoveryProcessor" />
+	
+	<!-- 调度业务 -->
+	<bean id="jobDetail1" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceDiscoveryProcessor" />
+	 <property name="targetMethod"  value="execute"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	
+	<bean id="simpleTrigger1" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="jobDetail1" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />		
 	  	 
 	</bean>
 	
@@ -100,76 +123,12 @@
 	 <property name="triggers">
 	  <list>
 	   <ref bean="simpleTrigger" />
+	   <ref bean="simpleTrigger1" />
 	  </list>
 	 </property>	 
 	</bean>
+	
+	
+   
     
-=======
-    </bean> 
-    
-    <!--
-    <bean id="runMeJob" class="com.stan.quartz.RunMeJob" />
-    <bean id="workdiscover" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" />
-    <bean id="servicediscover" class="com.stan.wen9000.web.ServiceDiscoveryProcessor" />
-    
-    <bean id="runtask" 
-	 class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">	 
-		<property name="targetObject" ref="runMeJob" />
-		<property name="targetMethod" value="printMe" />	 
-	</bean>
-	
-	<bean id="workdiscovertask" 
-	 class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">	 
-		<property name="targetObject" ref="workdiscover" />
-		<property name="targetMethod" value="dostart" />	 
-	</bean>
-	
-	<bean id="servicediscovertask" 
-	 class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">	 
-		<property name="targetObject" ref="servicediscover" />
-		<property name="targetMethod" value="dostart" />	 
-	</bean>
-	
-	<bean id="cronTriggertask"
-		class="org.springframework.scheduling.quartz.CronTriggerBean"> 
-		<property name="jobDetail" ref="runtask" />
-		<property name="cronExpression" value="0/5 * * * * ?" /> 
-	</bean>
-	
-	 
-	<bean id="simpleTrigger"
-		class="org.springframework.scheduling.quartz.SimpleTriggerBean"> 
-		<property name="jobDetail" ref="runtask" />
-		<property name="repeatInterval" value="50" />
-		<property name="startDelay" value="1000" />
- 		<property name="RepeatCount" value="1" />
-	</bean>
-	
-	<bean id="discoverTrigger"
-		class="org.springframework.scheduling.quartz.SimpleTriggerBean"> 
-		<property name="jobDetail" ref="workdiscovertask" />
-		<property name="repeatInterval" value="50" />
-		<property name="startDelay" value="8000" />
-		<property name="RepeatCount" value="0" />
-	</bean>
-	<bean id="discoverTrigger_server"
-		class="org.springframework.scheduling.quartz.SimpleTriggerBean"> 
-		<property name="jobDetail" ref="servicediscovertask" />
-		<property name="repeatInterval" value="50" />
-		<property name="startDelay" value="5000" />
-		<property name="RepeatCount" value="0" />
-	</bean>
-	
-	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
-		<property name="configLocation" value="classpath:quartz.properties"/>
-		<property name="triggers">
-		    <list>
-				<ref bean="simpleTrigger" />	
-				<ref bean="discoverTrigger" />	
-				<ref bean="discoverTrigger_server" />	
-		    </list>
-		</property>
-	</bean>
-	-->
->>>>>>> 02c8ec859a5d5d9ccab0575e2a8817e8d14b169e
-</beans>
+   </beans>

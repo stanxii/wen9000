@@ -106,3 +106,9 @@ perform tests
 // [failed] test stub --class 
 test stub --class ~.domain.CbatIntegrationTest
 perform tests
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-06 15:44:52
+exit
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-06 15:45:27
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-06 15:45:31
+exit
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-06 15:45:42
