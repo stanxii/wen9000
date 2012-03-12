@@ -3,12 +3,14 @@ package com.stan.wen9000.web;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import org.apache.log4j.Logger;
 import org.snmp4j.smi.OID;
 
 import com.rabbitmq.client.Channel;
@@ -17,7 +19,9 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.MessageProperties;
 import com.rabbitmq.client.QueueingConsumer;
 
-public class WorkerDiscoveryProcessor implements Job{
+public class WorkerDiscoveryProcessor{
+	
+	private static Logger logger = Logger.getLogger(WorkerDiscoveryProcessor.class);
 
 	private static final String TASK_QUEUE_NAME = "discovery_queue";
 
@@ -25,8 +29,9 @@ public class WorkerDiscoveryProcessor implements Job{
 
 	private static SnmpUtil util = new SnmpUtil();
 
-	public void execute(JobExecutionContext context) throws JobExecutionException{
-		System.out.println(" [x2] WorkerDiscoveryProcessor Start......");
+	public void execute(){
+		//System.out.println(" [x2] WorkerDiscoveryProcessor Start......");
+		logger.info(" [x2] WorkerDiscoveryProcessor Start......");
 		servicestart();
 
 	}
@@ -74,9 +79,18 @@ public class WorkerDiscoveryProcessor implements Job{
 
 			System.out.println(" [x] WorkerDiscoveryProcessor Received '" + message
 					+ "'");
+			DateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			Date now = new Date();
+			try {
+				System.out.println(format1.parse(now.toLocaleString()));
+			} catch (ParseException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			for(long i=0;i<9000;i++){
 			doWork(message);
 			//System.out.println(" [x] WorkerDiscoveryProcessor Done");
-
+			}
 			try {
 				channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
 			} catch (Exception e) {
@@ -91,91 +105,96 @@ public class WorkerDiscoveryProcessor implements Job{
 	private static void doWork(String currentip) {
 
 		String msgservice = "";
+		String cbatmac = "30:71:b2:00:00:88";
+		msgservice = "001" + "|" + currentip + "|" + cbatmac.toUpperCase() + "|"
+		+ "02";
 
+		sendToPersist(msgservice);
+		msgservice = "";
 		// do work
-		Boolean tong;
-		Pattern pattern = Pattern
-				.compile("(((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))");
-		Matcher m = pattern.matcher(currentip);
-		boolean b1 = m.matches();
-		if (!b1) {
-			//System.out.println("not a good ip for work");
-			return;
-		}
-
-		if(hfcping(currentip,"161"))
-		{
-			return;
-		}
-		tong = ping(currentip);
-		if (tong) {
-			tong = false;
-			
-			
-			tong = snmpping(currentip, "161");
-			if (tong) {
-				
-				//log.info(
-				//		"Snmping.........ip......#0........successful.... now save to db  Tong tong tong !",
-				//		currentip);
-
-				String cbatmac = "";
-				
-				try {
-				     cbatmac = util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,6,0}) );
-				     cbatmac = cbatmac.toUpperCase();
-				} catch (IOException e) {
-						// TODO Auto-generated catch block													
-					System.out.println("WorkDiscoveryProcessing XXXX]]]]]]Cbat get table mac addrress error");
-					return;
-				}
-					
-				
-
-				System.out.println("WorkDiscoveryProcessing discoveryed Mac = "
-						+ cbatmac.toUpperCase() + "    ip=  " + currentip);
-
-				if (cbatmac.length() <= 0) {
-					System.out
-							.println("get cbat mac error, can't discovery this cbat please check this CBAT IP"
-									+ currentip);
-					return;
-				}
-				
-				Long devicetype = 0L;
-				
-				try {
-					devicetype = (long) util.getINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,4,8,0}) );
-				} catch (IOException e) {
-						// TODO Auto-generated catch block													
-					System.out.println("get devicetype error");
-					return;
-				}
-				// write trap server address
-				// //----------
-
-				// //////////////////////////////get cbat ok now send msg to
-				// service
-				msgservice = "001" + "|" + currentip + "|" + cbatmac.toUpperCase() + "|"
-						+ devicetype.toString();
-
-				sendToPersist(msgservice);
-				msgservice = "";
-
-
-			} else {
-				//log.info(
-				//		"Snmping...ip #0...................  discovery #1  Bu Tong ,Bu tong, Bu tong !",
-				//		currentip);
-				return;
-			}
-		} else {
-			//log.info(
-			//		"#0 ping ping. ip #1........Bu Bu Tong ,Bu tong, Bu tong !",
-			//		currentip);
-
-			return;
-		}
+//		Boolean tong;
+//		Pattern pattern = Pattern
+//				.compile("(((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))");
+//		Matcher m = pattern.matcher(currentip);
+//		boolean b1 = m.matches();
+//		if (!b1) {
+//			//System.out.println("not a good ip for work");
+//			return;
+//		}
+//
+//		if(hfcping(currentip,"161"))
+//		{
+//			return;
+//		}
+//		tong = ping(currentip);
+//		if (tong) {
+//			tong = false;
+//			
+//			
+//			tong = snmpping(currentip, "161");
+//			if (tong) {
+//				
+//				//log.info(
+//				//		"Snmping.........ip......#0........successful.... now save to db  Tong tong tong !",
+//				//		currentip);
+//
+//				String cbatmac = "";
+//				
+//				try {
+//				     cbatmac = util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,6,0}) );
+//				     cbatmac = cbatmac.toUpperCase();
+//				} catch (IOException e) {
+//						// TODO Auto-generated catch block													
+//					System.out.println("WorkDiscoveryProcessing XXXX]]]]]]Cbat get table mac addrress error");
+//					return;
+//				}
+//					
+//				
+//
+//				System.out.println("WorkDiscoveryProcessing discoveryed Mac = "
+//						+ cbatmac.toUpperCase() + "    ip=  " + currentip);
+//
+//				if (cbatmac.length() <= 0) {
+//					System.out
+//							.println("get cbat mac error, can't discovery this cbat please check this CBAT IP"
+//									+ currentip);
+//					return;
+//				}
+//				
+//				Long devicetype = 0L;
+//				
+//				try {
+//					devicetype = (long) util.getINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,4,8,0}) );
+//				} catch (IOException e) {
+//						// TODO Auto-generated catch block													
+//					System.out.println("get devicetype error");
+//					return;
+//				}
+//				// write trap server address
+//				// //----------
+//
+//				// //////////////////////////////get cbat ok now send msg to
+//				// service
+//				msgservice = "001" + "|" + currentip + "|" + cbatmac.toUpperCase() + "|"
+//						+ devicetype.toString();
+//
+//				sendToPersist(msgservice);
+//				msgservice = "";
+//
+//
+//			} else {
+//				//log.info(
+//				//		"Snmping...ip #0...................  discovery #1  Bu Tong ,Bu tong, Bu tong !",
+//				//		currentip);
+//				return;
+//			}
+//		} else {
+//			//log.info(
+//			//		"#0 ping ping. ip #1........Bu Bu Tong ,Bu tong, Bu tong !",
+//			//		currentip);
+//
+//			return;
+//		}
 
 	}	
 

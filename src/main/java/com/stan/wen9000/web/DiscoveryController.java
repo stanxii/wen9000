@@ -2,6 +2,7 @@ package com.stan.wen9000.web;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +16,9 @@ import org.quartz.Trigger;
 import org.quartz.TriggerUtils;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,18 +67,11 @@ public class DiscoveryController {
         return new ResponseEntity<String>(Cnu.toJsonArray(result), headers, HttpStatus.OK);
     }
     
-    @RequestMapping(value = "search", method = RequestMethod.POST)      
-    public String discoveryProductor(@RequestParam(value = "startip", required = false) String startip, @RequestParam(value = "startip", required = false) String stopip ) {
-               
-    	System.out.println("startip=" + startip +" stop=" + stopip);
-    	
-    	return "discovery/index";
-    }
     
-    @RequestMapping(value = "search",  headers = "Accept=application/json")
+    @RequestMapping(value = "search",  method = RequestMethod.POST)
     public String searchProduct(@RequestParam(value = "startip", required = false) String st, @RequestParam(value = "stopip", required = false) String end) throws Exception {
         System.out.println("start:"+st + ",end:"+end);
-        quartzRun();
+        //quartzRun();
         long longstartIp = IP2Long.ipToLong(st);		
 		long longstopIp = IP2Long.ipToLong(end);
 		

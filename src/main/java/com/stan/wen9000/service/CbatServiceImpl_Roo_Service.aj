@@ -32,10 +32,10 @@ privileged aspect CbatServiceImpl_Roo_Service {
         return cbatRepository.findOne(id);
     }
     
-    public Cbat CbatServiceImpl.findCbat(String mac) {
+    public Cbat CbatServiceImpl.findByMac(String mac) {
         return cbatRepository.findByMac(mac);
     }
-
+    
     public List<Cbat> CbatServiceImpl.findAllCbats() {
         return cbatRepository.findAll();
     }

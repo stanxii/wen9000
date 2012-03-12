@@ -11,7 +11,8 @@ privileged aspect CnuService_Roo_Service {
     
     public abstract long CnuService.countAllCnus();    
     public abstract void CnuService.deleteCnu(Cnu cnu);    
-    public abstract Cnu CnuService.findCnu(Long id);    
+    public abstract Cnu CnuService.findCnu(Long id);  
+    public abstract Cnu CnuService.findByMac(String mac);
     public abstract List<Cnu> CnuService.findAllCnus();    
     public abstract List<Cnu> CnuService.findCnuEntries(int firstResult, int maxResults);    
     public abstract void CnuService.saveCnu(Cnu cnu);    
