@@ -7,17 +7,32 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
+import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.snmp4j.smi.OID;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import com.stan.wen9000.action.jedis.foo.MyListener;
+import com.stan.wen9000.action.jedis.util.RedisUtil;
+import com.stan.wen9000.action.jedis.util.SingletonContext;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-public class WorkerDiscoveryProcessor {
+
+public class WorkerDiscoveryProcessor{
+	
+	private static Logger logger = Logger.getLogger(WorkerDiscoveryProcessor.class);
 
 	private static final String DISCOVERY_QUEUE_NAME = "discovery_queue";
 
@@ -25,19 +40,40 @@ public class WorkerDiscoveryProcessor {
 
 	private static SnmpUtil util = new SnmpUtil();
 
-    private static JedisPool pool;
-	 private  static Jedis jedis;
-	 static {
-	        JedisPoolConfig config = new JedisPoolConfig();
-	        config.setMaxActive(1000);
-	        config.setMaxIdle(20);
-	        config.setMaxWait(1000);	        
-	        pool = new JedisPool(config, "192.168.1.249", 6379, 10*1000);
-	    }
-	 
+
+	
+	
+    private static RedisUtil redisUtil;
+   
+ 
+
+
+	public static RedisUtil getRedisUtil() {
+		return redisUtil;
+	}
+
+	public static void setRedisUtil(RedisUtil redisUtil) {
+		WorkerDiscoveryProcessor.redisUtil = redisUtil;
+	}
+
+	
+    
+    
+  
+	
+//	private static JedisPool pool;
+//	 static {
+//	        JedisPoolConfig config = new JedisPoolConfig();
+//	        config.setMaxActive(1000);
+//	        config.setMaxIdle(20);
+//	        config.setMaxWait(1000);	        
+//	        pool = new JedisPool(config, "192.168.1.249", 6379, 10*1000);
+//	    }
+//	 
 
 	public void execute() {
-		System.out.println(" [x2] WorkerDiscoveryProcessor Start......");
+//		System.out.println(" [x2] WorkerDiscoveryProcessor Start......");
+		logger.info(" [x2] WorkerDiscoveryProcessor Start......");
 
 		try {
 			servicestart();
@@ -51,56 +87,46 @@ public class WorkerDiscoveryProcessor {
 	public static void servicestart() throws Exception {
 
 		
-		jedis = pool.getResource();
+//		ApplicationContext ac = new ClassPathXmlApplicationContext("beans-config.xml");
+//		//BeanFactory factory  = new XmlBeanFactory((Resource) new ClassPath("beans-config.xml"));
+//		RedisUtil ru = (RedisUtil) ac.getBean("redisUtil", RedisUtil.class);
+//		
+		
+		
+//		jedis = pool.getResource();
 		
 		
 		while (true) {
 			String message = null;
 			
-		
+			Jedis jedis = redisUtil.getConnection();
 			
 			message = jedis.rpop(DISCOVERY_QUEUE_NAME);
 			
-			System.out.println(" [x] WorkerDiscoveryProcessor Received '"
-					+ message + "'");
+			 redisUtil.closeConnection(jedis);
 			
-			if(message == null) {
-				
+//			System.out.println(" [x] WorkerDiscoveryProcessor what message and len[" + message + "]  " );
+			
+			if(message == null ) {
+//				System.out.println(" [x] WorkerDiscoveryProcessor null and will continue ");
 				
 				Thread.sleep(1000);
 				continue;
 			}
 			
-			DateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			Date now = new Date();
-			try {
-				System.out.println(format1.parse(now.toLocaleString()));
-			} catch (ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
+			
+//			System.out.println(" [x] WorkerDiscoveryProcessor Received '" + message
+//					+ "'");
 			
 			
-			for(long i =0; i< 10000000; i++) {
+			
+			long start = System.currentTimeMillis();  
+			
 			doWork(message);
-			}
 			
 			
-			
-			
-			DateFormat format2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			Date now2 = new Date();
-			try {
-				System.out.println(format2.parse(now2.toLocaleString()));
-			} catch (ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-			
-			System.out.println(" [x] WorkerDiscoveryProcessor done ");
-			// System.out.println(" [x] WorkerDiscoveryProcessor Done");
+			long end = System.currentTimeMillis();  
+			System.out.println("one WorkerDiscoveryProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 			
 			
 		}
@@ -109,121 +135,115 @@ public class WorkerDiscoveryProcessor {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void doWork(String currentip) {
-
-		String msgservice = "";
-
-		// do work
-		Boolean tong;
+		
+		long devicetype ;
+		int  mvlanenable; 
+		int mvlanid ;
+		String appver;
+		int agetnport;
+		
+		currentip.trim().toUpperCase();
+		
 		Pattern pattern = Pattern
 				.compile("(((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))");
 		Matcher m = pattern.matcher(currentip);
 		boolean b1 = m.matches();
 		if (!b1) {
-			// System.out.println("not a good ip for work");
+			System.out.println("not a good ip for work");
 			return;
 		}
 		
+//		if (hfcping(currentip, "161")) {
+//			//tong
+//			System.out.println("hfc tong ");
+//			return;
+//		}
 		
-		// test tong will true
-					if (true) {
-						String cbatmac = "30:71:b2:00:00:ff" ;
-						
-						// service
-						msgservice="";
-						 msgservice = "001" + "|" + currentip + "|" + cbatmac +"|" + "2";
-						// cbatmac.toUpperCase() + "|"
-						// + devicetype.toString();
+		
+		//eoc
+//		tong = ping(currentip);
+		
 
-						
-						
-						sendToPersist(msgservice);
-						msgservice = "";
-						
-						return;
-					}
-
-					
-					
-
-		if (hfcping(currentip, "161")) {
-			return;
-		}
-		tong = ping(currentip);
-		if (tong) {
-			tong = false;
-
-			tong = snmpping(currentip, "161");
+		
+		devicetype = eocping(currentip, "161");
 
 			
+		
 			// ///////////////////////////////////////////////////
-			if (tong) {
-
-				// ////////////////////////////
-
-				// log.info(
-				// "Snmping.........ip......#0........successful.... now save to db  Tong tong tong !",
-				// currentip);
-
+			if (devicetype != -1) {
 				String cbatmac = "";
 
+				
 				try {
 					cbatmac = util.getStrPDU(currentip, "161", new OID(
 							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 6, 0 }));
-					cbatmac = cbatmac.toUpperCase();
+					cbatmac = cbatmac.trim().toUpperCase();
+				
+
+//				System.out.println("WorkDiscoveryProcessing discoveryed Mac = "
+//						+ cbatmac + "    ip=  " + currentip);
+				
+				
+				/////////获取cbatinfo
+				
+
+
+				 agetnport = util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					
+				 appver = util.getStrPDU(currentip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+				 mvlanid =  util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 }));				    				   
+			     mvlanenable = util.getINT32PDU(currentip, "161", new OID(	new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 }));
+		
+			     
+		
+
+				
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					System.out
-							.println("WorkDiscoveryProcessing XXXX]]]]]]Cbat get table mac addrress error");
-					return;
-				}
-
-				System.out.println("WorkDiscoveryProcessing discoveryed Mac = "
-						+ cbatmac.toUpperCase() + "    ip=  " + currentip);
-
-				if (cbatmac.length() <= 0) {
-					System.out
-							.println("get cbat mac error, can't discovery this cbat please check this CBAT IP"
-									+ currentip);
-					return;
-				}
-
-				Long devicetype = 0L;
-
-				try {
-					devicetype = (long) util.getINT32PDU(currentip, "161",
-							new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 4,
-									8, 0 }));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					System.out.println("get devicetype error");
+					System.out.println("get cbatmac error");
 					return;
 				}
 				// write trap server address
 				// //----------
 
+				String msgservice="";
 				// //////////////////////////////get cbat ok now send msg to
 				// service
-				// msgservice = "001" + "|" + currentip + "|" +
-				// cbatmac.toUpperCase() + "|"
-				// + devicetype.toString();
-
+//				 msgservice = "001" + "|" + currentip + "|" +
+//				 cbatmac + "|"
+//				 + Long.toString(devicetype);
+//				 
+				 
+				
+				Map paramhash=new LinkedHashMap();
+				
+				 
+				 
+				 paramhash.put("msgcode", "001");
+				 paramhash.put("ip", currentip.toLowerCase().trim());
+				 paramhash.put("cbatmac", cbatmac.toLowerCase().trim());
+				 paramhash.put("cbatdevicetype", Long.toString(devicetype));
+				 paramhash.put("cbatinfo:agentport", Integer.toString(agetnport));
+				 paramhash.put("cbatinfo:appver", appver.trim());				 
+				 paramhash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
+				 paramhash.put("cbatinfo:mvlanenable", mvlanenable == 1 ? "1" :"0");
+				 
+				 msgservice = JSONValue.toJSONString(paramhash);
+				
 				sendToPersist(msgservice);
 				msgservice = "";
 
-			} else {
-				// log.info(
-				// "Snmping...ip #0...................  discovery #1  Bu Tong ,Bu tong, Bu tong !",
-				// currentip);
-				return;
-			}
+			
 		} else {
 			// log.info(
 			// "#0 ping ping. ip #1........Bu Bu Tong ,Bu tong, Bu tong !",
 			// currentip);
 
+			
 			return;
 		}
+
 
 	}
 
@@ -257,9 +277,9 @@ public class WorkerDiscoveryProcessor {
 
 	}
 
-	static Boolean snmpping(String host, String port) {
+	static long eocping(String host, String port) {
 
-		return util.snmpping(host, port);
+		return util.eocping(host, port);
 	}
 
 	static Boolean hfcping(String host, String port) {
@@ -271,8 +291,24 @@ public class WorkerDiscoveryProcessor {
 					2, 1, 1, 2, 0 }));
 			if ((oid != null) && (oid != "")) {
 				// service
-				String msgservice = "003" + "|" + host + "|" + oid;
+				
+				String msgservice="";
+				Map paramhash=new LinkedHashMap();
+				
+				 
+				 
+				 paramhash.put("msgcode", "003");
+				 paramhash.put("ip", host);
+				 paramhash.put("oid", oid);
+				 
+				 
+				 msgservice = JSONValue.toJSONString(paramhash);
+				
 				sendToPersist(msgservice);
+				msgservice = "";
+				
+//				String msgservice = "003" + "|" + host + "|" + oid;
+//				sendToPersist(msgservice);
 
 				return true;
 			}
@@ -283,8 +319,11 @@ public class WorkerDiscoveryProcessor {
 	}
 
 	public static void sendToPersist(String msg) {
+				
+		Jedis jedis = redisUtil.getConnection();
+		jedis.lpush(PERSIST_CBAT_QUEUE_NAME, msg);
+		 redisUtil.closeConnection(jedis);
 
-		jedis.lpush(PERSIST_CBAT_QUEUE_NAME, msg.toLowerCase().trim());
 	
 	}
 

@@ -32,6 +32,10 @@ privileged aspect CnuServiceImpl_Roo_Service {
         return cnuRepository.findOne(id);
     }
     
+    public Cnu CnuServiceImpl.findByMac(String mac) {
+        return cnuRepository.findByMac(mac);
+    }
+    
     public List<Cnu> CnuServiceImpl.findAllCnus() {
         return cnuRepository.findAll();
     }

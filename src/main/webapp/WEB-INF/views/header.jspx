@@ -48,6 +48,7 @@
                 <li><a href="#">数据导入/导出</a></li>  
             </ul>  
         </li>  
+        <li><a href="/wen9000/nav/profilemanager">模板管理</a></li> 
         <li><a href="#">用户管理</a></li>  
         <li><a href="#">告警信息</a></li>  
         <li><a href="#">关于我们</a></li>  

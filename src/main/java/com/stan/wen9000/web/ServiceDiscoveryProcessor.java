@@ -1,21 +1,30 @@
 package com.stan.wen9000.web;
 
-import java.util.HashMap;
-import java.util.Map;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.ContainerFactory;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.Response;
 
+import com.stan.wen9000.action.jedis.util.RedisUtil;
 import com.stan.wen9000.reference.EocDeviceType;
 import com.stan.wen9000.service.CbatService;
 import com.stan.wen9000.service.CbatinfoService;
 
 public class ServiceDiscoveryProcessor  {
+
+
 
 	@Autowired
 	CbatService cbatsv;
@@ -27,21 +36,32 @@ public class ServiceDiscoveryProcessor  {
 
 	private static final String PERSIST_CBAT_QUEUE_NAME = "service_discovery_queue";
 	private static SnmpUtil util = new SnmpUtil();
-	
-	private static JedisPool pool;
+//	private static JedisPool pool;
 	 
 	
-	 
-	 static {
-	        JedisPoolConfig config = new JedisPoolConfig();
-	        config.setMaxActive(1000);
-	        config.setMaxIdle(20);
-	        config.setMaxWait(1000);	        
-	        pool = new JedisPool(config, "192.168.1.249", 6379, 10*1000);
-	    }
-	 
-	 
-	 private static Jedis jedis ;
+	  private static RedisUtil redisUtil;
+	  
+	  public static RedisUtil getRedisUtil() {
+		return redisUtil;
+	}
+
+	public static void setRedisUtil(RedisUtil redisUtil) {
+		ServiceDiscoveryProcessor.redisUtil = redisUtil;
+	}
+
+	private static Jedis jedis;
+	  
+	  
+//	 static {
+//	        JedisPoolConfig config = new JedisPoolConfig();
+//	        config.setMaxActive(1000);
+//	        config.setMaxIdle(20);
+//	        config.setMaxWait(1000);	        
+//	        pool = new JedisPool(config, "192.168.1.249", 6379, 10*1000);
+//	    }
+//	 
+//	 
+//	 private static Jedis jedis ;
 
 	public void execute() {
 
@@ -59,16 +79,15 @@ public class ServiceDiscoveryProcessor  {
 	public void servicestart() throws Exception {
 
 		
-		jedis = pool.getResource();
+		
+		jedis = redisUtil.getConnection();
 		
 		while (true) {
 		String message = null;
 
-
-		
-		
-		
+	
 		message = jedis.rpop(PERSIST_CBAT_QUEUE_NAME);
+		
 		
 		if(message == null) {
 			
@@ -78,18 +97,18 @@ public class ServiceDiscoveryProcessor  {
 		}
 		else if(message.equalsIgnoreCase("ok")) {
 			
-			System.out.println("Why ServiceDiscoveryProcessor receive == ok?? i don't know");
+//			System.out.println("Why ServiceDiscoveryProcessor receive == ok?? i don't know");
 			Thread.sleep(1000);
 			continue;
 		}else if(message.length() < 3) {
 			
-			System.out.println("Why ServiceDiscoveryProcessor receive len < 3 i don't know");
+//			System.out.println("Why ServiceDiscoveryProcessor receive len < 3 i don't know");
 			Thread.sleep(1000);
 			continue;
 		}
 		
-		 System.out.println(" [x]ServiceDiscoveryProcessor  Received '" +
-		 message + "'");
+//		 System.out.println(" [x]ServiceDiscoveryProcessor  Received '" +
+//		 message + "'");
 		 
 		 
 		doWork(message);
@@ -103,9 +122,14 @@ public class ServiceDiscoveryProcessor  {
 		
 	}
 
-	private void doWork(String message) {
+	private void doWork(String message) throws ParseException {
 
-		String msgtype = message.substring(0, message.indexOf("|"));
+		
+		 
+		JSONObject json=(JSONObject) JSONValue.parse(message);
+		
+		
+		String msgtype =(String) json.get("msgcode");
 
 		if (msgtype.equalsIgnoreCase("001")) {
 			doCbat(message);
@@ -120,112 +144,95 @@ public class ServiceDiscoveryProcessor  {
 
 	}
 
-	private void doCbat(String message) {
+	private void doCbat(String message) throws ParseException {
 
 		
-	       
 		
+		JSONParser parser = new JSONParser();
 		
-		int index1 = 0;
-		int index2 = 0;
-		// savedb
-		index1 = message.indexOf("|");
-		index2 = message.indexOf("|", index1 + 1);
-//		System.out.println("Cbatindex1 ==" + index1 + "  cbatindex2=" + index2);
-		String cbatip = message.substring(index1 + 1, index2);
-//		System.out.println("Cbatip ==" + cbatip);
+		ContainerFactory containerFactory = new ContainerFactory(){
+		    public List creatArrayContainer() {
+		      return new LinkedList();
+		    }
 
-		index1 = index2;
-		index2 = message.indexOf("|", index1 + 1);
-//		System.out.println("Cbatindex1 ==" + index1 + "  cbatindex2=" + index2);
-		String cbatmac = message.substring(index1 + 1, index2).toUpperCase();
-//		System.out.println("cbatmac ==" + cbatmac);
-
-		index1 = index2;
-
-//		System.out.println("Cbatindex1 ==" + index1);
-		String cbatdevicetype = message.substring(index1 + 1);
-//		System.out.println("cbatdevicetype ==" + cbatdevicetype);
-
-	
-		
-	   		// add cbatinfo
-//		Cbatinfo cbatinfo = new Cbatinfo();
-//		cbatinfo.setBootVer("cml-boot-v1.1.0 for linux sdk");
-//
-//		try {
-//			cbatinfo.setAgentPort(util.getINT32PDU(cbatip, "161", new OID(
-//					new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 })));
-//			cbatinfo.setAppVer(util.getStrPDU(cbatip, "161", new OID(new int[] {
-//					1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 })));
-//			cbatinfo.setMvId((long) util.getINT32PDU(cbatip, "161", new OID(
-//					new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 })));
-//			cbatinfo.setMvStatus(util.getINT32PDU(cbatip, "161", new OID(
-//					new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 })) == 1 ? true
-//					: false);
-//
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		
-
-	
+		    public Map createObjectContainer() {
+		      return new LinkedHashMap();
+		    }
+		                        
+		  };
+		                
+		  
+		Map jsonobj = (Map)parser.parse(message, containerFactory);
+		    
 		
 		
+		String cbatip =(String) jsonobj.get("ip");
+		String cbatmac =(String) jsonobj.get("cbatmac");
+		String cbatdevicetype =(String) jsonobj.get("cbatdevicetype");
 		
 		
-		//////////////////////////////////
+		String agentport =(String) jsonobj.get("cbatinfo:agentport");
+		String appver =(String) jsonobj.get("cbatinfo:appver");
+		String mvlanid =(String) jsonobj.get("cbatinfo:mvlanid");
+		String mvlanenable =(String) jsonobj.get("cbatinfo:mvlanenable");
 		
-		
-			 
-		/////////////////////////////////save cbat
-//		System.out.println("xxxxxxinsert cbat into redis====" );
+		 
 		
 		
 		long start = System.currentTimeMillis();  
 		
-	    long cbatid = jedis.incr("global:cbatid");
+		
+		
+		String cbatmackey = "cbatmac:" +  cbatmac.toLowerCase().trim() + ":cbatid";
+		
+		//get cbatmac if exist in redis server
+		String scbatid = jedis.get(cbatmackey);		
+		
+				
+		long cbatid ;
+		long cbatinfoid ;
+		
+		if(scbatid == null) {
+			cbatid = jedis.incr("global:cbatid");
+			jedis.set("global:cbatinfoid", Long.toString(cbatid));
+			cbatinfoid =  cbatid;
+			jedis.set(cbatmackey, Long.toString(cbatid) );
+		}else {
+			cbatid = Long.parseLong(scbatid);
+			cbatinfoid = cbatid ;
+			
+			
+		}
+		
+	      
 	    
-	   
-	    
-	    //set cbat mac
-	    String scbatkey = "cbatid:" + cbatid + ":mac";
-//	    System.out.println("cbatmacid=" + scbatkey);
-//	    System.out.println("cbatmamac=" + cbatmac);
-	    jedis.set(scbatkey, cbatmac.toLowerCase().trim());
-	    		
-        //set cbat active
-	    scbatkey = "cbatid:" + cbatid + ":active";
-	    jedis.set(scbatkey, "1");
-	    
-	    
-	  //set cbat ip
-	    scbatkey = "cbatid:" + cbatid + ":ip";
-	    jedis.set(scbatkey, cbatip.toLowerCase().trim());
-	    
-	    //set cbat label
-	     scbatkey = "cbatid:" + cbatid + ":label";
-	     jedis.set(scbatkey, cbatmac.toLowerCase().trim());
-	    
-	    //set devicetype	   
-	    scbatkey = "cbatid:" + cbatid + ":devtype";
-	    jedis.set(scbatkey, "2");
-	
-	    //set cbatmac 's cbatid
-	    scbatkey = "cbatmac:" +  cbatmac.toLowerCase().trim() + ":cbatid";
-	    jedis.set(scbatkey, Long.toString(cbatid) );
-	    
-	    
+		String scbatentitykey = "cbatid:" + cbatid + ":entity";
+		Map<String , String >  cbatentity = new HashMap<String, String>();
+		 
+		cbatentity.put("mac", cbatmac.toLowerCase().trim());
+		cbatentity.put("active", "1");
+		cbatentity.put("ip", cbatip.toLowerCase().trim());
+		cbatentity.put("label", cbatmac.toLowerCase().trim());
+		cbatentity.put("devicetype", cbatdevicetype.toLowerCase().trim());
+		
+		jedis.hmset(scbatentitykey, cbatentity);
 	    
 /////////////////////////////save cbatinfo
 	    
-	    long cbatinfoid = jedis.incr("global:cbatinfoid");
+	    
 		
 		Map<String , String >  hash = new HashMap<String, String>();
 		 
 		String scbatinfokey = "cbatid:" + cbatid + ":cbatinfo";
 		hash.put("address", "na");
 		hash.put("phone", "13988777");
+		hash.put("bootver", "cml-boot-v1.1.0 for linux sdk");
+		hash.put("contact", "na");
+		hash.put("agentport", agentport);
+		hash.put("appver", appver);
+		hash.put("mvlanid", mvlanid);
+		hash.put("mvlanenable", mvlanenable);
+		
 		jedis.hmset(scbatinfokey, hash);
 		// hmset cnuid:1 cnuid 1 mac 30:71:b2:88:88:01 label fuckyou
 		 		

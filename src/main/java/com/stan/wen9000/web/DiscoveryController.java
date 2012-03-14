@@ -1,6 +1,8 @@
 package com.stan.wen9000.web;
 
 
+import java.io.IOException;
+import java.util.Date;
 
 import java.util.List;
 
@@ -24,6 +26,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import com.stan.wen9000.action.jedis.util.RedisUtil;
 import com.stan.wen9000.domain.Cnu;
 
 @RequestMapping("/discovery/**")
@@ -34,52 +37,55 @@ public class DiscoveryController {
 	private static final String DISCOVERY_QUEUE_NAME = "discovery_queue";
 	
 	private static JedisPool pool;
-	 
+	  private static Jedis jedis;
+//	 
 	 static {
 	        JedisPoolConfig config = new JedisPoolConfig();
 	        config.setMaxActive(100);
 	        config.setMaxIdle(20);
 	        config.setMaxWait(1000);
 	        config.setTestOnBorrow(true);
-	        pool = new JedisPool(config, "192.168.1.249");
+	        pool = new JedisPool(config, "127.0.0.1");
 	    }
 	 
+//	  private static RedisUtil ru;
+	
+	
+    @Autowired
+    CnuController cnuctl;
+    
 
-	@Autowired
-	CnuController cnuctl;
+    @RequestMapping(method = RequestMethod.POST, value = "{id}")
+    public void post(@PathVariable Long id, ModelMap modelMap, HttpServletRequest request, HttpServletResponse response) {
+    }
 
-	@RequestMapping(method = RequestMethod.POST, value = "{id}")
-	public void post(@PathVariable Long id, ModelMap modelMap,
-			HttpServletRequest request, HttpServletResponse response) {
-	}
-
-	@RequestMapping
-	public String index() {
-		return "discovery/index";
-	}
-
-	@RequestMapping(value = "searchresult", headers = "Accept=application/json")
-	@ResponseBody
-	public ResponseEntity<String> searchListAll() {
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("Content-Type", "application/json; charset=utf-8");
-		// List<Cbat> result = cbatctl.cbatService.findAllCbats();
-		List<Cnu> result = cnuctl.cnuService.findAllCnus();
-		return new ResponseEntity<String>(Cnu.toJsonArray(result), headers,
-				HttpStatus.OK);
-	}
-
-	@RequestMapping(value = "search", method = RequestMethod.POST)
-	public String searchProduct(
-			@RequestParam(value = "startip", required = false) String st,
-			@RequestParam(value = "stopip", required = false) String end)
-			throws Exception {
-		System.out.println("start:" + st + ",end:" + end);
-
-		long longstartIp = IP2Long.ipToLong(st);
+    @RequestMapping
+    public String index() {
+        return "discovery/index";
+    }
+    
+    @RequestMapping(value = "searchresult",  headers = "Accept=application/json")
+    @ResponseBody
+    public ResponseEntity<String> searchListAll() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json; charset=utf-8");
+//        List<Cbat> result = cbatctl.cbatService.findAllCbats();
+        List<Cnu>  result = cnuctl.cnuService.findAllCnus();
+        return new ResponseEntity<String>(Cnu.toJsonArray(result), headers, HttpStatus.OK);
+    }
+    
+    
+    @RequestMapping(value = "search",  method = RequestMethod.POST)
+    public String searchProduct(@RequestParam(value = "startip", required = false) String st, @RequestParam(value = "stopip", required = false) String end) throws Exception {
+        System.out.println("start:"+st + ",end:"+end);
+        //quartzRun();
+        long longstartIp = IP2Long.ipToLong(st);		
 		long longstopIp = IP2Long.ipToLong(end);
 		
-		Jedis jedis = pool.getResource();
+		
+//		Jedis jedis = ru.getConnection();
+		
+		jedis = pool.getResource();
 		
 		while (longstartIp <= longstopIp) {
 			currentip = IP2Long.longToIP(longstartIp);
@@ -93,6 +99,8 @@ public class DiscoveryController {
 
 		}
 
+		
+//		ru.closeConnection(jedis);
 		
 
 		return "discovery/result";

@@ -101,14 +101,55 @@ exit
 // script --file log.roo
 // Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-01 09:56:52
 // Spring Roo 1.2.0.RELEASE [rev 39eb957] log opened at 2012-03-05 13:50:39
-perform tests
-perform tests
-// [failed] test stub --class 
-test stub --class ~.domain.CbatIntegrationTest
-perform tests
-// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-06 15:44:52
+
+// Spring Roo 1.2.0.RELEASE [rev 39eb957] log closed at 2012-03-06 16:13:40
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-06 16:15:18
+entity jpa --class ~.wen9000.domain.Alarm --activeRecord false --equals --testAutomatically 
+field number --fieldName alarmcode --type java.lang.Integer 
+field number --fieldName alarmlevel --type java.lang.Integer 
+field number --fieldName alarmtype --type java.lang.Integer 
+field number --fieldName alarmvalue --type java.lang.Integer 
+field number --fieldName cltindex --type java.lang.Integer
+field number --fieldName cnuindex --type java.lang.Integer
+field string --fieldName cnumac 
+field string --fieldName cbatmac
+field string --fieldName cbatip
+field string --fieldName oid
+field number --fieldName realtime --type java.lang.Long
+field string --fieldName trapinfo
+field string --fieldName timeticks
+repository jpa --interface ~.wen9000.domain.AlarmRepository --entity ~.wen9000.domain.Alarm
+service --interface ~.sevice.AlarmService --entity ~.wen9000.domain.Alarm
+json add --class ~.wen9000.domain.Alarm
 exit
-// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-06 15:45:27
-// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-06 15:45:31
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-06 16:29:15
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-07 09:01:22
+service ----interface ~.wen9000.service.Alarm --entity ~.wen9000.domain.Alarm
 exit
-// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-06 15:45:42
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-07 09:05:41
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-07 10:01:07
+// [failed] entity jpa --class ~.wen9000.domain.Alarm --activeRecord false --equals --testAutomatically
+exit
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-07 10:02:49
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-07 10:02:54
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-03-07 10:12:39
+entity jpa --class ~.wen9000.domain.Alarm --activeRecord false --equals --testAutomatically
+field number --fieldName alarmcode --type java.lang.Integer
+field number --fieldName alarmlevel --type java.lang.Integer
+field number --fieldName alarmtype --type java.lang.Integer
+field number --fieldName alarmvalue --type java.lang.Integer
+field number --fieldName cltindex --type java.lang.Integer
+field number --fieldName cnuindex --type java.lang.Integer
+field string --fieldName cnumac
+field string --fieldName cbatmac
+field string --fieldName cbatip
+field string --fieldName oid
+field date --fieldName realtime --type java.util.Date
+field string --fieldName trapinfo
+field string --fieldName timeticks
+field number --fieldName itemnumber --type java.lang.Integer
+repository jpa --interface ~.wen9000.domain.AlarmRepository --entity ~.wen9000.domain.Alarm
+service ----interface ~.wen9000.service.AlarmService --entity ~.wen9000.domain.Alarm
+exit
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log closed at 2012-03-07 10:19:06
+

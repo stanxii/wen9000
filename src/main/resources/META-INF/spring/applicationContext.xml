@@ -69,17 +69,39 @@
         <property name="dataSource" ref="dataSource"/>
     </bean>
     
-    <bean id="executor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
-	 <property name="corePoolSize" value="10" />
-	 <property name="maxPoolSize" value="100" />
-	 <property name="queueCapacity" value="500" />
+
+<!-- POOL配置 -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxActive" value="100" />
+		<property name="maxIdle" value="20" />
+		<property name="maxWait" value="1000" />
+		<property name="testOnBorrow" value="false" />
 	</bean>
+
+	<!-- jedis信息配置 -->
+	<bean id="jedis" class="redis.clients.jedis.Jedis">
+		<constructor-arg index="0" value="127.0.0.1" />		
+		<constructor-arg index="1" value="6379" />
+	</bean>
+
+	<!-- jedis pool配置 -->
+	<bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+		<constructor-arg index="0" ref="jedisPoolConfig" />
+		<constructor-arg index="1" value="127.0.0.1" />
+		<constructor-arg index="2" value="6379" />		
+		<constructor-arg index="3" value="60000" />
+	</bean>
+
 	
-	
-	
-	
+	<!-- 包装类 -->
+	<bean id="redisUtil" class="com.stan.wen9000.action.jedis.util.RedisUtil">
+		<property name="jedisPool" ref="jedisPool" />
+	</bean>
+
 	<!-- 业务对象 -->
-	<bean id="workerDiscoveryProcessor" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" />
+	<bean id="workerDiscoveryProcessor" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
 	
 	<!-- 调度业务 -->
 	<bean id="jobDetail0" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -92,15 +114,19 @@
 	 <property name="jobDetail" ref="jobDetail0" />
 	 <property name="startDelay" value="3000" />
 	 <property name="repeatInterval" value="5" />
-	 <property name="repeatCount" value="0" />		
+	 <property name="repeatCount" value="51" />		
 	  	 
 	</bean>
 	
 	
 	
 	
+	
+	
 	<!-- 业务对象 -->
-	<bean id="serviceDiscoveryProcessor" class="com.stan.wen9000.web.ServiceDiscoveryProcessor" />
+	<bean id="serviceDiscoveryProcessor" class="com.stan.wen9000.web.ServiceDiscoveryProcessor" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
 	
 	<!-- 调度业务 -->
 	<bean id="jobDetail1" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -127,8 +153,6 @@
 	  </list>
 	 </property>	 
 	</bean>
-	
-	
-   
-    
-   </beans>
+		
+</beans>
+

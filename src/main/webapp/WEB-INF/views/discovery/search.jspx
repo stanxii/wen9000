@@ -4,10 +4,10 @@
   <jsp:output omit-xml-declaration="yes"/>
   
   <div id="search_tip">
-  	<h3>设备搜索</h3>
+  	<h6>设备搜索</h6>
   	<form action="/wen9000/discovery/search" method="post">
-  		<p>起始Ip: <input type="text" name="startip" value="192.168.1.1" /></p>
-	    <p>结束Ip: <input type="text" name="stopip" value="192.168.1.244" /></p>
+  		<p>起始Ip: <input type="text" name="startip" value="192.168.223.8" /></p>
+	    <p>结束Ip: <input type="text" name="stopip" value="192.168.223.8" /></p>
 	    <input type="submit" value="提交" />  		
   	</form>
   </div>

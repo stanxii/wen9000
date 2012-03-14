@@ -28,140 +28,73 @@ public class SnmpUtil {
 
 	private TransportMapping transport = null;
 
-	Vector<String> devtypevector = new Vector<String>();
 
-	SnmpUtil() {
-		devtypevector.add("(WEC-3502I)");
-		devtypevector.add("(WEC6000)");
-		devtypevector.add("(WEC-3501I)");
+	
+	public enum Devicetye  {
+		WEC_3501I_X7(1) , 
+		WEC_3501I_E31(2),
+		WEC_3501I_Q31(3),		
+		WEC_3501I_C22(4),
+		WEC_3501I_S220(5),
+		WEC_3501I_S60(6),
+		WEC_3702I(7),
+		WEC_3703I(8),
+		WEC_602(9),
+		WEC_604(10),
+		WEC_3801I(11);
+		
+		
+		private final int value;
+        public int getValue() {
+            return value;
+        }
+		Devicetye(int value) {
+            this.value = value;
+        }
 	}
 
+	private Devicetye   devicetype ;
+	
 	// snmp ping judge device type when init devicetype
-	public boolean snmpping(String host, String port) {
+	public long eocping(String host, String port) {
 
-		boolean bstatus = false;
-		try {
-
-			Snmp snmp = new Snmp(new DefaultUdpTransportMapping());
-
-			CommunityTarget target = new CommunityTarget();
-
-			target.setCommunity(new OctetString("public"));
-
-			target.setVersion(SnmpConstants.version2c);
-
-			target.setAddress(new UdpAddress(host + "/" + port));
-
+		int bstatus = -1;
+		int idevicetype;
+		try {					
+			idevicetype = getINT32PDU(host, port, new OID(new int[] {1,3,6,1,4,1,36186,8,4,8,0}));
 			
+			if(idevicetype >=1 && idevicetype <=11){
+				bstatus =  idevicetype;
+//				System.out
+//				.println("Snmping "
+//						+ host
+//						+ " devtype="
+//						+ devtype
+//						+ "Snmpping Tong-- Snmpping Tong----------------------------------------");
 
-			target.setRetries(1);
-
-			target.setTimeout(4000); 
-
-			snmp.listen(); 
-
-			PDU request = new PDU(); 
-
-			// set pud type and set oid
-
-			request.setType(PDU.GET); 
-
-			// device type
-			request.add(new VariableBinding(new OID(".1.3.6.1.2.1.1.5.0")));
-
-
-
-			PDU response = null;
-
-			ResponseEvent responseEvent = snmp.send(request, target); 
-																	
-
-		
-
-			response = responseEvent.getResponse();
-
-		
-
-			if (response != null) {
-
-				if (response.getErrorIndex() == response.noError
-						&& response.getErrorStatus() == response.noError) {
-
-					bstatus = false;
-					Vector<VariableBinding> recVBs = response
-							.getVariableBindings();
-					for (int i = 0; i < recVBs.size(); i++) {
-						VariableBinding recVB = recVBs.elementAt(i);
-
-						// is wec3502 or WEC6000 devicetyp?
-						String devtype = recVB.getVariable().toString();
-						// System.out.println("EOC Devtype====== snmputil now = "
-						// + devtype);
-
-						for (int k = 0; k < devtypevector.size(); k++) {
-							String curdevType = devtypevector.elementAt(k);
-
-							if (devtype.equalsIgnoreCase(curdevType)) {
-								bstatus = true;
-								break;
-							}
-							if (bstatus == true)
-								break;
-						}
-
-//						if (bstatus == true) {
-//							System.out
-//									.println("Snmping "
-//											+ host
-//											+ " devtype="
-//											+ devtype
-//											+ "Snmpping Tong-- Snmpping Tong----------------------------------------");
-//						} else {
-//							System.out
-//									.println("Snmping "
-//											+ host
-//											+ " devtype="
-//											+ devtype
-//											+ "Snmpping Tong-- Snmpping Tong-But Devtype is not ok---------------------------------------");
-//						}
-					}
-
-				} else {
-
-//					System.out.println("get error:"
-//							+ response.getErrorStatusText());
-//
-//					System.out
-//							.println("Snmping "
-//									+ host
-//									+ "XXXXX Bu Tong-- Bu Bu Bu Bu  Tong----------------------------");
-					bstatus = false;
-
-				}
-
-			} else {
-
+			}else {
 //				System.out.println("get response error");
 //				System.out
 //						.println("Snmping "
 //								+ host
 //								+ "XXXXX Bu Tong-- Bu Bu Bu Bu  Tong----------------------------");
-
-				bstatus = false;
-
+				bstatus= -1;
 			}
-
-			snmp.close();
+			
+			
+			
 
 		} catch (IOException e) {
 
 			// TODO Auto-generated catch block
 
 			e.printStackTrace();
+			
+			bstatus= -1;
 
 		}
 
-		return bstatus;
+		return (long)bstatus;
 
 	}
 

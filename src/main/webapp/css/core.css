@@ -113,6 +113,9 @@ body {
 	overflow:hidden;
 	display:box;
 	min-height:500px;
+	border-top:medium  solid #dddddd;
+	border-left:medium  solid #dddddd;
+	padding:0px 0px 0px 10px;
 }
 
 #menu {
@@ -142,3 +145,13 @@ body {
 #footer a:link {color: #7db223;}
 
 
+h6 {
+	height:30px;
+	margin:0px 0px 0px -10px;
+	color: #0073ea;
+	padding: 4px 10px;
+	text-decoration: none;
+	line-height:30px;
+	font-family: Helvetica, Arial, sans-serif; font-size: 1.6em;
+	background: #dddddd url(images/ui-bg_highlight-soft_50_dddddd_1x100.png) repeat-x; font-weight: bold;	
+}
