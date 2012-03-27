@@ -126,6 +126,9 @@
 	<!-- 业务对象 -->
 	<bean id="serviceDiscoveryProcessor" class="com.stan.wen9000.web.ServiceDiscoveryProcessor" >
 		<property name="redisUtil" ref="redisUtil" />
+	</bean>	
+	<bean id="serviceProcess" class="com.stan.wen9000.web.ServiceProcess" >
+		<property name="redisUtil" ref="redisUtil" />
 	</bean>
 	
 	<!-- 调度业务 -->
@@ -134,13 +137,23 @@
 	 <property name="targetMethod"  value="execute"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
+	<bean id="serviceProcessjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceProcess" />
+	 <property name="targetMethod"  value="execute"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
 	
 	<bean id="simpleTrigger1" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 	 <property name="jobDetail" ref="jobDetail1" />
 	 <property name="startDelay" value="3000" />
 	 <property name="repeatInterval" value="5" />
-	 <property name="repeatCount" value="0" />		
-	  	 
+	 <property name="repeatCount" value="0" />		  	 
+	</bean>
+	<bean id="serviceProcessTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceProcessjob" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />		  	 
 	</bean>
 	
 	<!-- 设置调度 -->
@@ -150,6 +163,7 @@
 	  <list>
 	   <ref bean="simpleTrigger" />
 	   <ref bean="simpleTrigger1" />
+	   <ref bean="serviceProcessTrigger" />
 	  </list>
 	 </property>	 
 	</bean>
