@@ -3,43 +3,114 @@
     <jsp:directive.page contentType="text/html;charset=UTF-8"/>
     <jsp:output omit-xml-declaration="yes"/>
     <script><![CDATA[
-	  $(document).ready(function() {
-	  		var groupval=[];
-	  		$.ajax({   		 
-  			url: "/wen9000/cbats", 
-  			dataType: "json", 
-  			success: function(text) {
-  			 
-  			$.each(text, function(key, itemv) {  					
-  				var item = '{"title":"'+itemv.mac + '","url":"http://baidu.com"}';
-  				item = $.parseJSON(item);
-  				groupval[groupval.length] = item;
-  				
-  				
-  			 });  			
+      $.fx.speeds._default = 500;
+	  $(document).ready(function() {		
   			 $("#navtree").dynatree({
-		        children:[ 
-		            {title:"rootnode1",isFolder: true,expand:false, key: "1",
-		            children: groupval},
-		            {title:"rootnode2",isFolder: true,expand:false, key: "2",
-		            children: groupval},
-		        
-		        ],
-		        onActivate: function(dtnode) {
-			        if( dtnode.data.url )
-			          window.open(dtnode.data.url);
-			     },
-			     
-		    }); 
-		    $("#navtree").dynatree("getTree").getNodeByKey("2").expand(true);
-		    
-	  		}});
-	  		
+  			 	persist: true,
+  			 	selectMode: 3,
+  			 	activeVisible: true, 
+  			 	autoFocus: false,  			 	
+  			 	onPostInit: function(isReloading, isError) {
+		               //logMsg("onPostInit(%o, %o) - %o", isReloading, isError, this);
+		         this.reactivate();
+		        }, 
+		      	fx: { height: "toggle", duration: 200 },
+  			 		  			 			 	  			 	
+  			 	initAjax: { 
+		            url: "/wen9000/global/eocs"
+		            //addExpandedKeyList: true
+  			 	},  			 	
+		        imagePath: "../css/images/",
+				onClick: function(node, event) {
+					var jsondata;
+			        if(node.data.type=="cbat"){
+			        	var urltext="/wen9000/global/cbats/"+node.data.mac;
+			          	$.ajax({url:urltext,dataType:"text",success:function(text){
+				          	jsondata=$.parseJSON(text);
+				        	$("#main").empty();
+				        	$("#main").append('<div id="devinfo"><h6>头端设备信息</h6><h1>mac = '+jsondata.mac+'</h1>'+
+							'<h1>active = '+jsondata.active+'</h1>'+
+							'<h1>ip = '+jsondata.ip+'</h1>'+
+							'<h1>label = '+jsondata.label+'</h1>'+
+							'<h1>devicetype = '+jsondata.devicetype+'</h1></div>');
+						}
+			          	});
+			          	//window.location.href="/wen9000/global/cbats/"+node.data.mac;			          	
+			          }else if(node.data.type == "cnu"){			          	
+			          	var urltext="/wen9000/global/cnus/"+node.data.mac;
+			          	$.ajax({url:urltext,dataType:"text",success:function(text){
+			          		jsondata=$.parseJSON(text);			          		
+			          		$("#main").empty();		
+			          		$('.ui-dialog #dialog').remove();	          				          		
+				          	$("#main").append('<div id="devinfo"><h6>终端设备信息</h6><h1>mac ='+ jsondata.mac+'</h1><h1>active ='+ jsondata.active+'</h1>'+
+							'<h1>address = '+jsondata.address+'</h1>'+
+							'<h1>contact = '+jsondata.contact+'</h1>'+
+							'<h1>phone = '+jsondata.phone+'</h1></div>'+
+							'<div id="dialog" style="display:none" title="配置信息"><p>终端详细的配置信息将会在这里显示！！！！！<br/>选择的设备MAC地址是:'+jsondata.mac+'</p></div>'+
+							'<div><button id="btninfo">配置信息</button></div>'
+							);
+			          	}
+			          	});		          	
+			          }else if(node.data.type=="hfc"){
+			          		var urltext="/wen9000/global/hfcs/"+node.data.mac;
+				          	$.ajax({url:urltext,dataType:"text",success:function(text){
+				          		jsondata=$.parseJSON(text);			          		
+				          		$("#main").empty();		
+				          		$('.ui-dialog #dialog').remove();	          				          		
+					          	$("#main").append('<div id="devinfo"><h6>HFC设备信息</h6><h1>mac ='+ jsondata.mac+'</h1><h1>ip ='+ jsondata.ip+'</h1>'+
+								'<h1>oid = '+jsondata.oid+'</h1>'+
+								'<h1>hfctype = '+jsondata.hfctype+'</h1>'+
+								'<h1>logicalid = '+jsondata.logicalid+'</h1></div>'
+								);
+				          	}
+				          	});		    
+			          }
+			    },
+		        onDblClick: function(node, event) {
+			        node.toggleExpand();
+			    },		                
+		        onActivate: function(node) {
+		        			        	       	
+			    },
+			    // onLazyRead: function(node){
+			    // 	node.appendAjax({
+			    // 		url: "/wen9000/global/cnu_read/"+node.data.mac			     		
+			    // 	});
+			    // }
+		    }); 	  		
 	    	
+	  });
+	  $(function() {
+	  	$("#btninfo").live('click', function() { 	  			
+			$("#dialog").dialog({
+				autoOpen: false,
+				show: "blind",
+				modal: true,
+				hide: "explode"
+			});	
+			$("#dialog").dialog("open");
+		 });
+		 
+	  	//$(document).delegate("#btninfo", 'click', function(){
+	  	//	$("#dialog").dialog({
+		//		autoOpen: false,
+		//		show: "blind",
+		//		modal: true,
+		//		hide: "explode"
+		//	});	
+		//	$("#dialog").empty();
+		//  	$("#dialog").dialog("open");
+		  	
+		//  	var tmp = $("#main").data('mac');
+		//  	$("#dialog").append('<h3>xxx'+$("#main").data('mac')+'xxxxxx</h3>');
+		//	return false;
+		//});  		
+	  
 	  });
   ]]></script>
     <div id="navtree">
         <p/>
     </div>
 
+	
 </div>

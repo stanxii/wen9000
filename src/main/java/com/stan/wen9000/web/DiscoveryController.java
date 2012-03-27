@@ -2,18 +2,15 @@ package com.stan.wen9000.web;
 
 
 import java.io.IOException;
-import java.util.Date;
-
-import java.util.List;
+import java.io.PrintWriter;
+import java.util.Iterator;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,18 +23,16 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-import com.stan.wen9000.action.jedis.util.RedisUtil;
-import com.stan.wen9000.domain.Cnu;
-
 @RequestMapping("/discovery/**")
 @Controller
 public class DiscoveryController {
-
+	private static Logger logger = Logger.getLogger(DiscoveryController.class);
 	private String currentip;	
 	private static final String DISCOVERY_QUEUE_NAME = "discovery_queue";
 	
+	private static final String PROCESS_CBAT_QUEUE_NAME = "process_queue";
+	
 	private static JedisPool pool;
-	  private static Jedis jedis;
 //	 
 	 static {
 	        JedisPoolConfig config = new JedisPoolConfig();
@@ -51,8 +46,8 @@ public class DiscoveryController {
 //	  private static RedisUtil ru;
 	
 	
-    @Autowired
-    CnuController cnuctl;
+//    @Autowired
+//    CnuController cnuctl;
     
 
     @RequestMapping(method = RequestMethod.POST, value = "{id}")
@@ -64,29 +59,119 @@ public class DiscoveryController {
         return "discovery/index";
     }
     
-    @RequestMapping(value = "searchresult",  headers = "Accept=application/json")
+    @RequestMapping(value = "searchresult")
     @ResponseBody
-    public ResponseEntity<String> searchListAll() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json; charset=utf-8");
-//        List<Cbat> result = cbatctl.cbatService.findAllCbats();
-        List<Cnu>  result = cnuctl.cnuService.findAllCnus();
-        return new ResponseEntity<String>(Cnu.toJsonArray(result), headers, HttpStatus.OK);
+    public void searchResultList(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    	response.setContentType("text/html");
+    	response.setCharacterEncoding("UTF-8");
+    	Jedis jedis = pool.getResource();
+    	String result = "";
+    	String jsonstring = "";
+    	Set<String> list = jedis.keys("cbatid:*:entity");
+    	int i=0;
+    	for(Iterator it = list.iterator(); it.hasNext(); ) 
+    	{ 
+    		i++;
+    		if(jsonstring == ""){
+    			jsonstring += "{"+'"'+ "cbat"+i + '"'+":{";
+    		}else{
+    			jsonstring += ","+'"'+ "cbat"+i + '"'+":{";
+    		}
+    		String key = it.next().toString();
+    		int index1 = key.indexOf(':') +1;
+    		int index2 = key.lastIndexOf(':');
+    		String cid = key.substring(index1, index2);
+    		   	
+    		jsonstring += '"'+ "id" + '"'+":"+ '"' + cid+ '"' + ",";
+    		jsonstring += '"'+ "active" + '"'+":"+ '"' + jedis.hget(key, "active")+ '"' + ",";
+    		jsonstring += '"'+ "mac"+ '"'+":" + '"' + jedis.hget(key, "mac")+ '"' + ",";
+    		switch(Integer.parseInt(jedis.hget(key, "devicetype")))
+    		{
+            	case 1:
+            		//break;
+            	case 2:
+            		
+            		//break;
+            	case 3:
+            		//break;
+            	case 4:
+            		
+            		//break;
+            	case 5:
+            		//break;
+            	case 6:
+            		
+            		//break;
+            	case 7:
+            		//break;
+            	case 8:
+            		result = "中文测试";
+            		break;
+            	default:
+            		result = "Unknown";
+            		break;
+    		}
+    		jsonstring += '"'+ "devicetype"+ '"'+":" + '"' + result + '"'+ ",";
+    		jsonstring += '"'+ "label"+ '"'+":"+ '"'  + jedis.hget(key, "label")+ '"' + ",";
+    		jsonstring += '"'+ "ip"+ '"'+":"+ '"'  + jedis.hget(key, "ip")+ '"' + ",";
+    		jsonstring += '"'+ "cbatinfo"+ '"'+":" + '"' + "h_b"+ '"' + "}";
+    	}
+    	jsonstring += "}";
+    	logger.info("keys::::::"+ jsonstring);
+       // JSONObject json = JSONObject.fromObject(jsonstring);
+        //logger.info("searchresult:::::"+ json.toString());
+        pool.returnResource(jedis);
+        PrintWriter out = response.getWriter();
+        //logger.info("keys::::::"+ json);
+        out.println(jsonstring);  
+        out.flush();  
+        out.close();
+    	//return jsonstring;
     }
     
+    @RequestMapping(value = "discovertotal")
+    public @ResponseBody String getdiscoverTotal() {
+    	Jedis jedis = pool.getResource();
+    	Long count = jedis.llen(DISCOVERY_QUEUE_NAME);
+    	pool.returnResource(jedis);
+    	
+    	Long total = Long.parseLong(jedis.get("global:discovertotal"));
+    	float val = (total - count);
+    	String msg = String.valueOf((val/Float.valueOf(String.valueOf(total)))*100);
+    	logger.info("discovermsg:::::"+ msg);
+    	if(msg.equalsIgnoreCase("100.0")){
+    		logger.info("-------------------------------------------------");
+    		jedis.set("searchrun", "false");
+    	}
+    		
+    	return msg;
+    }
     
     @RequestMapping(value = "search",  method = RequestMethod.POST)
     public String searchProduct(@RequestParam(value = "startip", required = false) String st, @RequestParam(value = "stopip", required = false) String end) throws Exception {
         System.out.println("start:"+st + ",end:"+end);
         //quartzRun();
+        Jedis jedis = pool.getResource();
+        if((jedis.get("searchrun")==null) || (jedis.get("searchrun").equalsIgnoreCase("true")))
+        {
+        	logger.info("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::return");
+        	return "discovery/result";
+        }
+        jedis.set("searchrun", "true");
         long longstartIp = IP2Long.ipToLong(st);		
 		long longstopIp = IP2Long.ipToLong(end);
-		
-		
+		long total = longstopIp - longstartIp + 1;
+		if(total >256)
+		{
+			logger.info("search ip out of range!");
+			return "discovery/search";
+		}
 //		Jedis jedis = ru.getConnection();
 		
-		jedis = pool.getResource();
 		
+		String msg = "message:"+String.valueOf(total);
+		jedis.lpush(PROCESS_CBAT_QUEUE_NAME, msg);
+
 		while (longstartIp <= longstopIp) {
 			currentip = IP2Long.longToIP(longstartIp);
 
@@ -98,7 +183,7 @@ public class DiscoveryController {
 			longstartIp++;
 
 		}
-
+		pool.returnResource(jedis);
 		
 //		ru.closeConnection(jedis);
 		

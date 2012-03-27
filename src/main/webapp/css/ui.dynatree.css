@@ -31,7 +31,7 @@ ul.dynatree-container li
 	background-attachment: scroll;
 	background-color: transparent;
 	background-repeat: repeat-y;
-	background-image: url("vline.gif");
+	background-image: url("../css/images/vline.gif");
 	background-position: 0 0;
 	/*
 	background-image: url("icons_96x256.gif");
@@ -80,7 +80,7 @@ span.dynatree-drag-helper-img,
 	vertical-align: top;
 	background-repeat: no-repeat;
 	background-position: left;
-	background-image: url("icons.gif");
+	background-image: url("../css/images/icons.gif");
 	background-position: 0 0;
 }
 
@@ -145,7 +145,7 @@ span.dynatree-expander
 .dynatree-loading span.dynatree-expander  /* 'Loading' status overrides all others */
 {
 	background-position: 0 0;
-	background-image: url("loading.gif");
+	background-image: url("../css/images/loading.gif");
 }
 
 
@@ -243,7 +243,7 @@ span.dynatree-icon /* Default icon */
 
 .dynatree-statusnode-wait span.dynatree-icon
 {
-	background-image: url("loading.gif");
+	background-image: url("../css/images/loading.gif");
 }
 
 .dynatree-statusnode-error span.dynatree-icon
@@ -322,7 +322,7 @@ span.dynatree-selected a
 span.dynatree-active a
 {
 	background-color: #3169C6 !important;
-	color: white !important; /* @ IE6 */
+	color: black !important; /* @ IE6 */
 }
 
 /*******************************************************************************

@@ -2,15 +2,12 @@
 <div xmlns:field="urn:jsptagdir:/WEB-INF/tags/form/fields" xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:page="urn:jsptagdir:/WEB-INF/tags/form" version="2.0">
     <jsp:directive.page contentType="text/html;charset=UTF-8"/>
     <jsp:output omit-xml-declaration="yes"/>
-    <page:show id="ps_com_stan_wen9000_domain_Cbatinfo" object="${cbatinfo}" path="/cbatinfoes" z="24aHyHd1WvVpZ0330pmkD9FsuIk=">
-        <field:display field="agentPort" id="s_com_stan_wen9000_domain_Cbatinfo_agentPort" object="${cbatinfo}" z="BpmKVZ3GwBP3hCsLnelwlwuPF8I="/>
-        <field:display field="appVer" id="s_com_stan_wen9000_domain_Cbatinfo_appVer" object="${cbatinfo}" z="sped+VC4VxmBpR/MrD2JulGNFpE="/>
-        <field:display field="bootVer" id="s_com_stan_wen9000_domain_Cbatinfo_bootVer" object="${cbatinfo}" z="NpCTI2DKPtcshBZ0rYI9a8uoWz8="/>
-        <field:display field="mvId" id="s_com_stan_wen9000_domain_Cbatinfo_mvId" object="${cbatinfo}" z="eV3S6xln8Y75RCs8eYrFbwQYRSY="/>
-        <field:display field="mvStatus" id="s_com_stan_wen9000_domain_Cbatinfo_mvStatus" object="${cbatinfo}" z="9uCzENhiE8lmdES4nxFbe+Mt8X4="/>
-        <field:display field="address" id="s_com_stan_wen9000_domain_Cbatinfo_address" object="${cbatinfo}" z="PwIOuQvA26KBazOzjgyDypq6H9I="/>
-        <field:display field="contact" id="s_com_stan_wen9000_domain_Cbatinfo_contact" object="${cbatinfo}" z="jFF5ZjAEokADJ1RZWecmV6jSrdE="/>
-        <field:display field="label" id="s_com_stan_wen9000_domain_Cbatinfo_label" object="${cbatinfo}" z="8sGTqkOdEKZVKmbxeIZygXdXS60="/>
-        <field:display field="phone" id="s_com_stan_wen9000_domain_Cbatinfo_phone" object="${cbatinfo}" z="/TBUkrpA7Cq3fIi1ZdGLeX+y7+k="/>
-    </page:show>
+    <h1>address = ${address}</h1>
+	<h1>phone = ${phone}</h1>
+	<h1>bootver = ${bootver}</h1>
+	<h1>contact = ${contact}</h1>
+	<h1>agentport = ${agentport}</h1>
+	<h1>appver = ${appver}</h1>
+	<h1>mvlanid = ${mvlanid}</h1>
+	<h1>mvlanenable = ${mvlanenable}</h1>
 </div>

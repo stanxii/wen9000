@@ -3,31 +3,18 @@ package com.stan.wen9000.web;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 import org.apache.log4j.Logger;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.snmp4j.smi.OID;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-import com.stan.wen9000.action.jedis.foo.MyListener;
-import com.stan.wen9000.action.jedis.util.RedisUtil;
-import com.stan.wen9000.action.jedis.util.SingletonContext;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+
+import com.stan.wen9000.action.jedis.util.RedisUtil;
 
 
 public class WorkerDiscoveryProcessor{
@@ -36,7 +23,7 @@ public class WorkerDiscoveryProcessor{
 
 	private static final String DISCOVERY_QUEUE_NAME = "discovery_queue";
 
-	private static final String PERSIST_CBAT_QUEUE_NAME = "service_discovery_queue";
+	private static final String PERSIST_CBAT_QUEUE_NAME = "service_discovery_queue";	
 
 	private static SnmpUtil util = new SnmpUtil();
 
@@ -155,11 +142,81 @@ public class WorkerDiscoveryProcessor{
 			return;
 		}
 		
-//		if (hfcping(currentip, "161")) {
-//			//tong
-//			System.out.println("hfc tong ");
-//			return;
-//		}
+		if (hfcping(currentip, "161")) {
+			//tong
+			String oid = "";
+			String hfc_mac = "30:71:b2:00:00:00";
+			String hfc_version = "";
+			String hfc_LogicalID = "";
+			String hfc_ModelNumber = "";
+			String hfc_SerialNumber = "";
+			try{
+				oid = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
+					2, 1, 1, 2, 0 }));
+				hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}) );
+				hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}) );
+				hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}) );
+				hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}) );
+			}
+			catch(Exception e){
+				logger.info("read hfc info error!");
+			}
+			String hfctype = "";
+			if (oid.toString().equals("1.3.6.1.4.1.2000.1.3000"))
+	        {
+				hfctype = "光平台";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.8888.1"))
+	        {
+	        	hfctype = "万隆8槽WOS2000";
+	        }
+	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.8686"))
+	        {
+	        	hfctype = "万隆增强光开关";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.11"))
+	        {
+	        	hfctype = "掺铒光纤放大器";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.6"))
+	        {
+	        	hfctype = "1310nm光发射机";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.10"))
+	        {
+	        	hfctype = "光工作站";
+	        }
+	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.9"))
+	        {
+	        	hfctype = "光接收机";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.7"))
+	        {
+	        	hfctype = "1550光发射机";
+	        }
+	        else
+	        {
+	        	hfctype = "未知设备类型";
+	        }
+			
+			 String msgservice="";
+			 Map paramhash=new LinkedHashMap();				 
+			 paramhash.put("msgcode", "003");
+			 paramhash.put("ip", currentip);
+			 paramhash.put("oid", oid);	
+			 paramhash.put("hfcmac", hfc_mac);
+			 paramhash.put("hfctype", hfctype);	
+			 paramhash.put("version", hfc_version);	
+			 paramhash.put("logicalid", hfc_LogicalID);
+			 paramhash.put("modelnumber", hfc_ModelNumber);
+			 paramhash.put("serialnumber", hfc_SerialNumber);
+			 
+			 msgservice = JSONValue.toJSONString(paramhash);
+			
+			sendToPersist(msgservice);
+			//System.out.println("hfc tong ");
+			return;
+		}
 		
 		
 		//eoc
@@ -290,25 +347,6 @@ public class WorkerDiscoveryProcessor{
 			oid = util.gethfcStrPDU(host, port, new OID(new int[] { 1, 3, 6, 1,
 					2, 1, 1, 2, 0 }));
 			if ((oid != null) && (oid != "")) {
-				// service
-				
-				String msgservice="";
-				Map paramhash=new LinkedHashMap();
-				
-				 
-				 
-				 paramhash.put("msgcode", "003");
-				 paramhash.put("ip", host);
-				 paramhash.put("oid", oid);
-				 
-				 
-				 msgservice = JSONValue.toJSONString(paramhash);
-				
-				sendToPersist(msgservice);
-				msgservice = "";
-				
-//				String msgservice = "003" + "|" + host + "|" + oid;
-//				sendToPersist(msgservice);
 
 				return true;
 			}

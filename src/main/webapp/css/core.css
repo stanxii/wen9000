@@ -7,7 +7,7 @@ body {
 	width:100%;  
 	margin:0 auto;
 	position:relative;
-	z-index: auto;
+	z-index: 5;
 }
 
     ul.topnav {  
@@ -80,7 +80,7 @@ body {
     position: fixed;
     top: 0;
     width: 100%;
-    z-index: 99999999;
+    z-index: 5;
 }
 
 #logo{
@@ -128,6 +128,7 @@ body {
 #navtree { 	
 	height:450px;
 }
+
 	
 #footer {
 	display: block;
@@ -153,5 +154,11 @@ h6 {
 	text-decoration: none;
 	line-height:30px;
 	font-family: Helvetica, Arial, sans-serif; font-size: 1.6em;
-	background: #dddddd url(images/ui-bg_highlight-soft_50_dddddd_1x100.png) repeat-x; font-weight: bold;	
+	background: #dddddd; font-weight: bold;	
 }
+
+
+#result_list {
+    display:none;
+}
+
