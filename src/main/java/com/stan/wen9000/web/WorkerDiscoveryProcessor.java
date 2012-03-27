@@ -101,6 +101,7 @@ public class WorkerDiscoveryProcessor{
 			
 			Jedis jedis = redisUtil.getConnection();
 			
+			
 			message = jedis.rpop(DISCOVERY_QUEUE_NAME);
 			
 			 redisUtil.closeConnection(jedis);
