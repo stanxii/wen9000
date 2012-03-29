@@ -5,6 +5,7 @@
     <script><![CDATA[
       $.fx.speeds._default = 500;
 	  $(document).ready(function() {		
+	  		setInterval("reloadtree()",10000);
   			 $("#navtree").dynatree({
   			 	persist: true,
   			 	selectMode: 3,
@@ -23,36 +24,49 @@
 		        imagePath: "../css/images/",
 				onClick: function(node, event) {
 					var jsondata;
-			        if(node.data.type=="cbat"){
-			        	var urltext="/wen9000/global/cbats/"+node.data.mac;
-			          	$.ajax({url:urltext,dataType:"text",success:function(text){
-				          	jsondata=$.parseJSON(text);
-				        	$("#main").empty();
-				        	$("#main").append('<div id="devinfo"><h6>头端设备信息</h6><h1>mac = '+jsondata.mac+'</h1>'+
-							'<h1>active = '+jsondata.active+'</h1>'+
-							'<h1>ip = '+jsondata.ip+'</h1>'+
-							'<h1>label = '+jsondata.label+'</h1>'+
-							'<h1>devicetype = '+jsondata.devicetype+'</h1></div>');
-						}
-			          	});
-			          	//window.location.href="/wen9000/global/cbats/"+node.data.mac;			          	
-			          }else if(node.data.type == "cnu"){			          	
-			          	var urltext="/wen9000/global/cnus/"+node.data.mac;
-			          	$.ajax({url:urltext,dataType:"text",success:function(text){
-			          		jsondata=$.parseJSON(text);			          		
-			          		$("#main").empty();		
-			          		$('.ui-dialog #dialog').remove();	          				          		
-				          	$("#main").append('<div id="devinfo"><h6>终端设备信息</h6><h1>mac ='+ jsondata.mac+'</h1><h1>active ='+ jsondata.active+'</h1>'+
-							'<h1>address = '+jsondata.address+'</h1>'+
-							'<h1>contact = '+jsondata.contact+'</h1>'+
-							'<h1>phone = '+jsondata.phone+'</h1></div>'+
-							'<div id="dialog" style="display:none" title="配置信息"><p>终端详细的配置信息将会在这里显示！！！！！<br/>选择的设备MAC地址是:'+jsondata.mac+'</p></div>'+
-							'<div><button id="btninfo">配置信息</button></div>'
-							);
-			          	}
-			          	});		          	
+			        if(node.data.type=="cbat"){			        	
+
+			        		var urltext="/wen9000/global/cbats/"+node.data.key;
+				          	$.ajax({url:urltext,dataType:"text",success:function(text){
+					          	jsondata=$.parseJSON(text);
+					        	$("#main").empty();
+					        	$("#main").append('<div id="devinfo"><h6>头端设备信息</h6><h3 style="color:green">基本信息</h3><hr/>'+
+					        	'<table id="baseinfo"><tr><td><lable>mac : '+jsondata.mac+'</lable></td>'+
+								'<td><lable>状态 : '+jsondata.active+'</lable></td></tr>'+
+								'<tr><td><lable>ip : '+jsondata.ip+'</lable></td>'+
+								'<td><lable>设备标识 : '+jsondata.label+'</lable></td></tr>'+
+								'<tr><td><lable>设备类型 : '+jsondata.devicetype+'</lable></td>'+
+								'<td><lable>地址 : '+jsondata.address+'</lable></td></tr>'+
+								'<tr><td><lable>内核版本 : '+jsondata.bootver+'</lable></td>'+
+								'<td><lable>软件版本 : '+jsondata.appver+'</lable></td></tr>'+
+								'<tr><td><lable>管理VLAN使能 : '+jsondata.mvlanenable+'</lable></td>'+
+								'<td><lable>管理VLAN ID : '+jsondata.mvlanid+'</lable></td></tr>'+
+								'</table></div>');
+							}
+				          });			       	          	
+			          }else if(node.data.type == "cnu"){	
+
+			          		var urltext="/wen9000/global/cnus/"+node.data.key;
+				          	$.ajax({url:urltext,dataType:"text",success:function(text){
+				          		jsondata=$.parseJSON(text);			          		
+				          		$("#main").empty();		
+				          		$('.ui-dialog #dialog').remove();	          				          		
+					          	$("#main").append('<div id="devinfo"><h6>终端设备信息</h6><h3 style="color:green">基本信息</h3><hr/>'+
+					          	'<table id="baseinfo"><tr><td><lable>mac :'+ jsondata.mac+'</lable></td>'+
+					          	'<td><lable>状态 :'+ jsondata.active+'</lable></td></tr>'+
+					          	'<tr><td><lable>设备类型: '+"待定"+'</lable></td>'+
+								'<td><lable>地址: '+jsondata.address+'</lable></td>'+
+								'<tr><td><lable>联系方式 : '+jsondata.contact+'</lable></td>'+
+								'<td><lable>电话: '+jsondata.phone+'</lable></td></tr>'+
+								'</table></div><br/><br/><h3 style="color:green">配置信息</h3><hr/>'+
+								'<div id="dialog" style="display:none" title="配置信息"><p>终端详细的配置信息将会在这里显示！！！！！<br/>选择的设备MAC地址是:'+jsondata.mac+'</p></div>'+
+								'<div><button id="btninfo">配置信息</button></div>'
+								);
+				          	}
+				          });		          		          	
+			          	
 			          }else if(node.data.type=="hfc"){
-			          		var urltext="/wen9000/global/hfcs/"+node.data.mac;
+			          		var urltext="/wen9000/global/hfcs/"+node.data.key;
 				          	$.ajax({url:urltext,dataType:"text",success:function(text){
 				          		jsondata=$.parseJSON(text);			          		
 				          		$("#main").empty();		
@@ -80,6 +94,13 @@
 		    }); 	  		
 	    	
 	  });
+	  
+	  function reloadtree(){
+	  		$("#navtree").dynatree("getTree").reload();
+	  		//$("#navtree").dynatree("getTree").reloadAjax();
+	  		
+	  }
+	  
 	  $(function() {
 	  	$("#btninfo").live('click', function() { 	  			
 			$("#dialog").dialog({
@@ -89,22 +110,7 @@
 				hide: "explode"
 			});	
 			$("#dialog").dialog("open");
-		 });
-		 
-	  	//$(document).delegate("#btninfo", 'click', function(){
-	  	//	$("#dialog").dialog({
-		//		autoOpen: false,
-		//		show: "blind",
-		//		modal: true,
-		//		hide: "explode"
-		//	});	
-		//	$("#dialog").empty();
-		//  	$("#dialog").dialog("open");
-		  	
-		//  	var tmp = $("#main").data('mac');
-		//  	$("#dialog").append('<h3>xxx'+$("#main").data('mac')+'xxxxxx</h3>');
-		//	return false;
-		//});  		
+		 }); 		
 	  
 	  });
   ]]></script>

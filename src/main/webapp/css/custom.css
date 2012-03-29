@@ -9,16 +9,6 @@
 	background-image: url("../css/images/doc_with_children.gif");
 }
 
-.dynatree-ico-cf span.dynatree-icon  /* Collapsed Folder */
-{
-	background-image: url("../css/images/folder_docs.gif");
-}
-
-.dynatree-ico-ef span.dynatree-icon  /* Expanded Folder */
-{
-	background-image: url("../css/images/folder_images.gif");
-}
-
 
 /*******************************************************************************
  * Node titles
@@ -52,10 +42,11 @@ span.custom1 a
 	background-color: #ffffbb;
 	color: maroon;
 }
-span.custom1 span.dynatree-icon
+span.dynatree-exp-c span.dynatree-icon,
+span.dynatree-exp-cl span.dynatree-icon
 {
     background-position: 0 0;
-	background-image: url("../css/images/customDoc2.gif");
+	background-image: url("../css/images/folder_docs.gif");
 }
 
 span.custom2 a
@@ -64,7 +55,7 @@ span.custom2 a
 	background-color: silver;
 	color: navy;
 }
-span.custom2 span.dynatree-icon
+span.dynatree-folder span.dynatree-icon
 {
     background-position: 0 0;
 	background-image: url("../css/images/folder_page.gif");

@@ -5,20 +5,14 @@
   <script>
   	$(document).ready(function() {
   		
-  		setInterval("test11()",1000);
+  		//setInterval("test11()",1000);
   		
 	  	
 	});
-	var count = 3;
-	function test11() {		
-		$("#test").val("测试中(" + count + ")");		
-		if(count == 0){	
-		 	
-		 	count=3;
-		 	return;
-		 }
-		 count--;
-	}
+
+	//function test11() {		
+		
+	//}
   </script>
   <spring:message var="app_name" code="application_name" htmlEscape="false" />
   <spring:message var="title" code="welcome_titlepane" arguments="${app_name}" htmlEscape="false" />

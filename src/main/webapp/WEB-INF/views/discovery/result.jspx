@@ -15,7 +15,7 @@
 		     width:bw,
 		     display:"block"
 		});
-		$("#dialog").show();				
+		$("#pb_bar").show();				
 	  	
 	});
 	
@@ -38,7 +38,7 @@
 						sleep(1000);
 						getresult();
 						$("#result_list").show();
-						$("#dialog").hide();
+						$("#pb_bar").hide();
 					};					
 					
 					
@@ -103,7 +103,7 @@
 	}
 	]]></script>
 	<h6>头端设备列表</h6>
-	<div id="dialog">
+	<div id="pb_bar">
 	  <span class="progressBar" id="spaceused1">0%</span>	
 	</div>
 	<div id="result_list">

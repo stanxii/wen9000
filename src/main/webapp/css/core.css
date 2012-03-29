@@ -162,3 +162,19 @@ h6 {
     display:none;
 }
 
+#pb_bar {
+	margin: 100px auto auto 200px;
+	width: 240px;
+	height: 100px;
+}
+
+#spaceused1 {
+	margin-right: 5px;
+	top: 50%;
+	position: relative;
+}
+
+#baseinfo lable {
+	margin-left: 60px;	
+	
+}
