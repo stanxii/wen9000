@@ -152,11 +152,14 @@ public class DiscoveryController {
         System.out.println("start:"+st + ",end:"+end);
         //quartzRun();
         Jedis jedis = pool.getResource();
-        if((jedis.get("searchrun")==null) || (jedis.get("searchrun").equalsIgnoreCase("true")))
+        if(jedis.get("searchrun")==null){
+        	jedis.set("searchrun", "false");
+        }
+        if(jedis.get("searchrun").equalsIgnoreCase("true"))
         {
         	logger.info("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::return");
         	return "discovery/result";
-        }
+        }        
         jedis.set("searchrun", "true");
         long longstartIp = IP2Long.ipToLong(st);		
 		long longstopIp = IP2Long.ipToLong(end);

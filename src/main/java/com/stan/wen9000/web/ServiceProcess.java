@@ -42,7 +42,7 @@ public class ServiceProcess{
 		
 		while (true) {
 			String message = null;
-	
+			
 		
 			message = jedis.rpop(PROCESS_CBAT_QUEUE_NAME);
 			
@@ -52,16 +52,16 @@ public class ServiceProcess{
 			}
 			else if(message.equalsIgnoreCase("ok")) {
 				
-	//			System.out.println("Why ServiceDiscoveryProcessor receive == ok?? i don't know");
+				System.out.println("Why ServiceDiscoveryProcessor receive == ok?? i don't know");
 				Thread.sleep(1000);
 				continue;
 			}else if(message.length() < 3) {
 				
-	//			System.out.println("Why ServiceDiscoveryProcessor receive len < 3 i don't know");
+				System.out.println("Why ServiceDiscoveryProcessor receive len < 3 i don't know");
 				Thread.sleep(1000);
 				continue;
 			}
-
+			logger.info(":::::::::::::::serviceProcess");
 			String total = "global:discovertotal";
 			jedis.set(total, message.substring(8));
 			
