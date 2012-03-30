@@ -3,9 +3,15 @@ package com.stan.wen9000.web;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Vector;
 
+import org.apache.log4j.Logger;
+import org.json.simple.JSONValue;
 import org.snmp4j.CommandResponder;
 import org.snmp4j.CommandResponderEvent;
 import org.snmp4j.Snmp;
@@ -18,11 +24,10 @@ import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.MessageProperties;
-import com.stan.wen9000.domain.Alarm;
+import redis.clients.jedis.Jedis;
+
+
+import com.stan.wen9000.action.jedis.util.RedisUtil;
 
 
 public class TrapReceiverBean {
@@ -31,130 +36,51 @@ public class TrapReceiverBean {
 	private static final String ALARM_QUEUE_NAME = "alarm_queue";
 	private static final String Upgrade_QUEUE_NAME = "upgrade_result_queue";
 
-	public static String TRAP_ADDRESS = "udp:0.0.0.0/";
+	public static String TRAP_ADDRESS = "udp:0.0.0.0/";	
+	private static final String TRAP_SERVER_PORT_KEY = "trapserver:port:key";
 
 	private static Snmp snmp = null;
 	private Address listenAddress;
 	
 	
-	private ConnectionFactory factoryAlarm = null;
-	private Connection connectionAlarm = null;
-	private Channel channelAlarm = null;
 	
-//	private ConnectionFactory factoryHeart = null;
-//	private Connection connectionHeart = null;
-//	private Channel channelHeart = null;
+	private static Logger logger = Logger.getLogger(TrapReceiverBean.class);
 	
-	public void init(){
-		//init alarm rabbitmq
-		//This example in Java creates a queue which expires after it has been unused for 30 minutes.
-		// Map<String, Object> args = new HashMap<String, Object>();
-		//args.put("x-expires", 1800000);
-		try {
-			factoryAlarm = new ConnectionFactory();
-			factoryAlarm.setHost("localhost");
-			connectionAlarm = factoryAlarm.newConnection();			
-			//create channel			
-			channelAlarm = connectionAlarm.createChannel();
+	private static RedisUtil redisUtil;
 
-			channelAlarm.queueDeclare(ALARM_QUEUE_NAME, true, false, false, null);
-		} catch (Exception e1) {
-			// TODO Auto-generated catch block										
-			e1.printStackTrace();			
-		}
-		
-		//init heart rabbitmq
-		
-//		try {
-//			factoryHeart = new ConnectionFactory();
-//			factoryHeart.setHost("localhost");
-//			connectionHeart = factoryHeart.newConnection();			
-//			//create channel			
-//			channelHeart = connectionHeart.createChannel();
-//
-//			channelHeart.queueDeclare(HEART_QUEUE_NAME, true, false, false, null);
-//		} catch (Exception e1) {
-//			// TODO Auto-generated catch block										
-//			e1.printStackTrace();			
-//		}
-		
-		
+	public static RedisUtil getRedisUtil() {
+		return redisUtil;
 	}
+
+	public static void setRedisUtil(RedisUtil redisUtil) {
+		TrapReceiverBean.redisUtil = redisUtil;
+	}
+
 	
-	public void desTroy(){
-		//close rabbimq
-		try {	
-			channelAlarm.close();
-			connectionAlarm.close();
-		} catch (Exception e1) {
-			// TODO Auto-generated catch block										
-			e1.printStackTrace();
-			
-		}		
-//		try {	
-//			channelHeart.close();
-//			connectionHeart.close();
-//		} catch (Exception e1) {
-//			// TODO Auto-generated catch block										
-//			e1.printStackTrace();
-//			
-//		}	
-	}
+	
+	
+
 
 	public void start() {
-//		// implement your business logic here
-//		//log.info("trapreceiver.start() action called, start trap receivering..........");
-//		try {
-//			factoryAlarm = new ConnectionFactory();
-//			factoryAlarm.setHost("localhost");
-//			connectionAlarm = factoryAlarm.newConnection();			
-//			//create channel			
-//			channelAlarm = connectionAlarm.createChannel();
-//
-//			channelAlarm.queueDeclare(ALARM_QUEUE_NAME, true, false, false, null);
-//		} catch (Exception e1) {
-//			// TODO Auto-generated catch block										
-//			e1.printStackTrace();			
-//		}
-//		
-//		//init heart rabbitmq
-//		
-////		try {
-////			factoryHeart = new ConnectionFactory();
-////			factoryHeart.setHost("localhost");
-////			connectionHeart = factoryHeart.newConnection();			
-////			//create channel			
-////			channelHeart = connectionHeart.createChannel();
-////
-////			channelHeart.queueDeclare(HEART_QUEUE_NAME, true, false, false, null);
-////		} catch (Exception e1) {
-////			// TODO Auto-generated catch block										
-////			e1.printStackTrace();			
-////		}
-//		doWork();
-//		
-//		try {	
-//			channelAlarm.close();
-//			connectionAlarm.close();
-//		} catch (Exception e1) {
-//			// TODO Auto-generated catch block										
-//			e1.printStackTrace();
-//			
-//		}		
-////		try {	
-////			channelHeart.close();
-////			connectionHeart.close();
-////		} catch (Exception e1) {
-////			// TODO Auto-generated catch block										
-////			e1.printStackTrace();
-////			
-////		}	
-
+		logger.info("trapreceiver.start() action called, start trap receivering..........");
+			
+		
+		
+			doWork();
+		
 	}
 
 	private void doWork() {
 
 		try {
+			//get trap port from db
+			Jedis jedis = redisUtil.getConnection();
+			String trapport = jedis.get(TRAP_SERVER_PORT_KEY);
+			if(trapport == null)trapport="162";
+			redisUtil.closeConnection(jedis);
+			TRAP_ADDRESS = TRAP_ADDRESS + trapport;
+			System.out.println("+++++++++TRAP_ADDRESS=" + TRAP_ADDRESS);
+			
 			listenAddress = GenericAddress.parse(System.getProperty(
 					"snmp4j.listenAddress", TRAP_ADDRESS));
 			TransportMapping transport;
@@ -187,6 +113,7 @@ public class TrapReceiverBean {
 
 	
 
+	@SuppressWarnings("unchecked")
 	public void doReceive(CommandResponderEvent event) {
 
 		// /process response
@@ -197,138 +124,263 @@ public class TrapReceiverBean {
 			// size=9 is cbat alarm
 
 			if (recVBs.size() == 10) {
-				Alarm alarm = new Alarm();
-
+				
+				
+				Map alarmhash=new LinkedHashMap();
+			   
 				for (int i = 0; i < recVBs.size(); i++) {
 					VariableBinding recVB = recVBs.elementAt(i);
 					String content = recVB.getVariable().toString();
-					// System.out.println("SNMP4j traper: content=" + content);
+					 System.out.println("SNMP4j traper: content=" + content);
 
 					// populate the alarm
 					switch (i) {
-					case 0:
-						alarm.setTimeticks(content);
+					case 0:						
+						alarmhash.put("runingtime", content);
 						break;
-					case 1:
-						alarm.setOid(content);
+					case 1:						
+						alarmhash.put("oid", content);
 						break;
-					case 2:
-						alarm.setAlarmcode(Integer.parseInt(content));
+					case 2:						
+						alarmhash.put("alarmcode", content);
 						break;
-					case 3:
-						alarm.setTrapinfo(content);
+					case 3:						
+						alarmhash.put("trapinfo", content);
 						break;
 					case 4:
-						//alarm.setSerialflow(Long.parseLong(content));
+						//alarm.setSerialflow(Long.parseLong(content));						
 						break;
-					case 5:
-						alarm.setCbatmac(content.toUpperCase());
+					case 5:						
+						alarmhash.put("cbatmac", content.toLowerCase());
 						break;
-					case 6:
-						alarm.setCltindex(Integer.parseInt(content));
+					case 6:						
+						alarmhash.put("cltindex", content);
 						break;
 					case 7:
-						alarm.setCnuindex(Integer.parseInt(content));
+						alarmhash.put("cnuindex", content);						
 						break;
-					case 8:
-						alarm.setAlarmtype(Integer.parseInt(content));
+					case 8:						
+						alarmhash.put("alarmtype", content);
 						break;
 					case 9:
-						alarm.setAlarmvalue(Integer.parseInt(content));
+						alarmhash.put("alarmvalue", content);						
 						break;
 					default:
 						System.out.println("not correct");
 						break;
 					}
 				}
-
-				try {
-					//Calendar c = Calendar.getInstance();
-					//Date now = c.getTime();
-					Date now = new Date();
-					alarm.setRealtime(now);
-
-					// /////////////////////case alarm code
-					switch (alarm.getAlarmcode()) {
-					case 200000:
-					case 200001:
-					case 200902:
-					case 200903:
-					case 200904:
-					case 200905:
-					case 200906:
-					case 200907:
-					case 200908:	
-					case 200909:
-					case 200910:
-					case 200911:
-					case 200920:
-					case 200921:
-						//doCbatUpstart(alarm);
-						doAlarm(alarm);
-						break;					
-					default:
-						;
-					}
-
-				} catch (Exception e) {
-					//System.out.println("trap save db error alarm save error");
-					e.printStackTrace();
-				}
+				
+				
+				
+				String msgservice = JSONValue.toJSONString(alarmhash);
+				
+				
+				 parseAlarmMsg(alarmhash );
+				
+				
+				
+				
 				return;
 			}
 			
-			if(recVBs.size() == 6){
-//				HeartBean heart = new HeartBean(); 
-//				for (int i = 0; i < recVBs.size(); i++) {
-//					VariableBinding recVB = recVBs.elementAt(i);
-//					String content = recVB.getVariable().toString();
-//
-//					// populate the alarm
-//					switch (i) {
-//					case 0:
-//						
-//						break;
-//					case 1:
-//						
-//						break;
-//					case 2:
-//						heart.setCode(Integer.parseInt(content));
-//						break;
-//					case 3:
-//						heart.setInfo(content);
-//						break;
-//					case 4:
-//						heart.setCbatsys(content);
-//						break;
-//					case 5:
-//						heart.setCnusys(content);
-//						break;				
-//					default:
-//						System.out.println("heart read not correct");
-//						break;
-//					}
-//				}
-//				doheart(heart);
-			}
 
 		}
 
 	}
 	
-	private void doAlarm(Alarm alarm) {
+	
+	@SuppressWarnings("unchecked")
+	private void parseAlarmMsg(Map alarmhash){
+		
+		
+		
+		try {			 
+			 long alarmtime = System.currentTimeMillis();
+			 Date date = new Date();
+			 DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			 String alarmtimes = format.format(date);
+			 alarmhash.put("lalarmtime", Long.toString(alarmtime));
+			 alarmhash.put("salarmtime", alarmtimes);
+			 int isOnline = -1;
+				String cnumac = "";
+				int cnutype = 0;
+				int index1 = 0;
+				int index2 = 0;
+			 
+			// /////////////////////case alarm code
+			switch (Integer.parseInt((String) alarmhash.get("alarmcode"))) {
+			case 200902:
+				String trapinfo = (String) alarmhash.get("trapinfo");
+				index1 = trapinfo.indexOf("[");
+				index2 = trapinfo.indexOf("]");
+				cnumac = trapinfo.substring(0, index1).toLowerCase()
+						.trim();
+				cnutype = Integer.parseInt(trapinfo.substring(
+						index1 + 1, index2));
+				
+				isOnline = Integer.parseInt((String)alarmhash.get("alarmvalue"));
+				alarmhash.put("alarmlevel", "7");
+				alarmhash.put("cnumac", cnumac);
+				alarmhash.put("cnutype", cnutype);
+				
+				if( 1 == isOnline){
+				alarmhash.put("cnalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"的终端上线");
+				alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"'s slave online");
+				}else{
+					alarmhash.put("cnalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"的终端下线");
+					alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"'s slave offline");
+				}
+				
+				
+				break;
+			case 200901:			
+			case 200909:
+				// 事件	upgrade			
+				
+				String status = (String)alarmhash.get("alarmvalue");
+				int istatus = Integer.parseInt(status);
+				
+				if(istatus >1)
+				{				
+					alarmhash.put("alarmlevel", "1");
+					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级失败");
+					alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +" Upgrade Failed!");
+					
+				}
+				else if(istatus==1)
+				{
+					alarmhash.put("alarmlevel", "7");
+					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级告警信息");
+					alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +" Upgrade  Alarm information!");
+									
+				}
+				else if(istatus == 0)
+				{
+					alarmhash.put("alarmlevel", "6");
+					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级成功");
+					alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +" Upgrade Successful!");
+									
+				}
+				
+				break;
+			case 200903:
+				alarmhash.put("alarmlevel", "1");
+				alarmhash.put("cnalarminfo", "环境温度告警");
+				alarmhash.put("enalarminfo", "Environment temperature alarm");				
+				break;
+			case 200904:
+				alarmhash.put("alarmlevel", "1");
+				alarmhash.put("cnalarminfo", "CBAT管理CPU负载过高告警以及恢复");
+				alarmhash.put("enalarminfo", "CBAT Management CPU load warning and high recovery");				
+				break;
+			case 200905:
+				alarmhash.put("alarmlevel", "1");
+				alarmhash.put("cnalarminfo", "CBAT内存利用率过高告警");
+				alarmhash.put("enalarminfo", "CBAT memory utilization warning too high");				
+				break;
+			case 200910:
+			case 200911:
+				alarmhash.put("alarmlevel", "1");
+				break;
+			case 200906:
+				alarmhash.put("alarmlevel", "2");
+				alarmhash.put("cnalarminfo", "噪声过高告警");
+				alarmhash.put("enalarminfo", "High noise alarm");
+				
+				break;
+			case 200907:
+				alarmhash.put("alarmlevel", "2");
+				alarmhash.put("cnalarminfo", "链路层速率告警");
+				alarmhash.put("enalarminfo", "The link layer rate alarm");				
+				break;
+			case 200908:
+				alarmhash.put("alarmlevel", "2");
+				alarmhash.put("cnalarminfo", "物理层速率告警");
+				alarmhash.put("enalarminfo", "The physical layer rate alarm");
+				
+				break;
+			case 200913:
+				// 警告
+				alarmhash.put("alarmlevel", "2");
+				alarmhash.put("cnalarminfo", "用户数量超限");
+				alarmhash.put("enalarminfo", "The number of users, overrun");				
+				break;
+			case 200914:
+				if(Integer.parseInt((String)alarmhash.get("alarmvalue"))==1)
+				{
+					alarmhash.put("alarmlevel", "6");
+					alarmhash.put("cnalarminfo", "阻止 CNU注册 成功");
+					alarmhash.put("enalarminfo", "Prevent  CNU Register Successful");					
+				}
+				else
+				{
+					alarmhash.put("alarmlevel", "3");
+					alarmhash.put("cnalarminfo", "阻止 CNU注册 失败");
+					alarmhash.put("enalarminfo", "Prevent  CNU Register Failed");					
+				}
+				break;
+			case 200915:
+			case 200916:				
+				alarmhash.put("alarmlevel", "3");
+				break;
+			case 200918:
+				if( Integer.parseInt((String)alarmhash.get("alarmvalue"))==1)
+				{
+					alarmhash.put("alarmlevel", "6");
+					alarmhash.put("cnalarminfo", "KICK OFF CNU 成功");
+					alarmhash.put("enalarminfo", "KICK OFF CNU Successful");					
+				}
+				else
+				{
+					alarmhash.put("alarmlevel", "3");
+					alarmhash.put("cnalarminfo", "KICK OFF CNU 失败");
+					alarmhash.put("enalarminfo", "KICK OFF CNU Failed");					
+				}
+				break;
+			case 200919:
+				alarmhash.put("alarmlevel", "6");
+				alarmhash.put("cnalarminfo", "CNU强制重新注册");
+				alarmhash.put("enalarminfo", "CNU forced to registration again");				
+				break;
+			case 200920:			
+				// 告警				
+				alarmhash.put("alarmlevel", "6");
+				alarmhash.put("cnalarminfo", "CbatMac为"+ (String)alarmhash.get("cbatmac") +"的头端上线");
+				alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +"  Master online!");
+				break;
+			case 200921:				
+				alarmhash.put("alarmlevel", "2");
+				alarmhash.put("cnalarminfo", "CbatMac为"+ (String)alarmhash.get("cbatmac") +"的头端下线");
+				alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +"  Master offline!");
+				break;
+			case 200912:				
+				alarmhash.put("alarmlevel", "5");
+				alarmhash.put("cnalarminfo", "非法用户试图注册");
+				alarmhash.put("enalarminfo", "llegal users trying to register");				
+				break;
+			}
+
+
+		} catch (Exception e) {
+			//System.out.println("trap save db error alarm save error");
+			e.printStackTrace();
+		}
+		
+		
+		doAlarm(alarmhash);
+		
+		
+	}
+	private void doAlarm(Map alarm) {
 		
 		//System.out.println("================================>>>>>code"+ alarm.getAlarmcode());
 		
-		// TODO Auto-generated method stub
-		DateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String msg = alarm.getAlarmcode() + "|" + alarm.getAlarmtype() + "|"
-				+ alarm.getCltindex() + "|" + alarm.getCnuindex() + "|"
-				+ alarm.getItemnumber() + "|" + alarm.getCbatmac() + "|"
-				+ alarm.getAlarmvalue() + "|" + alarm.getTrapinfo()+ "|" + format1.format(alarm.getRealtime())
-				+ "|" + alarm.getTimeticks();
-		//System.out.println("===================>>>>>send msg alarm");
-		sendToAlarmQueue(msg);
+		
+		 String msgservice = JSONValue.toJSONString(alarm);
+			
+		 sendToAlarmQueue(msgservice);
+		 
 	}
 
 //	private void doheart(HeartBean heart) {
@@ -339,41 +391,16 @@ public class TrapReceiverBean {
 //		sendToAlarmQueue(msg);
 //	}
 	
-	private void doCnuStatus(Alarm alarm) {
-		// TODO Auto-generated method stub
-		String msg = alarm.getAlarmcode() + "|" + alarm.getAlarmvalue() + "|"
-				+ alarm.getCltindex() + "|" + alarm.getCnuindex() + "|"
-				+ alarm.getCnumac() + "|" + alarm.getTrapinfo();
-		sendToHeartQueue(msg);
-	}
-
-	private void doCbatOnline(Alarm alarm) {
-		// TODO Auto-generated method stub
-		String msg = alarm.getAlarmcode() + "|" + alarm.getAlarmvalue() + "|"
-				+ alarm.getCltindex() + "|" + alarm.getCnuindex() + "|"
-				+ alarm.getCbatmac() + "|" + alarm.getTrapinfo();
-		sendToHeartQueue(msg);
-	}
-
-	private void doCbatUpstart(Alarm alarm) {
-		// TODO Auto-generated method stub
-		// discovery new Cbat
-		String msg = alarm.getAlarmcode() + "|" + alarm.getAlarmvalue() + "|"
-				+ alarm.getCltindex() + "|" + alarm.getCnuindex() + "|"
-				+ alarm.getCbatmac() + "|" + alarm.getTrapinfo();
-		sendToHeartQueue(msg);
-
-	}
+	
 
 	private void sendToAlarmQueue(String msg) {
 		try {
 			
-			channelAlarm.basicPublish("", ALARM_QUEUE_NAME,
-					MessageProperties.PERSISTENT_TEXT_PLAIN, msg.getBytes());
-			// System.out.println(" [x0] Alarm Sent '" + msg +
-			//"'");
+			Jedis jedis = redisUtil.getConnection();
+			jedis.lpush(ALARM_QUEUE_NAME, msg);
+			redisUtil.closeConnection(jedis);
 
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			//System.out.println("TrapReceiverBean:sendToQueue error");

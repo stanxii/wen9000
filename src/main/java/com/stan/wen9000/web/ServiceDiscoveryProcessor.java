@@ -18,18 +18,12 @@ import redis.clients.jedis.Jedis;
 
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 import com.stan.wen9000.reference.EocDeviceType;
-import com.stan.wen9000.service.CbatService;
-import com.stan.wen9000.service.CbatinfoService;
 
 public class ServiceDiscoveryProcessor  {
 
 
 
-	@Autowired
-	CbatService cbatsv;
 
-	@Autowired
-	CbatinfoService cbatinfosv;
 
 	EocDeviceType devicetype;
 
@@ -105,8 +99,8 @@ public class ServiceDiscoveryProcessor  {
 			continue;
 		}
 		
-//		 System.out.println(" [x]ServiceDiscoveryProcessor  Received '" +
-//		 message + "'");
+		 System.out.println(" [x]ServiceDiscoveryProcessor  Received '" +
+		 message + "'");
 		 
 		 
 		doWork(message);
@@ -212,6 +206,8 @@ public class ServiceDiscoveryProcessor  {
 		cbatentity.put("ip", cbatip.toLowerCase().trim());
 		cbatentity.put("label", cbatmac.toLowerCase().trim());
 		cbatentity.put("devicetype", cbatdevicetype.toLowerCase().trim());
+		//20 not have upgradestatus
+		cbatentity.put("upgradestatus", "20");
 		
 		jedis.hmset(scbatentitykey, cbatentity);
 	    

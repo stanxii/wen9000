@@ -1,0 +1,110 @@
+<div id="alarm" xmlns:spring="http://www.springframework.org/tags" xmlns:util="urn:jsptagdir:/WEB-INF/tags/util" xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0">
+  <jsp:directive.page contentType="text/html;charset=UTF-8" />
+  <jsp:output omit-xml-declaration="yes" />
+  
+  <script>
+	<![CDATA[
+  var oTable = null;
+
+
+    $(function() {
+
+    
+    	redrawTable();
+
+		setInterval("flushTable()",5000);
+		
+	  	
+	});
+
+  //自定义数据获取函数
+	function retrieveData( sSource, aoData, fnCallback ) {		
+		$.ajax( {
+			"type": "POST", 
+			"contentType": "application/json",
+			"url": sSource, 
+			"dataType": "json",
+			"data": JSON.stringify(aoData), 
+			"success": function(resp) {
+				fnCallback(resp);
+			}
+		});
+	}
+
+	function flushTable( ) {
+
+
+		oTable.fnDestroy();
+		oTable = null;
+		redrawTable();
+		
+	}
+
+	function redrawTable(){
+
+			$("#alarmtable").hide();
+  	  	
+  		if (oTable == null) { //仅第一次检索时初始化Datatable
+			$("#alarmtable").show();
+			oTable = $('#alarmtable').dataTable( {
+				"bAutoWidth": false,	//不自动计算列宽度
+				
+				"aoColumns": [							//设定各列宽度
+								{"sWidth": "15px"},
+								{"sWidth": "15px"},	
+								{"sWidth": "160px"},
+								{"sWidth": "110px"},
+								{"sWidth": "120px"},
+								{"sWidth": "140px"},
+								{"sWidth": "140px"},
+								{"sWidth": "15px"},
+								{"sWidth": "80px"},
+								{"sWidth": "160px"},
+								{"sWidth": "110px"},
+								{"sWidth": "120px"},
+								{"sWidth": "140px"},		
+													
+								{"sWidth": "*"}
+								],
+					"bProcessing": false,					//加载数据时显示正在加载信息
+					"bServerSide": true,					//指定从服务器端获取数据
+					"bFilter": false,						//不使用过滤功能
+					"bLengthChange": false,					//用户不可改变每页显示数量
+					"iDisplayLength": 8,					//每页显示8条数据
+					"sAjaxSource": "/wen9000/alarm/realtimealarm", //获取数据的url
+					"fnServerParams": function ( aoData ) {
+					      aoData.push( { "name": "iDisplayStart", "value": "0" } );
+					    },
+					"fnServerData": retrieveData,			//获取数据的处理函数
+					"sPaginationType": "full_numbers",		//翻页界面类型
+					"oLanguage": {							//汉化
+						"sLengthMenu": "每页显示 _MENU_ 条记录",
+						"sZeroRecords": "没有检索到数据",
+						"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
+						"sInfoEmtpy": "没有数据",
+						"sProcessing": "正在加载数据...",
+						"oPaginate": {
+							"sFirst": "首页",
+							"sPrevious": "前页",
+							"sNext": "后页",
+							"sLast": "尾页"
+						}
+					}
+				});
+			}
+	
+			//刷新Datatable，会自动激发retrieveData
+			oTable.fnDraw();
+			
+     }
+
+ 		  
+
+	 
+
+	 ]]>
+  </script>
+
+  <table id="alarmtable"><p></p>
+  </table>
+</div>

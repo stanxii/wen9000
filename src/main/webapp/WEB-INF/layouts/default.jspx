@@ -23,6 +23,7 @@
 	    		<tiles:insertAttribute name="body"/> 		    	
 		    </div>		   
 		</div>
+		<tiles:insertAttribute name="alarm" ignore="true" />
 		 <tiles:insertAttribute name="footer" ignore="true"/>
 	</body>
 </html>

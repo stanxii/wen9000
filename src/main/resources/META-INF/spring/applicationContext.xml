@@ -131,6 +131,16 @@
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
 	
+	<bean id="serviceAlarmProcessor" class="com.stan.wen9000.web.ServiceAlarmProcessor" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>	
+	
+	<bean id="trapReceiverBean" class="com.stan.wen9000.web.TrapReceiverBean" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
+	
+	
+	
 	<!-- 调度业务 -->
 	<bean id="jobDetail1" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 	 <property name="targetObject" ref="serviceDiscoveryProcessor" />
@@ -142,6 +152,18 @@
 	 <property name="targetMethod"  value="execute"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
+	<bean id="serviceAlarmjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceAlarmProcessor" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	<bean id="trapReceiverJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="trapReceiverBean" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	
+	
 	
 	<bean id="simpleTrigger1" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 	 <property name="jobDetail" ref="jobDetail1" />
@@ -154,7 +176,22 @@
 	 <property name="startDelay" value="3000" />
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="0" />		  	 
+	</bean>	
+	<bean id="serviceAlarmTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceAlarmjob" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />		  	 
 	</bean>
+	<bean id="trapReceierTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="trapReceiverJob" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />		  	 
+	</bean>
+	
+	
+	
 	
 	<!-- 设置调度 -->
 	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
@@ -164,6 +201,8 @@
 	   <ref bean="simpleTrigger" />
 	   <ref bean="simpleTrigger1" />
 	   <ref bean="serviceProcessTrigger" />
+	   <ref bean="serviceAlarmTrigger" />
+	   <ref bean="trapReceierTrigger" />
 	  </list>
 	 </property>	 
 	</bean>

@@ -58,31 +58,19 @@ public class WorkerDiscoveryProcessor{
 //	    }
 //	 
 
-	public void execute() {
+	public void execute() throws Exception {
 //		System.out.println(" [x2] WorkerDiscoveryProcessor Start......");
 		logger.info(" [x2] WorkerDiscoveryProcessor Start......");
 
-		try {
+		
 			servicestart();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 
 	}
 
 	public static void servicestart() throws Exception {
 
-		
-//		ApplicationContext ac = new ClassPathXmlApplicationContext("beans-config.xml");
-//		//BeanFactory factory  = new XmlBeanFactory((Resource) new ClassPath("beans-config.xml"));
-//		RedisUtil ru = (RedisUtil) ac.getBean("redisUtil", RedisUtil.class);
-//		
-		
-		
-//		jedis = pool.getResource();
-		
-		
+	
 		while (true) {
 			String message = null;
 			
@@ -93,7 +81,7 @@ public class WorkerDiscoveryProcessor{
 			
 			 redisUtil.closeConnection(jedis);
 			
-//			System.out.println(" [x] WorkerDiscoveryProcessor what message and len[" + message + "]  " );
+			//System.out.println(" [x] WorkerDiscoveryProcessor what message and len[" + message + "]  " );
 			
 			if(message == null ) {
 //				System.out.println(" [x] WorkerDiscoveryProcessor null and will continue ");
@@ -103,8 +91,8 @@ public class WorkerDiscoveryProcessor{
 			}
 			
 			
-//			System.out.println(" [x] WorkerDiscoveryProcessor Received '" + message
-//					+ "'");
+			System.out.println(" [x] WorkerDiscoveryProcessor Received '" + message
+					+ "'");
 			
 			
 			
@@ -143,91 +131,91 @@ public class WorkerDiscoveryProcessor{
 			return;
 		}
 		
-		if (hfcping(currentip, "161")) {
-			//tong
-			String oid = "";
-			String hfc_mac = "30:71:b2:00:00:00";
-			String hfc_version = "";
-			String hfc_LogicalID = "";
-			String hfc_ModelNumber = "";
-			String hfc_SerialNumber = "";
-			try{
-				oid = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
-					2, 1, 1, 2, 0 }));
-				hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}) );
-				hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}) );
-				hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}) );
-				hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}) );
-			}
-			catch(Exception e){
-				logger.info("read hfc info error!");
-			}
-			String hfctype = "";
-			if (oid.toString().equals("1.3.6.1.4.1.2000.1.3000"))
-	        {
-				hfctype = "光平台";
-	        }
-	        else if (oid.toString().equals("1.3.6.1.4.1.17409.8888.1"))
-	        {
-	        	hfctype = "万隆8槽WOS2000";
-	        }
-	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.8686"))
-	        {
-	        	hfctype = "万隆增强光开关";
-	        }
-	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.11"))
-	        {
-	        	hfctype = "掺铒光纤放大器";
-	        }
-	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.6"))
-	        {
-	        	hfctype = "1310nm光发射机";
-	        }
-	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.10"))
-	        {
-	        	hfctype = "光工作站";
-	        }
-	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.9"))
-	        {
-	        	hfctype = "光接收机";
-	        }
-	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.7"))
-	        {
-	        	hfctype = "1550光发射机";
-	        }
-	        else
-	        {
-	        	hfctype = "未知设备类型";
-	        }
-			
-			 String msgservice="";
-			 Map paramhash=new LinkedHashMap();				 
-			 paramhash.put("msgcode", "003");
-			 paramhash.put("ip", currentip);
-			 paramhash.put("oid", oid);	
-			 paramhash.put("hfcmac", hfc_mac);
-			 paramhash.put("hfctype", hfctype);	
-			 paramhash.put("version", hfc_version);	
-			 paramhash.put("logicalid", hfc_LogicalID);
-			 paramhash.put("modelnumber", hfc_ModelNumber);
-			 paramhash.put("serialnumber", hfc_SerialNumber);
-			 
-			 msgservice = JSONValue.toJSONString(paramhash);
-			
-			sendToPersist(msgservice);
-			//System.out.println("hfc tong ");
-			return;
-		}
+//		if (hfcping(currentip, "161")) {
+//			//tong
+//			String oid = "";
+//			String hfc_mac = "30:71:b2:00:00:00";
+//			String hfc_version = "";
+//			String hfc_LogicalID = "";
+//			String hfc_ModelNumber = "";
+//			String hfc_SerialNumber = "";
+//			try{
+//				oid = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
+//					2, 1, 1, 2, 0 }));
+//				hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}) );
+//				hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}) );
+//				hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}) );
+//				hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}) );
+//			}
+//			catch(Exception e){
+//				logger.info("read hfc info error!");
+//			}
+//			String hfctype = "";
+//			if (oid.toString().equals("1.3.6.1.4.1.2000.1.3000"))
+//	        {
+//				hfctype = "光平台";
+//	        }
+//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.8888.1"))
+//	        {
+//	        	hfctype = "万隆8槽WOS2000";
+//	        }
+//	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.8686"))
+//	        {
+//	        	hfctype = "万隆增强光开关";
+//	        }
+//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.11"))
+//	        {
+//	        	hfctype = "掺铒光纤放大器";
+//	        }
+//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.6"))
+//	        {
+//	        	hfctype = "1310nm光发射机";
+//	        }
+//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.10"))
+//	        {
+//	        	hfctype = "光工作站";
+//	        }
+//	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.9"))
+//	        {
+//	        	hfctype = "光接收机";
+//	        }
+//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.7"))
+//	        {
+//	        	hfctype = "1550光发射机";
+//	        }
+//	        else
+//	        {
+//	        	hfctype = "未知设备类型";
+//	        }
+//			
+//			 String msgservice="";
+//			 Map paramhash=new LinkedHashMap();				 
+//			 paramhash.put("msgcode", "003");
+//			 paramhash.put("ip", currentip);
+//			 paramhash.put("oid", oid);	
+//			 paramhash.put("hfcmac", hfc_mac);
+//			 paramhash.put("hfctype", hfctype);	
+//			 paramhash.put("version", hfc_version);	
+//			 paramhash.put("logicalid", hfc_LogicalID);
+//			 paramhash.put("modelnumber", hfc_ModelNumber);
+//			 paramhash.put("serialnumber", hfc_SerialNumber);
+//			 
+//			 msgservice = JSONValue.toJSONString(paramhash);
+//			
+//			sendToPersist(msgservice);
+//			//System.out.println("hfc tong ");
+//			return;
+//		}
 		
 		
 		//eoc
-//		tong = ping(currentip);
+
 		
 
 		
 		devicetype = eocping(currentip, "161");
 
-			
+		System.out.println("----------------------------------------->>>>11111");
 		
 			// ///////////////////////////////////////////////////
 			if (devicetype != -1) {
@@ -274,20 +262,20 @@ public class WorkerDiscoveryProcessor{
 //				 
 				 
 				
-				Map paramhash=new LinkedHashMap();
+				Map cbathash=new LinkedHashMap();
 				
 				 
 				 
-				 paramhash.put("msgcode", "001");
-				 paramhash.put("ip", currentip.toLowerCase().trim());
-				 paramhash.put("cbatmac", cbatmac.toLowerCase().trim());
-				 paramhash.put("cbatdevicetype", Long.toString(devicetype));
-				 paramhash.put("cbatinfo:agentport", Integer.toString(agetnport));
-				 paramhash.put("cbatinfo:appver", appver.trim());				 
-				 paramhash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
-				 paramhash.put("cbatinfo:mvlanenable", mvlanenable == 1 ? "1" :"0");
+				 cbathash.put("msgcode", "001");
+				 cbathash.put("ip", currentip.toLowerCase().trim());
+				 cbathash.put("cbatmac", cbatmac.toLowerCase().trim());
+				 cbathash.put("cbatdevicetype", Long.toString(devicetype));
+				 cbathash.put("cbatinfo:agentport", Integer.toString(agetnport));
+				 cbathash.put("cbatinfo:appver", appver.trim());				 
+				 cbathash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
+				 cbathash.put("cbatinfo:mvlanenable", mvlanenable == 1 ? "1" :"0");
 				 
-				 msgservice = JSONValue.toJSONString(paramhash);
+				 msgservice = JSONValue.toJSONString(cbathash);
 				
 				sendToPersist(msgservice);
 				msgservice = "";

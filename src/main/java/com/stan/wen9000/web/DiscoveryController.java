@@ -180,8 +180,8 @@ public class DiscoveryController {
 
 			
 			jedis.lpush(DISCOVERY_QUEUE_NAME, currentip);
-			// System.out.println("DiscoveryAction [x] Sent '" + currentip +
-			// "'");
+			 System.out.println("DiscoveryAction [x] Sent '" + currentip +
+			 "'");
 
 			longstartIp++;
 

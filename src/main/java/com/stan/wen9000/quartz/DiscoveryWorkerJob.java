@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 public class DiscoveryWorkerJob {
 
-	private int timeout;
 	private int i=0;
 	
 	
@@ -28,7 +27,6 @@ public class DiscoveryWorkerJob {
     
 
 	public void setTimeout(int timeout) {
-		this.timeout = timeout;
 	}
 
 
