@@ -5,7 +5,8 @@
     <script><![CDATA[
       $.fx.speeds._default = 500;
 	  $(document).ready(function() {		
-	  		setInterval("reloadtree()",10000);
+	  		//setInterval("reloadtree()",10000);
+	  		
   			 $("#navtree").dynatree({
   			 	persist: true,
   			 	selectMode: 3,
@@ -21,7 +22,7 @@
 		            url: "/wen9000/global/eocs"
 		            //addExpandedKeyList: true
   			 	},  			 	
-		        imagePath: "../css/images/",
+		        imagePath: "/wen9000/css/images/",
 				onClick: function(node, event) {
 					var jsondata;
 			        if(node.data.type=="cbat"){			        	
@@ -48,22 +49,58 @@
 
 			          		var urltext="/wen9000/global/cnus/"+node.data.key;
 				          	$.ajax({url:urltext,dataType:"text",success:function(text){
-				          		jsondata=$.parseJSON(text);			          		
-				          		$("#main").empty();		
-				          		$('.ui-dialog #dialog').remove();	          				          		
-					          	$("#main").append('<div id="devinfo"><h6>终端设备信息</h6><h3 style="color:green">基本信息</h3><hr/>'+
-					          	'<table id="baseinfo"><tr><td><lable>mac :'+ jsondata.mac+'</lable></td>'+
-					          	'<td><lable>状态 :'+ jsondata.active+'</lable></td></tr>'+
-					          	'<tr><td><lable>设备类型: '+"待定"+'</lable></td>'+
-								'<td><lable>地址: '+jsondata.address+'</lable></td>'+
-								'<tr><td><lable>联系方式 : '+jsondata.contact+'</lable></td>'+
-								'<td><lable>电话: '+jsondata.phone+'</lable></td></tr>'+
-								'</table></div><br/><br/><h3 style="color:green">配置信息</h3><hr/>'+
-								'<div id="dialog" style="display:none" title="配置信息"><p>终端详细的配置信息将会在这里显示！！！！！<br/>选择的设备MAC地址是:'+jsondata.mac+'</p></div>'+
-								'<div><button id="btninfo">配置信息</button></div>'
-								);
-				          	}
-				          });		          		          	
+				          		jsondata=$.parseJSON(text);	
+				          		var tmpdata;
+				          		var url_2 = "/wen9000/global/cnuprofiles/"+node.data.key;
+				          		$.ajax({url:url_2,dataType:"text",success:function(text){
+				          			tmpdata = $.parseJSON(text);
+				          			$("#main").empty();		
+					          		$('.ui-dialog #dialog').remove();	          				          		
+						          	$("#main").append('<div id="devinfo"><h6>终端设备信息</h6><h3 style="color:green">基本信息</h3><hr/>'+
+						          	'<table id="baseinfo"><tr><td><lable>mac :'+ jsondata.mac+'</lable></td>'+
+						          	'<td><lable>状态 :'+ jsondata.active+'</lable></td></tr>'+
+						          	'<tr><td><lable>设备类型: '+"待定"+'</lable></td>'+
+									'<td><lable>地址: '+jsondata.address+'</lable></td>'+
+									'<tr><td><lable>联系方式 : '+jsondata.contact+'</lable></td>'+
+									'<td><lable>电话: '+jsondata.phone+'</lable></td></tr>'+
+									'</table></div><br/><br/><h3 style="color:green">配置信息</h3><hr/>'+
+									'<div id="dialog" style="display:none" title="配置信息"><p>终端详细的配置信息将会在这里显示！！！！！<br/>选择的设备MAC地址是:'+jsondata.mac+'</p></div>'+
+									'<div id="configinfo"><ul>'+
+										'<li><a href="#tabs-1">基本配置</a></li>'+
+										'<li><a href="#tabs-2">下行配置</a></li>'+
+										'<li><a href="#tabs-3">上行配置</a></li></ul>'+
+										'<div id="tabs-1">'+
+											'<table id="optinfo"><tr><td><lable>模板名称 :&nbsp &nbsp &nbsp'+tmpdata.profilename+'</lable></td>'+
+											'<td><lable>VLAN使能 : &nbsp &nbsp &nbsp  '+ tmpdata.vlanenable+'</lable></td></tr>'+
+											'<tr><td><lable>VLAN ID: &nbsp &nbsp &nbsp  '+tmpdata.vlanid+'</lable></td>'+
+											'<td><lable>1端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan0id+'</lable></td>'+
+											'<tr><td><lable>2端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan1id+'</lable></td>'+
+											'<td><lable>3端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan2id+'</lable></td>'+
+											'<tr><td><lable>4端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan3id+'</lable></td></tr></table>'+
+										'</div>'+
+										'<div id="tabs-2">'+
+											'<table id="optinfo"><tr><td><lable>下行限速使能 :&nbsp &nbsp &nbsp'+tmpdata.rxlimitsts+'</lable></td>'+
+											'<td><lable>下行全局限速 : &nbsp &nbsp &nbsp  '+ tmpdata.cpuportrxrate+'</lable></td></tr>'+
+											'<tr><td><lable>1端口下行限速: &nbsp &nbsp &nbsp  '+tmpdata.port0txrate+'</lable></td>'+
+											'<td><lable>2端口下行限速: &nbsp &nbsp &nbsp  '+tmpdata.port1txrate+'</lable></td>'+
+											'<tr><td><lable>3端口下行限速: &nbsp &nbsp &nbsp  '+tmpdata.port2txrate+'</lable></td>'+
+											'<td><lable>4端口下行限速: &nbsp &nbsp &nbsp  '+tmpdata.port3txrate+'</lable></td>'+
+											'</table>'+
+										'</div>'+
+										'<div id="tabs-3">'+
+											'<table id="optinfo"><tr><td><lable>上行限速使能 :&nbsp &nbsp &nbsp'+tmpdata.txlimitsts+'</lable></td>'+
+											'<td><lable>上行全局限速 :&nbsp &nbsp &nbsp  '+ tmpdata.cpuporttxrate+'</lable></td></tr>'+
+											'<tr><td><lable>1端口上行限速:&nbsp &nbsp &nbsp   '+tmpdata.port0rxrate+'</lable></td>'+
+											'<td><lable>2端口上行限速: &nbsp &nbsp &nbsp  '+tmpdata.port1rxrate+'</lable></td>'+
+											'<tr><td><lable>3端口上行限速: &nbsp &nbsp &nbsp  '+tmpdata.port2rxrate+'</lable></td>'+
+											'<td><lable>4端口上行限速:  &nbsp &nbsp &nbsp '+tmpdata.port3rxrate+'</lable></td>'+
+											'</table>'+
+										'</div>'+
+										'</div><button id="btninfo">配置信息</button>'
+									);
+				          		}
+				          		});
+				          		}});	  	         	          		          	
 			          	
 			          }else if(node.data.type=="hfc"){
 			          		var urltext="/wen9000/global/hfcs/"+node.data.key;
@@ -71,10 +108,13 @@
 				          		jsondata=$.parseJSON(text);			          		
 				          		$("#main").empty();		
 				          		$('.ui-dialog #dialog').remove();	          				          		
-					          	$("#main").append('<div id="devinfo"><h6>HFC设备信息</h6><h1>mac ='+ jsondata.mac+'</h1><h1>ip ='+ jsondata.ip+'</h1>'+
-								'<h1>oid = '+jsondata.oid+'</h1>'+
-								'<h1>hfctype = '+jsondata.hfctype+'</h1>'+
-								'<h1>logicalid = '+jsondata.logicalid+'</h1></div>'
+					          	$("#main").append('<div id="devinfo"><h6>HFC设备信息</h6><h3 style="color:green">基本信息</h3><hr/>'+
+					          	'<table id="baseinfo"><tr><td><lable>mac ='+ jsondata.mac+'</lable></td>'+
+					          	'<td><lable>ip ='+ jsondata.ip+'</lable></td></tr>'+
+								'<tr><td><lable>oid = '+jsondata.oid+'</lable></td>'+
+								'<td><lable>hfctype = '+jsondata.hfctype+'</lable></td></tr>'+
+								'<tr><td><lable>logicalid = '+jsondata.logicalid+'</lable></td>'+
+								'</tr></div>'
 								);
 				          	}
 				          	});		    
@@ -96,12 +136,26 @@
 	  });
 	  
 	  function reloadtree(){
-	  		$("#navtree").dynatree("getTree").reload();
-	  		//$("#navtree").dynatree("getTree").reloadAjax();
+	  		var urltext="/wen9000/global/statuschange";
+	  		$.ajax({url:urltext,dataType:"text",success:function(text){
+					jsondata=$.parseJSON(text);
+					          	
+					          	
+				}
+			});
 	  		
 	  }
 	  
 	  $(function() {
+	  	$("#configinfo").livequery( function(){
+	  		$(this).tabs({
+				cookie: {
+					// store cookie for a day, without, it would be a session cookie
+					expires: 1
+				}
+		   	});
+	  	});
+	  	
 	  	$("#btninfo").live('click', function() { 	  			
 			$("#dialog").dialog({
 				autoOpen: false,

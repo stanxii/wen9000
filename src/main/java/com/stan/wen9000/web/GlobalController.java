@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.stan.wen9000.action.jedis.util.RedisUtil;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -24,7 +26,16 @@ import redis.clients.jedis.JedisPoolConfig;
 @Controller
 public class GlobalController {
 	private static Logger logger = Logger.getLogger(DiscoveryController.class);
+	private static final String STSCHANGE_QUEUE_NAME = "stschange_queue";
 	private static JedisPool pool;
+	private static RedisUtil redisUtil;
+	 public static RedisUtil getRedisUtil() {
+			return redisUtil;
+		}
+
+		public static void setRedisUtil(RedisUtil redisUtil) {
+			GlobalController.redisUtil = redisUtil;
+		}
 	
 	static {
         JedisPoolConfig config = new JedisPoolConfig();
@@ -68,6 +79,7 @@ public class GlobalController {
 		String id = jedis.get("cbatmac:"+mac+":cbatid");
 		String cbatkey = "cbatid:"+id+":entity";
 		String result = "";
+		logger.info("getcbat keys::::::=====>1");
 		if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1") ){
 			//设备在线，实时获得设备信息
 			jsonstring += '"'+ "active" + '"'+":"+ '"' + "在线" + '"' + ",";
@@ -77,6 +89,7 @@ public class GlobalController {
 			jsonstring += '"'+ "active" + '"'+":"+ '"' + "离线" + '"' + ",";
 			jsonstring += '"'+ "ip"+ '"'+":" + '"' + jedis.hget(cbatkey, "ip")+ '"' + ",";
 			jsonstring += '"'+ "label"+ '"'+":" + '"' + jedis.hget(cbatkey, "label")+ '"' + ",";
+			logger.info("getcbat keys::::::=====>1.1");
 			switch(Integer.parseInt(jedis.hget(cbatkey, "devicetype")))
 			{
 	        	case 1:
@@ -103,8 +116,10 @@ public class GlobalController {
 	        		result = "Unknown";
 	        		break;
 			}
+			logger.info("getcbat keys::::::=====>1.2");
 			jsonstring += '"'+ "devicetype"+ '"'+":" + '"' + result+ '"' + ",";
 			//读取cbatinfo信息
+			logger.info("getcbat keys::::::=====>2");
 			String cbatinfokey = "cbatid:"+id+":cbatinfo";
 			jsonstring += '"'+ "address"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "address")+ '"' + ",";
 			jsonstring += '"'+ "phone"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "phone")+ '"' + ",";
@@ -145,6 +160,46 @@ public class GlobalController {
     		jsonstring += '"'+ "phone"+ '"'+":" + '"' + jedis.hget(cnukey, "phone")+ '"' + "}";
     	}
     	
+		pool.returnResource(jedis);
+		PrintWriter out = response.getWriter();
+        //logger.info("keys::::::"+ json);
+        out.println(jsonstring);  
+        out.flush();  
+        out.close();
+	}
+	
+	@RequestMapping(value="/cnuprofiles/{mac}", method=RequestMethod.GET)
+	public void getcnuprofile(HttpServletRequest request, HttpServletResponse response,@PathVariable String mac) throws IOException {		
+		response.setContentType("text/html");
+    	response.setCharacterEncoding("UTF-8");
+    	Jedis jedis = pool.getResource();
+    	//获取CNUID
+    	String id = jedis.get("cnumac:"+mac+":cnuid");
+    	//获取对应的profileid
+    	//这里是测试代码，profileid=1
+    	String prokey = "profileid:1:entity";
+    	//组合json字符串
+    	String jsonstring = "{";
+    	jsonstring += '"'+ "profilename" + '"'+":"+ '"' + jedis.hget(prokey,"profilename")+ '"' + ",";  
+    	jsonstring += '"'+ "vlanenable" + '"'+":"+ '"' + jedis.hget(prokey,"vlanenable")+ '"' + ",";
+    	jsonstring += '"'+ "vlan0id" + '"'+":"+ '"' + jedis.hget(prokey,"vlan0id")+ '"' + ",";
+    	jsonstring += '"'+ "vlan1id" + '"'+":"+ '"' + jedis.hget(prokey,"vlan1id")+ '"' + ",";
+    	jsonstring += '"'+ "vlan2id" + '"'+":"+ '"' + jedis.hget(prokey,"vlan2id")+ '"' + ",";
+    	jsonstring += '"'+ "vlan3id" + '"'+":"+ '"' + jedis.hget(prokey,"vlan3id")+ '"' + ",";
+    	
+    	jsonstring += '"'+ "rxlimitsts" + '"'+":"+ '"' + jedis.hget(prokey,"rxlimitsts")+ '"' + ",";
+    	jsonstring += '"'+ "cpuportrxrate" + '"'+":"+ '"' + jedis.hget(prokey,"cpuportrxrate")+ '"' + ",";
+    	jsonstring += '"'+ "port0txrate" + '"'+":"+ '"' + jedis.hget(prokey,"port0txrate")+ '"' + ",";
+    	jsonstring += '"'+ "port1txrate" + '"'+":"+ '"' + jedis.hget(prokey,"port1txrate")+ '"' + ",";
+    	jsonstring += '"'+ "port2txrate" + '"'+":"+ '"' + jedis.hget(prokey,"port2txrate")+ '"' + ",";
+    	jsonstring += '"'+ "port3txrate" + '"'+":"+ '"' + jedis.hget(prokey,"port3txrate")+ '"' + ",";
+    	
+    	jsonstring += '"'+ "txlimitsts" + '"'+":"+ '"' + jedis.hget(prokey,"txlimitsts")+ '"' + ",";
+    	jsonstring += '"'+ "cpuporttxrate" + '"'+":"+ '"' + jedis.hget(prokey,"cpuporttxrate")+ '"' + ",";
+    	jsonstring += '"'+ "port0rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port0rxrate")+ '"' + ",";
+    	jsonstring += '"'+ "port1rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port1rxrate")+ '"' + ",";
+    	jsonstring += '"'+ "port2rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port2rxrate")+ '"' + ",";
+    	jsonstring += '"'+ "port3rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port3rxrate")+ '"' + "}";
 		pool.returnResource(jedis);
 		PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ json);
@@ -261,34 +316,36 @@ public class GlobalController {
     	Jedis jedis = pool.getResource();
     	String jsonstring = "";
     	Set<String> list = jedis.keys("cbatid:*:entity");
-    	int i=0;
+
     	for(Iterator it = list.iterator(); it.hasNext(); ) 
     	{ 
-    		i++;
     		if(jsonstring == ""){
     			jsonstring += "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
     			+'"'+":[{";
     		}else{
     			jsonstring += ",{";
     		}
-    		String key = it.next().toString();    		
+    		String key = it.next().toString();   
     		//添加头端信息
     		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
     			jsonstring += '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
         		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+","+'"'+"children"+'"'+":";
     		}else{
     			jsonstring += '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-        		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"../../wen9000/css/images/offline.png"+'"'+","+'"'+"children"+'"'+":";
+        		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"'+","+'"'+"children"+'"'+":";
     		}
-    		
-    		//取得所有属于cbatmac为mac的cnu key
-        	Set<String> list_cnu = jedis.keys("cnuid:*:cbatid:"+jedis.get("cbatmac:"+jedis.hget(key, "mac")+":cbatid")+":*:entity");
-        	int j=0;
+
+    		//获取cbatid
+    		String cbatid = jedis.get("cbatmac:" + jedis.hget(key, "mac") + ":cbatid");
+    		//logger.info("keys::::::cbatid"+ cbatid);
+    		//取得所有属于cbatid的 cnuid
+        	Set<String> list_cnu = jedis.smembers("cbatid:" + cbatid + ":cnus");//jedis.keys("cnuid:*:cbatid:"+jedis.get("cbatmac:"+jedis.hget(key, "mac")+":cbatid")+":*:entity");
         	String cnustring ="";
         	for(Iterator jt = list_cnu.iterator(); jt.hasNext(); ) 
         	{ 
-        		String key_cnu = jt.next().toString();  
-        		j++;
+        		String key_cnuid = jt.next().toString();  
+        		String key_cnu = "cnuid:" + key_cnuid + ":entity";
+        		//logger.info("keys::::::key_cnu"+ key_cnu);
         		if(cnustring == ""){
         			cnustring += "[{";
         		}else{
@@ -299,14 +356,14 @@ public class GlobalController {
             		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
         		}else{
         			cnustring += '"'+ "title" + '"'+":"+'"'+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"../../wen9000/css/images/offline.png"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
+            		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
         		}
         		
         	}
         	cnustring += "]";
         	//头端下没有终端
         	if(cnustring.length()<3)
-        	{
+        	{        		
         		cnustring = "[{"+'"'+ "title" + '"'+":"+'"'+"NOData"+'"'+ "}]";
         	}
         	jsonstring += cnustring;
@@ -315,26 +372,29 @@ public class GlobalController {
     	jsonstring += "]}";
     	if(jsonstring.length()<3)
     	{
-    		jsonstring = "{"+'"'+ "title" + '"'+":"+'"'+"NOData"+'"'+ "}";
+    		jsonstring = "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
+			+'"'+":[{"+'"'+ "title" + '"'+":"+'"'+"NOData"+'"'+ "}]"+ "}";
     	}
     	
-    	String hfcstring = "";
-    	
+    	String hfcstring = "";    	
     	list = jedis.keys("hfcid:*:entity");
-    	for(Iterator it=list.iterator();it.hasNext();){
-    		if(hfcstring == ""){
+    	for(Iterator it=list.iterator();it.hasNext();){    		
+			if(hfcstring == ""){
         		hfcstring += ",{"+'"'+ "title" + '"'+":"+'"'+"HFC设备"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
     			+'"'+":[{";
     		}else{
     			hfcstring += ",{";
-    		}
+    		}    		
     		String key = it.next().toString();   
     		hfcstring += '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
     		+jedis.hget(key, "hfcmac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"hfc"+'"'+","+'"'+"children"+'"'+":"+"[{"+
     		'"'+ "title" + '"'+":"+'"'+jedis.hget(key, "logicalid")+'"'+ "},{"+ '"'+ "title" + '"'+":"+'"'+jedis.hget(key, "modelnumber")+'"'+ "},{"+
     		'"'+ "title" + '"'+":"+'"'+jedis.hget(key, "hfctype")+'"'+ "}]}";
     	}
-    	hfcstring += "]}]";
+    	if(hfcstring.length()>3){
+    		hfcstring += "]}";
+    	}
+    	hfcstring += "]";
     	jsonstring += hfcstring;
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
@@ -356,10 +416,8 @@ public class GlobalController {
     	Jedis jedis = pool.getResource();
     	String jsonstring = "";
     	Set<String> list = jedis.keys("cbatid:*:entity");
-    	int i=0;
     	for(Iterator it = list.iterator(); it.hasNext(); ) 
     	{ 
-    		i++;
     		if(jsonstring == ""){
     			jsonstring += "{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
     			+'"'+":[{";
@@ -398,11 +456,9 @@ public class GlobalController {
     	logger.info("cbatmac keys::::::"+ mac);
     	//取得所有属于cbatmac为mac的cnu key
     	Set<String> list = jedis.keys("cnuid:*:cbatid:"+jedis.get("cbatmac:"+mac+":cbatid")+":*:entity");
-    	int i=0;
     	for(Iterator it = list.iterator(); it.hasNext(); ) 
     	{ 
     		String key = it.next().toString();  
-    		i++;
     		if(jsonstring == ""){
     			jsonstring += "[{";
     		}else{
@@ -423,4 +479,38 @@ public class GlobalController {
         out.close();
 	}
 	
+	@RequestMapping(value = "statuschange")
+	@ResponseBody
+	private void getsts(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		response.setContentType("text/html");
+    	response.setCharacterEncoding("UTF-8");
+    	Jedis jedis = pool.getResource();
+    	Jedis jedis_queue = redisUtil.getConnection();
+    	String jsonstring = "";
+    	//从状态变更队列获取状态变更的设备
+    	while (true) {
+			String message = null;		
+			message = jedis_queue.rpop(STSCHANGE_QUEUE_NAME);
+			
+			if(message == null) {		
+				break;
+			}
+			else if(message.equalsIgnoreCase("ok")) {
+				
+				System.out.println("Why ServiceDiscoveryProcessor receive == ok?? i don't know");
+				continue;
+			}else if(message.length() < 3) {
+				System.out.println("Why ServiceDiscoveryProcessor receive len < 3 i don't know");
+				continue;
+			}
+    	
+			redisUtil.closeConnection(jedis_queue);
+	    	//logger.info("cnukeys::::::"+ jsonstring);
+	    	pool.returnResource(jedis);
+	        PrintWriter out = response.getWriter();
+	        out.println(jsonstring);  
+	        out.flush();  
+	        out.close();
+		}
+	}
 }
