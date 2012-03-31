@@ -175,32 +175,28 @@ public class ServiceDiscoveryProcessor  {
 		
 		
 		
-		String cbatmackey = "cbatmac:" +  cbatmac.toLowerCase().trim() + ":cbatid";
+		String cbatmackey = "mac:" +  cbatmac.toLowerCase().trim() + ":deviceid";
 		
 		//get cbatmac if exist in redis server
 		String scbatid = jedis.get(cbatmackey);		
 		
 				
-		long cbatid ;
-		long cbatinfoid ;
+		long icbatid ;
 		
 		if(scbatid == null) {
-			cbatid = jedis.incr("global:cbatid");
-			jedis.set("global:cbatinfoid", Long.toString(cbatid));
-			cbatinfoid =  cbatid;
-			jedis.set(cbatmackey, Long.toString(cbatid) );
+			icbatid = jedis.incr("global:deviceid");		
+			jedis.set(cbatmackey, Long.toString(icbatid) );
 		}else {
-			cbatid = Long.parseLong(scbatid);
-			cbatinfoid = cbatid ;
-			
-			
+			icbatid = Long.parseLong(scbatid);
+					
 		}
 		
 	      
 	    
-		String scbatentitykey = "cbatid:" + cbatid + ":entity";
+		String scbatentitykey = "cbatid:" + icbatid + ":entity";
 		Map<String , String >  cbatentity = new HashMap<String, String>();
-		 
+		
+		cbatentity.put("deviceclass", "cbat");
 		cbatentity.put("mac", cbatmac.toLowerCase().trim());
 		cbatentity.put("active", "1");
 		cbatentity.put("ip", cbatip.toLowerCase().trim());
@@ -217,7 +213,7 @@ public class ServiceDiscoveryProcessor  {
 		
 		Map<String , String >  hash = new HashMap<String, String>();
 		 
-		String scbatinfokey = "cbatid:" + cbatid + ":cbatinfo";
+		String scbatinfokey = "cbatid:" + icbatid + ":cbatinfo";
 		hash.put("address", "na");
 		hash.put("phone", "13988777");
 		hash.put("bootver", "cml-boot-v1.1.0_for_linux_sdk");
@@ -228,7 +224,7 @@ public class ServiceDiscoveryProcessor  {
 		hash.put("mvlanenable", mvlanenable);
 		
 		jedis.hmset(scbatinfokey, hash);
-		// hmset cnuid:1 cnuid 1 mac 30:71:b2:88:88:01 label fuckyou
+		// hmset cnuid:1 cnuid 1 mac 30:71:b2:88:88:01 label 
 		 		
 				
 		long end = System.currentTimeMillis();  
@@ -265,7 +261,7 @@ public class ServiceDiscoveryProcessor  {
 		String modelnumber =(String) jsonobj.get("modelnumber");
 		String serialnumber =(String) jsonobj.get("serialnumber");
 		
-		String hfckey = "hfcmac:" +  hfcmac.toLowerCase().trim() + ":hfcid";
+		String hfckey = "mac:" +  hfcmac.toLowerCase().trim() + ":deviceid";
 		
 		//get hfcmac if exist in redis server
 		String shfcid = jedis.get(hfckey);
@@ -273,7 +269,7 @@ public class ServiceDiscoveryProcessor  {
 		long hfcid ;
 		
 		if(shfcid == null) {
-			hfcid = jedis.incr("global:hfcid");
+			hfcid = jedis.incr("global:deviceid");
 			jedis.set(hfckey, Long.toString(hfcid) );
 		}else {
 			hfcid = Long.parseLong(shfcid);			

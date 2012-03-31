@@ -1,13 +1,23 @@
 package com.stan.wen9000.web;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+
+
+
+
+
+
 
 
 
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,39 +54,78 @@ public class AlarmController {
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/realtimealarm", method = RequestMethod.POST, headers = "Accept=application/json")
 	@ResponseBody
-	public ResponseEntity<String> listRealtimeAlarm(@RequestParam(value="sEcho", required = false) String sEcho,@RequestParam(value="iDisplayStart", required = false) Integer page, @RequestParam(value="size", required = false) Integer size ){ 
+	public ResponseEntity<String> listRealtimeAlarm( @RequestBody String json){ 
 	
+		JSONObject jsonResponse = new JSONObject();
+		
 
-		
-		
 		HttpHeaders headers = new HttpHeaders();        
         headers.add("Content-Type", "application/json; charset=utf-8");
+	    long iDisplayStart=0;
+	    long iDisplayLength=0;
+	        
+		
+		System.out.println("RequesBody string=["+ json);
+		Object job = JSONValue.parse(json);
+				
+		JSONArray array = (JSONArray)job;
+		Map<String, String> param = new LinkedHashMap(20);
+		int iTotalRecords; // total number of records (unfiltered)
+	    int iTotalDisplayRecords;//value will be set when code filters companies by keyword
+		System.out.println("JSONArray size="+ array.size());
+		for(int i=0; i< array.size(); i++ ) {
+			JSONObject item = (JSONObject)array.get(i);		
+			if(((String)item.get("name")).equals("sEcho")){
+				System.out.println("sEcho=" + item.get("value"));
+				jsonResponse.put("sEcho", item.get("value"));
+			}else if(((String)item.get("name")).equals("iDisplayStart")){
+				iDisplayStart = (Long) item.get("value");
+				
+			
+			}else if(((String)item.get("name")).equals("iDisplayLength")){				
+				iDisplayLength = (Long) item.get("value");
+				System.out.println("iDisplayLength=" + iDisplayLength);
+			}
+			//param.put((String)item.get("name"), (String)item.get("value"));
+		}
+		
+		
+		System.out.println("now over 1");
+		
+		
+		
+	
+		
+		
+		
+		
       
-        int iTotalRecords; // total number of records (unfiltered)
-        int iTotalDisplayRecords;//value will be set when code filters companies by keyword
-        JSONObject jsonResponse = new JSONObject();
+      
         try {
             
+        	System.out.println("now over 2");
             JSONArray data = new JSONArray();
             Jedis jedis = pool.getResource();
-            long len = jedis.llen(ALARM_REALTIME_QUEUE_NAME);
-            iTotalRecords = (int)len;
-            iTotalDisplayRecords = (int)len;
-            System.out.println("get http request secho=" + sEcho);
-            jsonResponse.put("sEcho", "2");
+            
+            List<String> results = jedis.lrange(ALARM_REALTIME_QUEUE_NAME, iDisplayStart, iDisplayStart + iDisplayLength);
+            
+            
+            iTotalRecords = (int)(long)jedis.llen(ALARM_REALTIME_QUEUE_NAME);
+            iTotalDisplayRecords = (int)results.size();
+            System.out.println("get http request secho=" + param.get("sEcho")); 
             jsonResponse.put("iTotalRecords", iTotalRecords);
             jsonResponse.put("iTotalDisplayRecords", iTotalDisplayRecords);
             
-            
-            for(long i=len; len >0; len --) {
-	            String alarmid = (String)jedis.lindex(ALARM_REALTIME_QUEUE_NAME, len-1);
+           
+            for(int i=0; i< iTotalDisplayRecords ; i++) {
+	            String alarmid = results.get(i);
 	            String alarmkey = "alarmid:" + alarmid +":entity";
 	        	Map<String, String> alarmmap = jedis.hgetAll(alarmkey);
 	        	if(alarmmap != null){
 	        		JSONArray row = new JSONArray();
-	        		row.addAll(alarmmap.values());
-	        		data.add(row);
-	        			
+	        		row.addAll(alarmmap.values());	        		
+	        		data.add(row);	        		
+	        		 System.out.println("row=" + row.toJSONString());
 	        	}
             }
             pool.returnResource(jedis);

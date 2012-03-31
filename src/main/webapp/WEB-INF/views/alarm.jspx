@@ -9,10 +9,10 @@
 
     $(function() {
 
-    
+  
     	redrawTable();
 
-		setInterval("flushTable()",5000);
+		//setInterval("flushTable()",8000);
 		
 	  	
 	});
@@ -32,17 +32,32 @@
 	}
 
 	function flushTable( ) {
+		var jsonData =null;
+
+		//get add data and remove data then change 
+		if ($("#alarmtable") != null) { 
+			
+			//aoData.push( { "name": "iDisplayStart", "value": "0" } );
+			$.ajax( {
+				"url": "/wen9000/alarm/realtimealarm",
+				"type": "POST", 
+				"contentType": "application/json",				
+				"dataType": "json",
+				"data": {"iDisplayStart":"0"}, 
+				"success": function(resp) {
+					
+					changeTable(resp);
+					
+				}
+			});
 
 
-		oTable.fnDestroy();
-		oTable = null;
-		redrawTable();
-		
+			
+			
+		}
 	}
 
 	function redrawTable(){
-
-			$("#alarmtable").hide();
   	  	
   		if (oTable == null) { //仅第一次检索时初始化Datatable
 			$("#alarmtable").show();
@@ -65,38 +80,54 @@
 								{"sWidth": "140px"},		
 													
 								{"sWidth": "*"}
-								],
-					"bProcessing": false,					//加载数据时显示正在加载信息
-					"bServerSide": true,					//指定从服务器端获取数据
-					"bFilter": false,						//不使用过滤功能
-					"bLengthChange": false,					//用户不可改变每页显示数量
-					"iDisplayLength": 8,					//每页显示8条数据
-					"sAjaxSource": "/wen9000/alarm/realtimealarm", //获取数据的url
-					"fnServerParams": function ( aoData ) {
-					      aoData.push( { "name": "iDisplayStart", "value": "0" } );
-					    },
-					"fnServerData": retrieveData,			//获取数据的处理函数
-					"sPaginationType": "full_numbers",		//翻页界面类型
-					"oLanguage": {							//汉化
-						"sLengthMenu": "每页显示 _MENU_ 条记录",
-						"sZeroRecords": "没有检索到数据",
-						"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
-						"sInfoEmtpy": "没有数据",
-						"sProcessing": "正在加载数据...",
-						"oPaginate": {
-							"sFirst": "首页",
-							"sPrevious": "前页",
-							"sNext": "后页",
-							"sLast": "尾页"
-						}
+							],
+				"bProcessing": false,					//加载数据时显示正在加载信息
+				"bServerSide": true,					//指定从服务器端获取数据
+				"bFilter": false,						//不使用过滤功能
+				"bLengthChange": false,					//用户不可改变每页显示数量
+				"iDisplayLength": 8,					//每页显示8条数据
+				"sAjaxSource": "/wen9000/alarm/realtimealarm", //获取数据的url
+				"fnServerParams": function ( aoData ) {
+				      aoData.push( { "name": "iDisplayStart", "value": "0" } );
+				    },
+				"fnServerData": retrieveData,			//获取数据的处理函数
+				"sPaginationType": "full_numbers",		//翻页界面类型
+				"oLanguage": {							//汉化
+					"sLengthMenu": "每页显示 _MENU_ 条记录",
+					"sZeroRecords": "没有检索到数据",
+					"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
+					"sInfoEmtpy": "没有数据",
+					"sProcessing": "正在加载数据...",
+					"oPaginate": {
+						"sFirst": "首页",
+						"sPrevious": "前页",
+						"sNext": "后页",
+						"sLast": "尾页"
 					}
-				});
-			}
-	
-			//刷新Datatable，会自动激发retrieveData
-			oTable.fnDraw();
+				}
+			});
+		}
+
+		//刷新Datatable，会自动激发retrieveData
+		oTable.fnDraw();
+		
+	}
+
+	function changeTable(resp){
+		if(resp != null) {
+					oTable.fnClearTable();
+		
+		
+					for (var i = 0, l = resp.aaData.length; i < l; i++) {
+						oTable.fnAddData(resp.aaData[i]);
+					    }
+				    
+					
+			        
+					oTable.fnDraw();
 			
-     }
+			}
+	}
 
  		  
 
