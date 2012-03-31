@@ -86,10 +86,7 @@
 				"bFilter": false,						//不使用过滤功能
 				"bLengthChange": false,					//用户不可改变每页显示数量
 				"iDisplayLength": 8,					//每页显示8条数据
-				"sAjaxSource": "/wen9000/alarm/realtimealarm", //获取数据的url
-				"fnServerParams": function ( aoData ) {
-				      aoData.push( { "name": "iDisplayStart", "value": "0" } );
-				    },
+				"sAjaxSource": "/wen9000/alarm/realtimealarm", //获取数据的url				
 				"fnServerData": retrieveData,			//获取数据的处理函数
 				"sPaginationType": "full_numbers",		//翻页界面类型
 				"oLanguage": {							//汉化
