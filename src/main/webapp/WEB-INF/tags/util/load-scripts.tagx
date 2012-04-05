@@ -8,7 +8,9 @@
   <spring:url value="/resources/js/jquery-ui-1.8.16.custom.min.js" var="jqueryui_url" />
   <spring:url value="/resources/js/jquery.dataTables.js" var="datatable_url" />
   <spring:url value="/resources/js/jquery.dynatree.js" var="dynatree_url" />
-  <spring:url value="/resources/js/jquery.progressbar.js" var="jquery_progressbar_url" />
+  <spring:url value="/resources/js/jquery.progressbar.js" var="jquery_progressbar_url" />  
+  <spring:url value="/resources/js/jquery.vticker.js" var="jquery_vticker_url" />
+  
   
   <spring:url value="/resources/css/flick/jquery-ui-1.8.17.custom.css" var="flcik_url" />
   <spring:url value="/resources/css/jquery.dataTables.css" var="datatablescss_url" />
@@ -31,4 +33,7 @@
   <script src="${datatable_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
   <script src="${dynatree_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
   <script src="${jquery_progressbar_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
+  <script src="${jquery_vticker_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
+  
+  
 </jsp:root>

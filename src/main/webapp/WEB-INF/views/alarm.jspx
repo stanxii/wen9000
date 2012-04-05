@@ -8,11 +8,13 @@
 
 
     $(function() {
+    	
+    	
+    	historyAlarmTable();
 
-  
-    	redrawTable();
-
-		//setInterval("flushTable()",8000);
+    	flushRealTimeTable();
+    	
+		setInterval("flushRealTimeTable()",8000);
 		
 	  	
 	});
@@ -31,6 +33,37 @@
 		});
 	}
 
+    function flushRealTimeTable() {
+    	$.ajax( {
+			"url": "/wen9000/alarm/realtimealarm",
+			"type": "POST", 
+			"contentType": "application/json",				
+			"dataType": "json",
+			"data": {"iDisplayStart":"0", "iDisplayLength":10}, 
+			"success": function(resp) {
+				
+				redrawRealTimeTable(resp);
+				
+			}
+		});
+    }
+
+
+    function redrawRealTimeTable(resp) {
+
+    	
+		for (var i = 0, l = resp.aaData.length; i < l; i++) {
+			var row = resp.aaData[i];
+				$('#realtimeAlarm').append('<li>' + row[9] +'</li>');
+		    }
+
+		
+		$('.myclass').vTicker();
+		
+     }
+
+    
+    
 	function flushTable( ) {
 		var jsonData =null;
 
@@ -57,7 +90,7 @@
 		}
 	}
 
-	function redrawTable(){
+	function historyAlarmTable(){
   	  	
   		if (oTable == null) { //仅第一次检索时初始化Datatable
 			$("#alarmtable").show();
@@ -86,7 +119,7 @@
 				"bFilter": false,						//不使用过滤功能
 				"bLengthChange": false,					//用户不可改变每页显示数量
 				"iDisplayLength": 8,					//每页显示8条数据
-				"sAjaxSource": "/wen9000/alarm/realtimealarm", //获取数据的url				
+				"sAjaxSource": "/wen9000/alarm/historyalarm", //获取数据的url				
 				"fnServerData": retrieveData,			//获取数据的处理函数
 				"sPaginationType": "full_numbers",		//翻页界面类型
 				"oLanguage": {							//汉化
@@ -132,6 +165,12 @@
 
 	 ]]>
   </script>
+
+
+<div class='myclass'>
+	<ul  id="realtimeAlarm">
+	</ul>
+</div>
 
   <table id="alarmtable"><p></p>
   </table>

@@ -25,6 +25,7 @@ public class ServiceAlarmProcessor {
 	private static final String  ALARM_EXPIRE_SECONDS =  "alarm:expire:seconds" ;
 	private static final String  ALARM_REALTIME_MAX_NUM =  "alarm:realtime:max" ;
 	private static final String ALARM_REALTIME_QUEUE_NAME = "alarm_realtime_queue";
+	private static final String ALARM_HISTORY_QUEUE_NAME = "alarm_history_queue";
 	
 
 	private static RedisUtil redisUtil;
@@ -146,35 +147,11 @@ public class ServiceAlarmProcessor {
 			
 
 			doalarm(alarm);
+			for(int i=0;i<1000;i++){
+			savelarm(alarm);
+			}
 			
-			//presist alarm
-			Jedis jedis = redisUtil.getConnection();
 			
-			
-			//save alarm entity
-			long alarmid = jedis.incr("global:alarmid");
-			String salarmid = Long.toString(alarmid);
-			String alarmkey = "alarmid:" + salarmid + ":entity";
-			jedis.hmset(alarmkey, alarm);
-			
-			//expire alarm key three months
-			int lseconds= 3*30*24*60*60;
-			String seconds = jedis.get(ALARM_EXPIRE_SECONDS);
-			if(seconds != null)
-				 lseconds = Integer.parseInt(seconds);								
-			jedis.expire(alarmkey, lseconds);
-			
-			String smax = jedis.get(ALARM_REALTIME_MAX_NUM);
-			int imax = 100;
-			if(smax != null)
-				imax = Integer.parseInt(smax);
-			if(imax < 100 || imax > 1000) imax = 200;
-			
-			//set realtime alarm list queue
-			jedis.lpush(ALARM_REALTIME_QUEUE_NAME, salarmid);
-			jedis.ltrim(ALARM_REALTIME_QUEUE_NAME, 0, imax);
-			
-			redisUtil.closeConnection(jedis);
 			
 
 			
@@ -185,6 +162,44 @@ public class ServiceAlarmProcessor {
 	}
 
 
+	public static void savelarm(Map<String, String> alarm) {
+		//presist alarm
+		Jedis jedis = redisUtil.getConnection();
+		
+		
+		//save alarm entity
+		long alarmid = jedis.incr("global:alarmid");
+		String salarmid = Long.toString(alarmid);
+		String alarmkey = "alarmid:" + salarmid + ":entity";
+		jedis.hmset(alarmkey, alarm);
+		
+		//expire alarm key three months
+		int lseconds= 3*30*24*60*60;
+		String seconds = jedis.get(ALARM_EXPIRE_SECONDS);
+		if(seconds != null)
+			 lseconds = Integer.parseInt(seconds);								
+		jedis.expire(alarmkey, lseconds);
+		
+		String smax = jedis.get(ALARM_REALTIME_MAX_NUM);
+		int imax = 100;
+		if(smax != null)
+			imax = Integer.parseInt(smax);
+		else{
+			jedis.set(ALARM_REALTIME_MAX_NUM, Integer.toString(imax));
+		}
+		
+		//set realtime alarm list queue
+		jedis.lpush(ALARM_REALTIME_QUEUE_NAME, salarmid);
+		jedis.ltrim(ALARM_REALTIME_QUEUE_NAME, 0, imax -1);
+		
+		
+		//history alarm sorted sets score is timestamp
+		Double score = (double) System.currentTimeMillis();
+		jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
+		
+		
+		redisUtil.closeConnection(jedis);
+	}
 
 	public static void doalarm(Map<String, String> alarm) {
 		
