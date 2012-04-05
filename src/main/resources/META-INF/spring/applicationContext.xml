@@ -135,6 +135,10 @@
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>	
 	
+	<bean id="serviceHeartProcessor" class="com.stan.wen9000.web.ServiceHeartProcessor" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>	
+	
 	<bean id="trapReceiverBean" class="com.stan.wen9000.web.TrapReceiverBean" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
@@ -154,6 +158,11 @@
 	</bean>
 	<bean id="serviceAlarmjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 	 <property name="targetObject" ref="serviceAlarmProcessor" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	<bean id="serviceHeartjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceHeartProcessor" />
 	 <property name="targetMethod"  value="start"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
@@ -183,6 +192,12 @@
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="0" />		  	 
 	</bean>
+	<bean id="serviceHeartTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceHeartjob" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />		  	 
+	</bean>
 	<bean id="trapReceierTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 	 <property name="jobDetail" ref="trapReceiverJob" />
 	 <property name="startDelay" value="3000" />
@@ -202,7 +217,8 @@
 	   <ref bean="simpleTrigger1" />
 	   <ref bean="serviceProcessTrigger" />
 	   <ref bean="serviceAlarmTrigger" />
-	   <ref bean="trapReceierTrigger" />
+	   <ref bean="serviceHeartTrigger" />
+	   <ref bean="trapReceierTrigger" />	  
 	  </list>
 	 </property>	 
 	</bean>

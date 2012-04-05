@@ -33,9 +33,21 @@ span.dynatree-active a:hover
 }
 
 
+
+span.custom2 a
+{
+	font-weight: bold;
+	background-color: silver;
+	color: navy;
+}
+span.dynatree-folder span.dynatree-icon
+{
+    background-position: 0 0;
+	background-image: url("../css/images/folder_page.gif");
+}
 /*******************************************************************************
  * Custom node classes (sample)
- */
+
 
 span.custom1 a
 {
@@ -49,14 +61,5 @@ span.dynatree-exp-cl span.dynatree-icon
 	background-image: url("../css/images/folder_docs.gif");
 }
 
-span.custom2 a
-{
-	font-weight: bold;
-	background-color: silver;
-	color: navy;
-}
-span.dynatree-folder span.dynatree-icon
-{
-    background-position: 0 0;
-	background-image: url("../css/images/folder_page.gif");
-}
+
+ */

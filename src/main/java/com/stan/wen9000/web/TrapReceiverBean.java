@@ -25,8 +25,6 @@ import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 
 import redis.clients.jedis.Jedis;
-
-
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 
 
@@ -131,7 +129,7 @@ public class TrapReceiverBean {
 				for (int i = 0; i < recVBs.size(); i++) {
 					VariableBinding recVB = recVBs.elementAt(i);
 					String content = recVB.getVariable().toString();
-					 System.out.println("SNMP4j traper: content=" + content);
+					 //System.out.println("SNMP4j traper: content=" + content);
 
 					// populate the alarm
 					switch (i) {
@@ -182,19 +180,125 @@ public class TrapReceiverBean {
 				
 				
 				return;
+			}else if(recVBs.size() == 6){
+				//heart alarm
+				Map hearthash=new LinkedHashMap();
+				for (int i = 0; i < recVBs.size(); i++) {
+					VariableBinding recVB = recVBs.elementAt(i);
+					String content = recVB.getVariable().toString();
+
+					// populate the alarm
+					switch (i) {
+					case 0:
+						
+						break;
+					case 1:
+						
+						break;
+					case 2:
+						hearthash.put("code", content);
+						break;
+					case 3:
+						hearthash.put("info", content);
+						break;
+					case 4:
+						hearthash.put("cbatsys", content);
+						break;
+					case 5:
+						hearthash.put("cnusys", content);
+						break;				
+					default:
+						System.out.println("heart read not correct");
+						break;
+					}
+				}
+				
+				//String msgservice = JSONValue.toJSONString(hearthash);
+				parseHeartMsg(hearthash);
 			}
-			
 
 		}
 
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void parseHeartMsg(Map hearthash){
+		Map msgheart = new LinkedHashMap();
+		int index1 = 0;
+		int index2 = 0;
+		int flag = 0;
+		String cbatip = "";
+		String cbatmac = "";
+		int cbattype = 0;
+		msgheart.put("code", hearthash.get("code"));
+		try {
+			index1 = ((String) hearthash.get("cbatsys")).indexOf("|");
+			cbatmac = ((String) hearthash.get("cbatsys")).substring(1, index1);
+			msgheart.put("cbatmac", cbatmac);
+			index2 = ((String) hearthash.get("cbatsys")).indexOf("|", index1 + 1);
+			cbatip = ((String) hearthash.get("cbatsys")).substring(index1 + 1, index2);
+			msgheart.put("cbatip", cbatmac);
+			index1 = index2;
+			index2 = ((String) hearthash.get("cbatsys")).indexOf("]");
+			cbattype = Integer.parseInt(((String) hearthash.get("cbatsys")).substring(
+					index1 + 1, index2));
+			msgheart.put("cbattype", cbattype);
+			
+			index1 = 0;
+			index2 = 0;
+			String cnumac = "";
+			String cnutype = "";
+			String cltindex = "";
+			String cnuindex = "";
+			String active = "";
+			int count = 0;
+			count = ((String) hearthash.get("cnusys")).length()
+					- ((String) hearthash.get("cnusys")).replace("[", "").length();
+			// System.out.println("============>>count="+count);
+			msgheart.put("cnucount", count);
+			for (int i = 0; i < count; i++) {
+				String message = ((String) hearthash.get("cnusys")).substring(flag,
+						((String) hearthash.get("cnusys")).indexOf("]", flag + 1));
+
+				try {
+					index1 = message.indexOf("|");
+					cnumac = message.substring(1, index1);
+					msgheart.put("cnumac"+i, cnumac);
+					
+					index2 = message.indexOf("|", index1 + 1);
+					cnutype = message.substring(index1 + 1, index2);
+					msgheart.put("cnutype"+i, cnutype);
+					
+					index1 = index2;
+					index2 = message.indexOf("|", index1 + 1);
+					cltindex = message.substring(index1 + 1,index2);
+					msgheart.put("cltindex"+i, cltindex);
+
+					index1 = index2;
+					index2 = message.indexOf("|", index1 + 1);
+					cnuindex = message.substring(index1 + 1,index2);
+					msgheart.put("cnuindex"+i, cnuindex);
+
+					index1 = index2;
+					active = message.substring(index1 + 1);
+					msgheart.put("active"+i, active);
+
+					flag += (index1 + 3);
+
+					//doheartcnu(cbatmac, cnumac, cnutype, cltindex, cnuindex, active);
+				} catch (Exception e) {
+					System.out.println("parse cnusys error!");
+					return;
+				}
+			}
+			doheart(msgheart);
+		} catch (Exception e) {
+			System.out.println("parse cbatsys error!");
+		}
+	}
 	
 	@SuppressWarnings("unchecked")
-	private void parseAlarmMsg(Map alarmhash){
-		
-		
-		
+	private void parseAlarmMsg(Map alarmhash){		
 		try {			 
 			 long alarmtime = System.currentTimeMillis();
 			 Date date = new Date();
@@ -383,13 +487,11 @@ public class TrapReceiverBean {
 		 
 	}
 
-//	private void doheart(HeartBean heart) {
-//		// TODO Auto-generated method stub
-//		String msg = heart.getCode() + ";" + heart.getCbatsys() + ";"
-//				+ heart.getCnusys() + ";" + heart.getInfo();
-//		//System.out.println("===================>>>>>send msg alarm");
-//		sendToAlarmQueue(msg);
-//	}
+	private void doheart(Map heart) {
+		// TODO Auto-generated method stub
+		String msgservice = JSONValue.toJSONString(heart);
+		sendToHeartQueue(msgservice);
+	}
 	
 	
 
@@ -409,12 +511,10 @@ public class TrapReceiverBean {
 	}
 	
 	private void sendToHeartQueue(String msg) {
-		try {
-			
-//			channelHeart.basicPublish("", HEART_QUEUE_NAME,
-//					MessageProperties.PERSISTENT_TEXT_PLAIN, msg.getBytes());
-			// System.out.println(" [x0] Alarm_Heart Sent '" + msg +
-			// "'");
+		try {			
+			Jedis jedis = redisUtil.getConnection();
+			jedis.lpush(HEART_QUEUE_NAME, msg);
+			redisUtil.closeConnection(jedis);
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
