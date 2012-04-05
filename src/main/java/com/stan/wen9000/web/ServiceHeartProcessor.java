@@ -61,13 +61,13 @@ public class ServiceHeartProcessor{
 				continue;
 			}
 			
-			System.out.println(" [x] ServiceAlarmProcessor Received '" + message
+			System.out.println(" [x] ServiceHeartProcessor Received '" + message
 					+ "'");
 			
 			long start = System.currentTimeMillis();  			
 			dowork(message);					
 			long end = System.currentTimeMillis();  
-			System.out.println("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
+			System.out.println("one ServiceHeartProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 		}
 	}
 	
@@ -93,14 +93,14 @@ public class ServiceHeartProcessor{
 	private void doheart(Map<String,String> heart){
 		String cbatip = "";
 		String cbatmac = "";
-		int cbattype = 0;
+		String cbattype = "";
 		//解析cbat 心跳信息
 		cbatip = heart.get("cbatip");
 		cbatmac = heart.get("cbatmac");
-		cbattype = Integer.valueOf(heart.get("cbattype"));
+
+		cbattype = heart.get("cbattype");
 		//处理cbat 心跳信息
 		doheartcbat(cbatmac, cbatip, cbattype);
-		
 		//解析cnu 心跳信息
 		String cnumac = "";
 		String cnutype = "";
@@ -121,7 +121,7 @@ public class ServiceHeartProcessor{
 		}
 	}
 	
-	private void doheartcbat(String cbatmac, String cbatip, int type) {
+	private void doheartcbat(String cbatmac, String cbatip, String type) {
 		Jedis jedis = pool.getResource();
 		//判断头端是否已存在
 		if(jedis.exists("mac:"+cbatmac+":deviceid")){
@@ -153,12 +153,11 @@ public class ServiceHeartProcessor{
 			cbatentity.put("active", "1");
 			cbatentity.put("ip", cbatip.toLowerCase().trim());
 			cbatentity.put("label", cbatmac.toLowerCase().trim());
-			cbatentity.put("devicetype", String.valueOf(type).toLowerCase().trim());
+			cbatentity.put("devicetype", type.toLowerCase().trim());
 			//20 not have upgradestatus
 			cbatentity.put("upgradestatus", "20");
 			//保存头端信息
 			jedis.hmset(scbatentitykey, cbatentity);
-			
 			/////////////////////////////save cbatinfo
 			Map<String , String >  hash = new HashMap<String, String>();
 			 
@@ -192,6 +191,7 @@ public class ServiceHeartProcessor{
 	
 	private void doheartcnu(String cbatmac, String cnumac, String type,
 			String cltindex, String cnuindex, String active) {
+		
 		// CNU上线
 		if (active.equalsIgnoreCase("1")) {
 			doheartOnline(cbatmac, cnumac, type, cnuindex, active);
@@ -262,6 +262,32 @@ public class ServiceHeartProcessor{
 	public void doOffline_heart(String cbatmac, String cnuindex, String cnumac,
 			String cnutype) {
 		Jedis jedis = pool.getResource();
+		//判断cnu是否已存在
+		if(!(jedis.exists("mac:"+cnumac+":deviceid"))){
+			//发现新cnu
+			String cnumackey = "mac:" +  cnumac.toLowerCase().trim() + ":deviceid";
+			long icnuid = jedis.incr("global:deviceid");		
+			jedis.set(cnumackey, Long.toString(icnuid) );
+			//组合cnu信息
+			String scnuentitykey = "cnuid:" + icnuid + ":entity";
+			Map<String , String >  cnuentity = new HashMap<String, String>();			
+			cnuentity.put("mac", cnumac.toLowerCase().trim());
+			cnuentity.put("active", "0");
+			cnuentity.put("devcnuid", cnuindex.toLowerCase().trim());//设备上cnu的索引
+			cnuentity.put("label", cnumac.toLowerCase().trim());
+			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
+			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
+			//cnuentity.put("profileid", jedis.get("mac:"+cbatmac+":deviceid"));
+			
+			//将cnuid添加到所属头端下的集合中
+			jedis.sadd("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":cnus", Long.toString(icnuid));
+			//save
+			jedis.hmset(scnuentitykey, cnuentity);
+			
+			//发现新cnu,发往STSCHANGE_QUEUE_NAME
+			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
+			
+		}
 		//一下判断是否是所属头端发出的心跳
 		String cnuid = jedis.get("mac:"+cnumac+":deviceid");
 		String cur_cbatid = jedis.hget("cnuid:"+cnuid+":entity", "cbatid");

@@ -181,6 +181,7 @@ public class TrapReceiverBean {
 				
 				return;
 			}else if(recVBs.size() == 6){
+				//System.out.println("============>>do heart");
 				//heart alarm
 				Map hearthash=new LinkedHashMap();
 				for (int i = 0; i < recVBs.size(); i++) {
@@ -223,25 +224,26 @@ public class TrapReceiverBean {
 	
 	@SuppressWarnings("unchecked")
 	private void parseHeartMsg(Map hearthash){
+		//System.out.println("============>>do heart 11111");
 		Map msgheart = new LinkedHashMap();
 		int index1 = 0;
 		int index2 = 0;
 		int flag = 0;
 		String cbatip = "";
 		String cbatmac = "";
-		int cbattype = 0;
+		String cbattype = "";
 		msgheart.put("code", hearthash.get("code"));
 		try {
 			index1 = ((String) hearthash.get("cbatsys")).indexOf("|");
-			cbatmac = ((String) hearthash.get("cbatsys")).substring(1, index1);
+			cbatmac = ((String) hearthash.get("cbatsys")).substring(1, index1).trim().toLowerCase();
 			msgheart.put("cbatmac", cbatmac);
 			index2 = ((String) hearthash.get("cbatsys")).indexOf("|", index1 + 1);
 			cbatip = ((String) hearthash.get("cbatsys")).substring(index1 + 1, index2);
 			msgheart.put("cbatip", cbatmac);
 			index1 = index2;
 			index2 = ((String) hearthash.get("cbatsys")).indexOf("]");
-			cbattype = Integer.parseInt(((String) hearthash.get("cbatsys")).substring(
-					index1 + 1, index2));
+			cbattype = ((String) hearthash.get("cbatsys")).substring(
+					index1 + 1, index2);
 			msgheart.put("cbattype", cbattype);
 			
 			index1 = 0;
@@ -254,15 +256,15 @@ public class TrapReceiverBean {
 			int count = 0;
 			count = ((String) hearthash.get("cnusys")).length()
 					- ((String) hearthash.get("cnusys")).replace("[", "").length();
-			// System.out.println("============>>count="+count);
-			msgheart.put("cnucount", count);
+			//System.out.println("============>>count="+count);
+			msgheart.put("cnucount", String.valueOf(count));
 			for (int i = 0; i < count; i++) {
 				String message = ((String) hearthash.get("cnusys")).substring(flag,
 						((String) hearthash.get("cnusys")).indexOf("]", flag + 1));
 
 				try {
 					index1 = message.indexOf("|");
-					cnumac = message.substring(1, index1);
+					cnumac = message.substring(1, index1).trim().toLowerCase();
 					msgheart.put("cnumac"+i, cnumac);
 					
 					index2 = message.indexOf("|", index1 + 1);
@@ -511,6 +513,7 @@ public class TrapReceiverBean {
 	}
 	
 	private void sendToHeartQueue(String msg) {
+		//System.out.println("============>>do heart 222222   msg="+msg);
 		try {			
 			Jedis jedis = redisUtil.getConnection();
 			jedis.lpush(HEART_QUEUE_NAME, msg);
