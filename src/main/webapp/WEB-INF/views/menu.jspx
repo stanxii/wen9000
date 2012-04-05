@@ -5,7 +5,7 @@
     <script><![CDATA[
       $.fx.speeds._default = 500;
 	  $(document).ready(function() {		
-	  		//setInterval("reloadtree()",10000);
+	  		setInterval("reloadtree()",10000);
 	  		
   			 $("#navtree").dynatree({
   			 	persist: true,
@@ -138,10 +138,66 @@
 	  function reloadtree(){
 	  		var urltext="/wen9000/global/statuschange";
 	  		$.ajax({url:urltext,dataType:"text",success:function(text){
-					jsondata=$.parseJSON(text);
+	  				if(text!="\r\n"){
+	  					jsondata=$.parseJSON(text);
+						$.each(jsondata, function(key, itemv) {  					
+		  					var node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.mac);
+		  					//node.data.online = itemv.online;
+		  					if(itemv.type == "cbat"){
+		  						//	如果是新设备
+		  						if(node == null){
+		  							node = $("#navtree").dynatree("getTree").getNodeByKey("eocroot");
+		  							node.addChild({
+		  								title: itemv.ip,
+		  								key: itemv.mac,
+		  								online:itemv.online,
+		  								type:"cbat",
+		  								icon:"doc_with_children.gif"
+		  							});
+		  						}
+		  						if(itemv.online == "1"){
+		  							node.data.icon = "doc_with_children.gif";
+		  						}else{
+		  							node.data.icon = "offline.png";
+		  						}
+		  					}else if(itemv.type == "cnu"){
+		  						//	如果是新设备
+		  						if(node == null){
+			  						node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.cbatmac);
+			  						node.addChild({
+			  								title: itemv.mac,
+			  								key: itemv.mac,
+			  								online:itemv.online,
+			  								type:"cnu",
+			  								icon:"online.gif"
+			  							});
+			  					}			  					
+		  						if(itemv.online == "1"){
+		  							node.data.icon = "online.gif";
+		  						}else{
+		  							node.data.icon = "offline.png";
+		  						}
+		  					}else if(itemv.type == "hfc"){
+		  						if(node == null){
+			  						node = $("#navtree").dynatree("getTree").getNodeByKey("hfcroot");
+			  						node.addChild({
+			  								title: itemv.ip,
+			  								key: itemv.mac,
+			  								online:itemv.online,
+			  								type:"hfc",
+			  								icon:"doc_with_children.gif"
+			  							});
+			  					}			  					
+		  						if(itemv.online == "1"){
+		  							node.data.icon = "doc_with_children.gif";
+		  						}else{
+		  							node.data.icon = "offline.png";
+		  						}
+		  					}		  					
+		  					node.render();
+		  				}); 
 					          	
-					          	
-				}
+				}}
 			});
 	  		
 	  }

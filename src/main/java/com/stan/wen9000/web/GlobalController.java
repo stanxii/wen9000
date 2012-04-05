@@ -76,10 +76,10 @@ public class GlobalController {
     	response.setCharacterEncoding("UTF-8");
     	String jsonstring = "{";
 		Jedis jedis = pool.getResource();
-		String id = jedis.get("cbatmac:"+mac+":cbatid");
+		String id = jedis.get("mac:"+mac+":deviceid");
 		String cbatkey = "cbatid:"+id+":entity";
 		String result = "";
-		logger.info("getcbat keys::::::=====>1");
+	
 		if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1") ){
 			//设备在线，实时获得设备信息
 			jsonstring += '"'+ "active" + '"'+":"+ '"' + "在线" + '"' + ",";
@@ -89,7 +89,7 @@ public class GlobalController {
 			jsonstring += '"'+ "active" + '"'+":"+ '"' + "离线" + '"' + ",";
 			jsonstring += '"'+ "ip"+ '"'+":" + '"' + jedis.hget(cbatkey, "ip")+ '"' + ",";
 			jsonstring += '"'+ "label"+ '"'+":" + '"' + jedis.hget(cbatkey, "label")+ '"' + ",";
-			logger.info("getcbat keys::::::=====>1.1");
+
 			switch(Integer.parseInt(jedis.hget(cbatkey, "devicetype")))
 			{
 	        	case 1:
@@ -116,17 +116,17 @@ public class GlobalController {
 	        		result = "Unknown";
 	        		break;
 			}
-			logger.info("getcbat keys::::::=====>1.2");
+
 			jsonstring += '"'+ "devicetype"+ '"'+":" + '"' + result+ '"' + ",";
 			//读取cbatinfo信息
-			logger.info("getcbat keys::::::=====>2");
+
 			String cbatinfokey = "cbatid:"+id+":cbatinfo";
 			jsonstring += '"'+ "address"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "address")+ '"' + ",";
 			jsonstring += '"'+ "phone"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "phone")+ '"' + ",";
 			jsonstring += '"'+ "bootver"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "bootver")+ '"' + ",";
 			jsonstring += '"'+ "contact"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "contact")+ '"' + ",";
 			jsonstring += '"'+ "agentport"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "agentport")+ '"' + ",";
-			jsonstring += '"'+ "appver"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "appever")+ '"' + ",";
+			jsonstring += '"'+ "appver"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "appver")+ '"' + ",";
 			jsonstring += '"'+ "mvlanenable"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "mvlanenable")+ '"' + ",";
 			jsonstring += '"'+ "mvlanid"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "mvlanid")+ '"' + "}";
 			
@@ -145,8 +145,8 @@ public class GlobalController {
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
     	Jedis jedis = pool.getResource();
-    	String id = jedis.get("cnumac:"+mac+":cnuid");
-    	String cnukey = jedis.keys("cnuid:"+id+"*:entity").toString().replace("[", "").replace("]", "").trim();
+    	String id = jedis.get("mac:"+mac+":deviceid");
+    	String cnukey = "cnuid:"+id+":entity";
     	String jsonstring = "{";
     	if(jedis.hget(cnukey, "active").equalsIgnoreCase("1")){
     		//设备在线,获取实时设备信息
@@ -162,7 +162,7 @@ public class GlobalController {
     	
 		pool.returnResource(jedis);
 		PrintWriter out = response.getWriter();
-        //logger.info("keys::::::"+ json);
+        //logger.info("keys::::::"+ jsonstring);
         out.println(jsonstring);  
         out.flush();  
         out.close();
@@ -174,7 +174,7 @@ public class GlobalController {
     	response.setCharacterEncoding("UTF-8");
     	Jedis jedis = pool.getResource();
     	//获取CNUID
-    	String id = jedis.get("cnumac:"+mac+":cnuid");
+    	String id = jedis.get("mac:"+mac+":deviceid");
     	//获取对应的profileid
     	//这里是测试代码，profileid=1
     	String prokey = "profileid:1:entity";
@@ -182,18 +182,19 @@ public class GlobalController {
     	String jsonstring = "{";
     	jsonstring += '"'+ "profilename" + '"'+":"+ '"' + jedis.hget(prokey,"profilename")+ '"' + ",";  
     	jsonstring += '"'+ "vlanenable" + '"'+":"+ '"' + jedis.hget(prokey,"vlanenable")+ '"' + ",";
+    	jsonstring += '"'+ "vlanid" + '"'+":"+ '"' + jedis.hget(prokey,"vlanid")+ '"' + ",";
     	jsonstring += '"'+ "vlan0id" + '"'+":"+ '"' + jedis.hget(prokey,"vlan0id")+ '"' + ",";
     	jsonstring += '"'+ "vlan1id" + '"'+":"+ '"' + jedis.hget(prokey,"vlan1id")+ '"' + ",";
     	jsonstring += '"'+ "vlan2id" + '"'+":"+ '"' + jedis.hget(prokey,"vlan2id")+ '"' + ",";
     	jsonstring += '"'+ "vlan3id" + '"'+":"+ '"' + jedis.hget(prokey,"vlan3id")+ '"' + ",";
-    	
+
     	jsonstring += '"'+ "rxlimitsts" + '"'+":"+ '"' + jedis.hget(prokey,"rxlimitsts")+ '"' + ",";
     	jsonstring += '"'+ "cpuportrxrate" + '"'+":"+ '"' + jedis.hget(prokey,"cpuportrxrate")+ '"' + ",";
     	jsonstring += '"'+ "port0txrate" + '"'+":"+ '"' + jedis.hget(prokey,"port0txrate")+ '"' + ",";
     	jsonstring += '"'+ "port1txrate" + '"'+":"+ '"' + jedis.hget(prokey,"port1txrate")+ '"' + ",";
     	jsonstring += '"'+ "port2txrate" + '"'+":"+ '"' + jedis.hget(prokey,"port2txrate")+ '"' + ",";
     	jsonstring += '"'+ "port3txrate" + '"'+":"+ '"' + jedis.hget(prokey,"port3txrate")+ '"' + ",";
-    	
+
     	jsonstring += '"'+ "txlimitsts" + '"'+":"+ '"' + jedis.hget(prokey,"txlimitsts")+ '"' + ",";
     	jsonstring += '"'+ "cpuporttxrate" + '"'+":"+ '"' + jedis.hget(prokey,"cpuporttxrate")+ '"' + ",";
     	jsonstring += '"'+ "port0rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port0rxrate")+ '"' + ",";
@@ -202,7 +203,7 @@ public class GlobalController {
     	jsonstring += '"'+ "port3rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port3rxrate")+ '"' + "}";
 		pool.returnResource(jedis);
 		PrintWriter out = response.getWriter();
-        //logger.info("keys::::::"+ json);
+        logger.info("keys::::::"+ jsonstring);
         out.println(jsonstring);  
         out.flush();  
         out.close();
@@ -214,7 +215,7 @@ public class GlobalController {
     	response.setCharacterEncoding("UTF-8");
     	String jsonstring = "{";
 		Jedis jedis = pool.getResource();
-		String id = jedis.get("hfcmac:"+mac+":hfcid");
+		String id = jedis.get("mac:"+mac+":deviceid");
 		String hfckey = jedis.keys("hfcid:"+id+"*:entity").toString().replace("[", "").replace("]", "").trim();
 		
 		jsonstring += '"'+ "mac" + '"'+":"+ '"' + jedis.hget(hfckey,"hfcmac")+ '"' + ",";
@@ -320,7 +321,7 @@ public class GlobalController {
     	for(Iterator it = list.iterator(); it.hasNext(); ) 
     	{ 
     		if(jsonstring == ""){
-    			jsonstring += "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
+    			jsonstring += "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"key"+'"'+":"+ '"'+"eocroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
     			+'"'+":[{";
     		}else{
     			jsonstring += ",{";
@@ -329,14 +330,14 @@ public class GlobalController {
     		//添加头端信息
     		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
     			jsonstring += '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-        		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+","+'"'+"children"+'"'+":";
+        		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"doc_with_children.gif"+'"'+","+'"'+"children"+'"'+":";
     		}else{
     			jsonstring += '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
         		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"'+","+'"'+"children"+'"'+":";
     		}
 
     		//获取cbatid
-    		String cbatid = jedis.get("cbatmac:" + jedis.hget(key, "mac") + ":cbatid");
+    		String cbatid = jedis.get("mac:" + jedis.hget(key, "mac") + ":deviceid");
     		//logger.info("keys::::::cbatid"+ cbatid);
     		//取得所有属于cbatid的 cnuid
         	Set<String> list_cnu = jedis.smembers("cbatid:" + cbatid + ":cnus");//jedis.keys("cnuid:*:cbatid:"+jedis.get("cbatmac:"+jedis.hget(key, "mac")+":cbatid")+":*:entity");
@@ -353,7 +354,7 @@ public class GlobalController {
         		}    		
         		if(jedis.hget(key_cnu, "active").equalsIgnoreCase("1")){
         			cnustring += '"'+ "title" + '"'+":"+'"'+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
+            		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"online.gif"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
         		}else{
         			cnustring += '"'+ "title" + '"'+":"+'"'+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"key"+'"'+":"+'"'
             		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
@@ -372,7 +373,7 @@ public class GlobalController {
     	jsonstring += "]}";
     	if(jsonstring.length()<3)
     	{
-    		jsonstring = "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
+    		jsonstring = "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"key"+ '"'+"eocroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
 			+'"'+":[{"+'"'+ "title" + '"'+":"+'"'+"NOData"+'"'+ "}]"+ "}";
     	}
     	
@@ -380,14 +381,14 @@ public class GlobalController {
     	list = jedis.keys("hfcid:*:entity");
     	for(Iterator it=list.iterator();it.hasNext();){    		
 			if(hfcstring == ""){
-        		hfcstring += ",{"+'"'+ "title" + '"'+":"+'"'+"HFC设备"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
+        		hfcstring += ",{"+'"'+ "title" + '"'+":"+'"'+"HFC设备"+'"'+","+'"'+"key"+ '"'+"hfcroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
     			+'"'+":[{";
     		}else{
     			hfcstring += ",{";
     		}    		
     		String key = it.next().toString();   
     		hfcstring += '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-    		+jedis.hget(key, "hfcmac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"hfc"+'"'+","+'"'+"children"+'"'+":"+"[{"+
+    		+jedis.hget(key, "hfcmac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"doc_with_children.gif"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"hfc"+'"'+","+'"'+"children"+'"'+":"+"[{"+
     		'"'+ "title" + '"'+":"+'"'+jedis.hget(key, "logicalid")+'"'+ "},{"+ '"'+ "title" + '"'+":"+'"'+jedis.hget(key, "modelnumber")+'"'+ "},{"+
     		'"'+ "title" + '"'+":"+'"'+jedis.hget(key, "hfctype")+'"'+ "}]}";
     	}
@@ -395,6 +396,11 @@ public class GlobalController {
     		hfcstring += "]}";
     	}
     	hfcstring += "]";
+    	if(hfcstring.length()<=3)
+    	{
+    		hfcstring = ",{"+'"'+ "title" + '"'+":"+'"'+"HFC设备"+'"'+","+'"'+"key"+'"'+":"+'"'+"hfcroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
+			+'"'+":[{"+'"'+ "title" + '"'+":"+'"'+"NOData"+'"'+ "}]"+ "}]";
+    	}
     	jsonstring += hfcstring;
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
@@ -485,32 +491,71 @@ public class GlobalController {
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
     	Jedis jedis = pool.getResource();
-    	Jedis jedis_queue = redisUtil.getConnection();
+    	//Jedis jedis_queue = redisUtil.getConnection();
     	String jsonstring = "";
     	//从状态变更队列获取状态变更的设备
     	while (true) {
 			String message = null;		
-			message = jedis_queue.rpop(STSCHANGE_QUEUE_NAME);
-			
+			message = jedis.rpop(STSCHANGE_QUEUE_NAME);
+			//logger.info("getsts:::message:::"+ message);
 			if(message == null) {		
 				break;
-			}
-			else if(message.equalsIgnoreCase("ok")) {
+			}else if(message.equalsIgnoreCase("ok")) {
 				
 				System.out.println("Why ServiceDiscoveryProcessor receive == ok?? i don't know");
 				continue;
-			}else if(message.length() < 3) {
-				System.out.println("Why ServiceDiscoveryProcessor receive len < 3 i don't know");
-				continue;
+			}else{
+				//logger.info("getsts:::message:::"+ jedis.hgetAll("cbatid:"+message+":entity"));
+				if(jedis.hgetAll("cbatid:"+message+":entity").toString()!="{}"){
+					logger.info("getsts:::message::=================>>>>cbat");
+					if(jsonstring == ""){
+		    			jsonstring += "[{"+'"'+ "mac" + '"'+":"+'"'+jedis.hget("cbatid:"+message+":entity","mac")+'"'+","+'"'+"online"+ '"'+":"+'"'
+		    			+jedis.hget("cbatid:"+message+":entity","active")+'"'+","+'"'+"ip"+ '"'+":"+'"'+jedis.hget("cbatid:"+message+":entity","ip")+'"'
+		    			+","+'"'+"type"+ '"'+":"+'"'+"cbat"+'"' +"}";
+		    			
+		    		}else{
+		    			jsonstring += ",{"+'"'+ "mac" + '"'+":"+'"'+jedis.hget("cbatid:"+message+":entity","mac")+'"'+","+'"'+"online"+ '"'+":"+'"'
+		    			+jedis.hget("cbatid:"+message+":entity","active")+'"'+","+'"'+"ip"+ '"'+":"+'"'+jedis.hget("cbatid:"+message+":entity","ip")+'"'
+		    			+","+'"'+"type"+ '"'+":"+'"'+"cbat"+'"'+"}";
+		    		}
+				}else if(jedis.hgetAll("cnuid:"+message+":entity").toString()!="{}"){
+					String cbatid = jedis.hget("cnuid:"+message+":entity","cbatid");
+					logger.info("getsts:::message::=================>>>>cnu===="+cbatid);
+					if(jsonstring == ""){
+		    			jsonstring += "[{"+'"'+ "mac" + '"'+":"+'"'+jedis.hget("cnuid:"+message+":entity","mac")+'"'+","+'"'+"online"+ '"'+":"+'"'
+		    			+jedis.hget("cnuid:"+message+":entity","active")+'"'+","+'"'+"type"+ '"'+":"+'"'+"cnu"+'"'+","+'"'+"cbatmac"+ '"'+":"+'"'+jedis.hget("cbatid:"+cbatid+":entity","mac")+'"'+"}";
+		    			
+		    		}else{
+		    			jsonstring += ",{"+'"'+ "mac" + '"'+":"+'"'+jedis.hget("cnuid:"+message+":entity","mac")+'"'+","+'"'+"online"+ '"'+":"+'"'
+		    			+jedis.hget("cnuid:"+message+":entity","active")+'"'+","+'"'+"type"+ '"'+":"+'"'+"cnu"+'"'+","+'"'+"cbatmac"+ '"'+":"+'"'+jedis.hget("cbatid:"+cbatid+":entity","mac")+'"'+"}";
+		    		}
+					logger.info("getsts:::message::=================>>>>cnu====end");
+				}else if(jedis.hgetAll("hfcid:"+message+":entity").toString()!="{}"){
+					logger.info("getsts:::message::=================>>>>hfc");
+					if(jsonstring == ""){
+		    			jsonstring += "[{"+'"'+ "mac" + '"'+":"+'"'+jedis.hget("hfcid:"+message+":entity","mac")+'"'+","+'"'+"online"+ '"'+":"+'"'
+		    			+jedis.hget("hfcid:"+message+":entity","active")+'"'+","+'"'+"ip"+ '"'+":"+'"'+jedis.hget("hfcid:"+message+":entity","ip")+'"'+","+'"'+"type"+ '"'+":"+'"'+"hfc"+'"'+"}";
+		    			
+		    		}else{
+		    			jsonstring += ",{"+'"'+ "mac" + '"'+":"+'"'+jedis.hget("hfcid:"+message+":entity","mac")+'"'+","+'"'+"online"+ '"'+":"+'"'
+		    			+jedis.hget("hfcid:"+message+":entity","active")+'"'+","+'"'+"ip"+ '"'+":"+'"'+jedis.hget("hfcid:"+message+":entity","ip")+'"'+","+'"'+"type"+ '"'+":"+'"'+"hfc"+'"'+"}";
+		    		}
+				}
+				
 			}
-    	
-			redisUtil.closeConnection(jedis_queue);
-	    	//logger.info("cnukeys::::::"+ jsonstring);
-	    	pool.returnResource(jedis);
-	        PrintWriter out = response.getWriter();
-	        out.println(jsonstring);  
-	        out.flush();  
-	        out.close();
+			
+			
 		}
+    	jsonstring += "]";
+    	if(jsonstring.length()<3){
+    		jsonstring = "";
+    	}
+    	//redisUtil.closeConnection(jedis_queue);
+    	//logger.info("getsts::::::"+ jsonstring);
+    	pool.returnResource(jedis);
+        PrintWriter out = response.getWriter();
+        out.println(jsonstring);  
+        out.flush();  
+        out.close();
 	}
 }

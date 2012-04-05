@@ -230,6 +230,7 @@ public class TrapReceiverBean {
 		String cbatip = "";
 		String cbatmac = "";
 		int cbattype = 0;
+		msgheart.put("code", hearthash.get("code"));
 		try {
 			index1 = ((String) hearthash.get("cbatsys")).indexOf("|");
 			cbatmac = ((String) hearthash.get("cbatsys")).substring(1, index1);
