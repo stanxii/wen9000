@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:field="urn:jsptagdir:/WEB-INF/tags/form/fields" xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:page="urn:jsptagdir:/WEB-INF/tags/form" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+
+    <script><![CDATA[
+    	$(document).ready(function() {	 
+    		$('#s_Table').dataTable( {	  			 		
+				"bFilter": false,						//不使用过滤功能
+				"bLengthChange": false,					//用户不可改变每页显示数量
+				"iDisplayLength": 5,					//每页显示5条数据
+        		"bInfo": false,	
+		        "sPaginationType": "full_numbers",				        
+		        "oLanguage": {							//汉化
+					"sLengthMenu": "每页显示 _MENU_ 条记录",
+					"sZeroRecords": "没有检索到数据",
+					"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
+					"sInfoEmtpy": "没有数据",
+					"sProcessing": "正在加载数据...",
+					"oPaginate": {
+						"sFirst": "首页",
+						"sPrevious": "前页",
+						"sNext": "后页",
+						"sLast": "尾页"
+					}
+				},
+        		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+		        	if ( aData[1] == "1" )
+		            {
+		            	$('td:eq(1)', nRow).html( '在线' );				               
+		            }else{
+		            	$('td:eq(1)', nRow).html( '下线' );
+		            }     
+		            
+		        },		
+		        "aaSorting": [[ 0, "asc" ]],
+				"aoColumns": [	
+							  { "sTitle": "MAC" , "sClass": "center"},
+							  { "sTitle": "状态" , "sClass": "center"},
+						      { "sTitle": "标识" , "sClass": "center"}
+							],
+				
+		    } );
+		    
+		    $('#f_Table').dataTable( {	  			 		
+				"bFilter": false,						//不使用过滤功能
+				"bLengthChange": false,					//用户不可改变每页显示数量
+				"iDisplayLength": 5,					//每页显示5条数据
+        		"bInfo": false,	
+		        "sPaginationType": "full_numbers",				        
+		        "oLanguage": {							//汉化
+					"sLengthMenu": "每页显示 _MENU_ 条记录",
+					"sZeroRecords": "没有检索到数据",
+					"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
+					"sInfoEmtpy": "没有数据",
+					"sProcessing": "正在加载数据...",
+					"oPaginate": {
+						"sFirst": "首页",
+						"sPrevious": "前页",
+						"sNext": "后页",
+						"sLast": "尾页"
+					}
+				},
+        		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+		        	if ( aData[2] == "1" )
+		            {
+		            	$('td:eq(1)', nRow).html( '在线' );				               
+		            }else{
+		            	$('td:eq(1)', nRow).html( '下线' );
+		            }     
+		            
+		        },		
+		        "aaSorting": [[ 0, "asc" ]],
+				"aoColumns": [	
+							  { "sTitle": "MAC" , "sClass": "center"},
+							  { "sTitle": "状态" , "sClass": "center"},
+						      { "sTitle": "标识" , "sClass": "center"}
+							],
+				
+		    } );
+    		setInterval("getsuccess()",3000);
+    		setInterval("getfailed()",3000);
+		} );
+		
+		function getsuccess(){
+			$.ajax({url:"/wen9000/opts/getsuccess",dataType:"text",success:function(text){
+				if(text != "\r\n"){
+					var tmp = $.parseJSON(text);
+	  				$.each(tmp, function(key, itemv) {  					
+		  				$('#s_Table').dataTable().fnAddData( [
+					        itemv.mac,
+					        itemv.active,
+					        itemv.label ] );
+		  								
+	  			 	});
+				}
+			}
+		});
+		}
+		
+		function getfailed(){
+			$.ajax({url:"/wen9000/opts/getfailed",dataType:"text",success:function(text){
+				if(text != "\r\n"){
+					var tmp = $.parseJSON(text);
+	  				$.each(tmp, function(key, itemv) {  					
+		  				$('#f_Table').dataTable().fnAddData( [
+					        itemv.mac,
+					        itemv.active,
+					        itemv.label ] );
+		  								
+	  			 	});
+				}
+			}
+		});
+	}
+    ]]></script>
+    <div>
+    	<h6>配置结果</h6>
+    	
+    </div>
+    <h3 style="color:green">配置成功的设备</h3><hr/>
+    <div id="success_cnus"><table id="s_Table"><p></p></table></div>
+
+    <br/>
+     <h3 style="color:green">配置失败的设备</h3><hr/>
+    <div id="failed_cnus"><table id="f_Table"><p></p></table></div>
+
+	
+
+</div>

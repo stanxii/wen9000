@@ -118,7 +118,7 @@
 	 <property name="jobDetail" ref="jobDetail0" />
 	 <property name="startDelay" value="3000" />
 	 <property name="repeatInterval" value="5" />
-	 <property name="repeatCount" value="51" />		
+	 <property name="repeatCount" value="29" />		
 	  	 
 	</bean>
 	
@@ -146,8 +146,12 @@
 	<bean id="trapReceiverBean" class="com.stan.wen9000.web.TrapReceiverBean" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	
-	
+	<bean id="workerCbatStatus" class="com.stan.wen9000.web.WorkerCbatStatus" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
+	<bean id="serviceCbatStatus" class="com.stan.wen9000.web.ServiceCbatStatus" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
 	
 	<!-- 调度业务 -->
 	<bean id="jobDetail1" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -175,6 +179,17 @@
 	 <property name="targetMethod"  value="start"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
+	<bean id="workerCbatStatusjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="workerCbatStatus" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	<bean id="serviceCbatStatusjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceCbatStatus" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	
 	
 	
 	
@@ -208,7 +223,18 @@
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="0" />		  	 
 	</bean>
-	
+	<bean id="workerCbatStatusTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="workerCbatStatusjob" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />		  	 
+	</bean>
+	<bean id="serviceCbatStatusTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceCbatStatusjob" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="4" />		  	 
+	</bean>
 	
 	
 	
@@ -222,7 +248,9 @@
 	   <ref bean="serviceProcessTrigger" />
 	   <ref bean="serviceAlarmTrigger" />
 	   <ref bean="serviceHeartTrigger" />
-	   <ref bean="trapReceierTrigger" />	  
+	   <ref bean="trapReceierTrigger" />	
+	   <ref bean="workerCbatStatusTrigger" />  
+	   <ref bean="serviceCbatStatusTrigger" /> 
 	  </list>
 	 </property>	 
 	</bean>

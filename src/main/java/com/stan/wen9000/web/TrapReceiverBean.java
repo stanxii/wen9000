@@ -35,7 +35,7 @@ public class TrapReceiverBean {
 	private static final String Upgrade_QUEUE_NAME = "upgrade_result_queue";
 
 	public static String TRAP_ADDRESS = "udp:0.0.0.0/";	
-	private static final String TRAP_SERVER_PORT_KEY = "trapserver:port:key";
+	private static final String TRAP_SERVER_PORT_KEY = "global:trapserver:port";
 
 	private static Snmp snmp = null;
 	private Address listenAddress;

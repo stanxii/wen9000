@@ -1,6 +1,7 @@
 package com.stan.wen9000.web;
 
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -207,6 +208,10 @@ public class ServiceDiscoveryProcessor  {
 		
 		jedis.hmset(scbatentitykey, cbatentity);
 	    
+		//更新头端时间戳
+		Date date = new Date();
+		long time = date.getTime();
+		jedis.hset(scbatentitykey, "timeticks", String.valueOf(time));
 /////////////////////////////save cbatinfo
 	    
 	    
@@ -288,6 +293,8 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("serialnumber", serialnumber.toLowerCase().trim());
 		
 		jedis.hmset(shfcentitykey, hfcentity);
+		
+		jedis.save();
 	}
 
 }
