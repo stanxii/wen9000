@@ -28,6 +28,8 @@ public class ServiceAlarmProcessor {
 	private static final String ALARM_HISTORY_QUEUE_NAME = "alarm_history_queue";
 	
 
+	private static String message = null;
+	
 	private static RedisUtil redisUtil;
 	  
 	public static void setRedisUtil(RedisUtil redisUtil) {
@@ -54,7 +56,7 @@ public class ServiceAlarmProcessor {
 
 		
 		while (true) {
-			String message = null;
+			
 			
 			Jedis jedis = redisUtil.getConnection();
 			
@@ -146,10 +148,9 @@ public class ServiceAlarmProcessor {
 			
 			
 
-			doalarm(alarm);
-			for(int i=0;i<1000;i++){
+			doalarm(alarm);			
 			savelarm(alarm);
-			}
+
 			
 			
 			
@@ -168,8 +169,9 @@ public class ServiceAlarmProcessor {
 		
 		
 		//save alarm entity
-		long alarmid = jedis.incr("global:alarmid");
-		String salarmid = Long.toString(alarmid);
+		Long alarmid = jedis.incr("global:alarmid");
+		String salarmid = String.valueOf(alarmid);
+		
 		String alarmkey = "alarmid:" + salarmid + ":entity";
 		jedis.hmset(alarmkey, alarm);
 		
@@ -197,6 +199,9 @@ public class ServiceAlarmProcessor {
 		Double score = (double) System.currentTimeMillis();
 		jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
 		
+		
+		//publish to notify node.js a new alarm
+		jedis.publish("alarm.newalarm", message);
 		
 		redisUtil.closeConnection(jedis);
 	}

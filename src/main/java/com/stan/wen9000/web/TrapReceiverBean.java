@@ -124,7 +124,7 @@ public class TrapReceiverBean {
 			if (recVBs.size() == 10) {
 				
 				
-				Map alarmhash=new LinkedHashMap();
+				Map<String, String> alarmhash=new LinkedHashMap();
 			   
 				for (int i = 0; i < recVBs.size(); i++) {
 					VariableBinding recVB = recVBs.elementAt(i);
@@ -223,9 +223,9 @@ public class TrapReceiverBean {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void parseHeartMsg(Map hearthash){
+	private void parseHeartMsg(Map<String, String> hearthash){
 		//System.out.println("============>>do heart 11111");
-		Map msgheart = new LinkedHashMap();
+		Map<String, String> msgheart = new LinkedHashMap();
 		int index1 = 0;
 		int index2 = 0;
 		int flag = 0;
@@ -310,7 +310,7 @@ public class TrapReceiverBean {
 			 alarmhash.put("salarmtime", alarmtimes);
 			 int isOnline = -1;
 				String cnumac = "";
-				int cnutype = 0;
+				String cnutype = "0";
 				int index1 = 0;
 				int index2 = 0;
 			 
@@ -322,8 +322,8 @@ public class TrapReceiverBean {
 				index2 = trapinfo.indexOf("]");
 				cnumac = trapinfo.substring(0, index1).toLowerCase()
 						.trim();
-				cnutype = Integer.parseInt(trapinfo.substring(
-						index1 + 1, index2));
+				cnutype = trapinfo.substring(
+						index1 + 1, index2);
 				
 				isOnline = Integer.parseInt((String)alarmhash.get("alarmvalue"));
 				alarmhash.put("alarmlevel", "7");
@@ -340,7 +340,21 @@ public class TrapReceiverBean {
 				
 				
 				break;
-			case 200901:			
+			case 200901:	
+				isOnline = Integer.parseInt((String)alarmhash.get("alarmvalue"));
+				alarmhash.put("alarmlevel", "4");
+				if( 1 == isOnline){
+					alarmhash.put("cnalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"发现线卡   " + alarmhash.get("cltindex") );
+					alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"discovery  clt index " + alarmhash.get("cltindex") );
+					
+				}else{
+					alarmhash.put("cnalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +" 丢失线 卡 " + alarmhash.get("cltindex") );
+					alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"loss clt index " + alarmhash.get("cltindex") );
+					
+				}
+					
+				
+				break;
 			case 200909:
 				// 事件	upgrade			
 				

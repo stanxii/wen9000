@@ -143,13 +143,106 @@ public class AlarmController {
         return new ResponseEntity<String>(jsonResponse.toJSONString(), headers, HttpStatus.OK);
 	}
 	
-	@RequestMapping(value = "/realtimealarm", method = RequestMethod.POST, headers = "Accept=application/json")
+	
+	
+
+	@RequestMapping(value = "/initRealTimeAlarm", method = RequestMethod.POST, headers = "Accept=application/json")
 	@ResponseBody
-	public ResponseEntity<String> listRealtimeAlarm( @RequestBody String json){ 
+	public ResponseEntity<String> initRealTimeAlarm( @RequestBody String json){ 
 	
 		JSONObject jsonResponse = new JSONObject();
 		
 
+		HttpHeaders headers = new HttpHeaders();        
+        headers.add("Content-Type", "application/json; charset=utf-8");
+	   
+				
+        try {
+                    	
+            JSONArray data = new JSONArray();
+            Jedis jedis = pool.getResource();
+            
+            
+            int iTotalRecords = 10;            
+            List<String> results = jedis.lrange(ALARM_REALTIME_QUEUE_NAME, 0, iTotalRecords -1);
+            jsonResponse.put("iTotalRecords", iTotalRecords);
+           
+            for(int i=0; i< results.size() ; i++) {
+	            String alarmid = results.get(i);
+	            String alarmkey = "alarmid:" + alarmid +":entity";
+	        	Map<String, String> alarmmap = jedis.hgetAll(alarmkey);
+	        	if(alarmmap != null){
+	        		JSONArray row = new JSONArray();
+	        		row.addAll(alarmmap.values());	        		
+	        		data.add(row);	        		
+	        		 System.out.println("realtimealarm row=" + row.toJSONString());
+	        	}
+            }
+            pool.returnResource(jedis);
+            
+            jsonResponse.put("aaData", data);
+            
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+        	e.printStackTrace();
+            jsonResponse =null;
+        }
+        
+        
+        return new ResponseEntity<String>(jsonResponse.toJSONString(), headers, HttpStatus.OK);
+	}
+	
+
+	
+	@RequestMapping(value = "/flushrealtimealarm", method = RequestMethod.POST, headers = "Accept=application/json")
+	@ResponseBody
+	public ResponseEntity<String> listRealtimeAlarm( @RequestBody String json){ 
+	
+		
+
+	JSONObject jsonResponse = new JSONObject();
+		
+
+		 
+		HttpHeaders headers = new HttpHeaders();        
+        headers.add("Content-Type", "application/json; charset=utf-8");
+	    
+        
+        long iRealStartid=0;
+	    long iDisplayLength=0;
+	        
+	  
+		//System.out.println("RequesBody string=["+ json);
+		Object job = JSONValue.parse(json);
+				
+		
+		JSONArray array = (JSONArray)job;
+		
+		int iTotalRecords; // total number of records (unfiltered)
+	    int iTotalDisplayRecords;//value will be set when code filters companies by keyword
+		System.out.println("JSONArray size="+ array.size());
+		
+		for(int i=0; i< array.size(); i++ ) {
+			System.out.println("i=" + i);
+			JSONObject item = (JSONObject)array.get(i);		
+			 if(((String)item.get("name")).equals("iRealStartid")){
+				 iRealStartid =  (Long)item.get("value");
+				System.out.println("realtime iRealStartid=" + iRealStartid);
+			
+			}else if(((String)item.get("name")).equals("iDisplayLength")){				
+				iDisplayLength = (Long) item.get("value");
+				System.out.println("iDisplayLength=" + iDisplayLength);
+			}		
+			
+			if(i==array.size() -1) break;
+		}
+		System.out.println("historyalarm JSONArray 2size="+ array.size());
+		
+		
+		
+		
+		
+/*
 		HttpHeaders headers = new HttpHeaders();        
         headers.add("Content-Type", "application/json; charset=utf-8");
 	   
@@ -185,7 +278,8 @@ public class AlarmController {
         	e.printStackTrace();
             jsonResponse =null;
         }
-        
+*/
+		
         
         return new ResponseEntity<String>(jsonResponse.toJSONString(), headers, HttpStatus.OK);
 	}

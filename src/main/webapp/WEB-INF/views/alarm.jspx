@@ -2,19 +2,38 @@
   <jsp:directive.page contentType="text/html;charset=UTF-8" />
   <jsp:output omit-xml-declaration="yes" />
   
+  <style>
+		#tabs { height: 200px; } 
+		.tabs-bottom { position: relative; } 
+		.tabs-bottom .ui-tabs-panel { height: 140px; overflow: auto; } 
+		.tabs-bottom .ui-tabs-nav { position: absolute !important; left: 0; bottom: 0; right:0; padding: 0 0.2em 0.2em 0; } 
+		.tabs-bottom .ui-tabs-nav li { margin-top: -2px !important; margin-bottom: 1px !important; border-top: none; border-bottom-width: 1px; }
+		.ui-tabs-selected { margin-top: -3px !important; }
+		</style>
+    
+    
   <script>
 	<![CDATA[
   var oTable = null;
-
+  var oRealTimeTable = null;
+  var iRealStartid = -1;
 
     $(function() {
     	
-    	
-    	historyAlarmTable();
+    	$( "#tabs").tabs();
+		$( ".tabs-bottom .ui-tabs-nav, .tabs-bottom .ui-tabs-nav > *" )
+			.removeClass( "ui-corner-all ui-corner-top" )
+			.addClass( "ui-corner-bottom" );
 
-    	flushRealTimeTable();
+		
+		
+		initRealTimeAlarmTable();
+    
+    	//historyAlarmTable();
+
+    	//flushRealTimeTable();
     	
-		setInterval("flushRealTimeTable()",8000);
+		//setInterval("flushRealTimeTable()",8000);
 		
 	  	
 	});
@@ -33,13 +52,75 @@
 		});
 	}
 
+  
+	//自定义数据获取函数
+	function initretrieveRealTimeAlarmData( sSource, aoData, fnCallback ) {		
+		$.ajax( {
+			"type": "POST", 
+			"contentType": "application/json",
+			"url": sSource, 
+			"dataType": "json",
+			"data": JSON.stringify(aoData), 
+			"success": function(respa) {
+				fnCallback(respa);
+			}
+		});
+	}
+
+  
+	function initRealTimeAlarmTable(){
+  	  	
+  		if (oRealTimeTable == null) { //仅第一次检索时初始化Datatable
+			$("#realtimeAlarm").show();
+			oRealTimeTable = $('#realtimeAlarm').dataTable( {
+				"bAutoWidth": false,	//不自动计算列宽度
+				
+				"aoColumns": [							//设定各列宽度
+								{"sWidth": "15px"},
+								{"sWidth": "15px"},	
+								{"sWidth": "160px"},
+								{"sWidth": "110px"},
+								{"sWidth": "120px"},
+								{"sWidth": "140px"},
+								{"sWidth": "140px"},
+								{"sWidth": "15px"},
+								{"sWidth": "80px"},
+								{"sWidth": "160px"},
+								{"sWidth": "110px"},
+								{"sWidth": "120px"},
+								{"sWidth": "140px"},		
+													
+								{"sWidth": "*"}
+							],
+				"bProcessing": false,					//加载数据时显示正在加载信息				
+				"bFilter": false,						//不使用过滤功能
+				"bLengthChange": false,					//用户不可改变每页显示数量
+				"iDisplayLength": 10,					//每页显示8条数据
+				"sAjaxSource": "/wen9000/alarm/initRealTimeAlarm", //获取数据的url		
+				"fnServerData": initretrieveRealTimeAlarmData,			//获取数据的处理函数
+				
+				
+			});
+		}
+
+		//刷新Datatable，会自动激发retrieveData
+		oRealTimeTable.fnDraw();
+		
+		
+		//set startid for reflush realtime
+		iRealStartid = oRealTimeTable
+		
+	}
+
+
+	
     function flushRealTimeTable() {
     	$.ajax( {
-			"url": "/wen9000/alarm/realtimealarm",
+			"url": "/wen9000/alarm/flushrealtimealarm",
 			"type": "POST", 
 			"contentType": "application/json",				
 			"dataType": "json",
-			"data": {"iDisplayStart":"0", "iDisplayLength":10}, 
+			"data": {"iRealStartid": iRealStartid }, 
 			"success": function(resp) {
 				
 				redrawRealTimeTable(resp);
@@ -48,15 +129,21 @@
 		});
     }
 
+    
+    
 
     function redrawRealTimeTable(resp) {
 
     	
+    	$('#realtimeAlarm').append('<table id="baseinfo">');
 		for (var i = 0, l = resp.aaData.length; i < l; i++) {
 			var row = resp.aaData[i];
-				$('#realtimeAlarm').append('<li>' + row[9] +'</li>');
+				$('#realtimeAlarm').append('<li> <table id=ralaim style="width=100%"' + i + 
+						'<tr> <td>' + row[8] +  '</td> <td style="padding:15px">' + row[9] + '</td><td >' + row[5] + '</td><td>' +
+						'</table></li>');
 		    }
 
+		$('#realtimeAlarm').append('</table>');
 		
 		$('.myclass').vTicker();
 		
@@ -167,11 +254,33 @@
   </script>
 
 
-<div class='myclass'>
-	<ul  id="realtimeAlarm">
+
+<div class="demo">
+
+<div id="tabs" class="tabs-bottom">
+	<ul>
+		<li><a href="#tabs-1">实时告警</a></li>		
+		<li><a href="#tabs-2">历史告警</a></li>
 	</ul>
+	<div id="tabs-1">
+	    
+			<div class='myclass'>
+			<table  id="realtimeAlarm">
+			</table>
+		</div>
+		
+	</div>
+	<div id="tabs-2">
+		  <table id="alarmtable"><p></p>
+  </table>
+	</div>
+	
 </div>
 
-  <table id="alarmtable"><p></p>
-  </table>
+</div><!-- End demo -->
+
+
+
+
+
 </div>
