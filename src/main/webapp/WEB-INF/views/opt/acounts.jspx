@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:field="urn:jsptagdir:/WEB-INF/tags/form/fields" xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:page="urn:jsptagdir:/WEB-INF/tags/form" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+    <script><![CDATA[
+    	var cTable;
+    	$(document).ready(function() {	 		    
+		    $('.chk').live('click', function () {
+		        var checkbox = $(this);
+		        var mac = checkbox[0].parentElement.parentElement.cells[1].textContent;
+				//发往后台修改redis数据
+				$.ajax({
+					type: "POST",
+					url: "/wen9000/global/checkedcnus",
+					data:{"cnumac":mac,"value":checkbox[0].checked},
+					datatype:"json",
+					success: function(text){
+						
+					}		
+       			});
+		    } );
+		    
+       		//下一步按钮点击事件
+       		$("#btn_acount").click(function(){
+       			//获取所有已选cnu在列表显示
+	    		$.ajax({
+					url: "/wen9000/opts/allcheckedcnus", 
+		  			dataType: "text", 
+		  			success: function(text) {  
+		  				if(text == "}\r\n"){
+		  					//失败提示对话框		
+		  					$( "#dialog:ui-dialog" ).dialog( "destroy" );			
+							$( "#dialog-message-acount-failed" ).dialog({
+								autoOpen: false,
+								show: "blind",
+								modal: true,
+								resizable: false,
+								hide: "explode",
+								buttons: {
+									Ok: function() {
+										$( this ).dialog( "close" );
+									}
+								}
+							});
+							$("#dialog-message-acount-failed").dialog("open");
+		  				}else{
+		  					window.location.href="/wen9000/nav/selprofiles"; 
+		  				}		  				
+		  			}
+		  		});
+				
+
+       		});
+       		
+       		//全选按钮点击事件
+       		$("#checkall").click(function(){
+       			var c_box = $(this);
+       			var mac;
+       			if(c_box[0].checked){
+       				for(var i=1;i<cTable[0].rows.length;i++){
+	       				if(cTable[0].rows[i].firstChild.firstChild.checked){
+	       					continue;
+	       				}
+	       				cTable[0].rows[i].firstChild.firstChild.checked = true;
+	       				mac = cTable[0].rows[i].cells[1].textContent;
+	       				$.ajax({
+							type: "POST",
+							url: "/wen9000/global/checkedcnus",
+							data:{"cnumac":mac,"value":"true"},
+							datatype:"json",
+							success: function(text){
+								
+							}		
+		       			});
+	       			}
+       			}else{
+       				for(var i=1;i<cTable[0].rows.length;i++){
+	       				if(!cTable[0].rows[i].firstChild.firstChild.checked){
+	       					continue;
+	       				}
+	       				cTable[0].rows[i].firstChild.firstChild.checked = false;
+	       				mac = cTable[0].rows[i].cells[1].textContent;
+	       				$.ajax({
+							type: "POST",
+							url: "/wen9000/global/checkedcnus",
+							data:{"cnumac":mac,"value":"false"},
+							datatype:"json",
+							success: function(text){
+								
+							}		
+		       			});
+	       			}
+       			}
+				
+
+       		});       		
+       		
+       		
+       		//获取所有cnu在列表显示
+    		$.ajax({
+				url: "/wen9000/opts/allcnus", 
+	  			dataType: "text", 
+	  			success: function(text) {  
+	  				var groupval=[];	
+	  				var data="";
+	  				var tmp = $.parseJSON(text);
+	  				$.each(tmp, function(key, itemv) {  					
+		  				var item = [itemv.check,itemv.mac,itemv.active,itemv.label,itemv.devicetype,itemv.proname];
+		  				groupval[groupval.length] = item; 				
+		  								
+	  			 	}); 
+	  			 	
+	  			 	cTable = $('#cnuTable').dataTable( {	  			 		
+						"bFilter": false,						//不使用过滤功能
+						"bLengthChange": false,					//用户不可改变每页显示数量
+						"iDisplayLength": 2,					//每页显示10条数据
+						"aaData": groupval,
+		        		"bInfo": false,	
+				        "sPaginationType": "full_numbers",				        
+				        "oLanguage": {							//汉化
+							"sLengthMenu": "每页显示 _MENU_ 条记录",
+							"sZeroRecords": "没有检索到数据",
+							"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
+							"sInfoEmtpy": "没有数据",
+							"sProcessing": "正在加载数据...",
+							"oPaginate": {
+								"sFirst": "首页",
+								"sPrevious": "前页",
+								"sNext": "后页",
+								"sLast": "尾页"
+							}
+						},
+		        		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+		        			if(iDisplayIndex == 0){
+		        				$("#checkall")[0].checked = true;
+		        			}		        	
+	
+							if(nRow.outerHTML.indexOf("checked")<0)
+							{
+								$("#checkall")[0].checked = false;
+							}
+		        			
+				        	if ( aData[2] == "1" )
+				            {
+				            	$('td:eq(2)', nRow).html( '在线' );				               
+				            }else{
+				            	$('td:eq(2)', nRow).html( '下线' );
+				            }     
+				            
+				        },		
+				        "aaSorting": [[ 1, "asc" ]],
+						"aoColumns": [	
+									  { "sTitle": "选择" , "sClass": "center",type: "checkbox"},
+									  { "sTitle": "MAC" , "sClass": "center"},
+									  { "sTitle": "状态" , "sClass": "center"},
+								      { "sTitle": "标识" , "sClass": "center"},
+								      { "sTitle": "设备类型" , "sClass": "center"},
+								      { "sTitle": "当前模板" , "sClass": "center"}
+									],
+						
+				    } );
+	  			 }
+			});
+		} );
+		
+		
+    ]]></script>
+    <div>
+    	<h6>批量开户</h6>
+    	<table id="cnuTable"><p></p></table>
+    </div>
+    <br/>
+    <br/>
+    <br/>
+    <div>
+    	<input type="checkbox" value="全选" id="checkall">全选</input>
+    	<button id="btn_acount" style="float:right">下一步</button>
+    </div>
+	<div id="dialog-message-acount-failed" title="提示" style="display: none">
+		<p>
+			<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>
+			提示.
+		</p>
+		<p>
+			操作失败. <br/>
+			请选择设备再进行相关操作!
+		</p>
+	</div>
+
+</div>

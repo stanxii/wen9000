@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:field="urn:jsptagdir:/WEB-INF/tags/form/fields" xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:page="urn:jsptagdir:/WEB-INF/tags/form" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+    <script><![CDATA[
+   	$(document).ready(function() {	
+   			//每隔2s获取各队列消息数量	    	
+	    	setInterval("reloadqueue()",2000);
+	    	
+	    	$("#btn_heartclr").click( function(){
+	    		$.ajax({
+		    		url: "/wen9000/opts/clr_heartqueue", 
+		  			dataType: "text", 
+		  			success: function(text) {
+		  				$("#heart_queue")[0].value = 0;
+		  			}
+		    	});
+	    	});
+	    	
+	    	$("#btn_alarmclr").click( function(){
+	    		$.ajax({
+		    		url: "/wen9000/opts/clr_alarmqueue", 
+		  			dataType: "text", 
+		  			success: function(text) {
+		  				$("#alarm_queue")[0].value = 0;
+		  			}
+		    	});
+	    	});
+	    	
+	    	$("#btn_cbatclr").click( function(){
+	    		$.ajax({
+		    		url: "/wen9000/opts/clr_cbatqueue", 
+		  			dataType: "text", 
+		  			success: function(text) {
+		  				$("#alarm_queue")[0].value = 0;
+		  			}
+		    	});
+	    	});
+	    } ); 
+       	
+       	function reloadqueue(){
+       		//获取相关数据信息
+	    	$.ajax({
+	    		url: "/wen9000/opts/get_queueinfo", 
+	  			dataType: "text", 
+	  			success: function(text) {
+	  				var tmp = $.parseJSON(text);
+	  				$("#heart_queue")[0].value = tmp.heartnum;
+	  				$("#alarm_queue")[0].value = tmp.alarmnum;
+	  				$("#cbat_queue")[0].value = tmp.cbatnum;
+	  			}
+	    	});       	
+       	}
+    ]]></script>
+    <div>
+    	<h6>消息队列管理</h6>
+		<p style="color:green">
+			消息队列管理是为了防止队列中消息太多而阻塞，导致系统不能及时更新设备状态，获取新消息而建立的管理模块!
+		</p>
+		<table>
+			<tr>
+				<td>
+					<label>心跳消息队列:</label>
+				</td>
+				<td>
+					<input id="heart_queue" type="text" readonly="true"/>
+				</td>
+				<td>
+					<button id="btn_heartclr">清空队列</button>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label>告警消息队列:</label>
+				</td>
+				<td>
+					<input id="alarm_queue" type="text" readonly="true"/>
+				</td>
+				<td>
+					<button id="btn_alarmclr">清空队列</button>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label>头端状态队列:</label>
+				</td>
+				<td>
+					<input id="cbat_queue" type="text" readonly="true"/>
+				</td>
+				<td>
+					<button id="btn_cbatclr">清空队列</button>
+				</td>
+			</tr>
+		</table>		
+		<br/>
+		
+    </div>
+	
+
+
+</div>

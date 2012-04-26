@@ -41,16 +41,15 @@
             <a href="#">设备管理</a>
             <ul class="subnav">  
                 <li><a href="/wen9000/nav/search">设备发现</a></li>  
-                <li><a href="#">批量开户</a></li>  
-                <li><a href="#">批量销户</a></li> 
+                <li><a href="/wen9000/nav/acounts">批量配置</a></li>  
                 <li><a href="#">设备预开户</a></li>
             </ul>   
         </li>  
         <li>  
             <a href="#">Wen9000管理</a>  
             <ul class="subnav">  
-                <li><a href="#">全局配置</a></li>  
-                <li><a href="#">数据导入/导出</a></li>  
+                <li><a href="/wen9000/nav/global_opt">全局配置</a></li>  
+                <li><a href="/wen9000/nav/queue_opt">消息队列管理</a></li>  
             </ul>  
         </li>  
         <li><a href="/wen9000/nav/profilemanager">模板管理</a></li> 

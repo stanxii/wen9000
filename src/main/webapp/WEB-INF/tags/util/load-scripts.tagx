@@ -11,6 +11,7 @@
   <spring:url value="/resources/js/jquery.vticker.js" var="jquery_vticker_url" />
   <spring:url value="/resources/js/jquery.progressbar.js" var="jquery_progressbar_url" />
   <spring:url value="/resources/js/jquery.livequery.js" var="livequery_url" />
+  <spring:url value="/resources/js/jquery.validate.js" var="validate_url" />
   
   <spring:url value="/resources/css/flick/jquery-ui-1.8.17.custom.css" var="flcik_url" />
   <spring:url value="/resources/css/jquery.dataTables.css" var="datatablescss_url" />
@@ -35,5 +36,5 @@
   <script src="${jquery_progressbar_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
   <script src="${jquery_vticker_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
   <script src="${livequery_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
-  
+  <script src="${validate_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
 </jsp:root>

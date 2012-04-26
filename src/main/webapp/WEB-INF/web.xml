@@ -9,7 +9,10 @@
     
     <context-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>classpath*:META-INF/spring/applicationContext*.xml</param-value>
+        <param-value>
+        	classpath*:META-INF/spring/applicationContext*.xml
+        	classpath*:META-INF/spring/security-app-context.xml
+        </param-value>
     </context-param>
     
     <context-param>
@@ -110,6 +113,11 @@
     <session-config>
         <session-timeout>10</session-timeout>
     </session-config>
+    
+    <welcome-file-list>
+        <welcome-file>index.jspx</welcome-file>
+    </welcome-file-list>
+    
     
     <error-page>
         <exception-type>java.lang.Exception</exception-type>

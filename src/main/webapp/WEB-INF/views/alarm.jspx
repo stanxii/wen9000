@@ -14,7 +14,7 @@
 
     	flushRealTimeTable();
     	
-		setInterval("flushRealTimeTable()",8000);
+		//setInterval("flushRealTimeTable()",8000);
 		
 	  	
 	});

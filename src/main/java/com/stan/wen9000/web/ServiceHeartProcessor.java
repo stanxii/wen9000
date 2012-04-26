@@ -1,5 +1,6 @@
 package com.stan.wen9000.web;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -138,7 +139,10 @@ public class ServiceHeartProcessor{
 			jedis.hset(cbatkey,"cbatip", cbatip);
 //			cbat.setAppversion(util.getStrPDU(cbatip, "161",
 //					new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8,4, 4, 0 })));
-			
+			//更新头端时间戳
+			Date date = new Date();
+			long time = date.getTime();
+			jedis.hset(cbatkey, "timeticks", String.valueOf(time));
 			
 		}else{
 			//新头端
@@ -158,6 +162,12 @@ public class ServiceHeartProcessor{
 			cbatentity.put("upgradestatus", "20");
 			//保存头端信息
 			jedis.hmset(scbatentitykey, cbatentity);
+			
+			//更新头端时间戳
+			Date date = new Date();
+			long time = date.getTime();
+			jedis.hset(scbatentitykey, "timeticks", String.valueOf(time));			
+			
 			/////////////////////////////save cbatinfo
 			Map<String , String >  hash = new HashMap<String, String>();
 			 
@@ -166,7 +176,7 @@ public class ServiceHeartProcessor{
 			hash.put("phone", "13988777");
 			hash.put("bootver", "cml-boot-v1.1.0_for_linux_sdk");
 			hash.put("contact", "na");
-			//获取设备先关信息
+			//获取设备相关信息
 			try{
 				 int agentport = util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					
 				 String appver = util.getStrPDU(cbatip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
@@ -181,6 +191,7 @@ public class ServiceHeartProcessor{
 			}
 			jedis.hmset(scbatinfokey, hash);
 			
+			jedis.save();
 			//发现新cbat,发往STSCHANGE_QUEUE_NAME
 			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icbatid));
 		}
@@ -200,7 +211,8 @@ public class ServiceHeartProcessor{
 		{
 			doOffline_heart(cbatmac, cnuindex, cnumac, type);
 
-		}
+		}		
+		
 	}
 	
 	public void doheartOnline(String cbatmac, String cnumac, String cnutype,
@@ -252,10 +264,11 @@ public class ServiceHeartProcessor{
 			jedis.sadd("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":cnus", Long.toString(icnuid));
 			//save
 			jedis.hmset(scnuentitykey, cnuentity);
-			
+			jedis.save();
 			//发现新cnu,发往STSCHANGE_QUEUE_NAME
 			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
 		}
+		
 		pool.returnResource(jedis);			
 	}
 	
