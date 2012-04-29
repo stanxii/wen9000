@@ -30,8 +30,8 @@ import com.stan.wen9000.action.jedis.util.RedisUtil;
 
 public class TrapReceiverBean {
 
-	private static final String HEART_QUEUE_NAME = "heart_queue";
-	private static final String ALARM_QUEUE_NAME = "alarm_queue";
+	
+	
 	private static final String Upgrade_QUEUE_NAME = "upgrade_result_queue";
 
 	public static String TRAP_ADDRESS = "udp:0.0.0.0/";	
@@ -515,7 +515,7 @@ public class TrapReceiverBean {
 		try {
 			
 			Jedis jedis = redisUtil.getConnection();
-			jedis.lpush(ALARM_QUEUE_NAME, msg);
+			jedis.publish("servicealarm.new", msg);
 			redisUtil.closeConnection(jedis);
 
 		} catch (Exception e) {
@@ -530,7 +530,7 @@ public class TrapReceiverBean {
 		//System.out.println("============>>do heart 222222   msg="+msg);
 		try {			
 			Jedis jedis = redisUtil.getConnection();
-			jedis.lpush(HEART_QUEUE_NAME, msg);
+			jedis.publish("servicehearbert.new",  msg);
 			redisUtil.closeConnection(jedis);
 
 		} catch (Exception e) {

@@ -11,6 +11,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPubSub;
 
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 
@@ -21,21 +22,69 @@ public class ServiceAlarmProcessor {
 	
 	private static Logger log = Logger.getLogger(ServiceAlarmProcessor.class);
 
-	private static final String PERSIST_ALARM_QUEUE_NAME = "alarm_queue";
+
 	private static final String  ALARM_EXPIRE_SECONDS =  "alarm:expire:seconds" ;
 	private static final String  ALARM_REALTIME_MAX_NUM =  "alarm:realtime:max" ;
 	private static final String ALARM_REALTIME_QUEUE_NAME = "alarm_realtime_queue";
 	private static final String ALARM_HISTORY_QUEUE_NAME = "alarm_history_queue";
 	
 
-	private static String message = null;
 	
 	private static RedisUtil redisUtil;
-	private static Jedis jedis;
+
 	  
 	public static void setRedisUtil(RedisUtil redisUtil) {
 		ServiceAlarmProcessor.redisUtil = redisUtil;
 	}
+	
+	
+	private  static JedisPubSub jedissubSub = new JedisPubSub() {
+		public void onUnsubscribe(String arg0, int arg1) {
+
+        }
+		public void onSubscribe(String arg0, int arg1) {
+
+        }
+		 public void onMessage(String arg0, String arg1) {
+	       
+	     }
+		 public void onPUnsubscribe(String arg0, int arg1) {
+
+	        }
+		 public void onPSubscribe(String arg0, int arg1) {
+
+	        } 
+  	 
+       /*
+
+       * 正则模式：收到匹配key值的消息时触发
+
+       * arg0订阅的key正则表达式
+
+       * arg1匹配上该正则key值
+
+       * arg2收到的消息值
+
+       */
+
+      public void onPMessage(String arg0, String arg1, String msg) {
+
+      	System.out.println("[x]ServiceAlarmProcesser  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
+      	try {
+  			//arg2 is mssage now is currenti p
+  			
+  			
+  			
+  			servicestart(msg);
+  			
+  		}catch(Exception e){
+  			e.printStackTrace();			
+  		}
+  		
+      }
+
+  };
+  
 
 
 	public void start() {
@@ -43,37 +92,28 @@ public class ServiceAlarmProcessor {
 		log.info("[#3] ..... service alarm");
 
 		
+		System.out.println("[#3] ..... service discovery starting");
+		Jedis jedis=null;
 		try {
-			servicestart();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		 jedis = redisUtil.getConnection();
+		 
+		 jedis.psubscribe(jedissubSub, "servicealarm.*");
+		redisUtil.getJedisPool().returnResource(jedis);
+		}catch(Exception e){
 			e.printStackTrace();
-			 redisUtil.closeConnection(jedis);
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			
 		}
-
+		
+		
+		
+		
+		
 	}
 
 	
-	public static void servicestart() throws Exception {
+	public static void servicestart(String message) throws Exception {
 
-		jedis = redisUtil.getConnection();
-		
-		while (true) {
-			
-						
-			message = jedis.rpop(PERSIST_ALARM_QUEUE_NAME);
-			
-			
-			
-			
-			if(message == null ) {
-//				System.out.println(" [x] ServiceAlarmProcessor null and will continue ");
-				
-				Thread.sleep(1000);
-				continue;
-			}
-			
-			
 			System.out.println(" [x] ServiceAlarmProcessor Received '" + message
 					+ "'");
 			
@@ -82,11 +122,7 @@ public class ServiceAlarmProcessor {
 			long end = System.currentTimeMillis();  
 			System.out.println("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 			
-			
-		}
 		
-		
-
 	}
 	
 	
@@ -149,7 +185,7 @@ public class ServiceAlarmProcessor {
 			
 
 			doalarm(alarm);			
-			savelarm(alarm);
+			savelarm(message, alarm);
 
 			
 			
@@ -163,8 +199,20 @@ public class ServiceAlarmProcessor {
 	}
 
 
-	public static void savelarm(Map<String, String> alarm) {
+	public static void savelarm(String message, Map<String, String> alarm) {
 		//presist alarm		
+		
+		
+		
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		
+		
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			
+		}
 		
 		
 		//save alarm entity
@@ -199,9 +247,14 @@ public class ServiceAlarmProcessor {
 		jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
 		
 		
+		if(message==null) {
+			System.out.println("messag error=====null>>>>>>>>>>>>");
+		}
 		//publish to notify node.js a new alarm
-		jedis.publish("alarm.newalarm", message);
+		jedis.publish("node.alarm.newalarm", message);
 		
+		
+		redisUtil.getJedisPool().returnResource(jedis);
 		
 	}
 
@@ -226,6 +279,16 @@ public class ServiceAlarmProcessor {
 	
 	public static void doupgrade(Map<String, String> alarm) {
 		try {		
+
+			Jedis jedis=null;
+			try {
+			 jedis = redisUtil.getConnection();
+			
+			
+			}catch(Exception e){
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				
+			}
 			
 			String result = (String)alarm.get("alarmvalue");			
 			String cbatmac = (String)alarm.get("cbatmac");			
@@ -234,6 +297,9 @@ public class ServiceAlarmProcessor {
 			String scbatentitykey = "cbatid:" + scbatid + ":entity";			
 			jedis.hset(scbatentitykey, "upgradestatus", result);			
 			
+			
+			
+			redisUtil.getJedisPool().returnResource(jedis);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
