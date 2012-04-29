@@ -31,6 +31,7 @@ public class ServiceAlarmProcessor {
 	private static String message = null;
 	
 	private static RedisUtil redisUtil;
+	private static Jedis jedis;
 	  
 	public static void setRedisUtil(RedisUtil redisUtil) {
 		ServiceAlarmProcessor.redisUtil = redisUtil;
@@ -47,6 +48,7 @@ public class ServiceAlarmProcessor {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			 redisUtil.closeConnection(jedis);
 		}
 
 	}
@@ -54,16 +56,14 @@ public class ServiceAlarmProcessor {
 	
 	public static void servicestart() throws Exception {
 
+		jedis = redisUtil.getConnection();
 		
 		while (true) {
 			
-			
-			Jedis jedis = redisUtil.getConnection();
-			
-			
+						
 			message = jedis.rpop(PERSIST_ALARM_QUEUE_NAME);
 			
-			 redisUtil.closeConnection(jedis);
+			
 			
 			
 			if(message == null ) {
@@ -164,8 +164,7 @@ public class ServiceAlarmProcessor {
 
 
 	public static void savelarm(Map<String, String> alarm) {
-		//presist alarm
-		Jedis jedis = redisUtil.getConnection();
+		//presist alarm		
 		
 		
 		//save alarm entity
@@ -203,7 +202,7 @@ public class ServiceAlarmProcessor {
 		//publish to notify node.js a new alarm
 		jedis.publish("alarm.newalarm", message);
 		
-		redisUtil.closeConnection(jedis);
+		
 	}
 
 	public static void doalarm(Map<String, String> alarm) {
@@ -230,12 +229,11 @@ public class ServiceAlarmProcessor {
 			
 			String result = (String)alarm.get("alarmvalue");			
 			String cbatmac = (String)alarm.get("cbatmac");			
-			String cbatmackey = "cbatmac:" +  cbatmac + ":cbatid";			
-			Jedis jedis = redisUtil.getConnection();
+			String cbatmackey = "cbatmac:" +  cbatmac + ":cbatid";						
 			String scbatid = (String)jedis.get(cbatmackey);
 			String scbatentitykey = "cbatid:" + scbatid + ":entity";			
 			jedis.hset(scbatentitykey, "upgradestatus", result);			
-			redisUtil.closeConnection(jedis);
+			
 			
 		} catch (Exception e) {
 			e.printStackTrace();

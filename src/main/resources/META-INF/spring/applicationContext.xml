@@ -88,10 +88,7 @@
 	<bean id="jedisPool" class="redis.clients.jedis.JedisPool">
 		<constructor-arg index="0" ref="jedisPoolConfig" />
 		
-		<constructor-arg index="1" value="192.168.1.249" />
-		<!-- 
-		<constructor-arg index="1" value="192.168.1.249" />
-		 -->
+		<constructor-arg index="1" value="192.168.1.249" />		
 		<constructor-arg index="2" value="6379" />		
 		<constructor-arg index="3" value="60000" />
 	</bean>
@@ -103,8 +100,7 @@
 	</bean>
 
 	<!-- 业务对象 -->
-	<bean id="workerDiscoveryProcessor" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" >
-		<property name="redisUtil" ref="redisUtil" />
+	<bean id="workerDiscoveryProcessor" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" >			 
 	</bean>
 	
 	<!-- 调度业务 -->
@@ -118,7 +114,7 @@
 	 <property name="jobDetail" ref="jobDetail0" />
 	 <property name="startDelay" value="3000" />
 	 <property name="repeatInterval" value="5" />
-	 <property name="repeatCount" value="29" />		
+	 <property name="repeatCount" value="0" />		
 	  	 
 	</bean>
 	

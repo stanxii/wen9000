@@ -11,8 +11,8 @@
     <p/>
     
      <form id="discoveryForm" action="/wen9000/discovery/search" method="post" >
-     	StartIp: <input type="text" name="startip" value="192.168.223.2" /> <br/>
-     	StopIp:  <input type="text" name="stopip"  value="192.168.223.250" /> <br/>
+     	StartIp: <input type="text" name="startip" value="192.168.1.244" /> <br/>
+     	StopIp:  <input type="text" name="stopip"  value="192.168.1.247" /> <br/>
      	<input type="submit"  value="搜索"/>
      </form>
     

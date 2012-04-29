@@ -23,22 +23,18 @@ public class ServiceHeartProcessor{
 	private static Logger log = Logger.getLogger(ServiceAlarmProcessor.class);
 	private static final String HEART_QUEUE_NAME = "heart_queue";
 	private static final String STSCHANGE_QUEUE_NAME = "stschange_queue";
-	private static JedisPool pool;
+
+	
 	private static RedisUtil redisUtil;
+	private static Jedis jedis;
+	
 	private static SnmpUtil util = new SnmpUtil();
 	  
 	public static void setRedisUtil(RedisUtil redisUtil) {
 		ServiceHeartProcessor.redisUtil = redisUtil;
 	}
 	
-	static {
-        JedisPoolConfig config = new JedisPoolConfig();
-        config.setMaxActive(100);
-        config.setMaxIdle(20);
-        config.setMaxWait(1000);
-        config.setTestOnBorrow(true);
-        pool = new JedisPool(config, "127.0.0.1");
-    }
+
 	
 	public void start(){
 		log.info("[#3] ..... service heart");
@@ -46,16 +42,19 @@ public class ServiceHeartProcessor{
 		try{
 			servicestart();
 		}catch(Exception e){
-			
+			redisUtil.closeConnection(jedis);
 		}		
 	}
 	
 	private void servicestart() throws InterruptedException, ParseException{
+	
+		jedis = redisUtil.getConnection();
+		
 		while(true){
 			String message = "";
-			Jedis jedis = redisUtil.getConnection();
+			
 			message = jedis.rpop(HEART_QUEUE_NAME);
-			redisUtil.closeConnection(jedis);
+			
 			
 			if(message == null ) {				
 				Thread.sleep(1000);
@@ -71,6 +70,8 @@ public class ServiceHeartProcessor{
 			System.out.println("one ServiceHeartProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 		}
 	}
+	
+	
 	
 	private void dowork(String message) throws ParseException{
 		JSONParser parser = new JSONParser();
@@ -123,7 +124,7 @@ public class ServiceHeartProcessor{
 	}
 	
 	private void doheartcbat(String cbatmac, String cbatip, String type) {
-		Jedis jedis = pool.getResource();
+		
 		//判断头端是否已存在
 		if(jedis.exists("mac:"+cbatmac+":deviceid")){
 			//头端已存在
@@ -196,7 +197,7 @@ public class ServiceHeartProcessor{
 			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icbatid));
 		}
 		
-		pool.returnResource(jedis);				
+						
 				
 	}
 	
@@ -217,7 +218,7 @@ public class ServiceHeartProcessor{
 	
 	public void doheartOnline(String cbatmac, String cnumac, String cnutype,
 			String cnuindex, String active) {
-		Jedis jedis = pool.getResource();
+		
 		//判断cnu是否已存在
 		if(jedis.exists("mac:"+cnumac+":deviceid")){
 			String cnuid = jedis.get("mac:"+cnumac+":deviceid");
@@ -269,12 +270,12 @@ public class ServiceHeartProcessor{
 			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
 		}
 		
-		pool.returnResource(jedis);			
+					
 	}
 	
 	public void doOffline_heart(String cbatmac, String cnuindex, String cnumac,
 			String cnutype) {
-		Jedis jedis = pool.getResource();
+		
 		//判断cnu是否已存在
 		if(!(jedis.exists("mac:"+cnumac+":deviceid"))){
 			//发现新cnu
@@ -318,7 +319,7 @@ public class ServiceHeartProcessor{
 			return;
 		}
 		
-		pool.returnResource(jedis);	
+			
 	}
 	
 }

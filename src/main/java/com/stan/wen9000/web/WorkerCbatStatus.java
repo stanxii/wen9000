@@ -28,7 +28,7 @@ public class WorkerCbatStatus{
         config.setMaxIdle(20);
         config.setMaxWait(1000);
         config.setTestOnBorrow(true);
-        pool = new JedisPool(config, "127.0.0.1");
+        pool = new JedisPool(config, "192.168.1.249");
     }
 	
 	
