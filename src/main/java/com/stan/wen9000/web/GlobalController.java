@@ -11,11 +11,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -34,17 +40,24 @@ public class GlobalController {
 	private static final String STSCHANGE_QUEUE_NAME = "stschange_queue";
 	private static SnmpUtil util = new SnmpUtil();
 
-	private static RedisUtil redisUtil;
-
-	public static void setRedisUtil(RedisUtil redisUtil) {
-			GlobalController.redisUtil = redisUtil;
-		}
 	
-	private static Jedis jedis;
+	private static JedisPool pool;
+	 
+	 static {
+	        JedisPoolConfig config = new JedisPoolConfig();
+	        config.setMaxActive(100);
+	        config.setMaxIdle(20);
+	        config.setMaxWait(1000);
+	        config.setTestOnBorrow(true);
+	        pool = new JedisPool(config, "192.168.1.249");
+	    }
+	 
+	
+	
 	  
 	@RequestMapping(value="/cbatinfo/{id}", method=RequestMethod.GET)
 	public String prepare(Model model,@PathVariable Long id) {		
-		jedis = redisUtil.getConnection();
+		Jedis jedis = pool.getResource();
 		
 		
 		String tmpdata = jedis.hget("cbatid:"+id+":cbatinfo","address");
@@ -64,7 +77,7 @@ public class GlobalController {
 		tmpdata = jedis.hget("cbatid:"+id+":cbatinfo","mvlanenable");
 		model.addAttribute("mvlanenable", tmpdata);
 		
-		redisUtil.closeConnection(jedis);
+		 pool.returnResource(jedis);
 		return "cbatinfoes/show";
 	}
 	
@@ -73,7 +86,7 @@ public class GlobalController {
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
     	String jsonstring = "{";
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
 		
 		String id = jedis.get("mac:"+mac+":deviceid");
 		String cbatkey = "cbatid:"+id+":entity";
@@ -135,7 +148,7 @@ public class GlobalController {
 		}			
 		
 		//logger.info("getcbat keys::::::"+ jsonstring);
-		redisUtil.closeConnection(jedis);
+		 pool.returnResource(jedis);
 		
 		PrintWriter out = response.getWriter();
 		out.println(jsonstring);
@@ -147,7 +160,7 @@ public class GlobalController {
 	public void getcnu(HttpServletRequest request, HttpServletResponse response,@PathVariable String mac) throws IOException {		
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	String id = jedis.get("mac:"+mac+":deviceid");
     	String cnukey = "cnuid:"+id+":entity";
     	String jsonstring = "{";
@@ -164,7 +177,7 @@ public class GlobalController {
     		jsonstring += '"'+ "phone"+ '"'+":" + '"' + jedis.hget(cnukey, "phone")+ '"' + "}";
     	}
     	
-    	redisUtil.closeConnection(jedis);
+    	 pool.returnResource(jedis);
 		PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ jsonstring);
         out.println(jsonstring);  
@@ -176,7 +189,7 @@ public class GlobalController {
 	public void getcnuprofile(HttpServletRequest request, HttpServletResponse response,@PathVariable String mac) throws IOException {		
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	//获取CNUID
     	String id = jedis.get("mac:"+mac+":deviceid");
     	//获取对应的profileid
@@ -205,7 +218,7 @@ public class GlobalController {
     	jsonstring += '"'+ "port1rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port1rxrate")+ '"' + ",";
     	jsonstring += '"'+ "port2rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port2rxrate")+ '"' + ",";
     	jsonstring += '"'+ "port3rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port3rxrate")+ '"' + "}";
-    	redisUtil.closeConnection(jedis);
+    	 pool.returnResource(jedis);
 		PrintWriter out = response.getWriter();
         //logger.info("keys:::proname:::"+ jedis.hget(prokey,"profilename"));
         out.println(jsonstring);  
@@ -218,7 +231,7 @@ public class GlobalController {
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
     	String jsonstring = "{";
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
 		String id = jedis.get("mac:"+mac+":deviceid");
 		String hfckey = "hfcid:"+id+":entity";
 		
@@ -231,7 +244,7 @@ public class GlobalController {
 		jsonstring += '"'+ "serialnumber"+ '"'+":" + '"' + jedis.hget(hfckey, "serialnumber")+ '"' + "}";
 
 		
-		redisUtil.closeConnection(jedis);
+		 pool.returnResource(jedis);
 		//return "cnus/show";
 		PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ json);
@@ -246,7 +259,7 @@ public class GlobalController {
     public void getcbats(HttpServletRequest request, HttpServletResponse response) throws IOException {
     	response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	String result = "";
     	String jsonstring = "";
     	Set<String> list = jedis.keys("cbatid:*:entity");
@@ -302,7 +315,7 @@ public class GlobalController {
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
         //logger.info("searchresult:::::"+ json.toString());
-    	redisUtil.closeConnection(jedis);
+    	 pool.returnResource(jedis);
         PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ json);
         out.println(jsonstring);  
@@ -314,10 +327,16 @@ public class GlobalController {
 	//dynatree初始化读取数据函数
 	@RequestMapping(value = "eocs")
     @ResponseBody
-    public void getAllEoc(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		response.setContentType("text/html");
-    	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    public ResponseEntity<String> getAllEoc(@RequestBody String json) {
+		JSONObject jsonResponse = new JSONObject();
+		
+		HttpHeaders headers = new HttpHeaders();        
+        headers.add("Content-Type", "application/json; charset=utf-8");
+        
+		
+    	
+    	
+    	Jedis jedis = pool.getResource();
     	String jsonstring = "";
     	Set<String> list = jedis.keys("cbatid:*:entity");
 
@@ -423,12 +442,17 @@ public class GlobalController {
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
         //logger.info("searchresult:::::"+ json.toString());
-    	redisUtil.closeConnection(jedis);
-        PrintWriter out = response.getWriter();
+    	 pool.returnResource(jedis);
+    	 
+    	 
+    	 Object job = JSONValue.parse(jsonstring);
+    	  jsonResponse = (JSONObject)job;
+    	 
+    	 return new ResponseEntity<String>(jsonResponse.toJSONString(), headers, HttpStatus.OK);
+    	 
+        
         //logger.info("keys::::::"+ json);
-        out.println(jsonstring);  
-        out.flush();  
-        out.close();
+       
     	//return jsonstring;
     }
 	
@@ -437,7 +461,7 @@ public class GlobalController {
     public void tree_read(HttpServletRequest request, HttpServletResponse response) throws IOException {
     	response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	String jsonstring = "";
     	Set<String> list = jedis.keys("cbatid:*:entity");
     	for(Iterator it = list.iterator(); it.hasNext(); ) 
@@ -460,7 +484,7 @@ public class GlobalController {
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
         //logger.info("searchresult:::::"+ json.toString());
-    	redisUtil.closeConnection(jedis);
+    	 pool.returnResource(jedis);
         PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ json);
         out.println(jsonstring);  
@@ -474,7 +498,7 @@ public class GlobalController {
 	private void getcnus(@PathVariable String mac,HttpServletRequest request, HttpServletResponse response) throws IOException{
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	String jsonstring = "";
     	//String cbatmac = mac.substring(mac.indexOf(":")+3, mac.length()-1);
     	logger.info("cbatmac keys::::::"+ mac);
@@ -496,7 +520,7 @@ public class GlobalController {
     		jsonstring = "[{"+'"'+ "title" + '"'+":"+'"'+"NOData"+'"'+ "}]";
     	}
     	//logger.info("cnukeys::::::"+ jsonstring);
-    	redisUtil.closeConnection(jedis);
+    	 pool.returnResource(jedis);
         PrintWriter out = response.getWriter();
         out.println(jsonstring);  
         out.flush();  
@@ -508,7 +532,7 @@ public class GlobalController {
 	private void getsts(HttpServletRequest request, HttpServletResponse response) throws IOException{
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	//Jedis jedis_queue = redisUtil.getConnection();
     	String jsonstring = "";
     	//从状态变更队列获取状态变更的设备
@@ -574,7 +598,7 @@ public class GlobalController {
     	}
     	//redisUtil.closeConnection(jedis_queue);
     	//logger.info("getsts::::::"+ jsonstring);
-    	redisUtil.closeConnection(jedis);
+    	 pool.returnResource(jedis);
         PrintWriter out = response.getWriter();
         out.println(jsonstring);  
         out.flush();  
@@ -586,7 +610,7 @@ public class GlobalController {
 	public void checkedcnu(HttpServletRequest request, HttpServletResponse response) throws IOException {		
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	String mac = request.getParameter("cnumac");
     	String val = request.getParameter("value");
     	//logger.info("cnumac::::::"+ mac +"::::::::value::::::"+val);
@@ -601,12 +625,12 @@ public class GlobalController {
     	}
     	
     	
-    	redisUtil.closeConnection(jedis);
+    	 pool.returnResource(jedis);
 	}
 	
 	@RequestMapping(value="/save_cnuinfo", method=RequestMethod.POST)
 	public void savecnuinfo(HttpServletRequest request, HttpServletResponse response) throws IOException {		
-		jedis = redisUtil.getConnection();
+		Jedis jedis = pool.getResource();
     	String address = request.getParameter("address");
     	String contact = request.getParameter("contact");
     	String phone = request.getParameter("phone");
@@ -621,7 +645,7 @@ public class GlobalController {
 		jedis.hset(key, "phone", phone);
 		jedis.hset(key, "label", label);
 		jedis.save();
-		redisUtil.closeConnection(jedis);
+		 pool.returnResource(jedis);
 	}
 	
 	//头端数据修改
@@ -630,7 +654,7 @@ public class GlobalController {
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
     	String datastring = "";
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	String mac = request.getParameter("mac");
     	String ip = request.getParameter("ip");
     	String label = request.getParameter("label");
@@ -660,7 +684,7 @@ public class GlobalController {
             	jedis.hset(cbatinfokey, "address", address);
             	jedis.save();
             	
-            	redisUtil.closeConnection(jedis);
+            	 pool.returnResource(jedis);
             	datastring = "{" + '"' + "sts" + '"' +":" + '"' + "ok" + '"' + "}";
             	PrintWriter out = response.getWriter();
                 out.println(datastring);  
@@ -698,10 +722,10 @@ public class GlobalController {
         	jedis.save();
     	}catch(Exception e){
     		//e.printStackTrace();
-    		redisUtil.closeConnection(jedis);
+    		 pool.returnResource(jedis);
     		return;
     	}
-    	redisUtil.closeConnection(jedis);
+    	 pool.returnResource(jedis);
     	datastring = "{" + '"' + "sts" + '"' +":" + '"' + "ok" + '"' + "}";
     	PrintWriter out = response.getWriter();
         out.println(datastring);  
@@ -714,7 +738,7 @@ public class GlobalController {
 	public void synccbat(HttpServletRequest request, HttpServletResponse response) throws IOException {		
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
-    	jedis = redisUtil.getConnection();
+    	Jedis jedis = pool.getResource();
     	String mac = request.getParameter("mac");
     	String cbatid = jedis.get("mac:"+mac+":deviceid");
     	String cbatkey = "cbatid:"+cbatid+":entity";
@@ -752,7 +776,7 @@ public class GlobalController {
 		    +","+ '"' + "netmask" + '"' +":" + '"' + netmask + '"'+","+ '"' + "gateway" + '"' +":" + '"' + gateway + '"'
 		    +","+ '"' + "trapserverip" + '"' +":" + '"' + trapserverip + '"'+","+ '"' + "trap_port" + '"' +":" + '"' + trap_port + '"'+"}";
 		    
-		    redisUtil.closeConnection(jedis);
+		    pool.returnResource(jedis);
 		    
 		    PrintWriter out = response.getWriter();
 	        out.println(datastring);  
@@ -760,7 +784,7 @@ public class GlobalController {
 	        out.close();
 	    }catch(Exception e){
 	    	//e.printStackTrace();
-	    	redisUtil.closeConnection(jedis);
+	    	 pool.returnResource(jedis);
 	    	return;
 	    }
 	    

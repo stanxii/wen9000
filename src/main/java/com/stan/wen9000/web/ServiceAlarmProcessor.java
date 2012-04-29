@@ -247,9 +247,9 @@ public class ServiceAlarmProcessor {
 		jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
 		
 		
-		if(message==null) {
-			System.out.println("messag error=====null>>>>>>>>>>>>");
-		}
+		
+	  
+		
 		//publish to notify node.js a new alarm
 		jedis.publish("node.alarm.newalarm", message);
 		
