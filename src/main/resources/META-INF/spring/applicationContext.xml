@@ -148,6 +148,10 @@
 	<bean id="serviceCbatStatus" class="com.stan.wen9000.web.ServiceCbatStatus" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
+	<bean id="serviceController" class="com.stan.wen9000.web.ServiceController" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
+	
 	
 	<!-- 调度业务 -->
 	<bean id="jobDetail1" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -185,6 +189,12 @@
 	 <property name="targetMethod"  value="start"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
+	<bean id="serviceControllerjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceController" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	
 	
 	
 	
@@ -231,6 +241,14 @@
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="4" />		  	 
 	</bean>
+	<bean id="serviceControllerTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceControllerjob" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />
+	</bean>
+	
+	
 	
 	
 	
@@ -247,6 +265,7 @@
 	   <ref bean="trapReceierTrigger" />	
 	   <ref bean="workerCbatStatusTrigger" />  
 	   <ref bean="serviceCbatStatusTrigger" /> 
+	   <ref bean="serviceControllerTrigger" />
 	  </list>
 	 </property>	 
 	</bean>

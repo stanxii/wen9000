@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.snmp4j.smi.Integer32;
@@ -325,39 +326,56 @@ public class GlobalController {
     }
 	
 	//dynatree初始化读取数据函数
-	@RequestMapping(value = "eocs")
+	@RequestMapping(value = "eocs", method = RequestMethod.GET,  headers = "Accept=application/json")
     @ResponseBody
     public ResponseEntity<String> getAllEoc(@RequestBody String json) {
-		JSONObject jsonResponse = new JSONObject();
+		
 		
 		HttpHeaders headers = new HttpHeaders();        
         headers.add("Content-Type", "application/json; charset=utf-8");
         
 		
+        JSONArray jsonResponseArray = new JSONArray();
     	
     	
     	Jedis jedis = pool.getResource();
     	String jsonstring = "";
     	Set<String> list = jedis.keys("cbatid:*:entity");
 
+    	
+    	
+    	JSONObject eocjson = new JSONObject();
+		
+    	eocjson.put((String)"title", (String)"EOC设备");
+    	eocjson.put("key", "eocroot");
+    	eocjson.put("isFolder", "true");
+    	eocjson.put("expand", "true");
+
+    	//"children"
+		
+		JSONArray cbatarray = new JSONArray();
     	for(Iterator it = list.iterator(); it.hasNext(); ) 
     	{ 
-    		if(jsonstring == ""){
-    			jsonstring += "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"key"+'"'+":"+ '"'+"eocroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
-    			+'"'+":[{";
-    		}else{
-    			jsonstring += ",{";
-    		}
-    		String key = it.next().toString();   
-    		//添加头端信息
-    		String cbatstring = "";
+    		
+    		JSONObject cbatjson = new JSONObject();
+
+            
+    
+    		String key = it.next().toString();
+   
+    		//add head;
+    		cbatjson.put("title", jedis.hget(key, "ip"));
+    		cbatjson.put("key", jedis.hget(key, "mac"));
+    		cbatjson.put("online", jedis.hget(key, "active"));
+    		//添加头端信息    		
     		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
-    			cbatstring = '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-        		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"doc_with_children.gif"+'"'+","+'"'+"children"+'"'+":";
+    			cbatjson.put("icon", "doc_with_children.gif");
+    			//"children"+'"'+":";
     		}else{
-    			cbatstring = '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-        		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"'+","+'"'+"children"+'"'+":";
+    			cbatjson.put("icon", "offline.png");
+    			//+"children"+'"'+":";
     		}
+    		cbatjson.put("type", "cbat");
 
     		//获取cbatid
     		String cbatid = jedis.get("mac:" + jedis.hget(key, "mac") + ":deviceid");
@@ -365,50 +383,55 @@ public class GlobalController {
     		//取得所有属于cbatid的 cnuid
         	Set<String> list_cnu = jedis.smembers("cbatid:" + cbatid + ":cnus");//jedis.keys("cnuid:*:cbatid:"+jedis.get("cbatmac:"+jedis.hget(key, "mac")+":cbatid")+":*:entity");
         	String cnustring ="";
+        	
+        	JSONArray cnujsons = new JSONArray();
         	for(Iterator jt = list_cnu.iterator(); jt.hasNext(); ) 
         	{ 
+        		
+        		JSONObject cnujson = new JSONObject();
+        		
         		String key_cnuid = jt.next().toString();  
         		String key_cnu = "cnuid:" + key_cnuid + ":entity";
         		//logger.info("keys::::::key_cnu"+ key_cnu);
-        		if(cnustring == ""){
-        			cnustring += "[{";
-        		}else{
-        			cnustring += ",{";
-        		}    		
+        		
+        	
+        		cnujson.put("title", jedis.hget(key_cnu, "label"));
+        		cnujson.put("key", jedis.hget(key_cnu, "mac"));
+        		cnujson.put("online", jedis.hget(key_cnu, "active"));
+        		
+        	
         		if(jedis.hget(key_cnu, "active").equalsIgnoreCase("1")){
-        			cnustring += '"'+ "title" + '"'+":"+'"'+jedis.hget(key_cnu, "label")+'"'+ ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"online.gif"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
+        			cnujson.put("icon",  "online.gif");        			
         		}else{
-        			cnustring += '"'+ "title" + '"'+":"+'"'+jedis.hget(key_cnu, "label")+'"'+ ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
+        			cnujson.put("icon", "offline.png");        			
         		}
+        		cnujson.put("type", "cnu");
+        		
+        		
+        		cnujsons.add(cnujson);
         		
         	}
-        	cnustring += "]";
-        	//头端下没有终端
-        	if(cnustring.length()<3)
-        	{        		
-        		cnustring = "";
-        		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
-        			cbatstring = '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"doc_with_children.gif"+'"';
-        		}else{
-        			cbatstring = '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"';
-        		}
-        	}
-        	cbatstring += cnustring;
-        	cbatstring += "}";
-        	jsonstring += cbatstring;
-    	}
-    	jsonstring += "]}";
-    	if(jsonstring.length()<3)
-    	{
-    		jsonstring = "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"key"+'"'+":"+'"'+"eocroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true"+ "}";
+        	
+        	cbatjson.put("children", cnujsons);
+        	
+        	
+        	cbatarray.add(cbatjson);
     	}
     	
+   
+    	eocjson.put("children", cbatarray);
+    	
+    	///////////////////////////////hfc
+    	
+    	
+    	/*
+   
     	String hfcstring = "";    	
     	list = jedis.keys("hfcid:*:entity");
+    	
+    	
+    	
+    	
     	for(Iterator it=list.iterator();it.hasNext();){    		
 			if(hfcstring == ""){
         		hfcstring += ",{"+'"'+ "title" + '"'+":"+'"'+"HFC设备"+'"'+","+'"'+"key"+ '"'+":"+'"'+"hfcroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
@@ -442,18 +465,17 @@ public class GlobalController {
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
         //logger.info("searchresult:::::"+ json.toString());
+         * */
     	 pool.returnResource(jedis);
     	 
     	 
-    	 Object job = JSONValue.parse(jsonstring);
-    	  jsonResponse = (JSONObject)job;
     	 
-    	 return new ResponseEntity<String>(jsonResponse.toJSONString(), headers, HttpStatus.OK);
+    	 jsonResponseArray.add(eocjson);
     	 
-        
-        //logger.info("keys::::::"+ json);
-       
-    	//return jsonstring;
+    	 return new ResponseEntity<String>(jsonResponseArray.toJSONString(), headers, HttpStatus.OK);
+    
+    	
+    	 
     }
 	
 	@RequestMapping(value = "tree_read")
