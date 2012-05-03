@@ -30,7 +30,7 @@ import redis.clients.jedis.JedisPoolConfig;
 @RequestMapping("/global/**")
 @Controller
 public class GlobalController {
-	private static Logger logger = Logger.getLogger(DiscoveryController.class);
+	private static Logger logger = Logger.getLogger(GlobalController.class);
 	private static final String STSCHANGE_QUEUE_NAME = "stschange_queue";
 	private static SnmpUtil util = new SnmpUtil();
 	private static JedisPool pool;
@@ -88,7 +88,55 @@ public class GlobalController {
 	
 		if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1") ){
 			//设备在线，实时获得设备信息
-			jsonstring += '"'+ "active" + '"'+":"+ '"' + "在线" + '"' + ",";
+			jsonstring += '"'+ "mac" + '"'+":"+ '"' + jedis.hget(cbatkey,"mac")+ '"' + ",";
+			jsonstring += '"'+ "active" + '"'+":"+ '"' + "离线" + '"' + ",";
+			jsonstring += '"'+ "ip"+ '"'+":" + '"' + jedis.hget(cbatkey, "ip")+ '"' + ",";
+			jsonstring += '"'+ "label"+ '"'+":" + '"' + jedis.hget(cbatkey, "label")+ '"' + ",";
+			jsonstring += '"'+ "netmask"+ '"'+":" + '"' + jedis.hget(cbatkey, "netmask")+ '"' + ",";
+			jsonstring += '"'+ "gateway"+ '"'+":" + '"' + jedis.hget(cbatkey, "gateway")+ '"' + ",";			
+			
+			switch(Integer.parseInt(jedis.hget(cbatkey, "devicetype")))
+			{
+	        	case 1:
+	        		//break;
+	        	case 2:
+	        		
+	        		//break;
+	        	case 3:
+	        		//break;
+	        	case 4:
+	        		
+	        		//break;
+	        	case 5:
+	        		//break;
+	        	case 6:
+	        		
+	        		//break;
+	        	case 7:
+	        		//break;
+	        	case 8:
+	        		result = "中文测试";
+	        		break;
+	        	default:
+	        		result = "Unknown";
+	        		break;
+			}
+
+			jsonstring += '"'+ "devicetype"+ '"'+":" + '"' + result+ '"' + ",";
+			//读取cbatinfo信息
+
+			String cbatinfokey = "cbatid:"+id+":cbatinfo";
+			jsonstring += '"'+ "trapserver"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "trapserver")+ '"' + ",";
+			jsonstring += '"'+ "address"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "address")+ '"' + ",";
+			jsonstring += '"'+ "phone"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "phone")+ '"' + ",";
+			jsonstring += '"'+ "bootver"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "bootver")+ '"' + ",";
+			jsonstring += '"'+ "contact"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "contact")+ '"' + ",";
+			jsonstring += '"'+ "agentport"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "agentport")+ '"' + ",";
+			jsonstring += '"'+ "appver"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "appver")+ '"' + ",";
+			jsonstring += '"'+ "mvlanenable"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "mvlanenable")+ '"' + ",";
+			jsonstring += '"'+ "mvlanid"+ '"'+":" + '"' + jedis.hget(cbatinfokey, "mvlanid")+ '"' + "}";
+			
+			
 		}else{
 			//设备离线，从redis获取设备信息
 			jsonstring += '"'+ "mac" + '"'+":"+ '"' + jedis.hget(cbatkey,"mac")+ '"' + ",";
@@ -159,7 +207,12 @@ public class GlobalController {
     	String jsonstring = "{";
     	if(jedis.hget(cnukey, "active").equalsIgnoreCase("1")){
     		//设备在线,获取实时设备信息
-    		
+    		jsonstring += '"'+ "mac" + '"'+":"+ '"' + jedis.hget(cnukey,"mac")+ '"' + ",";    		
+    		jsonstring += '"'+ "active" + '"'+":"+ '"' + "离线" + '"' + ",";  
+    		jsonstring += '"'+ "label"+ '"'+":" + '"' + jedis.hget(cnukey, "label")+ '"' + ",";
+    		jsonstring += '"'+ "address"+ '"'+":" + '"' + jedis.hget(cnukey, "address")+ '"' + ",";
+    		jsonstring += '"'+ "contact"+ '"'+":" + '"' + jedis.hget(cnukey, "contact")+ '"' + ",";
+    		jsonstring += '"'+ "phone"+ '"'+":" + '"' + jedis.hget(cnukey, "phone")+ '"' + "}";
     	}else{
     		//设备离线，获取redis信息
     		jsonstring += '"'+ "mac" + '"'+":"+ '"' + jedis.hget(cnukey,"mac")+ '"' + ",";    		

@@ -27,7 +27,7 @@ import redis.clients.jedis.JedisPoolConfig;
 @Controller
 public class ProfileController {
 	private static JedisPool pool;
-	private static Logger logger = Logger.getLogger(DiscoveryController.class);
+	private static Logger logger = Logger.getLogger(ProfileController.class);
 	 static {
 	        JedisPoolConfig config = new JedisPoolConfig();
 	        config.setMaxActive(100);

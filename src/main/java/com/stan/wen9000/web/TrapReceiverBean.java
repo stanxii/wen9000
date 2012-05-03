@@ -55,16 +55,11 @@ public class TrapReceiverBean {
 	}
 
 	
-	
-	
-
 
 	public void start() {
 		logger.info("trapreceiver.start() action called, start trap receivering..........");
-			
-		
-		
-			doWork();
+
+		doWork();
 		
 	}
 
@@ -239,7 +234,7 @@ public class TrapReceiverBean {
 			msgheart.put("cbatmac", cbatmac);
 			index2 = ((String) hearthash.get("cbatsys")).indexOf("|", index1 + 1);
 			cbatip = ((String) hearthash.get("cbatsys")).substring(index1 + 1, index2);
-			msgheart.put("cbatip", cbatmac);
+			msgheart.put("cbatip", cbatip);
 			index1 = index2;
 			index2 = ((String) hearthash.get("cbatsys")).indexOf("]");
 			cbattype = ((String) hearthash.get("cbatsys")).substring(

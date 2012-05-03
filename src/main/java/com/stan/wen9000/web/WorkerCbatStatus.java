@@ -13,7 +13,7 @@ import redis.clients.jedis.JedisPoolConfig;
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 
 public class WorkerCbatStatus{	
-	private static Logger log = Logger.getLogger(ServiceAlarmProcessor.class);
+	private static Logger log = Logger.getLogger(WorkerCbatStatus.class);
 	private static JedisPool pool;
 	private static RedisUtil redisUtil;
 	private static final String CBATSTS_QUEUE_NAME = "cbatsts_queue";

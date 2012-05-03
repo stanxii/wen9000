@@ -17,7 +17,7 @@ import com.stan.wen9000.web.SnmpUtil;
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 
 public class ServiceCbatStatus{	
-	private static Logger log = Logger.getLogger(ServiceAlarmProcessor.class);
+	private static Logger log = Logger.getLogger(ServiceCbatStatus.class);
 	private static JedisPool pool;
 	private static RedisUtil redisUtil;
 	private static SnmpUtil util = new SnmpUtil();
@@ -53,10 +53,10 @@ public class ServiceCbatStatus{
 	private void servicestart(){
 		while(true){
 			String message = "";
-			Jedis jedis = redisUtil.getConnection();
+			Jedis jedis = pool.getResource();
 			message = jedis.rpop(CBATSTS_QUEUE_NAME);
-			redisUtil.closeConnection(jedis);
-			
+			pool.returnResource(jedis);
+
 			if(message == null ) {	
 				try{
 					Thread.sleep(1000);
@@ -118,6 +118,13 @@ public class ServiceCbatStatus{
 		if(devtrapserverip==""){
 			return;
 		}
+		
+		//如果global:trapserver:ip键不存在，创建之
+		if(jedis.get("global:trapserver:ip")==null){
+			jedis.set("global:trapserver:ip", "192.168.223.253");
+			jedis.set("global:trapserver:port", "162");
+		}
+
 		//if systemconfig db trap ip = device trap ip not need set trap server ip
 		if( !jedis.get("global:trapserver:ip").equalsIgnoreCase(devtrapserverip)){
 			try {

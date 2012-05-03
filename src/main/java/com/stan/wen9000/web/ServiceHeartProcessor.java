@@ -20,7 +20,7 @@ import com.stan.wen9000.web.SnmpUtil;
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 
 public class ServiceHeartProcessor{	
-	private static Logger log = Logger.getLogger(ServiceAlarmProcessor.class);
+	private static Logger log = Logger.getLogger(ServiceHeartProcessor.class);
 	private static final String HEART_QUEUE_NAME = "heart_queue";
 	private static final String STSCHANGE_QUEUE_NAME = "stschange_queue";
 	private static JedisPool pool;
@@ -65,10 +65,10 @@ public class ServiceHeartProcessor{
 			System.out.println(" [x] ServiceHeartProcessor Received '" + message
 					+ "'");
 			
-			long start = System.currentTimeMillis();  			
+			//long start = System.currentTimeMillis();  			
 			dowork(message);					
-			long end = System.currentTimeMillis();  
-			System.out.println("one ServiceHeartProcessor dowork spend: " + ((end - start)) + " milliseconds");  
+			//long end = System.currentTimeMillis();  
+			//System.out.println("one ServiceHeartProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 		}
 	}
 	
@@ -136,7 +136,7 @@ public class ServiceHeartProcessor{
 			}
 			//更新头端信息
 			jedis.hset(cbatkey,"active", "1");
-			jedis.hset(cbatkey,"cbatip", cbatip);
+			jedis.hset(cbatkey,"ip", cbatip);
 //			cbat.setAppversion(util.getStrPDU(cbatip, "161",
 //					new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8,4, 4, 0 })));
 			//更新头端时间戳
@@ -222,7 +222,7 @@ public class ServiceHeartProcessor{
 		if(jedis.exists("mac:"+cnumac+":deviceid")){
 			String cnuid = jedis.get("mac:"+cnumac+":deviceid");
 			//cnu已存在
-			//一下判断是否有移机操作
+			//以下判断是否有移机操作
 			//获取redis中CNU所属cbatmac
 			String tmpcbatid = jedis.hget("cnuid:"+cnuid+":entity", "cbatid");
 			if(jedis.hget("cbatid:"+tmpcbatid+":entity", "cbatmac").equalsIgnoreCase(cbatmac)){
@@ -258,10 +258,15 @@ public class ServiceHeartProcessor{
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
-			//cnuentity.put("profileid", jedis.get("mac:"+cbatmac+":deviceid"));
+			//暂将profileid置1
+			cnuentity.put("profileid", "1");
 			
 			//将cnuid添加到所属头端下的集合中
 			jedis.sadd("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":cnus", Long.toString(icnuid));
+			
+			//添加cnu到profile集合中
+			jedis.sadd("profileid:1:cnus", String.valueOf(icnuid));
+			
 			//save
 			jedis.hmset(scnuentitykey, cnuentity);
 			jedis.save();
@@ -276,6 +281,7 @@ public class ServiceHeartProcessor{
 			String cnutype) {
 		Jedis jedis = pool.getResource();
 		//判断cnu是否已存在
+		//可注释此段代码，离线设备不予发现
 		if(!(jedis.exists("mac:"+cnumac+":deviceid"))){
 			//发现新cnu
 			String cnumackey = "mac:" +  cnumac.toLowerCase().trim() + ":deviceid";
@@ -290,18 +296,25 @@ public class ServiceHeartProcessor{
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
-			//cnuentity.put("profileid", jedis.get("mac:"+cbatmac+":deviceid"));
+			//暂将profileid置1
+			cnuentity.put("profileid", "1");
 			
 			//将cnuid添加到所属头端下的集合中
 			jedis.sadd("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":cnus", Long.toString(icnuid));
 			//save
 			jedis.hmset(scnuentitykey, cnuentity);
 			
+			//添加cnu到profile集合中
+			jedis.sadd("profileid:1:cnus", String.valueOf(icnuid));
+			
+			jedis.bgsave();
 			//发现新cnu,发往STSCHANGE_QUEUE_NAME
 			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
 			
+			pool.returnResource(jedis);	
+			return;
 		}
-		//一下判断是否是所属头端发出的心跳
+		//以下判断是否是所属头端发出的心跳
 		String cnuid = jedis.get("mac:"+cnumac+":deviceid");
 		String cur_cbatid = jedis.hget("cnuid:"+cnuid+":entity", "cbatid");
 		if(jedis.hget("cbatid:"+cur_cbatid+":entity", "mac").equalsIgnoreCase(cbatmac)){
@@ -311,10 +324,11 @@ public class ServiceHeartProcessor{
 				jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
 				
 			}
-			//修改CNU先关信息
+			//修改CNU相关信息
 			jedis.hset("cnuid:"+cnuid+":entity", "active", "0");
 		}else{
 			//不是所属头端发出的心跳
+			pool.returnResource(jedis);	
 			return;
 		}
 		
