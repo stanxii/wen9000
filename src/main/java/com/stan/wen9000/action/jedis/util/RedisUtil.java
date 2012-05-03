@@ -25,7 +25,9 @@ public class RedisUtil {
 		try {              
 			jedis=jedisPool.getResource();          
 		} catch (Exception e) {              
-			e.printStackTrace();          
+			e.printStackTrace();   
+			jedisPool.returnBrokenResource(jedis);
+			jedis = null;
 		}          
 		return jedis;      
 	}   

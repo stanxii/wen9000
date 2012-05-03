@@ -27,9 +27,9 @@
 
 		
 		
-		initRealTimeAlarmTable();
+		//initRealTimeAlarmTable();
     
-    	//historyAlarmTable();
+    	historyAlarmTable();
 
     	//flushRealTimeTable();
     	
@@ -263,10 +263,10 @@
 		<li><a href="#tabs-2">历史告警</a></li>
 	</ul>
 	<div id="tabs-1">
-	    
-			<div class='myclass'>
-			<table  id="realtimeAlarm">
-			</table>
+	     显示实时告警
+			//<div class='myclass'>
+			//<table  id="realtimeAlarm">
+			//</table>
 		</div>
 		
 	</div>

@@ -16,6 +16,7 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPubSub;
 
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 import com.stan.wen9000.reference.EocDeviceType;
@@ -28,9 +29,6 @@ public class ServiceDiscoveryProcessor  {
 
 	EocDeviceType devicetype;
 
-	private static final String PERSIST_CBAT_QUEUE_NAME = "service_discovery_queue";
-//	private static JedisPool pool;
-	 
 	
 	  private static RedisUtil redisUtil;
 	  
@@ -42,80 +40,86 @@ public class ServiceDiscoveryProcessor  {
 		ServiceDiscoveryProcessor.redisUtil = redisUtil;
 	}
 
-	private static Jedis jedis;
+	
 	  
-	  
-//	 static {
-//	        JedisPoolConfig config = new JedisPoolConfig();
-//	        config.setMaxActive(1000);
-//	        config.setMaxIdle(20);
-//	        config.setMaxWait(1000);	        
-//	        pool = new JedisPool(config, "192.168.1.249", 6379, 10*1000);
-//	    }
-//	 
-//	 
-//	 private static Jedis jedis ;
+	
+	private  static JedisPubSub jedissubSub = new JedisPubSub() {
+		public void onUnsubscribe(String arg0, int arg1) {
+
+        }
+		public void onSubscribe(String arg0, int arg1) {
+
+        }
+		 public void onMessage(String arg0, String arg1) {
+	       
+	     }
+		 public void onPUnsubscribe(String arg0, int arg1) {
+
+	        }
+		 public void onPSubscribe(String arg0, int arg1) {
+
+	        } 
+  	 
+       /*
+
+       * 正则模式：收到匹配key值的消息时触发
+
+       * arg0订阅的key正则表达式
+
+       * arg1匹配上该正则key值
+
+       * arg2收到的消息值
+
+       */
+
+      public void onPMessage(String arg0, String arg1, String msg) {
+
+      	System.out.println("servicediscovery Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
+      	try {
+  			//arg2 is mssage now is currenti p
+  			
+  			
+  			
+  			servicestart(msg);
+  			
+  		}catch(Exception e){
+  			e.printStackTrace();			
+  		}
+  		
+      }
+
+  };
 
 	public void execute() {
 
 		System.out.println("[#3] ..... service discovery starting");
-
+		Jedis jedis=null;
 		try {
-			servicestart();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		 jedis = redisUtil.getConnection();
+		 jedis.psubscribe(jedissubSub, "servicediscovery.*");
+		redisUtil.getJedisPool().returnResource(jedis);
+		}catch(Exception e){
 			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			
 		}
+		
+		
+
+		
 
 	}
 
-	public void servicestart() throws Exception {
+	public static void servicestart(String msg) throws Exception {
 
-		
-		
-		jedis = redisUtil.getConnection();
-		
-		while (true) {
-		String message = null;
-
-	
-		message = jedis.rpop(PERSIST_CBAT_QUEUE_NAME);
-		
-		
-		if(message == null) {
+			 
+		doWork(msg);
 			
-			
-			Thread.sleep(1000);
-			continue;
-		}
-		else if(message.equalsIgnoreCase("ok")) {
-			
-//			System.out.println("Why ServiceDiscoveryProcessor receive == ok?? i don't know");
-			Thread.sleep(1000);
-			continue;
-		}else if(message.length() < 3) {
-			
-//			System.out.println("Why ServiceDiscoveryProcessor receive len < 3 i don't know");
-			Thread.sleep(1000);
-			continue;
-		}
-		
-		 System.out.println(" [x]ServiceDiscoveryProcessor  Received '" +
-		 message + "'");
-		 
-		 
-		doWork(message);
-		// System.out.println(" [x] ServiceDiscoveryProcessor  Done");
-		
-		}
-		
-	
-		
 		
 		
 	}
 
-	private void doWork(String message) throws ParseException {
+	private static void doWork(String message) throws Exception {
 
 		
 		 
@@ -137,7 +141,7 @@ public class ServiceDiscoveryProcessor  {
 
 	}
 
-	private void doCbat(String message) throws ParseException {
+	private static void doCbat(String message) throws ParseException {
 
 		
 		
@@ -177,6 +181,18 @@ public class ServiceDiscoveryProcessor  {
 		
 		
 		String cbatmackey = "mac:" +  cbatmac.toLowerCase().trim() + ":deviceid";
+		
+		
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		
+		
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			
+		}
+		
 		
 		//get cbatmac if exist in redis server
 		String scbatid = jedis.get(cbatmackey);		
@@ -234,11 +250,13 @@ public class ServiceDiscoveryProcessor  {
 				
 		long end = System.currentTimeMillis();  
 		System.out.println("one cbat and cbat info SET: " + ((end - start)) + " milliseconds");  
+		
+		redisUtil.getJedisPool().returnResource(jedis);
 
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private void doHfc(String message) throws ParseException {
+	private static void doHfc(String message) throws ParseException {
 
 		JSONParser parser = new JSONParser();
 		
@@ -268,6 +286,16 @@ public class ServiceDiscoveryProcessor  {
 		
 		String hfckey = "mac:" +  hfcmac.toLowerCase().trim() + ":deviceid";
 		
+		Jedis jedis=null;
+		try {
+			 jedis = redisUtil.getConnection();
+			
+			
+			}catch(Exception e){
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				
+			}
+		
 		//get hfcmac if exist in redis server
 		String shfcid = jedis.get(hfckey);
 		
@@ -295,6 +323,9 @@ public class ServiceDiscoveryProcessor  {
 		jedis.hmset(shfcentitykey, hfcentity);
 		
 		jedis.save();
+		
+		
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 
 }

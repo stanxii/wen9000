@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.SynchronousQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,6 +14,9 @@ import org.json.simple.JSONValue;
 import org.snmp4j.smi.OID;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisPubSub;
 
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 
@@ -21,96 +25,188 @@ public class WorkerDiscoveryProcessor{
 	
 	private static Logger logger = Logger.getLogger(WorkerDiscoveryProcessor.class);
 
-	private static final String DISCOVERY_QUEUE_NAME = "discovery_queue";
-
-	private static final String PERSIST_CBAT_QUEUE_NAME = "service_discovery_queue";	
-
+	
 	private static SnmpUtil util = new SnmpUtil();
 
 
 	
-	
-    private static RedisUtil redisUtil;
-   
- 
 
 
-	public static RedisUtil getRedisUtil() {
-		return redisUtil;
-	}
-
-	public static void setRedisUtil(RedisUtil redisUtil) {
-		WorkerDiscoveryProcessor.redisUtil = redisUtil;
-	}
-
-	
     
-    
+	private static JedisPool pool;
+	 
+	 static {
+	        JedisPoolConfig config = new JedisPoolConfig();
+	        config.setMaxActive(100);
+	        config.setMaxIdle(20);
+	        config.setMaxWait(1000);
+	        config.setTestOnBorrow(true);
+	        pool = new JedisPool(config, "192.168.1.249");
+	    }
+
+
+
+
+
+
+	private  static JedisPubSub jedissubSub = new JedisPubSub() {
+    	  /*
+
+         * 常规模式：关闭订阅时触发
+
+         * arg0 key值
+
+         * arg1 订阅数量
+
+         */
+
+        public void onUnsubscribe(String arg0, int arg1) {
+
+        }
+
+         /*
+
+         * 常规模式：启动订阅时触发
+
+         * arg0 key值
+
+         * arg1 订阅数量
+
+         */
+
+        public void onSubscribe(String arg0, int arg1) {
+
+        }
+
+         /*
+
+         * 常规模式：收到匹配key值的消息时触发
+
+         * arg0 key值
+
+         * arg1 收到的消息值
+
+         */
+
+        public void onMessage(String arg0, String arg1) {
+
+        	System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>Descovery Subscribing................now receive on msg");
+        }
+
+         /*
+
+         * 正则模式：关闭正则类型订阅时触发
+
+         * arg0 key的正则表达式
+
+         * arg1 订阅数量
+
+         */
+
+        public void onPUnsubscribe(String arg0, int arg1) {
+
+        }
+
+         /*
+
+         * 正则模式：启动正则类型订阅时触发
+
+         * arg0 key的正则表达式
+
+         * arg1 订阅数量
+
+         */
+
+        public void onPSubscribe(String arg0, int arg1) {
+
+        }
+
+         /*
+
+         * 正则模式：收到匹配key值的消息时触发
+
+         * arg0订阅的key正则表达式
+
+         * arg1匹配上该正则key值
+
+         * arg2收到的消息值
+
+         */
+
+        public void onPMessage(String arg0, String arg1, String arg2) {
+
+        	System.out.println(">pMessage>>>>>>>>>>>>>>>>>>>>>>>>Descovery Subscribing................now receive on msgarge1 [" + arg1 + "] arg2=["+arg2 +"]");
+        	try {
+    			//arg2 is mssage now is currenti p
+    			
+    			
+    			
+    			servicestart(arg2);
+    			
+    		}catch(Exception e){
+    			e.printStackTrace();			
+    		}
+    		
+        }
+
+    };
+
+     /*
+
+     * 启动订阅，当该方法启动时，将阻塞等待消息
+
+     * 说明：
+
+     * 1.subscribe(JedisPubSub jedisPubSub, String... channels)
+
+     * 是常规订阅方法，key值基于完全匹配,方法中channels是多个要订阅的key值
+
+ * 2.psubscribe(JedisPubSub jedisPubSub, String... patterns)
+
+     * 是正则订阅方法，key值基于正则匹配,方法中的patterns是多个订阅到正则表达式
+
+     * 不同的订阅将会触发JedisPubSub中不同的方法
+
+     */
+
+     
+
   
-	
-//	private static JedisPool pool;
-//	 static {
-//	        JedisPoolConfig config = new JedisPoolConfig();
-//	        config.setMaxActive(1000);
-//	        config.setMaxIdle(20);
-//	        config.setMaxWait(1000);	        
-//	        pool = new JedisPool(config, "192.168.1.249", 6379, 10*1000);
-//	    }
-//	 
+   
 
-	public void execute() throws Exception {
+
+	public void execute()  {
 //		System.out.println(" [x2] WorkerDiscoveryProcessor Start......");
 		logger.info(" [x2] WorkerDiscoveryProcessor Start......");
 
+		Jedis jedis = pool.getResource();
 		
-			servicestart();
+		jedis = new Jedis("192.168.1.249");
+		jedis.psubscribe(jedissubSub, "workdiscovery.*");		
+		 pool.returnResource(jedis);
+		
 		
 
 	}
 
-	public static void servicestart() throws Exception {
-
 	
-		while (true) {
-			String message = null;
-			
-			Jedis jedis = redisUtil.getConnection();
-			
-			
-			message = jedis.rpop(DISCOVERY_QUEUE_NAME);
-			
-			 redisUtil.closeConnection(jedis);
-			
-			//System.out.println(" [x] WorkerDiscoveryProcessor what message and len[" + message + "]  " );
-			
-			if(message == null ) {
-//				System.out.println(" [x] WorkerDiscoveryProcessor null and will continue ");
-				
-				Thread.sleep(1000);
-				continue;
-			}
-			
-			
-			System.out.println(" [x] WorkerDiscoveryProcessor Received '" + message
+		
+
+	public static  void servicestart(String ip) throws Exception {
+			System.out.println(" [x] WorkerDiscoveryProcessor Received '" + ip
 					+ "'");
 			
 			
 			
-			long start = System.currentTimeMillis();  
-			
-			doWork(message);
-			
-			
+			long start = System.currentTimeMillis();  			
+			doWork(ip);		
 			long end = System.currentTimeMillis();  
 			System.out.println("one WorkerDiscoveryProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 			
 			
 		}
 		
-		
-
-	}
-
+	
 	@SuppressWarnings("unchecked")
 	private static void doWork(String currentip) {
 		
@@ -120,14 +216,17 @@ public class WorkerDiscoveryProcessor{
 		String appver;
 		int agetnport;
 		
+		
 		currentip.trim().toUpperCase();
 		
+		
+		System.out.println("Current ip=" + currentip);
 		Pattern pattern = Pattern
 				.compile("(((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))[.](((2[0-4]\\d)|(25[0-5]))|(1\\d{2})|([1-9]\\d)|(\\d))");
 		Matcher m = pattern.matcher(currentip);
 		boolean b1 = m.matches();
 		if (!b1) {
-			System.out.println("not a good ip for work");
+			logger.info("[x] not a good ip for work");
 			return;
 		}
 		
@@ -215,7 +314,7 @@ public class WorkerDiscoveryProcessor{
 		
 		devicetype = eocping(currentip, "161");
 
-		System.out.println("----------------------------------------->>>>11111");
+		
 		
 			// ///////////////////////////////////////////////////
 			if (devicetype != -1) {
@@ -345,12 +444,19 @@ public class WorkerDiscoveryProcessor{
 		return false;
 	}
 
-	public static void sendToPersist(String msg) {
-				
-		Jedis jedis = redisUtil.getConnection();
-		jedis.lpush(PERSIST_CBAT_QUEUE_NAME, msg);
-		 redisUtil.closeConnection(jedis);
+	public static  void sendToPersist(String msg) {
 
+		//jedis.connect();
+		System.out.println("[XXXXXXXXXXXXXXXXXXXXXXX]msg=" + msg);
+		Jedis jedis = pool.getResource();
+				
+		
+		//jedis.lpush(PERSIST_CBAT_QUEUE_NAME, msg);
+		jedis.publish("servicediscovery.new", msg);
+		//jedis.dbSize();
+		
+		 
+		 pool.returnResource(jedis);
 	
 	}
 

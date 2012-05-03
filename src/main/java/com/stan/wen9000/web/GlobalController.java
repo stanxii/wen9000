@@ -11,11 +11,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -33,28 +40,27 @@ public class GlobalController {
 	private static Logger logger = Logger.getLogger(GlobalController.class);
 	private static final String STSCHANGE_QUEUE_NAME = "stschange_queue";
 	private static SnmpUtil util = new SnmpUtil();
-	private static JedisPool pool;
-	private static RedisUtil redisUtil;
-	 public static RedisUtil getRedisUtil() {
-			return redisUtil;
-		}
 
-		public static void setRedisUtil(RedisUtil redisUtil) {
-			GlobalController.redisUtil = redisUtil;
-		}
 	
-	static {
-        JedisPoolConfig config = new JedisPoolConfig();
-        config.setMaxActive(100);
-        config.setMaxIdle(20);
-        config.setMaxWait(1000);
-        config.setTestOnBorrow(true);
-        pool = new JedisPool(config, "127.0.0.1");
-    }
+	private static JedisPool pool;
+	 
+	 static {
+	        JedisPoolConfig config = new JedisPoolConfig();
+	        config.setMaxActive(100);
+	        config.setMaxIdle(20);
+	        config.setMaxWait(1000);
+	        config.setTestOnBorrow(true);
+	        pool = new JedisPool(config, "192.168.1.249");
+	    }
+	 
 	
+	
+	  
 	@RequestMapping(value="/cbatinfo/{id}", method=RequestMethod.GET)
 	public String prepare(Model model,@PathVariable Long id) {		
 		Jedis jedis = pool.getResource();
+		
+		
 		String tmpdata = jedis.hget("cbatid:"+id+":cbatinfo","address");
 		model.addAttribute("address", tmpdata);
 		tmpdata = jedis.hget("cbatid:"+id+":cbatinfo","phone");
@@ -72,7 +78,7 @@ public class GlobalController {
 		tmpdata = jedis.hget("cbatid:"+id+":cbatinfo","mvlanenable");
 		model.addAttribute("mvlanenable", tmpdata);
 		
-		pool.returnResource(jedis);
+		 pool.returnResource(jedis);
 		return "cbatinfoes/show";
 	}
 	
@@ -81,7 +87,8 @@ public class GlobalController {
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
     	String jsonstring = "{";
-		Jedis jedis = pool.getResource();
+    	Jedis jedis = pool.getResource();
+		
 		String id = jedis.get("mac:"+mac+":deviceid");
 		String cbatkey = "cbatid:"+id+":entity";
 		String result = "";
@@ -190,7 +197,8 @@ public class GlobalController {
 		}			
 		
 		//logger.info("getcbat keys::::::"+ jsonstring);
-		pool.returnResource(jedis);
+		 pool.returnResource(jedis);
+		
 		PrintWriter out = response.getWriter();
 		out.println(jsonstring);
 		out.flush();
@@ -223,7 +231,7 @@ public class GlobalController {
     		jsonstring += '"'+ "phone"+ '"'+":" + '"' + jedis.hget(cnukey, "phone")+ '"' + "}";
     	}
     	
-		pool.returnResource(jedis);
+    	 pool.returnResource(jedis);
 		PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ jsonstring);
         out.println(jsonstring);  
@@ -264,7 +272,7 @@ public class GlobalController {
     	jsonstring += '"'+ "port1rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port1rxrate")+ '"' + ",";
     	jsonstring += '"'+ "port2rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port2rxrate")+ '"' + ",";
     	jsonstring += '"'+ "port3rxrate" + '"'+":"+ '"' + jedis.hget(prokey,"port3rxrate")+ '"' + "}";
-		pool.returnResource(jedis);
+    	 pool.returnResource(jedis);
 		PrintWriter out = response.getWriter();
         //logger.info("keys:::proname:::"+ jedis.hget(prokey,"profilename"));
         out.println(jsonstring);  
@@ -277,7 +285,7 @@ public class GlobalController {
 		response.setContentType("text/html");
     	response.setCharacterEncoding("UTF-8");
     	String jsonstring = "{";
-		Jedis jedis = pool.getResource();
+    	Jedis jedis = pool.getResource();
 		String id = jedis.get("mac:"+mac+":deviceid");
 		String hfckey = "hfcid:"+id+":entity";
 		
@@ -290,7 +298,7 @@ public class GlobalController {
 		jsonstring += '"'+ "serialnumber"+ '"'+":" + '"' + jedis.hget(hfckey, "serialnumber")+ '"' + "}";
 
 		
-		pool.returnResource(jedis);
+		 pool.returnResource(jedis);
 		//return "cnus/show";
 		PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ json);
@@ -361,7 +369,7 @@ public class GlobalController {
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
         //logger.info("searchresult:::::"+ json.toString());
-        pool.returnResource(jedis);
+    	 pool.returnResource(jedis);
         PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ json);
         out.println(jsonstring);  
@@ -371,33 +379,56 @@ public class GlobalController {
     }
 	
 	//dynatree初始化读取数据函数
-	@RequestMapping(value = "eocs")
+	@RequestMapping(value = "eocs", method = RequestMethod.GET,  headers = "Accept=application/json")
     @ResponseBody
-    public void getAllEoc(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		response.setContentType("text/html");
-    	response.setCharacterEncoding("UTF-8");
+    public ResponseEntity<String> getAllEoc(@RequestBody String json) {
+		
+		
+		HttpHeaders headers = new HttpHeaders();        
+        headers.add("Content-Type", "application/json; charset=utf-8");
+        
+		
+        JSONArray jsonResponseArray = new JSONArray();
+    	
+    	
     	Jedis jedis = pool.getResource();
     	String jsonstring = "";
     	Set<String> list = jedis.keys("cbatid:*:entity");
 
+    	
+    	
+    	JSONObject eocjson = new JSONObject();
+		
+    	eocjson.put((String)"title", (String)"EOC设备");
+    	eocjson.put("key", "eocroot");
+    	eocjson.put("isFolder", "true");
+    	eocjson.put("expand", "true");
+
+    	//"children"
+		
+		JSONArray cbatarray = new JSONArray();
     	for(Iterator it = list.iterator(); it.hasNext(); ) 
     	{ 
-    		if(jsonstring == ""){
-    			jsonstring += "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"key"+'"'+":"+ '"'+"eocroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
-    			+'"'+":[{";
-    		}else{
-    			jsonstring += ",{";
-    		}
-    		String key = it.next().toString();   
-    		//添加头端信息
-    		String cbatstring = "";
+    		
+    		JSONObject cbatjson = new JSONObject();
+
+            
+    
+    		String key = it.next().toString();
+   
+    		//add head;
+    		cbatjson.put("title", jedis.hget(key, "ip"));
+    		cbatjson.put("key", jedis.hget(key, "mac"));
+    		cbatjson.put("online", jedis.hget(key, "active"));
+    		//添加头端信息    		
     		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
-    			cbatstring = '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-        		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"doc_with_children.gif"+'"'+","+'"'+"children"+'"'+":";
+    			cbatjson.put("icon", "doc_with_children.gif");
+    			//"children"+'"'+":";
     		}else{
-    			cbatstring = '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-        		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"'+","+'"'+"children"+'"'+":";
+    			cbatjson.put("icon", "offline.png");
+    			//+"children"+'"'+":";
     		}
+    		cbatjson.put("type", "cbat");
 
     		//获取cbatid
     		String cbatid = jedis.get("mac:" + jedis.hget(key, "mac") + ":deviceid");
@@ -405,50 +436,55 @@ public class GlobalController {
     		//取得所有属于cbatid的 cnuid
         	Set<String> list_cnu = jedis.smembers("cbatid:" + cbatid + ":cnus");//jedis.keys("cnuid:*:cbatid:"+jedis.get("cbatmac:"+jedis.hget(key, "mac")+":cbatid")+":*:entity");
         	String cnustring ="";
+        	
+        	JSONArray cnujsons = new JSONArray();
         	for(Iterator jt = list_cnu.iterator(); jt.hasNext(); ) 
         	{ 
+        		
+        		JSONObject cnujson = new JSONObject();
+        		
         		String key_cnuid = jt.next().toString();  
         		String key_cnu = "cnuid:" + key_cnuid + ":entity";
         		//logger.info("keys::::::key_cnu"+ key_cnu);
-        		if(cnustring == ""){
-        			cnustring += "[{";
-        		}else{
-        			cnustring += ",{";
-        		}    		
+        		
+        	
+        		cnujson.put("title", jedis.hget(key_cnu, "label"));
+        		cnujson.put("key", jedis.hget(key_cnu, "mac"));
+        		cnujson.put("online", jedis.hget(key_cnu, "active"));
+        		
+        	
         		if(jedis.hget(key_cnu, "active").equalsIgnoreCase("1")){
-        			cnustring += '"'+ "title" + '"'+":"+'"'+jedis.hget(key_cnu, "label")+'"'+ ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"online.gif"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
+        			cnujson.put("icon",  "online.gif");        			
         		}else{
-        			cnustring += '"'+ "title" + '"'+":"+'"'+jedis.hget(key_cnu, "label")+'"'+ ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key_cnu, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key_cnu, "active")+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cnu"+'"'+ "}";
+        			cnujson.put("icon", "offline.png");        			
         		}
+        		cnujson.put("type", "cnu");
+        		
+        		
+        		cnujsons.add(cnujson);
         		
         	}
-        	cnustring += "]";
-        	//头端下没有终端
-        	if(cnustring.length()<3)
-        	{        		
-        		cnustring = "";
-        		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
-        			cbatstring = '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"doc_with_children.gif"+'"';
-        		}else{
-        			cbatstring = '"'+ "title" + '"'+":"+ '"' + jedis.hget(key, "ip")+ '"' + ","+'"'+"key"+'"'+":"+'"'
-            		+jedis.hget(key, "mac")+'"'+ ","+'"'+"online"+'"'+":"+'"'+jedis.hget(key, "active")+'"'+ ","+'"'+"type"+'"'+":"+'"'+"cbat"+'"'+ ","+'"'+"icon"+'"'+":"+'"'+"offline.png"+'"';
-        		}
-        	}
-        	cbatstring += cnustring;
-        	cbatstring += "}";
-        	jsonstring += cbatstring;
-    	}
-    	jsonstring += "]}";
-    	if(jsonstring.length()<3)
-    	{
-    		jsonstring = "[{"+'"'+ "title" + '"'+":"+'"'+"EOC设备"+'"'+","+'"'+"key"+'"'+":"+'"'+"eocroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true"+ "}";
+        	
+        	cbatjson.put("children", cnujsons);
+        	
+        	
+        	cbatarray.add(cbatjson);
     	}
     	
+   
+    	eocjson.put("children", cbatarray);
+    	
+    	///////////////////////////////hfc
+    	
+    	
+    	/*
+   
     	String hfcstring = "";    	
     	list = jedis.keys("hfcid:*:entity");
+    	
+    	
+    	
+    	
     	for(Iterator it=list.iterator();it.hasNext();){    		
 			if(hfcstring == ""){
         		hfcstring += ",{"+'"'+ "title" + '"'+":"+'"'+"HFC设备"+'"'+","+'"'+"key"+ '"'+":"+'"'+"hfcroot"+'"'+","+'"'+"isFolder"+ '"'+":true,"+'"'+"expand"+ '"'+":true,"+'"'+"children"
@@ -482,13 +518,17 @@ public class GlobalController {
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
         //logger.info("searchresult:::::"+ json.toString());
-        pool.returnResource(jedis);
-        PrintWriter out = response.getWriter();
-        //logger.info("keys::::::"+ json);
-        out.println(jsonstring);  
-        out.flush();  
-        out.close();
-    	//return jsonstring;
+         * */
+    	 pool.returnResource(jedis);
+    	 
+    	 
+    	 
+    	 jsonResponseArray.add(eocjson);
+    	 
+    	 return new ResponseEntity<String>(jsonResponseArray.toJSONString(), headers, HttpStatus.OK);
+    
+    	
+    	 
     }
 	
 	@RequestMapping(value = "tree_read")
@@ -519,7 +559,7 @@ public class GlobalController {
     	//logger.info("keys::::::"+ jsonstring);
        // JSONObject json = JSONObject.fromObject(jsonstring);
         //logger.info("searchresult:::::"+ json.toString());
-        pool.returnResource(jedis);
+    	 pool.returnResource(jedis);
         PrintWriter out = response.getWriter();
         //logger.info("keys::::::"+ json);
         out.println(jsonstring);  
@@ -555,7 +595,7 @@ public class GlobalController {
     		jsonstring = "[{"+'"'+ "title" + '"'+":"+'"'+"NOData"+'"'+ "}]";
     	}
     	//logger.info("cnukeys::::::"+ jsonstring);
-    	pool.returnResource(jedis);
+    	 pool.returnResource(jedis);
         PrintWriter out = response.getWriter();
         out.println(jsonstring);  
         out.flush();  
@@ -633,7 +673,7 @@ public class GlobalController {
     	}
     	//redisUtil.closeConnection(jedis_queue);
     	//logger.info("getsts::::::"+ jsonstring);
-    	pool.returnResource(jedis);
+    	 pool.returnResource(jedis);
         PrintWriter out = response.getWriter();
         out.println(jsonstring);  
         out.flush();  
@@ -660,12 +700,12 @@ public class GlobalController {
     	}
     	
     	
-    	pool.returnResource(jedis);
+    	 pool.returnResource(jedis);
 	}
 	
 	@RequestMapping(value="/save_cnuinfo", method=RequestMethod.POST)
 	public void savecnuinfo(HttpServletRequest request, HttpServletResponse response) throws IOException {		
-    	Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
     	String address = request.getParameter("address");
     	String contact = request.getParameter("contact");
     	String phone = request.getParameter("phone");
@@ -680,7 +720,7 @@ public class GlobalController {
 		jedis.hset(key, "phone", phone);
 		jedis.hset(key, "label", label);
 		jedis.save();
-    	pool.returnResource(jedis);
+		 pool.returnResource(jedis);
 	}
 	
 	//头端数据修改
@@ -719,7 +759,7 @@ public class GlobalController {
             	jedis.hset(cbatinfokey, "address", address);
             	jedis.save();
             	
-            	pool.returnResource(jedis);
+            	 pool.returnResource(jedis);
             	datastring = "{" + '"' + "sts" + '"' +":" + '"' + "ok" + '"' + "}";
             	PrintWriter out = response.getWriter();
                 out.println(datastring);  
@@ -757,10 +797,10 @@ public class GlobalController {
         	jedis.save();
     	}catch(Exception e){
     		//e.printStackTrace();
-    		pool.returnResource(jedis);
+    		 pool.returnResource(jedis);
     		return;
     	}
-    	pool.returnResource(jedis);
+    	 pool.returnResource(jedis);
     	datastring = "{" + '"' + "sts" + '"' +":" + '"' + "ok" + '"' + "}";
     	PrintWriter out = response.getWriter();
         out.println(datastring);  
@@ -819,7 +859,7 @@ public class GlobalController {
 	        out.close();
 	    }catch(Exception e){
 	    	//e.printStackTrace();
-	    	pool.returnResource(jedis);
+	    	 pool.returnResource(jedis);
 	    	return;
 	    }
 	    

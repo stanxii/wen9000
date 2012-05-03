@@ -12,30 +12,119 @@ import org.snmp4j.smi.OID;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisPubSub;
 
 import com.stan.wen9000.web.SnmpUtil;
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 
 public class ServiceCbatStatus{	
+
 	private static Logger log = Logger.getLogger(ServiceCbatStatus.class);
 	private static JedisPool pool;
+
 	private static RedisUtil redisUtil;
+	private static Jedis jedis = null;
+	  
+	
 	private static SnmpUtil util = new SnmpUtil();
 	private static final String STSCHANGE_QUEUE_NAME = "stschange_queue";
-	private static final String CBATSTS_QUEUE_NAME = "cbatsts_queue";
+	private static  String CBATSTS_QUEUE_NAME = "cbatsts_queue";
 	
 	public static void setRedisUtil(RedisUtil redisUtil) {
 		ServiceCbatStatus.redisUtil = redisUtil;
 	}
 	
-	static {
-        JedisPoolConfig config = new JedisPoolConfig();
-        config.setMaxActive(100);
-        config.setMaxIdle(20);
-        config.setMaxWait(1000);
-        config.setTestOnBorrow(true);
-        pool = new JedisPool(config, "127.0.0.1");
-    }
+	
+	   private  static JedisPubSub jedissubSub = new JedisPubSub() {
+	    	  /*
+
+	         * 常规模式：关闭订阅时触发
+
+	         * arg0 key值
+
+	         * arg1 订阅数量
+
+	         */
+
+	        public void onUnsubscribe(String arg0, int arg1) {
+
+	        }
+
+	         /*
+
+	         * 常规模式：启动订阅时触发
+
+	         * arg0 key值
+
+	         * arg1 订阅数量
+
+	         */
+
+	        public void onSubscribe(String arg0, int arg1) {
+
+	        }
+
+	         /*
+
+	         * 常规模式：收到匹配key值的消息时触发
+
+	         * arg0 key值
+
+	         * arg1 收到的消息值
+
+	         */
+
+	        public void onMessage(String arg0, String arg1) {
+
+	        }
+
+	         /*
+
+	         * 正则模式：关闭正则类型订阅时触发
+
+	         * arg0 key的正则表达式
+
+	         * arg1 订阅数量
+
+	         */
+
+	        public void onPUnsubscribe(String arg0, int arg1) {
+
+	        }
+
+	         /*
+
+	         * 正则模式：启动正则类型订阅时触发
+
+	         * arg0 key的正则表达式
+
+	         * arg1 订阅数量
+
+	         */
+
+	        public void onPSubscribe(String arg0, int arg1) {
+
+	        }
+
+	         /*
+
+	         * 正则模式：收到匹配key值的消息时触发
+
+	         * arg0订阅的key正则表达式
+
+	         * arg1匹配上该正则key值
+
+	         * arg2收到的消息值
+
+	         */
+
+	        public void onPMessage(String arg0, String arg1, String arg2) {
+
+	        }
+
+	    };
+
+	    
 	
 	//此进程用于判断头端是否下线
 	
@@ -45,17 +134,29 @@ public class ServiceCbatStatus{
 		try{
 			servicestart();
 		}catch(Exception e){
+			e.printStackTrace();
 			
 		}
 		
 	}
 	
+	
+	
 	private void servicestart(){
+		
+		
+		jedis = redisUtil.getConnection();
+		
 		while(true){
+			
+			jedis.psubscribe(jedissubSub, "cbatstatus.*");
+			
 			String message = "";
-			Jedis jedis = pool.getResource();
+
+			
 			message = jedis.rpop(CBATSTS_QUEUE_NAME);
-			pool.returnResource(jedis);
+			
+			
 
 			if(message == null ) {	
 				try{
@@ -73,12 +174,13 @@ public class ServiceCbatStatus{
 			
 			//log.info("[###] ..... ServiceCbatStatus Done");
 		}
+		
+		
 	}
 	
-	private void dowork(String message){
-		Jedis jedis = pool.getResource();
+	private void dowork(String message){		
 		//获取头端时间戳
-		long timeticks = Long.valueOf(jedis.hget(message, "timeticks"));
+		long timeticks = Long.parseLong(jedis.hget(message, "timeticks"));
 		Date date = new Date();
 		long now = date.getTime();
 		String id = jedis.get("mac:"+jedis.hget(message, "mac")+":deviceid");
@@ -177,6 +279,6 @@ public class ServiceCbatStatus{
 				
 			}
 		}
-		pool.returnResource(jedis);	
+		
 	}
 }

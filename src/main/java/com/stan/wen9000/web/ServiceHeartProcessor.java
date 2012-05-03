@@ -15,6 +15,7 @@ import org.snmp4j.smi.OID;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisPubSub;
 
 import com.stan.wen9000.web.SnmpUtil;
 import com.stan.wen9000.action.jedis.util.RedisUtil;
@@ -23,54 +24,101 @@ public class ServiceHeartProcessor{
 	private static Logger log = Logger.getLogger(ServiceHeartProcessor.class);
 	private static final String HEART_QUEUE_NAME = "heart_queue";
 	private static final String STSCHANGE_QUEUE_NAME = "stschange_queue";
-	private static JedisPool pool;
+
+	
 	private static RedisUtil redisUtil;
+	
+	
 	private static SnmpUtil util = new SnmpUtil();
 	  
 	public static void setRedisUtil(RedisUtil redisUtil) {
 		ServiceHeartProcessor.redisUtil = redisUtil;
 	}
 	
-	static {
-        JedisPoolConfig config = new JedisPoolConfig();
-        config.setMaxActive(100);
-        config.setMaxIdle(20);
-        config.setMaxWait(1000);
-        config.setTestOnBorrow(true);
-        pool = new JedisPool(config, "127.0.0.1");
-    }
+	
+	private   JedisPubSub jedissubSub = new JedisPubSub() {
+		public void onUnsubscribe(String arg0, int arg1) {
+
+        }
+		public void onSubscribe(String arg0, int arg1) {
+
+        }
+		 public void onMessage(String arg0, String arg1) {
+	       
+	     }
+		 public void onPUnsubscribe(String arg0, int arg1) {
+
+	        }
+		 public void onPSubscribe(String arg0, int arg1) {
+
+	        } 
+  	 
+       /*
+
+       * 正则模式：收到匹配key值的消息时触发
+
+       * arg0订阅的key正则表达式
+
+       * arg1匹配上该正则key值
+
+       * arg2收到的消息值
+
+       */
+
+      public void onPMessage(String arg0, String arg1, String msg) {
+
+      	System.out.println("[x]ServiceHearbertProcesser  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
+      	try {
+  			//arg2 is mssage now is currenti p
+  			
+  			
+  			
+  			servicestart(msg);
+  			
+  		}catch(Exception e){
+  			e.printStackTrace();			
+  		}
+  		
+      }
+
+  };
+  
+
 	
 	public void start(){
-		log.info("[#3] ..... service heart");
-		
-		try{
-			servicestart();
+	
+		System.out.println("[#3] ..... service hearbert starting");
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		 
+		 jedis.psubscribe(jedissubSub, "servicehearbert.*");
+		redisUtil.getJedisPool().returnResource(jedis);
 		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			
-		}		
+		}
+		
 	}
 	
-	private void servicestart() throws InterruptedException, ParseException{
-		while(true){
-			String message = "";
-			Jedis jedis = redisUtil.getConnection();
-			message = jedis.rpop(HEART_QUEUE_NAME);
-			redisUtil.closeConnection(jedis);
-			
-			if(message == null ) {				
-				Thread.sleep(1000);
-				continue;
-			}
-			
-			System.out.println(" [x] ServiceHeartProcessor Received '" + message
-					+ "'");
-			
-			//long start = System.currentTimeMillis();  			
-			dowork(message);					
-			//long end = System.currentTimeMillis();  
-			//System.out.println("one ServiceHeartProcessor dowork spend: " + ((end - start)) + " milliseconds");  
-		}
+	private void servicestart(String message) throws InterruptedException, ParseException{
+	
+	
+		
+		//System.out.println(" [x] ServiceHeartProcessor Received '" + message
+		//		+ "'");
+		
+		//long start = System.currentTimeMillis();  			
+		dowork(message);					
+
+		//long end = System.currentTimeMillis();  
+		//System.out.println("one ServiceHeartProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 	}
+
+		
+	
+	
 	
 	private void dowork(String message) throws ParseException{
 		JSONParser parser = new JSONParser();
@@ -123,7 +171,20 @@ public class ServiceHeartProcessor{
 	}
 	
 	private void doheartcbat(String cbatmac, String cbatip, String type) {
-		Jedis jedis = pool.getResource();
+		
+		
+
+			Jedis jedis=null;
+			try {
+			 jedis = redisUtil.getConnection();
+			
+			
+			}catch(Exception e){
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				
+			}
+			
+			
 		//判断头端是否已存在
 		if(jedis.exists("mac:"+cbatmac+":deviceid")){
 			//头端已存在
@@ -196,7 +257,9 @@ public class ServiceHeartProcessor{
 			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icbatid));
 		}
 		
-		pool.returnResource(jedis);				
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+						
 				
 	}
 	
@@ -217,7 +280,21 @@ public class ServiceHeartProcessor{
 	
 	public void doheartOnline(String cbatmac, String cnumac, String cnutype,
 			String cnuindex, String active) {
-		Jedis jedis = pool.getResource();
+		
+		
+
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		
+		
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			e.printStackTrace();
+			return;
+		}
+		
+		
 		//判断cnu是否已存在
 		if(jedis.exists("mac:"+cnumac+":deviceid")){
 			String cnuid = jedis.get("mac:"+cnumac+":deviceid");
@@ -274,12 +351,24 @@ public class ServiceHeartProcessor{
 			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
 		}
 		
-		pool.returnResource(jedis);			
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+					
 	}
 	
 	public void doOffline_heart(String cbatmac, String cnuindex, String cnumac,
 			String cnutype) {
-		Jedis jedis = pool.getResource();
+		
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		
+		
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			
+		}
+		
 		//判断cnu是否已存在
 		//可注释此段代码，离线设备不予发现
 		if(!(jedis.exists("mac:"+cnumac+":deviceid"))){
@@ -311,7 +400,7 @@ public class ServiceHeartProcessor{
 			//发现新cnu,发往STSCHANGE_QUEUE_NAME
 			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
 			
-			pool.returnResource(jedis);	
+			redisUtil.getJedisPool().returnResource(jedis);	
 			return;
 		}
 		//以下判断是否是所属头端发出的心跳
@@ -328,11 +417,13 @@ public class ServiceHeartProcessor{
 			jedis.hset("cnuid:"+cnuid+":entity", "active", "0");
 		}else{
 			//不是所属头端发出的心跳
-			pool.returnResource(jedis);	
+			redisUtil.getJedisPool().returnResource(jedis);
 			return;
+
 		}
 		
-		pool.returnResource(jedis);	
+		redisUtil.getJedisPool().returnResource(jedis);
+			
 	}
 	
 }

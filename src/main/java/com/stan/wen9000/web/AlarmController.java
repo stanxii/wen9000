@@ -46,7 +46,7 @@ public class AlarmController {
 	        config.setMaxIdle(20);
 	        config.setMaxWait(1000);
 	        config.setTestOnBorrow(true);
-	        pool = new JedisPool(config, "127.0.0.1");
+	        pool = new JedisPool(config, "192.168.1.249");
 	    }
 	 
 	private static final String ALARM_REALTIME_QUEUE_NAME = "alarm_realtime_queue";
@@ -61,41 +61,40 @@ public class AlarmController {
 		JSONObject jsonResponse = new JSONObject();
 		
 
-		System.out.println("history 1"); 
+		//System.out.println("history 1"); 
 		HttpHeaders headers = new HttpHeaders();        
         headers.add("Content-Type", "application/json; charset=utf-8");
 	    long iDisplayStart=0;
 	    long iDisplayLength=0;
 	        
-	    System.out.println("history 2");
+	    //System.out.println("history 2");
 		
 		//System.out.println("RequesBody string=["+ json);
 		Object job = JSONValue.parse(json);
 				
-		System.out.println("history 3");
+		//System.out.println("history 3");
 		JSONArray array = (JSONArray)job;
 		
 		int iTotalRecords; // total number of records (unfiltered)
 	    int iTotalDisplayRecords;//value will be set when code filters companies by keyword
-		System.out.println("JSONArray size="+ array.size());
-		for(int i=0; i< array.size(); i++ ) {
-			System.out.println("i=" + i);
+		
+		for(int i=0; i< array.size(); i++ ) {			
 			JSONObject item = (JSONObject)array.get(i);		
 			if(((String)item.get("name")).equals("sEcho")){
-				System.out.println("historyalarm sEcho=" + item.get("value"));
+				//System.out.println("historyalarm sEcho=" + item.get("value"));
 				jsonResponse.put("sEcho", item.get("value"));
 			}else if(((String)item.get("name")).equals("iDisplayStart")){
 				iDisplayStart =  (Long)item.get("value");
-				System.out.println("historyalarm iDisplayStart=" + iDisplayStart);
+				//System.out.println("historyalarm iDisplayStart=" + iDisplayStart);
 			
 			}else if(((String)item.get("name")).equals("iDisplayLength")){				
 				iDisplayLength = (Long) item.get("value");
-				System.out.println("iDisplayLength=" + iDisplayLength);
+				//System.out.println("iDisplayLength=" + iDisplayLength);
 			}		
 			
 			if(i==array.size() -1) break;
 		}
-		System.out.println("historyalarm JSONArray 2size="+ array.size());
+		//System.out.println("historyalarm JSONArray 2size="+ array.size());
 			
 				
         try {

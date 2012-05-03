@@ -32,14 +32,14 @@ public class DiscoveryController {
 	private static final String PROCESS_CBAT_QUEUE_NAME = "process_queue";
 	
 	private static JedisPool pool;
-//	 
+	 
 	 static {
 	        JedisPoolConfig config = new JedisPoolConfig();
 	        config.setMaxActive(100);
 	        config.setMaxIdle(20);
 	        config.setMaxWait(1000);
 	        config.setTestOnBorrow(true);
-	        pool = new JedisPool(config, "127.0.0.1");
+	        pool = new JedisPool(config, "192.168.1.249");
 	    }
 	 
 //	  private static RedisUtil ru;
@@ -127,7 +127,7 @@ public class DiscoveryController {
         out.close();
     	//return jsonstring;
     }
-    
+
     @RequestMapping(value = "discovertotal")
     public @ResponseBody String getdiscoverTotal() {
     	Jedis jedis = pool.getResource();
@@ -145,21 +145,34 @@ public class DiscoveryController {
     		
     	return msg;
     }
+
+//    
+//    @RequestMapping(value = "discovertotal")
+//    public @ResponseBody String getdiscoverTotal() {
+//    	Jedis jedis = pool.getResource();
+//    	Long count = jedis.llen(DISCOVERY_QUEUE_NAME);
+//    	pool.returnResource(jedis);
+//    	
+//    	Long total = Long.parseLong(jedis.get("global:discovertotal"));
+//    	float val = (total - count);
+//    	String msg = String.valueOf((val/Float.valueOf(String.valueOf(total)))*100);
+//    	logger.info("discovermsg:::::"+ msg);
+//    	if(msg.equalsIgnoreCase("100.0")){
+//    		logger.info("-------------------------------------------------");
+//    		jedis.set("searchrun", "false");
+//    	}
+//    		
+//    	return msg;
+//    }
+
     
     @RequestMapping(value = "search",  method = RequestMethod.POST)
     public String searchProduct(@RequestParam(value = "startip", required = false) String st, @RequestParam(value = "stopip", required = false) String end) throws Exception {
         System.out.println("start:"+st + ",end:"+end);
         //quartzRun();
         Jedis jedis = pool.getResource();
-        if(jedis.get("searchrun")==null){
-        	jedis.set("searchrun", "false");
-        }
-        if(jedis.get("searchrun").equalsIgnoreCase("true"))
-        {
-        	logger.info("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::return");
-        	return "discovery/result";
-        }        
-        jedis.set("searchrun", "true");
+        
+        
         long longstartIp = IP2Long.ipToLong(st);		
 		long longstopIp = IP2Long.ipToLong(end);
 		long total = longstopIp - longstartIp + 1;
@@ -178,13 +191,17 @@ public class DiscoveryController {
 			currentip = IP2Long.longToIP(longstartIp);
 
 			
-			jedis.lpush(DISCOVERY_QUEUE_NAME, currentip);
+			//jedis.lpush(DISCOVERY_QUEUE_NAME, currentip);
+			
+			jedis.publish("workdiscovery.new", currentip);
 			 System.out.println("DiscoveryAction [x] Sent '" + currentip +
 			 "'");
 
 			longstartIp++;
 
 		}
+		
+		
 		pool.returnResource(jedis);
 		
 //		ru.closeConnection(jedis);
