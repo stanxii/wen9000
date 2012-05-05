@@ -1,0 +1,32 @@
+!!! 5
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    link(rel='stylesheet', href='/stylesheets/header.css')
+    link(rel='stylesheet', href='/stylesheets/alarm.css')
+    link(rel='stylesheet', href='/stylesheets/themes/smoothness/jquery-ui-1.8.20.custom.css')
+    link(rel='stylesheet', href='/stylesheets/dyantree-skin/ui.dynatree.css')
+    link(rel='stylesheet', href='/stylesheets/datatable_page.css')
+    link(rel='stylesheet', href='/stylesheets/datatable_table.css')
+
+    script(type='text/javascript', src='/socket.io/socket.io.js')
+    script(type='text/javascript', src='/javascripts/jquery-1.7.2.min.js')
+    script(type='text/javascript', src='/javascripts/jquery-ui-1.8.19.custom.min.js')
+    script(type='text/javascript', src='/javascripts/jquery.cookie.js')
+    script(type='text/javascript', src='/javascripts/json2.js')
+    script(type='text/javascript', src='/javascripts/jquery.dynatree.js')
+    script(type='text/javascript', src='/javascripts/jquery.dataTables.js')
+    script(type='text/javascript', src='/javascripts/jquery.livequery.js')
+
+
+    script(type='text/javascript', src='/javascripts/header.js')
+  body
+    include header
+    #wapper
+      include menu
+      #content
+        block content
+      #menuclear
+    include alarm
+    include footer

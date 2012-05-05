@@ -1,0 +1,55 @@
+body {
+  height:100%;
+  overflow:scroll;
+  margin:0 auto;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+
+#wapper {
+      margin: 0 0 ;
+}
+
+#menu {
+	float:left;  	
+	width:25%;
+	margin-right:15px;
+}
+
+#configinfo {
+	float:left; 	
+	width:70%;
+}
+
+#dialog-message {
+    display: none	
+}
+
+#dialog-message span {
+    float:left;
+    margin:0 7px 50px 0;	
+}
+
+#dialog-message-failed {
+    display: none	
+}
+
+#dialog-message-failed span {
+    float:left; 
+    margin:0 7px 50px 0;	
+}
+
+#menuclear {
+	clear:both;
+}
+
+#navtree { 	
+	height:450px;
+}
+
+#alarm {
+}
