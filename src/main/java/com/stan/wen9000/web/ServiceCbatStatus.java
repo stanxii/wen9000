@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
 
@@ -118,7 +119,16 @@ public class ServiceCbatStatus{
 	         */
 
 	        public void onPMessage(String arg0, String arg1, String arg2) {
-
+	        	try {
+	      			//arg2 is mssage now is currenti p
+	      			
+	      			
+	      			
+	      			servicestart(arg1, arg2);
+	      			
+	      		}catch(Exception e){
+	      			e.printStackTrace();			
+	      		}
 	        }
 
 	    };
@@ -129,11 +139,15 @@ public class ServiceCbatStatus{
 	
 	private void start(){
 		log.info("[#3] ..... ServiceCbatStatus start");
-		
-		try{
-			servicestart();
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		 
+		 jedis.psubscribe(jedissubSub, "ServiceCbatStatus.*");
+		redisUtil.getJedisPool().returnResource(jedis);
 		}catch(Exception e){
 			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			
 		}
 		
@@ -141,43 +155,27 @@ public class ServiceCbatStatus{
 	
 	
 	
-	private void servicestart(){
-		
-		
-		jedis = redisUtil.getConnection();
-		
-		while(true){
-			
-			jedis.psubscribe(jedissubSub, "cbatstatus.*");
-			
-			String message = "";
+	private static void servicestart(String pat, String message){
 
-			
-			message = jedis.rpop(CBATSTS_QUEUE_NAME);
-			
-			
-
-			if(message == null ) {	
-				try{
-					Thread.sleep(1000);
-					continue;
-				}catch(Exception e){
-					
-				}
-			}
 			
 			//System.out.println(" [x] ServiceCbatStatus Received '" + message
 			//		+ "'");
 						
 			dowork(message);					
-			
-			//log.info("[###] ..... ServiceCbatStatus Done");
-		}
-		
-		
+
 	}
 	
-	private void dowork(String message){		
+	private static void dowork(String message){	
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
 		//获取头端时间戳
 		long timeticks = Long.parseLong(jedis.hget(message, "timeticks"));
 		Date date = new Date();
@@ -188,7 +186,8 @@ public class ServiceCbatStatus{
 			jedis.hset(message, "active", "0");
 
 			//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
-			jedis.lpush(STSCHANGE_QUEUE_NAME, id);
+			Sendstschange("cbat",id,jedis);
+			//jedis.lpush(STSCHANGE_QUEUE_NAME, id);
 			//置所属CNU下线
 			Set<String> cnus = jedis.smembers("cbatid:"+id + ":cnus");
 
@@ -198,8 +197,10 @@ public class ServiceCbatStatus{
 				jedis.hset(cnukey, "active", "0");
 
 				//cnu状态有变迁,发往STSCHANGE_QUEUE_NAME
-				jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
+				Sendstschange("cnu",cnuid,jedis);
+				//jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
 			}
+			redisUtil.getJedisPool().returnResource(jedis);
 			return;
 		}
 		
@@ -213,10 +214,12 @@ public class ServiceCbatStatus{
 			trap_port = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}));
 		}
 		catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
 
 		if(devtrapserverip==""){
+			redisUtil.getJedisPool().returnResource(jedis);
 			return;
 		}
 		
@@ -253,6 +256,7 @@ public class ServiceCbatStatus{
 			 */
 			 		
 			}catch(Exception e){
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
 				//e.printStackTrace();
 			}
 		}
@@ -275,9 +279,41 @@ public class ServiceCbatStatus{
 				
 				jedis.hset(cbatinfokey, "agentport", String.valueOf(trap_port));
 			}catch(Exception e){
-				
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
 			}
 		}
+		redisUtil.getJedisPool().returnResource(jedis);
 		
+	}
+	
+	private static void Sendstschange(String type,String devid,Jedis jedis){ 
+		JSONObject json = new JSONObject();
+		if(type == "cbat"){
+			String cbatkey = "cbatid:"+devid+":entity";
+			json.put("mac", jedis.hget(cbatkey,"mac"));
+			json.put("online", jedis.hget(cbatkey,"active"));
+			json.put("ip", jedis.hget(cbatkey,"ip"));
+			json.put("type", "cbat");
+		}else if(type == "cnu"){
+			String cbatid = jedis.hget("cnuid:"+devid+":entity","cbatid");
+			String cnukey = "cnuid:"+devid+":entity";
+			json.put("mac", jedis.hget(cnukey,"mac"));
+			json.put("online", jedis.hget(cnukey,"active"));
+			json.put("cbatmac", jedis.hget(cnukey,jedis.hget("cbatid:"+cbatid+":entity","mac")));
+			json.put("type", "cnu");
+			
+		}else if(type == "hfc"){
+			String hfckey = "hfcid:"+devid+":entity";
+			json.put("mac", jedis.hget(hfckey,"mac"));
+			json.put("active", jedis.hget(hfckey,"active"));
+			json.put("ip", jedis.hget(hfckey,"ip"));
+			json.put("type", "hfc");
+			json.put("sn", jedis.hget(hfckey,"serialnumber"));
+			json.put("hp", jedis.hget(hfckey,"hfctype"));
+			json.put("id", jedis.hget(hfckey,"logicalid"));
+			
+		}
+		String jsonString = json.toJSONString(); 
+	    jedis.publish("node.tree.statuschange", jsonString);
 	}
 }

@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -192,8 +193,8 @@ public class ServiceHeartProcessor{
 			String cbatkey = "cbatid:"+deviceid+":entity";
 			if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1")==false){
 				//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
-				jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
-				
+				//jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
+				Sendstschange("cbat",deviceid,jedis);
 			}
 			//更新头端信息
 			jedis.hset(cbatkey,"active", "1");
@@ -254,7 +255,8 @@ public class ServiceHeartProcessor{
 			
 			jedis.save();
 			//发现新cbat,发往STSCHANGE_QUEUE_NAME
-			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icbatid));
+			//jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icbatid));
+			Sendstschange("cbat",String.valueOf(icbatid),jedis);
 		}
 		
 		
@@ -314,7 +316,8 @@ public class ServiceHeartProcessor{
 			}
 			if(jedis.hget("cnuid:"+cnuid+":entity", "active").equalsIgnoreCase(active)==false){
 				//cnu状态有变迁,发往STSCHANGE_QUEUE_NAME
-				jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
+				//jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
+				Sendstschange("cnu",cnuid,jedis);
 				
 			}
 			//cnu其它信息修改
@@ -348,7 +351,8 @@ public class ServiceHeartProcessor{
 			jedis.hmset(scnuentitykey, cnuentity);
 			jedis.save();
 			//发现新cnu,发往STSCHANGE_QUEUE_NAME
-			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
+			//jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
+			Sendstschange("cnu",String.valueOf(icnuid),jedis);
 		}
 		
 		
@@ -398,8 +402,8 @@ public class ServiceHeartProcessor{
 			
 			jedis.bgsave();
 			//发现新cnu,发往STSCHANGE_QUEUE_NAME
-			jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
-			
+			//jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
+			Sendstschange("cnu",String.valueOf(icnuid),jedis);
 			redisUtil.getJedisPool().returnResource(jedis);	
 			return;
 		}
@@ -410,8 +414,8 @@ public class ServiceHeartProcessor{
 			//是所属头端发出的心跳
 			if(jedis.hget("cnuid:"+cnuid+":entity", "active").equalsIgnoreCase("0")==false){
 				//cnu状态有变迁,发往STSCHANGE_QUEUE_NAME
-				jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
-				
+				//jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
+				Sendstschange("cnu",cnuid,jedis);
 			}
 			//修改CNU相关信息
 			jedis.hset("cnuid:"+cnuid+":entity", "active", "0");
@@ -424,6 +428,37 @@ public class ServiceHeartProcessor{
 		
 		redisUtil.getJedisPool().returnResource(jedis);
 			
+	}
+	
+	private void Sendstschange(String type,String devid,Jedis jedis){ 
+		JSONObject json = new JSONObject();
+		if(type == "cbat"){
+			String cbatkey = "cbatid:"+devid+":entity";
+			json.put("mac", jedis.hget(cbatkey,"mac"));
+			json.put("online", jedis.hget(cbatkey,"active"));
+			json.put("ip", jedis.hget(cbatkey,"ip"));
+			json.put("type", "cbat");
+		}else if(type == "cnu"){
+			String cbatid = jedis.hget("cnuid:"+devid+":entity","cbatid");
+			String cnukey = "cnuid:"+devid+":entity";
+			json.put("mac", jedis.hget(cnukey,"mac"));
+			json.put("online", jedis.hget(cnukey,"active"));
+			json.put("cbatmac", jedis.hget(cnukey,jedis.hget("cbatid:"+cbatid+":entity","mac")));
+			json.put("type", "cnu");
+			
+		}else if(type == "hfc"){
+			String hfckey = "hfcid:"+devid+":entity";
+			json.put("mac", jedis.hget(hfckey,"mac"));
+			json.put("active", jedis.hget(hfckey,"active"));
+			json.put("ip", jedis.hget(hfckey,"ip"));
+			json.put("type", "hfc");
+			json.put("sn", jedis.hget(hfckey,"serialnumber"));
+			json.put("hp", jedis.hget(hfckey,"hfctype"));
+			json.put("id", jedis.hget(hfckey,"logicalid"));
+			
+		}
+		String jsonString = json.toJSONString(); 
+	    jedis.publish("node.tree.statuschange", jsonString);
 	}
 	
 }

@@ -31,6 +31,6 @@
   <spring:url value="/resources/images/springsource-logo.png" var="logo"/>
   <spring:message code="global_sponsored" htmlEscape="false" var="sponsored"/>
   <span>
-    <label style="margin-left:50px">Copyright © 2011 - 2012 <a href="http://www.prevail.com/" title="EOC团队设计">EOC团队设计</a>. All Rights Reserved. Powered By WordPress. Designed by <a href="http://www.prevail.com/">EOC团队设计</a></label>
+    <label style="margin-left:250px">Copyright © 2011 - 2012 <a href="http://www.prevail.com/" title="EOC团队设计">EOC团队设计</a>. All Rights Reserved. Powered By WordPress. Designed by <a href="http://www.prevail.com/">EOC团队设计</a></label>
   </span>
 </div>

@@ -240,7 +240,7 @@
 	 <property name="jobDetail" ref="serviceCbatStatusjob" />
 	 <property name="startDelay" value="3000" />
 	 <property name="repeatInterval" value="5" />
-	 <property name="repeatCount" value="4" />		  	 
+	 <property name="repeatCount" value="0" />		  	 
 	</bean>
 	<bean id="serviceControllerTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 	 <property name="jobDetail" ref="serviceControllerjob" />

@@ -9,20 +9,44 @@ a {
   color: #00B7FF;
 }
 
+table td {
+	text-align:center;
+}
 
 #wapper {
       margin: 0 0 ;
+      height:500px;
+      position:relative;
 }
 
+/*menu */
 #menu {
-	float:left;  	
+	position:absolute;
+	float:left;
 	width:25%;
 	margin-right:15px;
+	top:0;	
 }
 
-#configinfo {
-	float:left; 	
-	width:70%;
+#optinfo input{
+	width:60px;
+}
+
+#optinfo lable{
+	width:90px;
+	margin-left:10px;
+}
+
+#baseinfo lable{
+	margin-left:10px;
+}
+
+#devinfo {
+	width:800px;
+}
+
+#navtree { 	
+	height:490px;
 }
 
 #dialog-message {
@@ -42,13 +66,42 @@ a {
     float:left; 
     margin:0 7px 50px 0;	
 }
+/*==========================*/
+
+#content {
+	position:absolute;
+	top:0;
+	left:26%;
+	overflow:scroll;
+}
+
+#proTable_wrapper {
+	width:95%;
+}
+
+#proTable_wrapper .row_selected {
+	background-color:#cccccc;
+}
+
+#cnuTable {
+	width:800px;
+}
+
+#f_Table {
+	width:800px;
+}
+
+#s_Table {
+	width:800px;
+}
+
+#configinfo {
+	float:left; 	
+	width:800px;
+}
 
 #menuclear {
 	clear:both;
-}
-
-#navtree { 	
-	height:450px;
 }
 
 #alarm {
