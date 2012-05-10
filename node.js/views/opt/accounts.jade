@@ -1,0 +1,20 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/accounts.js')
+  div
+    h1  批量开户
+    table#cnuTable
+  br
+  br
+  br
+  div
+    input(type='checkbox',value='全选',id='checkall')  全选
+    button(id='btn_acount',style='float:right')  下一步
+  div(id='dialog-message-acount-failed',title='提示',style='display:none')
+    p
+      span.ui-icon.ui-icon-alert(style='float:left; margin:0 7px 50px 0;')
+      p  提示.
+    p.
+      操作失败.
+      请选择设备再进行相关操作!

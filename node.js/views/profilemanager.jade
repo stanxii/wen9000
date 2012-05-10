@@ -1,0 +1,125 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/profilemanager.js')
+  h1  模板管理
+  table#proTable
+  br
+  div(id='dialog-form',title='新模板',style='display:none')
+    p.validateTips  All form fields are required.
+    fieldset
+      legend  基本配置
+      form
+        table
+          tr
+            td
+              label(for='proname')  模板名称:
+            td
+              input(type='text',name='proname',id='proname',class='text ui-widget-content ui-corner-all')
+            td
+              label(for='vlanen')  Vlan使能:
+            td
+              select(name='vlanen',id='vlanen')
+                option(value='1')  启动
+                option(value='2')  禁止
+          tr
+            td
+              label(for='vlanid')  VlanID:
+            td
+              input(type='text',name='vlanid',id='vlanid',value='0',class='text ui-widget-content ui-corner-all')
+            td
+              label(for='vlan0id')  Vlan0ID:
+            td
+              input(type='text',name='vlan0id',id='vlan0id',value='0',class='text ui-widget-content ui-corner-all')
+          tr
+            td
+              label(for='vlan1id')  Vlan1ID:
+            td
+              input(type='text',name='vlan1id',id='vlan1id',value='0',class='text ui-widget-content ui-corner-all')
+            td
+              label(for='vlan2id')  Vlan2ID:
+            td
+              input(type='text',name='vlan2id',id='vlan2id',value='0',class='text ui-widget-content ui-corner-all')
+          tr
+            td
+              label(for='vlan3id')  Vlan3ID:
+            td
+              input(type='text',name='vlan3id',id='vlan3id',value='0',class='text ui-widget-content ui-corner-all')
+    fieldset
+      legend  下行配置(KB)
+      form
+        table
+          tr
+            td
+              label(for='rxlimitsts')  下行限速使能:
+            td
+              select(name='rxlimitsts',id='rxlimitsts')
+                option(value='1')  启动
+                option(value='2')  禁止
+            td
+              label(for='cpuportrxrate')  全局下行限速:
+            td
+              input(type='text',name='cpuportrxrate',id='cpuportrxrate',value='0',class='text ui-widget-content ui-corner-all')
+          tr
+            td
+              label(for='port0txrate')  1端口限速:
+            td
+              input(type='text',name='port0txrate',id='port0txrate',value='0',class='text ui-widget-content ui-corner-all')
+            td
+              label(for='port1txrate')  2端口限速:
+            td
+              input(type='text',name='port1txrate',id='port1txrate',value='0',class='text ui-widget-content ui-corner-all')
+          tr
+            td
+              label(for='port2txrate')  3端口限速:
+            td
+              input(type='text',name='port2txrate',id='port2txrate',value='0',class='text ui-widget-content ui-corner-all')
+            td
+              label(for='port3txrate')  4端口限速:
+            td
+              input(type='text',name='port3txrate',id='port3txrate',value='0',class='text ui-widget-content ui-corner-all')
+    fieldset
+      legend  上行配置(KB)
+      form
+        table
+          tr
+            td
+              label(for='txlimitsts')  上行限速使能:
+            td
+              select(name='txlimitsts',id='txlimitsts')
+                option(value='1')  启动
+                option(value='2')  禁止
+            td
+              label(for='cpuporttxrate')  全局上行限速:
+            td
+              input(type='text',name='cpuporttxrate',id='cpuporttxrate',value='0',class='text ui-widget-content ui-corner-all')
+          tr
+            td
+              label(for='port0rxrate')  1端口限速:
+            td
+              input(type='text',name='port0rxrate',id='port0rxrate',value='0',class='text ui-widget-content ui-corner-all')
+            td
+              label(for='port1rxrate')  2端口限速:
+            td
+              input(type='text',name='port1rxrate',id='port1rxrate',value='0',class='text ui-widget-content ui-corner-all')
+          tr
+            td
+              label(for='port2rxrate')  3端口限速:
+            td
+              input(type='text',name='port2rxrate',id='port2rxrate',value='0',class='text ui-widget-content ui-corner-all')
+            td
+              label(for='port3rxrate')  4端口限速:
+            td
+              input(type='text',name='port3rxrate',id='port3rxrate',value='0',class='text ui-widget-content ui-corner-all')
+  div(id='dialog-edit',title='编辑模板',style='display:none')
+  br
+  button#btn_create  创建模板
+  button#btn_delete  删除模板
+  button#btn_edit  编辑模板
+  div(id='dialog-pro-failed',title='提示',style='display:none')
+    p
+      span.ui-icon.ui-icon-alert(style='float:left;margin:0 7px 50px 0;')
+      p  提示.
+    p.
+      删除失败.
+      可能有其它CNU指向此模板！      

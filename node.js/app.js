@@ -29,15 +29,14 @@ app.configure('development', function(){
 });
 
 app.get('/', routes.index);
-//app.get('/profilemanager', routes.profilemanager);
 app.get('/profilemanager', function( request, response ) {
     response.render( 'profilemanager.jade', { title: 'Wen9000网路管理系统---模板管理' } );
 });
 app.get('/opt/accounts', function( request, response ) {
     response.render( 'opt/accounts.jade', { title: 'Wen9000网路管理系统---选择配置用户' } );
 });
-app.get('/opt/selprofiles', function( request, response ) {
-    response.render( 'opt/selprofiles.jade', { title: 'Wen9000网路管理系统---选择模板' } );
+app.get('/opt/selectprofiles', function( request, response ) {
+    response.render( 'opt/selectprofiles.jade', { title: 'Wen9000网路管理系统---选择模板' } );
 });
 app.get('/opt/confirm', function( request, response ) {
     response.render( 'opt/confirm.jade', { title: 'Wen9000网路管理系统---操作确认' } );

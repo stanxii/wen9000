@@ -9,8 +9,8 @@ a {
   color: #00B7FF;
 }
 
-table td {
-	text-align:center;
+table input {
+	width:100px;
 }
 
 #wapper {
@@ -72,7 +72,6 @@ table td {
 	position:absolute;
 	top:0;
 	left:26%;
-	overflow:scroll;
 }
 
 #proTable_wrapper {
@@ -87,12 +86,24 @@ table td {
 	width:800px;
 }
 
+cnuTable td {
+	text-align:center;
+}
+
 #f_Table {
 	width:800px;
 }
 
+#f_Table td {
+	text-align:center;
+}
+
 #s_Table {
 	width:800px;
+}
+
+#s_Table {
+	text-align:center;
 }
 
 #configinfo {

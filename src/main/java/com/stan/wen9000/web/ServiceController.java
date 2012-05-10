@@ -542,9 +542,9 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		//获取CNU ID 
-		String cnuid = jedis.get("mac:"+message+":deviceid");
+		String cnuid = jedis.get("mac:"+jsondata.get("mac").toString()+":deviceid");
     	String key = "cnuid:"+cnuid+":entity";
     	String devid = jedis.hget(key, "cnuindex");
     	//获取所属头端信息
@@ -560,7 +560,6 @@ public class ServiceController {
 		}
     	
 		//TODO
-		
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	

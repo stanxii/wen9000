@@ -1,0 +1,22 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/confirm.js')
+  h1  操作确认
+  h3(style='color:green')  选定的CNU
+  hr
+  #selcnus
+  table#cnuTable
+  #profile_info
+  br
+  div
+    button(id='btn_pre',style='float:left')  上一步
+    button(id='btn_ok',style='margin-left:300px')  提交
+  div(id='dialog-confirm-warm',title='提示',style='display: none')
+    p
+      span.ui-icon.ui-icon-alert(style='float:left; margin:0 7px 50px 0;')
+      p  提示.
+    p.
+      同时配置多台CNU可能需要较长时间，请耐心等待!
+    label  配置进度:
+    label#p_proc
