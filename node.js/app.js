@@ -44,6 +44,18 @@ app.get('/opt/confirm', function( request, response ) {
 app.get('/opt/config_results', function( request, response ) {
     response.render( 'opt/config_results.jade', { title: 'Wen9000网路管理系统---结果查询' } );
 });
+app.get('/dis/search', function( request, response ) {
+    response.render( 'discovery/discovery.jade', { title: 'Wen9000网路管理系统---设备搜索' } );
+});
+app.get('/dis/result', function( request, response ) {
+    response.render( 'discovery/result.jade', { title: 'Wen9000网路管理系统---搜索结果' } );
+});
+app.get('/opt/global_opt', function( request, response ) {
+    response.render( 'opt/global_opt.jade', { title: 'Wen9000网路管理系统---全局管理' } );
+});
+app.get('/opt/updatecbat', function( request, response ) {
+    response.render( 'opt/updatecbat.jade', { title: 'Wen9000网路管理系统---局端升级' } );
+});
 
 var node = http.createServer(app).listen(3000);
 var sio = io.listen(node);
@@ -53,6 +65,7 @@ redis.psubscribe('node.alarm.*');
 redis.psubscribe('node.tree.*');
 redis.psubscribe('node.pro.*');
 redis.psubscribe('node.opt.*');
+redis.psubscribe('node.dis.*');
 
 redis.on('pmessage', function(pat,ch,data) {
 
@@ -132,6 +145,45 @@ redis.on('pmessage', function(pat,ch,data) {
     		data = JSON.parse(data);
             sio.sockets.emit('opt.con_failed',data);
     	}        
+    }else if(ch == 'node.dis.validate') {
+    	sio.sockets.emit('dis.validate',data);   
+    }else if(ch == 'node.dis.proc') {
+    	sio.sockets.emit('dis.proc',data);   
+    }else if(ch == 'node.dis.searchtotal') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('dis.searchtotal',data);   
+    }else if(ch == 'node.dis.findcbat') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('dis.findcbat',data);   
+    }else if(ch == 'node.opt.globalopt') {
+    	if(data == ""){
+    		sio.sockets.emit('opt.globalopt',data);
+    	}else{
+    		data = JSON.parse(data);
+            sio.sockets.emit('opt.globalopt',data);
+    	}        
+    }else if(ch == 'node.opt.globalsave') {
+    	sio.sockets.emit('opt.globalsave',data);         
+    }else if(ch == 'node.opt.saveredis') {
+    	sio.sockets.emit('opt.saveredis',data);         
+    }else if(ch == 'node.opt.onlinecbats') {
+    	if(data == ""){
+    		sio.sockets.emit('opt.onlinecbats',data);
+    	}else{
+    		data = JSON.parse(data);
+            sio.sockets.emit('opt.onlinecbats',data);
+    	}        
+    }else if(ch == 'node.opt.ftpconnect') {
+    	if(data == ""){
+    		sio.sockets.emit('opt.ftpfilelist',data);
+    	}else{
+    		data = JSON.parse(data);
+            sio.sockets.emit('opt.ftpfilelist',data);
+    	}        
+    }else if(ch == 'node.opt.updateproc') {
+    	sio.sockets.emit('opt.updateproc',data);       
+    }else if(ch == 'node.opt.updateinfo') {
+    	sio.sockets.emit('opt.updateinfo',data);       
     }
 });
 
@@ -237,6 +289,56 @@ sio.sockets.on('connection', function (socket) {
   socket.on('opt.con_failed', function (data) {
 	  	 console.log('nodeserver: opt.con_failed==='+data);
 	     publish.publish('servicecontroller.opt.con_failed', data);
+  });
+  
+  socket.on('discovery.search', function (data) {
+	  	 console.log('nodeserver: discovery.search==='+data);
+	     publish.publish('servicecontroller.discovery.search', data);
+  });
+  
+  socket.on('dis.searchtotal', function (data) {
+	  	 console.log('nodeserver: discovery.searchtotal==='+data);
+	     publish.publish('servicecontroller.discovery.searchtotal', data);
+  });
+  
+  socket.on('opt.global_opt', function (data) {
+	  	 console.log('nodeserver: opt.global_opt==='+data);
+	     publish.publish('servicecontroller.opt.global_opt', data);
+  });
+  
+  socket.on('opt.save_global', function (data) {
+	  	 console.log('nodeserver: opt.save_global==='+data);
+	     publish.publish('servicecontroller.opt.save_global', data);
+  });
+  
+  socket.on('opt.saveredis', function (data) {
+	  	 console.log('nodeserver: opt.saveredis==='+data);
+	     publish.publish('servicecontroller.opt.saveredis', data);
+  });
+  
+  socket.on('opt.onlinecbats', function (data) {
+	  	 console.log('nodeserver: opt.onlinecbats==='+data);
+	     publish.publish('servicecontroller.opt.onlinecbats', data);
+  });
+  
+  socket.on('opt.ftpconnet', function (data) {
+	  	 console.log('nodeserver: opt.ftpconnet==='+data);
+	     publish.publish('servicecontroller.opt.ftpconnet', data);
+  });
+  //选择要升级的头端设备
+  socket.on('opt.updatedcbats', function (data) {
+	  	 console.log('nodeserver: opt.updatedcbats==='+data);
+	     publish.publish('servicecontroller.opt.updatedcbats', data);
+  });
+  //升级头端设备
+  socket.on('opt.ftpupdate', function (data) {
+	  	 console.log('nodeserver: opt.ftpupdate==='+data);
+	     publish.publish('servicecontroller.opt.ftpupdate', data);
+  });
+  //升级头端进度信息
+  socket.on('opt.updateinfo', function (data) {
+	  	 console.log('nodeserver: opt.updateinfo==='+data);
+	     publish.publish('servicecontroller.updateinfo', data);
   });
   
   socket.on('my other event', function (data) {

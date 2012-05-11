@@ -11,7 +11,7 @@
 		
 		var proname = $( "#proname" ),
 		vlanen = $( "#vlanen" ),
-		vlanid = $( "#vlanid" ),
+		//vlanid = $( "#vlanid" ),
 		vlan0id = $( "#vlan0id" ),
 		vlan1id = $( "#vlan1id" ),
 		vlan2id = $( "#vlan2id" ),
@@ -30,7 +30,7 @@
 		port3rxrate = $( "#port3rxrate" ),
 		
 		
-		allFields = $( [] ).add( proname ).add( vlanen ).add( vlanid ).add( vlan0id ).add( vlan1id ).add( vlan2id )
+		allFields = $( [] ).add( proname ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
 		.add( vlan3id ).add( rxlimitsts ).add( cpuportrxrate ).add( port0txrate ).add( port1txrate ).add( port2txrate )
 		.add( port3txrate ).add( txlimitsts ).add( cpuporttxrate ).add( port0rxrate ).add( port1rxrate ).add( port2rxrate )
 		.add( port3rxrate ),
@@ -114,11 +114,11 @@
 						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"1端口限速")&& checknum(port1txrate,"2端口限速")&& checknum(port2txrate,"3端口限速")&& checknum(port3txrate,"4端口限速")
 							&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"1端口限速")&& checknum(port1rxrate,"2端口限速")&& checknum(port2rxrate,"3端口限速")&& checknum(port3rxrate,"4端口限速"); 
 							
-						bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2) && checkvalue(vlanid,"vlanid",0,4095)&& checkvalue(vlan0id,"vlan0id",0,4095)&& checkvalue(vlan1id,"vlan1id",0,4095)
+						bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2)&& checkvalue(vlan0id,"vlan0id",0,4095)&& checkvalue(vlan1id,"vlan1id",0,4095)
 						&& checkvalue(vlan2id,"vlan2id",0,4095)&& checkvalue(vlan3id,"vlan3id",0,4095)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);
 						
 						if(bValid){
-							var datastring = '{"proname":"'+proname.val()+'","vlanen":"'+vlanen.val()+'","vlanid":"'+vlanid.val()+
+							var datastring = '{"proname":"'+proname.val()+'","vlanen":"'+vlanen.val()+
 							'","vlan0id":"'+vlan0id.val()+'","vlan1id":"'+vlan1id.val()+'","vlan2id":"'+vlan2id.val()+'","vlan3id":"'+vlan3id.val()+
 							'","rxlimitsts":"'+rxlimitsts.val()+'","cpuportrxrate":"'+cpuportrxrate.val()+'","port0txrate":"'+port0txrate.val()+
 							'","port1txrate":"'+port1txrate.val()+'","port2txrate":"'+port2txrate.val()+'","port3txrate":"'+port3txrate.val()+
@@ -196,7 +196,7 @@
 		
 		var proname = $( "#proname" ),
 		vlanen = $( "#vlanen" ),
-		vlanid = $( "#vlanid" ),
+		//vlanid = $( "#vlanid" ),
 		vlan0id = $( "#vlan0id" ),
 		vlan1id = $( "#vlan1id" ),
 		vlan2id = $( "#vlan2id" ),
@@ -215,7 +215,7 @@
 		port3rxrate = $( "#port3rxrate" ),
 		
 		
-		allFields = $( [] ).add( proname ).add( vlanen ).add( vlanid ).add( vlan0id ).add( vlan1id ).add( vlan2id )
+		allFields = $( [] ).add( proname ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
 		.add( vlan3id ).add( rxlimitsts ).add( cpuportrxrate ).add( port0txrate ).add( port1txrate ).add( port2txrate )
 		.add( port3txrate ).add( txlimitsts ).add( cpuporttxrate ).add( port0rxrate ).add( port1rxrate ).add( port2rxrate )
 		.add( port3rxrate ),
@@ -235,15 +235,14 @@
 								'<option value="1">启动</option>'+
 								'<option value="2">禁用</option>'+
 							'</select></td>	</tr>'+
-						'<tr><td><label for="vlanid_e">VlanID:</label></td>'+
-						'<td><input type="text" name="vlanid_e" id="vlanid_e" value='+tmpdata.vlanid+ ' class="text ui-widget-content ui-corner-all" /></td>'+
+						'<tr>'+
 						'<td><label for="vlan0id_e">Vlan0id:</label></td>'+
-						'<td><input type="text" name="vlan0id_e" id="vlan0id_e" value='+tmpdata.vlan0id+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
-						'<tr><td><label for="vlan1id_e">Vlan1id:</label></td>'+
-						'<td><input type="text" name="vlan1id_e" id="vlan1id_e" value='+tmpdata.vlan1id+ ' class="text ui-widget-content ui-corner-all" /></td>'+
-						'<td><label for="vlan2id_e">Vlan2id:</label></td>'+
-						'<td><input type="text" name="vlan2id_e" id="vlan2id_e" value='+tmpdata.vlan2id+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
-						'<tr><td><label for="vlan3id_e">Vlan3id:</label></td>'+
+						'<td><input type="text" name="vlan0id_e" id="vlan0id_e" value='+tmpdata.vlan0id+ ' class="text ui-widget-content ui-corner-all" /></td>'+
+						'<td><label for="vlan1id_e">Vlan1id:</label></td>'+
+						'<td><input type="text" name="vlan1id_e" id="vlan1id_e" value='+tmpdata.vlan1id+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
+						'<tr><td><label for="vlan2id_e">Vlan2id:</label></td>'+
+						'<td><input type="text" name="vlan2id_e" id="vlan2id_e" value='+tmpdata.vlan2id+ ' class="text ui-widget-content ui-corner-all" /></td>'+
+						'<td><label for="vlan3id_e">Vlan3id:</label></td>'+
 						'<td><input type="text" name="vlan3id_e" id="vlan3id_e" value='+tmpdata.vlan3id+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
 					'</table>'+
 				'</form></fieldset>'+
@@ -288,7 +287,7 @@
 			
 			proname = $( "#proname_e" ),
 			vlanen = $( "#vlanen_e" ),
-			vlanid = $( "#vlanid_e" ),
+			//vlanid = $( "#vlanid_e" ),
 			vlan0id = $( "#vlan0id_e" ),
 			vlan1id = $( "#vlan1id_e" ),
 			vlan2id = $( "#vlan2id_e" ),
@@ -328,12 +327,12 @@
 					bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"1端口限速")&& checknum(port1txrate,"2端口限速")&& checknum(port2txrate,"3端口限速")&& checknum(port3txrate,"4端口限速")
 						&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"1端口限速")&& checknum(port1rxrate,"2端口限速")&& checknum(port2rxrate,"3端口限速")&& checknum(port3rxrate,"4端口限速"); 
 						
-					bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2) && checkvalue(vlanid,"vlanid",0,4095)&& checkvalue(vlan0id,"vlan0id",0,4095)&& checkvalue(vlan1id,"vlan1id",0,4095)
+					bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2)&& checkvalue(vlan0id,"vlan0id",0,4095)&& checkvalue(vlan1id,"vlan1id",0,4095)
 					&& checkvalue(vlan2id,"vlan2id",0,4095)&& checkvalue(vlan3id,"vlan3id",0,4095)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);
 					
 					if(bValid){
 						var anSelected = fnGetSelected( pTable );
-						var datastring = '{"proid":"'+anSelected[0].firstChild.textContent+'","proname":"'+proname.val()+'","vlanen":"'+vlanen.val()+'","vlanid":"'+vlanid.val()+
+						var datastring = '{"proid":"'+anSelected[0].firstChild.textContent+'","proname":"'+proname.val()+'","vlanen":"'+vlanen.val()+
 						'","vlan0id":"'+vlan0id.val()+'","vlan1id":"'+vlan1id.val()+'","vlan2id":"'+vlan2id.val()+'","vlan3id":"'+vlan3id.val()+
 						'","rxlimitsts":"'+rxlimitsts.val()+'","cpuportrxrate":"'+cpuportrxrate.val()+'","port0txrate":"'+port0txrate.val()+
 						'","port1txrate":"'+port1txrate.val()+'","port2txrate":"'+port2txrate.val()+'","port3txrate":"'+port3txrate.val()+
@@ -384,7 +383,7 @@
 	function fun_Allprofiles(data){
 		var groupval=[];
 		$.each(data, function(key, itemv) {  					
-				var item = [itemv.id,itemv.proname,itemv.vlanen,itemv.vlanid,itemv.vlan0id,itemv.vlan1id,itemv.vlan2id,itemv.vlan3id,
+				var item = [itemv.id,itemv.proname,itemv.vlanen,itemv.vlan0id,itemv.vlan1id,itemv.vlan2id,itemv.vlan3id,
 				itemv.rxlimitsts,itemv.cpuportrxrate,itemv.port0txrate,itemv.port1txrate,itemv.port2txrate,itemv.port3txrate,
 				itemv.txlimitsts,itemv.cpuporttxrate,itemv.port0rxrate,];
 				groupval[groupval.length] = item; 				
@@ -439,7 +438,6 @@
 						  { "sTitle": "ID" },
 						  { "sTitle": "模板名称" },
 					      { "sTitle": "vlan使能" },
-					      { "sTitle": "vlan" },
 					      { "sTitle": "1端口vlan" },
 					      { "sTitle": "2端口vlan" },
 						  { "sTitle": "3端口vlan" },

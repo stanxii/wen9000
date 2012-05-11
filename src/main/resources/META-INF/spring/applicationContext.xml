@@ -101,7 +101,8 @@
 	</bean>
 
 	<!-- 业务对象 -->
-	<bean id="workerDiscoveryProcessor" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" >			 
+	<bean id="workerDiscoveryProcessor" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" >	
+	  <property name="redisUtil" ref="redisUtil" />		 
 	</bean>
 	
 	<!-- 调度业务 -->
@@ -152,6 +153,9 @@
 	<bean id="serviceController" class="com.stan.wen9000.web.ServiceController" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
+	<bean id="serviceUpdateProcess" class="com.stan.wen9000.web.ServiceUpdateProcess" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
 	
 	
 	<!-- 调度业务 -->
@@ -195,7 +199,11 @@
 	 <property name="targetMethod"  value="start"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
-	
+	<bean id="serviceUpdateProcessjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceUpdateProcess" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
 	
 	
 	
@@ -248,7 +256,12 @@
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="0" />
 	</bean>
-	
+	<bean id="serviceUpdateProcessTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceUpdateProcessjob" />
+	 <property name="startDelay" value="3000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />
+	</bean>
 	
 	
 	
@@ -267,6 +280,7 @@
 	   <ref bean="workerCbatStatusTrigger" />  
 	   <ref bean="serviceCbatStatusTrigger" /> 
 	   <ref bean="serviceControllerTrigger" />
+	   <ref bean="serviceUpdateProcessTrigger" />
 	  </list>
 	 </property>	 
 	</bean>

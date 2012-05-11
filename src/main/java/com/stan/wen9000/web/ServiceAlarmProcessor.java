@@ -292,12 +292,17 @@ public class ServiceAlarmProcessor {
 			
 			String result = (String)alarm.get("alarmvalue");			
 			String cbatmac = (String)alarm.get("cbatmac");			
-			String cbatmackey = "cbatmac:" +  cbatmac + ":cbatid";						
-			String scbatid = (String)jedis.get(cbatmackey);
-			String scbatentitykey = "cbatid:" + scbatid + ":entity";			
-			jedis.hset(scbatentitykey, "upgradestatus", result);			
-			
-			
+			String cbatid = "mac:" +  cbatmac + ":deviceid";						
+			String cbatkey = "cbatid:" + cbatid + ":entity";			
+			jedis.hset(cbatkey, "upgrade", result);			
+			if(!result.equalsIgnoreCase("1")){
+				//已升级头端加1
+				long num_t =jedis.incr("global:updated");
+				String num = String.valueOf(num_t);
+				String total = jedis.get("global:updatedtotal");
+				//通知前端此头端完成升级
+				jedis.publish("node.opt.updateproc", num+"/"+total);
+			}			
 			
 			redisUtil.getJedisPool().returnResource(jedis);
 			

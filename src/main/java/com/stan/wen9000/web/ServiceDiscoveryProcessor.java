@@ -121,8 +121,6 @@ public class ServiceDiscoveryProcessor  {
 
 	private static void doWork(String message) throws Exception {
 
-		
-		 
 		JSONObject json=(JSONObject) JSONValue.parse(message);
 		
 		
@@ -173,9 +171,7 @@ public class ServiceDiscoveryProcessor  {
 		String mvlanid =(String) jsonobj.get("cbatinfo:mvlanid");
 		String mvlanenable =(String) jsonobj.get("cbatinfo:mvlanenable");
 		
-		 
-		
-		
+
 		long start = System.currentTimeMillis();  
 		
 		
@@ -193,6 +189,38 @@ public class ServiceDiscoveryProcessor  {
 			
 		}
 		
+		//发现新头端，通知前端		
+		JSONObject json = new JSONObject();
+		json.put("mac", cbatmac);
+		json.put("active", "1");
+		json.put("ip", cbatip);
+		switch(Integer.parseInt(cbatdevicetype))
+		{
+        	case 1:
+        		//break;
+        	case 2:
+        		
+        		//break;
+        	case 3:
+        		//break;
+        	case 4:
+        		
+        		//break;
+        	case 5:
+        		//break;
+        	case 6:
+        		
+        		//break;
+        	case 7:
+        		//break;
+        	case 8:
+        		json.put("devtype", "中文测试");
+        		break;
+        	default:
+        		json.put("devtype", "Unknown");
+        		break;
+		}
+		jedis.publish("node.dis.findcbat", json.toJSONString());
 		
 		//get cbatmac if exist in redis server
 		String scbatid = jedis.get(cbatmackey);		

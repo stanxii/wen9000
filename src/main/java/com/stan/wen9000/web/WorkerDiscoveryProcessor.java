@@ -10,7 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
 import org.snmp4j.smi.OID;
 
 import redis.clients.jedis.Jedis;
@@ -28,21 +30,12 @@ public class WorkerDiscoveryProcessor{
 	
 	private static SnmpUtil util = new SnmpUtil();
 
+	private static RedisUtil redisUtil;
 
-	
-
-
-    
-	private static JedisPool pool;
-	 
-	 static {
-	        JedisPoolConfig config = new JedisPoolConfig();
-	        config.setMaxActive(100);
-	        config.setMaxIdle(20);
-	        config.setMaxWait(1000);
-	        config.setTestOnBorrow(true);
-	        pool = new JedisPool(config, "192.168.1.249");
-	    }
+	  
+	public static void setRedisUtil(RedisUtil redisUtil) {
+		WorkerDiscoveryProcessor.redisUtil = redisUtil;
+	}
 
 
 
@@ -138,9 +131,7 @@ public class WorkerDiscoveryProcessor{
         	System.out.println(">pMessage>>>>>>>>>>>>>>>>>>>>>>>>Descovery Subscribing................now receive on msgarge1 [" + arg1 + "] arg2=["+arg2 +"]");
         	try {
     			//arg2 is mssage now is currenti p
-    			
-    			
-    			
+
     			servicestart(arg2);
     			
     		}catch(Exception e){
@@ -178,37 +169,44 @@ public class WorkerDiscoveryProcessor{
 	public void execute()  {
 //		System.out.println(" [x2] WorkerDiscoveryProcessor Start......");
 		logger.info(" [x2] WorkerDiscoveryProcessor Start......");
-
-		Jedis jedis = pool.getResource();
-		
-		jedis = new Jedis("192.168.1.249");
-		jedis.psubscribe(jedissubSub, "workdiscovery.*");		
-		 pool.returnResource(jedis);
-		
-		
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		 
+			jedis.psubscribe(jedissubSub, "workdiscovery.*");
+			redisUtil.getJedisPool().returnResource(jedis);
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			
+		}	
 
 	}
 
 	
 		
 
-	public static  void servicestart(String ip) throws Exception {
-			System.out.println(" [x] WorkerDiscoveryProcessor Received '" + ip
-					+ "'");
+	public static  void servicestart(String message) throws Exception {
 			
-			
-			
-			long start = System.currentTimeMillis();  			
-			doWork(ip);		
-			long end = System.currentTimeMillis();  
-			System.out.println("one WorkerDiscoveryProcessor dowork spend: " + ((end - start)) + " milliseconds");  
+ 			
+			doWork(message);		
+  
 			
 			
 		}
 		
 	
 	@SuppressWarnings("unchecked")
-	private static void doWork(String currentip) {
+	private static void doWork(String currentip) {		
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
 		
 		long devicetype ;
 		int  mvlanenable; 
@@ -227,6 +225,9 @@ public class WorkerDiscoveryProcessor{
 		boolean b1 = m.matches();
 		if (!b1) {
 			logger.info("[x] not a good ip for work");
+			jedis.publish("node.dis.proc", "");
+			jedis.incr("global:searched");
+			redisUtil.getJedisPool().returnResource(jedis);
 			return;
 		}
 		
@@ -312,72 +313,52 @@ public class WorkerDiscoveryProcessor{
 		
 
 		
-		devicetype = eocping(currentip, "161");
-
+		devicetype = eocping(currentip, "161");	
 		
-		
-			// ///////////////////////////////////////////////////
-			if (devicetype != -1) {
-				String cbatmac = "";
+		// ///////////////////////////////////////////////////
+		if (devicetype != -1) {
+			String cbatmac = "";
+			
+			try {
+				cbatmac = util.getStrPDU(currentip, "161", new OID(
+						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 6, 0 }));
+				cbatmac = cbatmac.trim().toUpperCase();
 
-				
-				try {
-					cbatmac = util.getStrPDU(currentip, "161", new OID(
-							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 6, 0 }));
-					cbatmac = cbatmac.trim().toUpperCase();
-				
-
-//				System.out.println("WorkDiscoveryProcessing discoveryed Mac = "
-//						+ cbatmac + "    ip=  " + currentip);
-				
-				
 				/////////获取cbatinfo
-				
-
-
 				 agetnport = util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					
 				 appver = util.getStrPDU(currentip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
 				 mvlanid =  util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 }));				    				   
 			     mvlanenable = util.getINT32PDU(currentip, "161", new OID(	new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 }));
-		
-			     
-		
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("get cbatmac error");
+				jedis.publish("node.dis.proc", "");
+				jedis.incr("global:searched");
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
+			}
+			// write trap server address
+			// //----------
 
-				
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					System.out.println("get cbatmac error");
-					return;
-				}
-				// write trap server address
-				// //----------
+			String msgservice="";
 
-				String msgservice="";
-				// //////////////////////////////get cbat ok now send msg to
-				// service
-//				 msgservice = "001" + "|" + currentip + "|" +
-//				 cbatmac + "|"
-//				 + Long.toString(devicetype);
-//				 
-				 
-				
-				Map cbathash=new LinkedHashMap();
-				
-				 
-				 
-				 cbathash.put("msgcode", "001");
-				 cbathash.put("ip", currentip.toLowerCase().trim());
-				 cbathash.put("cbatmac", cbatmac.toLowerCase().trim());
-				 cbathash.put("cbatdevicetype", Long.toString(devicetype));
-				 cbathash.put("cbatinfo:agentport", Integer.toString(agetnport));
-				 cbathash.put("cbatinfo:appver", appver.trim());				 
-				 cbathash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
-				 cbathash.put("cbatinfo:mvlanenable", mvlanenable == 1 ? "1" :"0");
-				 
-				 msgservice = JSONValue.toJSONString(cbathash);
-				
-				sendToPersist(msgservice);
-				msgservice = "";
+			Map cbathash=new LinkedHashMap();
+			
+			 
+			 
+			 cbathash.put("msgcode", "001");
+			 cbathash.put("ip", currentip.toLowerCase().trim());
+			 cbathash.put("cbatmac", cbatmac.toLowerCase().trim());
+			 cbathash.put("cbatdevicetype", Long.toString(devicetype));
+			 cbathash.put("cbatinfo:agentport", Integer.toString(agetnport));
+			 cbathash.put("cbatinfo:appver", appver.trim());				 
+			 cbathash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
+			 cbathash.put("cbatinfo:mvlanenable", mvlanenable == 1 ? "1" :"0");
+			 msgservice = JSONValue.toJSONString(cbathash);
+			
+			sendToPersist(msgservice,jedis);
+			msgservice = "";
 
 			
 		} else {
@@ -385,7 +366,9 @@ public class WorkerDiscoveryProcessor{
 			// "#0 ping ping. ip #1........Bu Bu Tong ,Bu tong, Bu tong !",
 			// currentip);
 
-			
+			jedis.publish("node.dis.proc", "");
+			jedis.incr("global:searched");
+			redisUtil.getJedisPool().returnResource(jedis);
 			return;
 		}
 
@@ -444,19 +427,16 @@ public class WorkerDiscoveryProcessor{
 		return false;
 	}
 
-	public static  void sendToPersist(String msg) {
-
-		//jedis.connect();
-		System.out.println("[XXXXXXXXXXXXXXXXXXXXXXX]msg=" + msg);
-		Jedis jedis = pool.getResource();
-				
+	public static  void sendToPersist(String msg,Jedis jedis) {
 		
+		//jedis.connect();
+
 		//jedis.lpush(PERSIST_CBAT_QUEUE_NAME, msg);
 		jedis.publish("servicediscovery.new", msg);
 		//jedis.dbSize();
-		
-		 
-		 pool.returnResource(jedis);
+		jedis.publish("node.dis.proc", "");
+		jedis.incr("global:searched");
+		redisUtil.getJedisPool().returnResource(jedis);
 	
 	}
 

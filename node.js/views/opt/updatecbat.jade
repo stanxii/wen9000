@@ -1,0 +1,53 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/updatecbat.js')
+  h1  局端升级
+    img(id='showproc',src='http://localhost:8080/wen9000/images/show.png',style='margin-left:30px')
+  div
+    table#upcbat_table
+  br
+  br
+  h3(style='color:green')  FTP服务器
+  hr
+  #ftpinfo(style='float:left')
+    table
+      tr
+        td
+          label  Server IP:
+        td
+          input(type='text',id='serverip',value='192.168.1.252')
+      tr
+        td
+          label  Server Port:
+        td
+          input(type='text',id='serverport',value='21')
+      tr
+        td
+          label  用户名:
+        td
+          input(type='text',id='username',value='anonymous')
+      tr
+        td
+          label  密码:
+        td
+          input(type='text',id='password')
+    br
+    button(id='ftp_connect',style='float:right')  获取文件列表
+  #choosefile(style='float:left;margin-left:200px')
+    label  选择升级文件:
+    select#combox_files
+    br
+    button(id='btn_update',style='margin-top:105px;float:right',disabled='disabled')  开始升级
+
+  div(id='dialog-message-ftp-failed',title='提示',style='display:none')
+    p
+      span.ui-icon.ui-icon-alert(style='float:left; margin:0 7px 50px 0;')
+      p  提示
+    p.
+      获取文件列表失败!
+                                                                                                                                                                  
+  
+  div(id='dialog-message-proc',title='升级进度',style='display:none')
+    label  已升级头端:
+    label#up_proc                 

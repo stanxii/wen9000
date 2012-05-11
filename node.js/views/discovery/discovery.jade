@@ -1,0 +1,29 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/discovery.js')
+  h1  设备搜索
+  p
+  p
+  p
+  table#discoveryTable
+    tr
+      td
+        label  起始IP:
+      td
+        input(type='text',id='startip',value='192.168.223.1',style='width:200px')
+    tr
+      td
+        label  终止IP:
+      td
+        input(type='text',id='stopip',value='192.168.223.10',style='width:200px')
+  br
+  button(id='submit',style='float:right')  搜索
+
+  div(id='dialog-dis-warn',title='提示',style='display:none')
+    p
+      span.ui-icon.ui-icon-alert(style='float:left;margin:0 7px 50px 0;')
+      p  提示.
+    p.
+      IP错误.
+      请输入合法的IP地址！      

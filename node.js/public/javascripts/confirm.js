@@ -65,14 +65,14 @@
 		}
 			
 		$("#profile_info").empty();	
-		$("#profile_info").append('<br/><br/><h3 style="color:green">配置信息</h3><hr/><div id="configinfo"><ul>'+
+		$("#profile_info").append('<h3 style="color:green">配置信息</h3><div id="configinfo"><ul>'+
 				'<li><a href="#tabs-1">基本配置</a></li>'+
 				'<li><a href="#tabs-2">下行配置</a></li>'+
 				'<li><a href="#tabs-3">上行配置</a></li></ul>'+
 				'<div id="tabs-1">'+
 					'<table id="optinfo"><tr><td><lable>模板名称 :&nbsp &nbsp &nbsp'+tmpdata.proname+'</lable></td>'+
 					'<td><lable>VLAN使能 : &nbsp &nbsp &nbsp  '+ tmpdata.vlanen+'</lable></td>'+
-					'<td><lable>VLAN ID: &nbsp &nbsp &nbsp  '+tmpdata.vlanid+'</lable></td></tr>'+
+					'</tr>'+
 					'<tr><td><lable>1端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan0id+'</lable></td>'+
 					'<td><lable>2端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan1id+'</lable></td>'+
 					'<tr><td><lable>3端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan2id+'</lable></td>'+

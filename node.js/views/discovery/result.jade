@@ -1,0 +1,13 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/result.js')
+  div
+    h1  搜索结果
+  #result_list
+    table#list
+  
+  div(id='dialog-dis-proc',title='搜索进度',style='display:none')
+    label  已搜索设备:
+    label#dis_proc  
+      

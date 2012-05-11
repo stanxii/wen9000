@@ -1,0 +1,30 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/global_opt.js')
+  h1  全局配置
+  h3(style='color:green')  Trap Server配置
+  hr
+  p(style='color:green')
+    Trap Server是网管系统的核心部分，用于接收设备端发往网管的消息，例如:设备心跳消息，告警消息；如设置不正确，新设备的发现及所有设备的状态变迁，告警消息的接收功能将缺失!
+  table
+    tr
+      td
+        label  Trap Server IP: 
+      td
+        input(id='trap_server',type='text')
+    tr
+      td
+        label  Trap Server Port:
+      td 
+        input(id='trap_serport',type='text')
+      td
+        p(style='color:green')  端口号变更需重启网管生效!
+  br
+  button(id='btn_gsub')  提交
+  br
+  br
+  h3(style='color:green')  Redis数据库操作
+  p(style='color:green')  本网管采用最新的Redis内存数据库优化数据存储效率，为了保证关键数据不丢失，建议关闭网管前点击保存按钮将内存中未存储的数据保存到硬盘。
+  br
+  button(id='btn_gsave')  保存 

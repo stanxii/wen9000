@@ -1,6 +1,8 @@
 package com.stan.wen9000.web;
 
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -176,9 +180,344 @@ public class ServiceController {
 			doOptConSuccess(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.opt.con_failed")){
 			doOptConFailed(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.discovery.search")){
+			doDisSearch(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.discovery.searchtotal")){
+			doDisSearchTotal(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.global_opt")){
+			doOptGlobalopt(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.save_global")){
+			doOptGlobalSave(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.saveredis")){
+			doOptSaveRedis(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.onlinecbats")){
+			doOptOnlineCbats(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.ftpconnet")){
+			doOptFtpConnect(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.updatedcbats")){
+			doOptUpdatedcbats(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.ftpupdate")){
+			doOptFtpupdate(message);
 		}
+		
 
 
+	}
+	
+	private static void doOptFtpupdate(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String ftpip = jsondata.get("ftpip").toString();
+		String ftpport = jsondata.get("ftpport").toString();
+		String username = jsondata.get("username").toString();
+		String password = jsondata.get("password").toString();
+		String filename = jsondata.get("filename").toString();
+		//获取所有要升级的头端
+		Set<String> cbats = jedis.smembers("global:updatedcbats");
+		//记录升级头端数，用户前端进度跟踪
+		jedis.set("global:updatedtotal", String.valueOf(cbats.size()));
+		//记录已升级头端数，用户前端进度跟踪
+		jedis.set("global:updated", "0");
+		
+		for(Iterator cbat=cbats.iterator();cbat.hasNext();){
+			String cbatid = cbat.next().toString();
+			jedis.srem("global:updatedcbats", cbatid);
+			JSONObject json = new JSONObject();
+			json.put("ftpip", ftpip);
+			json.put("ftpport", ftpport);
+			json.put("username", username);
+			json.put("password", password);
+			json.put("cbatid", cbatid);
+			
+			jedis.publish("ServiceUpdateProcess.update", json.toJSONString());
+		}
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptUpdatedcbats(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String value = jsondata.get("value").toString();
+		
+		//获取CBAT ID 
+		String cnuid = jedis.get("mac:"+mac+":deviceid");
+    	if(value.equalsIgnoreCase("true")){
+    		//保存选择的cbat到集合
+    		jedis.sadd("global:updatedcbats", cnuid);
+    	}else{
+    		//删除选择的cbat
+    		jedis.srem("global:updatedcbats", cnuid);
+    	}
+    	
+    	
+    	redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptFtpConnect(String message) throws ParseException{
+		FTPClient ftpClient;
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String ip = jsondata.get("ftpip").toString();
+		String port = jsondata.get("ftpport").toString();
+		String username = jsondata.get("username").toString();
+		String password = jsondata.get("password").toString();
+		//连接ftp
+		try
+		  {
+		      ftpClient= new FTPClient();
+		      ftpClient.connect(ip,Integer.parseInt(port));
+		      if(!ftpClient.login(username, password)){
+		    	  log.info("------------------------------login failed");
+		    	  ftpClient.disconnect();
+			      jedis.publish("node.opt.ftpconnect", "");
+			      redisUtil.getJedisPool().returnResource(jedis);
+			      return;
+		      }
+		      JSONArray jsonarray = new JSONArray();
+		      
+		      if(ftpClient.isConnected()){
+		    	  FTPFile[] remoteFiles = ftpClient.listFiles("/");
+		    	  if(remoteFiles != null) {   
+	                for(int i=0;i<remoteFiles.length;i++){
+	                	JSONObject filejson = new JSONObject();
+	                    String name = remoteFiles[i].getName(); 
+	                    if(name.equalsIgnoreCase(".")||name.equalsIgnoreCase("..")){
+	                    	continue;
+	                    }
+	                    filejson.put("filename", name);
+	                    jsonarray.add(filejson);
+	                }   
+		          }    
+		      }
+		      ftpClient.logout();
+		      ftpClient.disconnect();
+		      jedis.publish("node.opt.ftpconnect", jsonarray.toJSONString());
+		      redisUtil.getJedisPool().returnResource(jedis);
+		  }
+		  catch(Exception e)
+		  {
+			  e.printStackTrace();
+			  ftpClient=null;
+			  jedis.publish("node.opt.ftpconnect", "");
+			  redisUtil.getJedisPool().returnResource(jedis);
+		  }
+		
+	}
+	
+	private static void doOptOnlineCbats(String message){
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		Set<String> cbats = jedis.keys("cbatid:*:entity");
+		JSONArray jsonarray = new JSONArray();
+		//清楚所有要升级的头端
+		Set<String> members = jedis.smembers("global:updatedcbats");
+		if(!members.isEmpty()){
+			for(Iterator it=members.iterator();it.hasNext();){
+				jedis.srem("global:updatedcbats", it.next().toString());
+			}
+		}		
+		//获取在线头端信息
+		for(Iterator it=cbats.iterator();it.hasNext();){
+			String key = it.next().toString();		
+			//TODO
+			//调试阶段取消离线头端不可见
+			if(!jedis.hget(key, "active").equalsIgnoreCase("3")){
+				JSONObject cbatjson = new JSONObject();
+				cbatjson.put("check", "<input type=checkbox class=chk />");
+				cbatjson.put("mac", jedis.hget(key, "mac"));
+				cbatjson.put("ip", jedis.hget(key, "ip"));
+				cbatjson.put("upgrade", jedis.hget(key, "upgrade"));
+				switch(Integer.parseInt(jedis.hget(key, "devicetype")))
+				{
+		        	case 1:
+		        		cbatjson.put("devicetype", "WEC-3501I X7");
+		        		break;
+		        	case 2:
+		        		cbatjson.put("devicetype", "WEC-3501I E31");
+		        		break;
+		        	case 3:
+		        		cbatjson.put("devicetype", "WEC-3501I Q31");
+		        		break;
+		        	case 4:
+		        		cbatjson.put("devicetype", "WEC-3501I C22");
+		        		break;
+		        	case 5:
+		        		cbatjson.put("devicetype", "WEC-3501I S220");
+		        		break;
+		        	case 6:
+		        		cbatjson.put("devicetype", "WEC-3501I S60");
+		        		break;
+		        	default:
+		        		cbatjson.put("devicetype", "Unknown");
+		        		break;
+				}
+
+				key.replaceFirst("entity", "cbatinfo");
+				log.info("replaced key ========="+key);
+				cbatjson.put("appver", jedis.hget(key, "appver"));
+				jsonarray.add(cbatjson);
+			}		
+		}
+		
+		jedis.publish("node.opt.onlinecbats", jsonarray.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+
+	private static void doOptSaveRedis(String message){
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		jedis.save();
+		jedis.publish("node.opt.saveredis", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptGlobalSave(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		//保存全局配置信息
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String ip = jsondata.get("ip").toString();
+		String port = jsondata.get("port").toString();
+		jedis.set("global:trapserver:ip", ip);
+		jedis.set("global:trapserver:port", port);
+		jedis.publish("node.opt.globalsave", "");
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptGlobalopt(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		//获取全局配置trap server端口号和IP地址
+		String ip = jedis.get("global:trapserver:ip");
+		String port = jedis.get("global:trapserver:port");
+		JSONObject json = new JSONObject();
+		json.put("ip", ip);
+		json.put("port", port);
+		jedis.publish("node.opt.globalopt", json.toJSONString());
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doDisSearchTotal(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		String total = jedis.get("global:searchtotal");
+		String proc = jedis.get("global:searched");
+		JSONObject json = new JSONObject();
+		json.put("total", total);
+		json.put("proc", proc);
+		jedis.publish("node.dis.searchtotal", json.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doDisSearch(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String startip = jsondata.get("startip").toString();
+		String stopip = jsondata.get("stopip").toString();
+		String currentip = "";
+		long longstartIp = IP2Long.ipToLong(startip);		
+		long longstopIp = IP2Long.ipToLong(stopip);
+		long total = longstopIp - longstartIp + 1;
+		if((total >256)|| (longstartIp>longstopIp))
+		{
+			log.info("search ip out of range!");
+			jedis.publish("node.dis.validate", "");
+			redisUtil.getJedisPool().returnResource(jedis);
+			return;
+		}
+		jedis.publish("node.dis.validate", "validateok");
+		
+		//将搜索总ip数写入redis，方便前端显示搜索进度
+		jedis.set("global:searchtotal", String.valueOf(total));
+		
+		//将已搜索设备清0，此键是为防止用户刷新页面导致显示搜索进度不正确
+		jedis.set("global:searched", "0");
+		
+		
+		while (longstartIp <= longstopIp) {
+			currentip = IP2Long.longToIP(longstartIp);
+			jedis.publish("workdiscovery.new", currentip);
+
+			longstartIp++;
+
+		}
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+		
 	}
 	
 	private static void doOptConSuccess(String message){
@@ -309,6 +648,10 @@ public class ServiceController {
 			
 			//获取cnu原profileid号
 			String old_proid = jedis.hget(cnukey, "profileid");
+			//如果原模板是配置信息，则删除
+			if(jedis.hget("profileid:"+old_proid+":entity","profiename").equalsIgnoreCase("配置信息")){
+				jedis.del("profileid:"+old_proid+":entity");
+			}
 			//删除原profile集合中此CNU
 			jedis.srem("profileid:"+old_proid+":cnus", cnuid);
 			//更改CNU模板号
@@ -344,7 +687,7 @@ public class ServiceController {
 		JSONObject json = new JSONObject();
 		json.put("proname", jedis.hget(prokey, "profilename"));
 		json.put("vlanen", jedis.hget(prokey, "vlanen"));
-		json.put("vlanid", jedis.hget(prokey, "vlanid"));
+		//json.put("vlanid", jedis.hget(prokey, "vlanid"));
 		json.put("vlan0id", jedis.hget(prokey, "vlan0id"));
 		json.put("vlan1id", jedis.hget(prokey, "vlan1id"));
 		json.put("vlan2id", jedis.hget(prokey, "vlan2id"));
@@ -382,6 +725,7 @@ public class ServiceController {
 		}
 		JSONArray jsonResponseArray = new JSONArray();
 		String result="";
+		//获取所有已选定的CNU
 		Set<String> list = jedis.smembers("global:checkedcnus");
         for(Iterator it = list.iterator(); it.hasNext(); ) {
         	String cnuid = (String) it.next();
@@ -456,6 +800,7 @@ public class ServiceController {
     	redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
+	//获取所有CNU
 	private static void doOptCnus(String message) throws ParseException, IOException{
 		Jedis jedis=null;
 		try {
@@ -558,8 +903,33 @@ public class ServiceController {
 			jedis.publish("node.tree.cnu_sub", "");
 			return;
 		}
-    	
-		//TODO
+    	//配置CNU
+		if(Cnuconfig(jsondata,cbatip,Integer.parseInt(devid),jedis)){
+			jedis.publish("node.tree.cnu_sub", "configok");
+		}else{
+			jedis.publish("node.tree.cnu_sub", "");
+		}
+		
+		//获取cnu原profileid号
+		String old_proid = jedis.hget(key, "profileid");
+		//判断CNU原模板是否是配置信息
+		if(jsondata.get("proname").toString().equalsIgnoreCase("配置信息")){
+			editcustomprofile(jsondata,jedis,"profileid:"+old_proid+":entity");
+		}else{			
+			//删除原profile集合中此CNU
+			jedis.srem("profileid:"+old_proid+":cnus", cnuid);
+			
+			//新建自定义模板
+			String proid = newcustomprofile(jsondata,jedis);
+			//更改CNU模板号
+			jedis.hset(key, "profileid", proid);
+		}
+		
+		//添加cnu到新profile集合中
+		//jedis.sadd("profileid:"+proid+":cnus", cnuid);		
+		
+		//保存数据到硬盘
+		jedis.bgsave();
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -590,9 +960,50 @@ public class ServiceController {
 			return;
 		}
     	//获取终端信息
-		//TODO
-		
-		//JSONObject json = new JSONObject();
+		try{
+			int vlanenable = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,36,Integer.parseInt(devid)}));
+			int port0vid = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,37,Integer.parseInt(devid)}));
+			int port1vid = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,38,Integer.parseInt(devid)}));
+			int port2vid = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,39,Integer.parseInt(devid)}));
+			int port3vid = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,40,Integer.parseInt(devid)}));
+			
+			int txlimitsts = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,52,Integer.parseInt(devid)}));
+			int cpuporttxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,53,Integer.parseInt(devid)}));
+			int cpuportrxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,47,Integer.parseInt(devid)}));
+			int port0txrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,48,Integer.parseInt(devid)}));
+			int port1txrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,49,Integer.parseInt(devid)}));
+			int port2txrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,50,Integer.parseInt(devid)}));
+			int port3txrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,51,Integer.parseInt(devid)}));
+			
+			int rxlimitsts = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,46,Integer.parseInt(devid)}));
+			int port0rxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,54,Integer.parseInt(devid)}));
+			int port1rxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,55,Integer.parseInt(devid)}));
+			int port2rxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,56,Integer.parseInt(devid)}));
+			int port3rxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,57,Integer.parseInt(devid)}));
+			
+			JSONObject json = new JSONObject();
+			json.put("vlanen", String.valueOf(vlanenable));
+			json.put("vlan0id", String.valueOf(port0vid));
+			json.put("vlan1id", String.valueOf(port1vid));
+			json.put("vlan2id", String.valueOf(port2vid));
+			json.put("vlan3id", String.valueOf(port3vid));
+			json.put("txlimitsts", String.valueOf(txlimitsts));
+			json.put("cpuporttxrate", String.valueOf(cpuporttxrate));
+			json.put("cpuportrxrate", String.valueOf(cpuportrxrate));
+			json.put("port0txrate", String.valueOf(port0txrate));
+			json.put("port1txrate", String.valueOf(port1txrate));
+			json.put("port2txrate", String.valueOf(port2txrate));
+			json.put("port3txrate", String.valueOf(port3txrate));
+			json.put("rxlimitsts", String.valueOf(rxlimitsts));
+			json.put("port0rxrate", String.valueOf(port0rxrate));
+			json.put("port1rxrate", String.valueOf(port1rxrate));
+			json.put("port2rxrate", String.valueOf(port2rxrate));
+			json.put("port3rxrate", String.valueOf(port3rxrate));
+			
+			jedis.publish("node.tree.cnusync", json.toJSONString());
+		}catch(Exception e){
+			jedis.publish("node.tree.cnusync", "");
+		}
 		
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
@@ -639,7 +1050,7 @@ public class ServiceController {
 		//获取传递参数
     	String proname = jsondata.get("proname").toString();
     	String vlanen = jsondata.get("vlanen").toString();
-    	String vlanid = jsondata.get("vlanid").toString();
+    	//String vlanid = jsondata.get("vlanid").toString();
     	String vlan0id = jsondata.get("vlan0id").toString();
     	String vlan1id = jsondata.get("vlan1id").toString();
     	String vlan2id = jsondata.get("vlan2id").toString();
@@ -666,7 +1077,7 @@ public class ServiceController {
     	Map<String , String >  proentity = new HashMap<String, String>();
     	proentity.put("profilename", proname.toLowerCase());
     	proentity.put("vlanen", vlanen);
-    	proentity.put("vlanid", vlanid);
+    	//proentity.put("vlanid", vlanid);
     	proentity.put("vlan0id", vlan0id);
     	proentity.put("vlan1id", vlan1id);
     	proentity.put("vlan2id", vlan2id);
@@ -712,7 +1123,7 @@ public class ServiceController {
 		JSONObject json = new JSONObject();
 		json.put("proname", jedis.hget(prokey, "profilename"));		
 		json.put("vlanen", jedis.hget(prokey, "vlanen"));
-		json.put("vlanid", jedis.hget(prokey, "vlanid"));
+		//json.put("vlanid", jedis.hget(prokey, "vlanid"));
 		json.put("vlan0id", jedis.hget(prokey, "vlan0id"));
 		json.put("vlan1id", jedis.hget(prokey, "vlan1id"));
 		json.put("vlan2id", jedis.hget(prokey, "vlan2id"));
@@ -752,7 +1163,7 @@ public class ServiceController {
 		String proid = jsondata.get("proid").toString();
     	String proname = jsondata.get("proname").toString();
     	String vlanen = jsondata.get("vlanen").toString();
-    	String vlanid = jsondata.get("vlanid").toString();
+    	//String vlanid = jsondata.get("vlanid").toString();
     	String vlan0id = jsondata.get("vlan0id").toString();
     	String vlan1id = jsondata.get("vlan1id").toString();
     	String vlan2id = jsondata.get("vlan2id").toString();
@@ -777,7 +1188,7 @@ public class ServiceController {
     	Map<String , String >  proentity = new HashMap<String, String>();
     	proentity.put("profilename", proname.toLowerCase());
     	proentity.put("vlanen", vlanen);
-    	proentity.put("vlanid", vlanid);
+    	//proentity.put("vlanid", vlanid);
     	proentity.put("vlan0id", vlan0id);
     	proentity.put("vlan1id", vlan1id);
     	proentity.put("vlan2id", vlan2id);
@@ -856,7 +1267,7 @@ public class ServiceController {
     		projson.put("id", cid);
     		projson.put("proname", jedis.hget(prokey, "profilename"));
     		projson.put("vlanen", jedis.hget(prokey, "vlanen"));
-    		projson.put("vlanid", jedis.hget(prokey, "vlanid"));
+    		//projson.put("vlanid", jedis.hget(prokey, "vlanid"));
     		projson.put("vlan0id", jedis.hget(prokey, "vlan0id"));
     		projson.put("vlan1id", jedis.hget(prokey, "vlan1id"));
     		projson.put("vlan2id", jedis.hget(prokey, "vlan2id"));
@@ -1083,7 +1494,7 @@ public class ServiceController {
     	String prokey = "profileid:"+proid+":entity";
     	cnujson.put("profilename", jedis.hget(prokey,"profilename"));
     	cnujson.put("vlanen", jedis.hget(prokey,"vlanen"));
-    	cnujson.put("vlanid", jedis.hget(prokey,"vlanid"));
+    	//cnujson.put("vlanid", jedis.hget(prokey,"vlanid"));
     	cnujson.put("vlan0id", jedis.hget(prokey,"vlan0id"));
     	cnujson.put("vlan1id", jedis.hget(prokey,"vlan1id"));
     	cnujson.put("vlan2id", jedis.hget(prokey,"vlan2id"));
@@ -1132,21 +1543,25 @@ public class ServiceController {
 		switch(Integer.parseInt(jedis.hget(cbatkey, "devicetype")))
 		{
         	case 1:
-        		//break;
+        		result = "WEC-3501I X7";
+        		break;
         	case 2:
-        		
-        		//break;
+        		result = "WEC-3501I E31";
+        		break;
         	case 3:
-        		//break;
+        		result ="WEC-3501I Q31";
+        		break;
         	case 4:
-        		
-        		//break;
+        		result ="WEC-3501I C22";
+        		break;
         	case 5:
-        		//break;
+        		result ="WEC-3501I S220";
+        		break;
         	case 6:
-        		
-        		//break;
+        		result ="WEC-3501I S60";
+        		break;
         	case 7:
+        		//result ="WEC-3501I C22";
         		//break;
         	case 8:
         		result = "中文测试";
@@ -1295,6 +1710,113 @@ public class ServiceController {
  		jedis.publish("node.tree.init", jsonString);
  		
     	 
+	}
+	
+	private static String newcustomprofile(JSONObject jsondata, Jedis jedis){
+		//获取传递参数
+    	String vlanen = jsondata.get("vlanen").toString();
+    	//String vlanid = jsondata.get("vlanid").toString();
+    	String vlan0id = jsondata.get("vlan0id").toString();
+    	String vlan1id = jsondata.get("vlan1id").toString();
+    	String vlan2id = jsondata.get("vlan2id").toString();
+    	String vlan3id = jsondata.get("vlan3id").toString();
+    	
+    	String rxlimitsts = jsondata.get("rxlimitsts").toString();
+    	String cpuportrxrate = jsondata.get("cpuportrxrate").toString();
+    	String port0txrate = jsondata.get("port0txrate").toString();
+    	String port1txrate = jsondata.get("port1txrate").toString();
+    	String port2txrate = jsondata.get("port2txrate").toString();
+    	String port3txrate = jsondata.get("port3txrate").toString();
+    	
+    	String txlimitsts = jsondata.get("txlimitsts").toString();
+    	String cpuporttxrate = jsondata.get("cpuporttxrate").toString();
+    	String port0rxrate = jsondata.get("port0rxrate").toString();
+    	String port1rxrate = jsondata.get("port1rxrate").toString();
+    	String port2rxrate = jsondata.get("port2rxrate").toString();
+    	String port3rxrate = jsondata.get("port3rxrate").toString();
+		
+    	//获取profileid
+    	String proid = String.valueOf(jedis.incr("global:profileid"));
+    	String prokey = "profileid:"+proid + ":entity";
+    	//组合存储字符串
+    	Map<String , String >  proentity = new HashMap<String, String>();
+    	proentity.put("profilename", "配置信息");
+    	proentity.put("vlanen", vlanen);
+    	//proentity.put("vlanid", vlanid);
+    	proentity.put("vlan0id", vlan0id);
+    	proentity.put("vlan1id", vlan1id);
+    	proentity.put("vlan2id", vlan2id);
+    	proentity.put("vlan3id", vlan3id);
+    	
+    	proentity.put("rxlimitsts", rxlimitsts);
+    	proentity.put("cpuportrxrate", cpuportrxrate);
+    	proentity.put("port0txrate", port0txrate);
+    	proentity.put("port1txrate", port1txrate);
+    	proentity.put("port2txrate", port2txrate);
+    	proentity.put("port3txrate", port3txrate);
+    	
+    	proentity.put("txlimitsts", txlimitsts);
+    	proentity.put("cpuporttxrate", cpuporttxrate);
+    	proentity.put("port0rxrate", port0rxrate);
+    	proentity.put("port1rxrate", port1rxrate);
+    	proentity.put("port2rxrate", port2rxrate);
+    	proentity.put("port3rxrate", port3rxrate);
+    	//save
+    	jedis.hmset(prokey, proentity);
+    	
+    	return proid;
+    	//logger.info("prokeys::::::proname"+ proname + "---vlanen::::"+vlanen );
+	}
+	
+	private static void editcustomprofile(JSONObject jsondata, Jedis jedis,String key){
+		//获取传递参数
+    	String vlanen = jsondata.get("vlanen").toString();
+    	//String vlanid = jsondata.get("vlanid").toString();
+    	String vlan0id = jsondata.get("vlan0id").toString();
+    	String vlan1id = jsondata.get("vlan1id").toString();
+    	String vlan2id = jsondata.get("vlan2id").toString();
+    	String vlan3id = jsondata.get("vlan3id").toString();
+    	
+    	String rxlimitsts = jsondata.get("rxlimitsts").toString();
+    	String cpuportrxrate = jsondata.get("cpuportrxrate").toString();
+    	String port0txrate = jsondata.get("port0txrate").toString();
+    	String port1txrate = jsondata.get("port1txrate").toString();
+    	String port2txrate = jsondata.get("port2txrate").toString();
+    	String port3txrate = jsondata.get("port3txrate").toString();
+    	
+    	String txlimitsts = jsondata.get("txlimitsts").toString();
+    	String cpuporttxrate = jsondata.get("cpuporttxrate").toString();
+    	String port0rxrate = jsondata.get("port0rxrate").toString();
+    	String port1rxrate = jsondata.get("port1rxrate").toString();
+    	String port2rxrate = jsondata.get("port2rxrate").toString();
+    	String port3rxrate = jsondata.get("port3rxrate").toString();
+		
+    	//组合存储字符串
+    	Map<String , String >  proentity = new HashMap<String, String>();
+    	proentity.put("profilename", "配置信息");
+    	proentity.put("vlanen", vlanen);
+    	//proentity.put("vlanid", vlanid);
+    	proentity.put("vlan0id", vlan0id);
+    	proentity.put("vlan1id", vlan1id);
+    	proentity.put("vlan2id", vlan2id);
+    	proentity.put("vlan3id", vlan3id);
+    	
+    	proentity.put("rxlimitsts", rxlimitsts);
+    	proentity.put("cpuportrxrate", cpuportrxrate);
+    	proentity.put("port0txrate", port0txrate);
+    	proentity.put("port1txrate", port1txrate);
+    	proentity.put("port2txrate", port2txrate);
+    	proentity.put("port3txrate", port3txrate);
+    	
+    	proentity.put("txlimitsts", txlimitsts);
+    	proentity.put("cpuporttxrate", cpuporttxrate);
+    	proentity.put("port0rxrate", port0rxrate);
+    	proentity.put("port1rxrate", port1rxrate);
+    	proentity.put("port2rxrate", port2rxrate);
+    	proentity.put("port3rxrate", port3rxrate);
+    	//save
+    	jedis.hmset(key, proentity);
+    	//logger.info("prokeys::::::proname"+ proname + "---vlanen::::"+vlanen );
 	}
 
 	private static Boolean sendconfig(int proid,String cbatip, int cnuindex,Jedis jedis ){
@@ -1461,7 +1983,157 @@ public class ServiceController {
 		}
 	}
 
-
+	private static Boolean Cnuconfig(JSONObject jsondata,String cbatip, int cnuindex,Jedis jedis ){
+		try{			
+			//vlansts
+		util.setV2PDU(cbatip,
+			"161",
+			new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,36,cnuindex}), 
+			new Integer32(Integer.valueOf(jsondata.get("vlanen").toString()))
+		);
+		//p0vid
+		util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,37,cnuindex}), 
+				new Integer32(Integer.valueOf(jsondata.get("vlan0id").toString())==0?1:Integer.valueOf(jsondata.get("vlan0id").toString()))
+		);
+		
+		//p1vid
+		util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,38,cnuindex}), 
+				new Integer32(Integer.valueOf(jsondata.get("vlan1id").toString())==0?1:Integer.valueOf(jsondata.get("vlan1id").toString()))
+				);
+		
+		//p2vid
+		util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,39,cnuindex}), 
+				new Integer32(Integer.valueOf(jsondata.get("vlan2id").toString())==0?1:Integer.valueOf(jsondata.get("vlan2id").toString()))
+				);
+		
+		//p3vid
+		util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,40,cnuindex}), 
+				new Integer32(Integer.valueOf(jsondata.get("vlan3id").toString())==0?1:Integer.valueOf(jsondata.get("vlan3id").toString()))
+				);
+		
+		//if(pro.getTxlimitsts() != 0 ){			
+			//cpuport tx sts
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,52,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("txlimitsts").toString()))
+					);
+			
+			//cpuport tx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,53,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("cpuporttxrate").toString()))
+					);
+			//eth1 tx     
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,54,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("port0rxrate").toString()))
+					);
+			//eth2 tx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,55,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("port1rxrate").toString()))
+					);
+			//eth3 tx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,56,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("port2rxrate").toString()))
+					);
+			//eth4 tx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,57,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("port3rxrate").toString()))
+					);
+		//}
+		/*else{
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,52,cnuindex}), 
+					new Integer32(0)
+					);
+		}*/
+		
+		//if(pro.getRxlimitsts() != 0){
+			//rx sts
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,46,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("rxlimitsts").toString()))
+					);
+			//cpuport rx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,47,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("cpuportrxrate").toString()))
+					);
+			//eth1 rx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,48,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("port0txrate").toString()))
+					);
+			//eth2 rx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,49,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("port1txrate").toString()))
+					);
+			//eth3 rx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,50,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("port2txrate").toString()))
+					);
+			//eth4 rx
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,51,cnuindex}), 
+					new Integer32(Integer.valueOf(jsondata.get("port3txrate").toString()))
+					);
+		/*}else{
+			//rx sts
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,46,cnuindex}), 
+					new Integer32(0)
+					);
+		}*/
+		//reload profile
+		util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+				new Integer32(2)
+				);	
+		
+		util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+				new Integer32(3)
+				);
+		
+		
+		}catch(Exception e)
+		{
+			System.out.println("=============================>Cnuconfig error");
+			//e.printStackTrace();
+			return false;
+		
+		}
+		return true;
+	}
 	
 	
 	

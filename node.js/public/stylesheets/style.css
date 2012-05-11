@@ -10,12 +10,12 @@ a {
 }
 
 table input {
-	width:100px;
+	width:150px;
 }
 
 #wapper {
       margin: 0 0 ;
-      height:500px;
+      min-height:500px;
       position:relative;
 }
 
@@ -86,7 +86,15 @@ table input {
 	width:800px;
 }
 
-cnuTable td {
+#cnuTable td {
+	text-align:center;
+}
+
+#upcbat_table {
+	width:800px;
+}
+
+#upcbat_table td {
 	text-align:center;
 }
 
@@ -103,6 +111,14 @@ cnuTable td {
 }
 
 #s_Table {
+	text-align:center;
+}
+
+#list {
+	width:800px;
+}
+
+#list {
 	text-align:center;
 }
 
