@@ -59,6 +59,9 @@ app.get('/opt/updatecbat', function( request, response ) {
 app.get('/version', function( request, response ) {
     response.render( 'version.jade', { title: 'Wen9000网路管理系统---版本信息' } );
 });
+app.get('/historyalarm', function( request, response ) {
+    response.render( 'historyalarm.jade', { title: 'Wen9000网路管理系统---历史告警' } );
+});
 
 var node = http.createServer(app).listen(3000);
 var sio = io.listen(node);
@@ -77,10 +80,15 @@ redis.on('pmessage', function(pat,ch,data) {
        data = JSON.parse(data);
        sio.sockets.emit('newAlarm',data);
     }
+    else if(ch == 'node.historyalarm') {
+       data = JSON.parse(data);
+       sio.sockets.emit('historyalarm_all',data);
+    }
     else if(ch == 'node.tree.init') {
        data = JSON.parse(data);
        sio.sockets.emit('initDynatree',data);
     }
+
     else if(ch == 'node.tree.cbatdetail') {
         data = JSON.parse(data);
         sio.sockets.emit('cbatdetail',data);
@@ -209,6 +217,11 @@ sio.sockets.on('connection', function (socket) {
      publish.publish('servicecontroller.treeinit', 'inittree');
   });
   
+  socket.on('historyalarm_all', function (data) {
+     console.log('nodeserver: historyalarm_all');
+     publish.publish('servicecontroller.gethistoryalarm', '{istart:1, ilen: 1000}');
+  });
+
   socket.on('cbatdetail', function (data) {
 	     console.log('nodeserver: cbatmac==='+data);
 	     publish.publish('servicecontroller.cbatdetail', data);
