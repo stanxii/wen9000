@@ -56,6 +56,9 @@ app.get('/opt/global_opt', function( request, response ) {
 app.get('/opt/updatecbat', function( request, response ) {
     response.render( 'opt/updatecbat.jade', { title: 'Wen9000网路管理系统---局端升级' } );
 });
+app.get('/version', function( request, response ) {
+    response.render( 'version.jade', { title: 'Wen9000网路管理系统---版本信息' } );
+});
 
 var node = http.createServer(app).listen(3000);
 var sio = io.listen(node);
@@ -105,6 +108,9 @@ redis.on('pmessage', function(pat,ch,data) {
     }else if(ch == 'node.pro.get') {
     	data = JSON.parse(data);
     	sio.sockets.emit('profileGet',data);   
+    }else if(ch == 'node.pro.detail') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('profiledetail',data);   
     }else if(ch == 'node.pro.isedit') {
     	if(data == ""){
     		sio.sockets.emit('profileisedit',data);
@@ -231,6 +237,11 @@ sio.sockets.on('connection', function (socket) {
   socket.on('profile_del', function (data) {
 	  	 console.log('nodeserver: profile_del==='+data);
 	     publish.publish('servicecontroller.profile_del', data);
+  });
+  
+  socket.on('profile_detail', function (data) {
+	  	 console.log('nodeserver: profile_detail==='+data);
+	     publish.publish('servicecontroller.profile_detail', data);
   });
   
   socket.on('profile_get', function (data) {

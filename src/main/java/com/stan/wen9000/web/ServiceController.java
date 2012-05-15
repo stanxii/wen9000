@@ -158,6 +158,8 @@ public class ServiceController {
 			doProfileEdit(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.profile_isedit")){
 			doProfileIsEdit(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.profile_detail")){
+			doProfileDetail(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.profile_get")){
 			doProfileGet(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.profile_create")){
@@ -1148,6 +1150,44 @@ public class ServiceController {
 	    jedis.publish("node.pro.get", jsonString);
 	}
 	
+	private static void doProfileDetail(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		String prokey = "profileid:"+message+":entity";
+		JSONObject json = new JSONObject();
+		json.put("proname", jedis.hget(prokey, "profilename"));		
+		json.put("vlanen", jedis.hget(prokey, "vlanen"));
+		//json.put("vlanid", jedis.hget(prokey, "vlanid"));
+		json.put("vlan0id", jedis.hget(prokey, "vlan0id"));
+		json.put("vlan1id", jedis.hget(prokey, "vlan1id"));
+		json.put("vlan2id", jedis.hget(prokey, "vlan2id"));
+		json.put("vlan3id", jedis.hget(prokey, "vlan3id"));
+		json.put("rxlimitsts", jedis.hget(prokey, "rxlimitsts"));
+		json.put("cpuportrxrate", jedis.hget(prokey, "cpuportrxrate"));
+		json.put("port0txrate", jedis.hget(prokey, "port0txrate"));
+		json.put("port1txrate", jedis.hget(prokey, "port1txrate"));
+		json.put("port2txrate", jedis.hget(prokey, "port2txrate"));
+		json.put("port3txrate", jedis.hget(prokey, "port3txrate"));    		
+		json.put("txlimitsts", jedis.hget(prokey, "txlimitsts"));
+		json.put("cpuporttxrate", jedis.hget(prokey, "cpuporttxrate"));
+		json.put("port0rxrate", jedis.hget(prokey, "port0rxrate"));
+		json.put("port1rxrate", jedis.hget(prokey, "port1rxrate"));
+		json.put("port2rxrate", jedis.hget(prokey, "port2rxrate"));
+		json.put("port3rxrate", jedis.hget(prokey, "port3rxrate"));
+		
+		String jsonString = json.toJSONString(); 
+	    redisUtil.getJedisPool().returnResource(jedis);
+	    jedis.publish("node.pro.detail", jsonString);
+	}
+	
 	private static void doProfileIsEdit(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
@@ -1690,7 +1730,7 @@ public class ServiceController {
     		String key = it.next().toString();
    
     		//add head;
-    		cbatjson.put("title", jedis.hget(key, "ip"));
+    		cbatjson.put("title", jedis.hget(key, "label"));
     		cbatjson.put("key", jedis.hget(key, "mac"));
     		cbatjson.put("online", jedis.hget(key, "active"));
     		//添加头端信息    		
@@ -1701,6 +1741,8 @@ public class ServiceController {
     			cbatjson.put("icon", "offline.png");
     			//+"children"+'"'+":";
     		}
+    		//添加tips
+    		cbatjson.put("tooltip",jedis.hget(key, "ip"));
     		cbatjson.put("type", "cbat");
 
     		//获取cbatid
@@ -1725,7 +1767,7 @@ public class ServiceController {
         		cnujson.put("key", jedis.hget(key_cnu, "mac"));
         		cnujson.put("online", jedis.hget(key_cnu, "active"));
         		
-        	
+        		cnujson.put("tooltip", jedis.hget(key_cnu, "mac"));
         		if(jedis.hget(key_cnu, "active").equalsIgnoreCase("1")){
         			cnujson.put("icon",  "online.gif");        			
         		}else{

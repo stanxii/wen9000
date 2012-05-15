@@ -139,6 +139,10 @@
 			+'","mvlanid":"'+mvlanid+'","trapserver":"'+trapserver+'","trap_port":"'+trap_port+'","netmask":"'+netmask+'","gateway":"'
 			+gateway+'"}';
 			
+			var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
+			node.data.title = label;
+			node.render();
+			
 			socket.emit('cbat_modify', datastring );
 	  	
 		 });
@@ -177,6 +181,7 @@
 					title: itemv.ip,
 					key: itemv.mac,
 					online:itemv.online,
+					tooltip:itemv.ip,
 					type:"cbat",
 					icon:img
 				});
@@ -200,6 +205,7 @@
 						title: itemv.mac,
 						key: itemv.mac,
 						online:itemv.online,
+						tooltip:itemv.mac,
 						type:"cnu",
 						icon:img
 					});
@@ -222,6 +228,7 @@
 						title: itemv.ip,
 						key: itemv.mac,
 						online:itemv.online,
+						tooltip:itemv.mac,
 						type:"hfc",
 						icon:img
 					});
@@ -556,10 +563,19 @@
    
    function fun_cbatdetail(jsondata) {
 	   console.log(jsondata);
+	   var active;
+	   var style;
+	   if(jsondata.active == "1"){
+		   active = "设备连接正常";
+		   style = "color:green";
+	   }else{
+		   active = "设备失去连接";
+		   style = "color:red";
+	   }
 	   $("#content").empty();
 	   	$("#content").append('<div id="devinfo"><h3 style="color:green">头端设备信息</h3>'+
 	   	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:100px"/></div>'+
-	   	'<div style="height:100px;width:auto;margin:10px 0px 1px 210px"><lable></lable></div>'+
+	   	'<div style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 	   	'<h3 style="color:green">基本信息</h3>'+
 	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
 			'<td><lable>状态 : </lable></td><td><lable id="cbat_active">'+jsondata.active+'</lable></td></tr>'+

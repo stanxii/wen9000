@@ -8,6 +8,7 @@
 		socket.on('profileALL',fun_Allprofiles);
 		socket.on('profileDEL',fun_Delprofile);
 		socket.on('profileisedit',fun_Editprofile);
+		socket.on('profiledetail',fun_Detail);
 		
 		var proname = $( "#proname" ),
 		vlanen = $( "#vlanen" ),
@@ -89,6 +90,13 @@
 	        socket.emit('profile_del',anSelected[0].firstChild.textContent);
 	        
 	    } );    	
+	    
+	    $('#pro_detail').live('click', function() {
+	        var anSelected = $(this);
+	        var proid = anSelected[0].parentNode.parentElement.cells[0].textContent;
+	        socket.emit('profile_detail',proid);
+	        
+	    } ); 
 	    
 	    $("#btn_create").click( function() { 
 	    	$( "#dialog:ui-dialog" ).dialog( "destroy" );	
@@ -189,6 +197,118 @@
 	function fnGetSelected( oTableLocal )
 	{
 	    return oTableLocal.$('tr.row_selected');
+	}
+	
+	function fun_Detail(tmpdata){
+		if(tmpdata != ""){
+			$( "#dialog:ui-dialog" ).dialog( "destroy" );
+			if(tmpdata.vlanen=="1"){
+				tmpdata.vlanen = "启动";
+			}else{
+				tmpdata.vlanen = "禁止";
+			}
+			if(tmpdata.rxlimitsts=="1"){
+				tmpdata.rxlimitsts = "启动";
+			}else{
+				tmpdata.rxlimitsts = "禁止";
+			}
+			if(tmpdata.txlimitsts=="1"){
+				tmpdata.txlimitsts = "启动";
+			}else{
+				tmpdata.txlimitsts = "禁止";
+			}
+			//组装弹出窗口html	
+			$("#dialog-detail").empty();
+			$("#dialog-detail").append('<fieldset>'+
+					'<legend>基本配置</legend>'+
+					'<form>'+
+						'<table>'+
+							'<tr><td><label for="proname_e" >模板名称：</label></td>'+
+								'<td><label>'+tmpdata.proname+'</label></td>'+
+								'<td><label for="vlanen_e">&nbsp &nbsp &nbsp &nbsp Vlan使能:</label></td>'+
+								'<td><label>'+tmpdata.vlanen+
+									'</td></tr>'+
+							'<tr>'+
+							'<td><label for="vlan0id_e">Vlan0id:</label></td>'+
+							'<td><label>'+tmpdata.vlan0id+ ' </label></td>'+
+							'<td><label for="vlan1id_e">&nbsp &nbsp &nbsp &nbsp Vlan1id:</label></td>'+
+							'<td><label>'+tmpdata.vlan1id+ '</label></td></tr>'+
+							'<tr><td><label for="vlan2id_e">Vlan2id:</label></td>'+
+							'<td><label>'+tmpdata.vlan2id+ '</label></td>'+
+							'<td><label for="vlan3id_e">&nbsp &nbsp &nbsp &nbsp Vlan3id:</label></td>'+
+							'<td><label>'+tmpdata.vlan3id+ '</label></td></tr>'+
+						'</table>'+
+					'</form></fieldset>'+
+					'<fieldset><legend>下行配置(KB)</legend>'+
+					'<form><table>'+
+						'<tr><td><label for="rxlimitsts_e">下行限速使能：</label></td>'+
+						'<td><label>'+tmpdata.rxlimitsts+
+						'</td>'+
+						'<td><label for="cpuportrxrate_e">&nbsp &nbsp &nbsp &nbsp 全局下行限速:</label></td>'+
+						'<td><label >'+tmpdata.cpuportrxrate+ '</label></td></tr>'+
+						'<tr><td><label for="port0txrate_e">1端口限速:</label></td>'+
+						'<td><label>'+tmpdata.port0txrate+ '</label></td>'+
+						'<td><label for="port1txrate_e">&nbsp &nbsp &nbsp &nbsp 2端口限速:</label></td>'+
+						'<td><label>'+tmpdata.port1txrate+ '</label></td></tr>'+
+						'<tr><td><label for="port2txrate_e">3端口限速:</label></td>'+
+						'<td><label>'+tmpdata.port2txrate+ '</label></td>'+
+						'<td><label for="port3txrate_e">&nbsp &nbsp &nbsp &nbsp 4端口限速:</label></td>'+
+						'<td><label>'+tmpdata.port3txrate+ '</label></td></tr>'+
+					'</table></form></fieldset>'+
+					'<fieldset><legend>上行配置(KB)</legend>'+
+					'<form><table>'+
+						'<tr><td><label for="txlimitsts_e">上行限速使能：</label></td>'+
+						'<td><label>'+tmpdata.txlimitsts+						
+						'</td>'+
+						'<td><label for="cpuporttxrate_e">&nbsp &nbsp &nbsp &nbsp 全局上行限速:</label></td>'+
+						'<td><label>'+tmpdata.cpuporttxrate+ '</label></td></tr>'+
+						'<tr><td><label for="port0rxrate_e">1端口限速:</label></td>'+
+						'<td><label>'+tmpdata.port0rxrate+ '</label></td>'+
+						'<td><label for="port1txrate_e">&nbsp &nbsp &nbsp &nbsp 2端口限速:</label></td>'+
+						'<td><label>'+tmpdata.port1rxrate+ '</label></td></tr>'+
+						'<tr><td><label for="port2rxrate_e">3端口限速:</label></td>'+
+						'<td><label>'+tmpdata.port2rxrate+ '</label></td>'+
+						'<td><label for="port3txrate_e">&nbsp &nbsp &nbsp &nbsp 4端口限速:</label></td>'+
+						'<td><label>'+tmpdata.port3rxrate+ '</label></td></tr>'+
+					'</table></form></fieldset>');
+				
+				
+				//弹出窗口
+				$("#dialog-detail").dialog({
+				autoOpen: false,
+				resizable: false,
+				show: "blind",
+				hide: "explode",
+				modal: true,
+				height: 500,
+				width: 600,
+				buttons: {					
+					"确定": function() {
+						$( "#dialog-detail" ).dialog("close");
+					}
+				},
+				close: function() {
+
+				}
+			});	
+		
+			$("#dialog-detail").dialog("open");
+		}else{
+			//失败提示对话框					
+			$( "#dialog-pro-failed" ).dialog({
+				autoOpen: false,
+				show: "blind",
+				modal: true,
+				resizable: false,
+				hide: "explode",
+				buttons: {
+					Ok: function() {
+						$( this ).dialog( "close" );
+					}
+				}
+			});
+			$("#dialog-pro-failed").dialog("open");
+		}
 	}
 	
 	function fun_Editprofile(tmpdata){
@@ -401,9 +521,9 @@
 	function fun_Allprofiles(data){
 		var groupval=[];
 		$.each(data, function(key, itemv) {  					
-				var item = [itemv.id,itemv.proname,itemv.vlanen,itemv.vlan0id,itemv.vlan1id,itemv.vlan2id,itemv.vlan3id,
-				itemv.rxlimitsts,itemv.cpuportrxrate,itemv.port0txrate,itemv.port1txrate,itemv.port2txrate,itemv.port3txrate,
-				itemv.txlimitsts,itemv.cpuporttxrate,itemv.port0rxrate,];
+				var item = [itemv.id,itemv.proname,itemv.vlanen,
+				itemv.rxlimitsts,itemv.cpuportrxrate,
+				itemv.txlimitsts,itemv.cpuporttxrate,itemv.id];
 				groupval[groupval.length] = item; 				
 								
 		 	}); 
@@ -438,36 +558,32 @@
 	            }else{
 	            	$('td:eq(2)', nRow).html( '禁用' );
 	            }      
-	            if ( aData[8] == "1" )
+	            if ( aData[3] == "1" )
 	            {
-	            	$('td:eq(8)', nRow).html( '启用' );				               
+	            	$('td:eq(3)', nRow).html( '启用' );				               
 	            }else{
-	            	$('td:eq(8)', nRow).html( '禁用' );
+	            	$('td:eq(3)', nRow).html( '禁用' );
 	            } 
-	            if ( aData[14] == "1" )
+	            if ( aData[5] == "1" )
 	            {
-	            	$('td:eq(14)', nRow).html( '启用' );				               
+	            	$('td:eq(5)', nRow).html( '启用' );				               
 	            }else{
-	            	$('td:eq(14)', nRow).html( '禁用' );
-	            }     
+	            	$('td:eq(5)', nRow).html( '禁用' );
+	            }
+	            if(aData[7] != ""){
+	            	$('td:eq(7)', nRow).html( '<button id="pro_detail">查看</button>' );
+	            }
 	            
 	        },		
 			"aoColumns": [							//设定各列宽度
-						  { "sTitle": "ID" },
+			              { "sTitle": "ID" },
 						  { "sTitle": "模板名称" },
 					      { "sTitle": "vlan使能" },
-					      { "sTitle": "1端口vlan" },
-					      { "sTitle": "2端口vlan" },
-						  { "sTitle": "3端口vlan" },
-					      { "sTitle": "4端口vlan" },
 					      { "sTitle": "下行限速使能" },
 					      { "sTitle": "下行全局限速" },
-					      { "sTitle": "1端口限速" },
-						  { "sTitle": "2端口限速" },
-					      { "sTitle": "3端口限速" },
-					      { "sTitle": "4端口限速" },
 					      { "sTitle": "上行限速使能" },
-					      { "sTitle": "上行全局限速" }
+					      { "sTitle": "上行全局限速" },
+					      { "sTitle": "详细信息" }
 						],
 			
 	    } );

@@ -82,9 +82,8 @@
 		 	}); 
 		 	
 		 	cTable = $('#cnuTable').dataTable( {	  			 		
-			"bFilter": false,						//不使用过滤功能
 			"bLengthChange": false,					//用户不可改变每页显示数量
-			"iDisplayLength": 2,					//每页显示10条数据
+			"iDisplayLength": 10,					//每页显示10条数据
 			"aaData": groupval,
     		"bInfo": false,	
 	        "sPaginationType": "full_numbers",				        
@@ -94,6 +93,7 @@
 				"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
 				"sInfoEmtpy": "没有数据",
 				"sProcessing": "正在加载数据...",
+				"sSearch": "搜索设备:",
 				"oPaginate": {
 					"sFirst": "首页",
 					"sPrevious": "前页",
@@ -115,7 +115,7 @@
 	            {
 	            	$('td:eq(2)', nRow).html( '在线' );				               
 	            }else{
-	            	$('td:eq(2)', nRow).html( '下线' );
+	            	$('td:eq(2)', nRow).html( '离线' );
 	            }     
 	            
 	        },		
