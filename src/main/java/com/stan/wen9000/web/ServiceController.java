@@ -156,6 +156,8 @@ public class ServiceController {
 			doProfileDel(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.profile_edit")){
 			doProfileEdit(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.profile_isedit")){
+			doProfileIsEdit(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.profile_get")){
 			doProfileGet(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.profile_create")){
@@ -293,7 +295,6 @@ public class ServiceController {
 		      ftpClient= new FTPClient();
 		      ftpClient.connect(ip,Integer.parseInt(port));
 		      if(!ftpClient.login(username, password)){
-		    	  log.info("------------------------------login failed");
 		    	  ftpClient.disconnect();
 			      jedis.publish("node.opt.ftpconnect", "");
 			      redisUtil.getJedisPool().returnResource(jedis);
@@ -384,9 +385,8 @@ public class ServiceController {
 		        		cbatjson.put("devicetype", "Unknown");
 		        		break;
 				}
-
-				key.replaceFirst("entity", "cbatinfo");
-				log.info("replaced key ========="+key);
+				int index = key.lastIndexOf(":");
+				key = key.substring(0, index)+":cbatinfo";
 				cbatjson.put("appver", jedis.hget(key, "appver"));
 				jsonarray.add(cbatjson);
 			}		
@@ -613,7 +613,7 @@ public class ServiceController {
 			i++;
 			proc = i + "/" + String.valueOf(list.size());
 			//获取cnu在头端上的索引
-			String cnuindex = jedis.hget(cnukey, "cnuindex");
+			String cnuindex = jedis.hget(cnukey, "devcnuid");
 			//获取所属头端信息
 			String cid = jedis.hget(cnukey, "cbatid");
 			String cip = jedis.hget("cbatid:"+cid+":entity", "ip");
@@ -648,8 +648,10 @@ public class ServiceController {
 			
 			//获取cnu原profileid号
 			String old_proid = jedis.hget(cnukey, "profileid");
+			
+			//log.info("-----------oldproid---"+old_proid+"---------"+jedis.hget("profileid:"+old_proid+":entity","profilename"));
 			//如果原模板是配置信息，则删除
-			if(jedis.hget("profileid:"+old_proid+":entity","profiename").equalsIgnoreCase("配置信息")){
+			if(jedis.hget("profileid:"+old_proid+":entity","profilename").equalsIgnoreCase("配置信息")){
 				jedis.del("profileid:"+old_proid+":entity");
 			}
 			//删除原profile集合中此CNU
@@ -891,7 +893,7 @@ public class ServiceController {
 		//获取CNU ID 
 		String cnuid = jedis.get("mac:"+jsondata.get("mac").toString()+":deviceid");
     	String key = "cnuid:"+cnuid+":entity";
-    	String devid = jedis.hget(key, "cnuindex");
+    	String devid = jedis.hget(key, "devcnuid");
     	//获取所属头端信息
     	String cbatid = jedis.hget(key,"cbatid");
     	String cbatip = jedis.hget("cbatid:"+cbatid+":entity", "ip");
@@ -947,7 +949,7 @@ public class ServiceController {
 		//获取CNU ID 
 		String cnuid = jedis.get("mac:"+message+":deviceid");
     	String key = "cnuid:"+cnuid+":entity";
-    	String devid = jedis.hget(key, "cnuindex");
+    	String devid = jedis.hget(key, "devcnuid");
     	//获取所属头端信息
     	String cbatid = jedis.hget(key,"cbatid");
     	String cbatip = jedis.hget("cbatid:"+cbatid+":entity", "ip");
@@ -980,7 +982,7 @@ public class ServiceController {
 			int port1rxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,55,Integer.parseInt(devid)}));
 			int port2rxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,56,Integer.parseInt(devid)}));
 			int port3rxrate = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,57,Integer.parseInt(devid)}));
-			
+
 			JSONObject json = new JSONObject();
 			json.put("vlanen", String.valueOf(vlanenable));
 			json.put("vlan0id", String.valueOf(port0vid));
@@ -1146,6 +1148,50 @@ public class ServiceController {
 	    jedis.publish("node.pro.get", jsonString);
 	}
 	
+	private static void doProfileIsEdit(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		//log.info("--------->>>profileIsEdit----");
+		//判断是否有CNU指向此模板
+		if(jedis.smembers("profileid:"+message+":cnus").isEmpty()){
+			String prokey = "profileid:"+message+":entity";
+			JSONObject json = new JSONObject();
+			json.put("proname", jedis.hget(prokey, "profilename"));		
+			json.put("vlanen", jedis.hget(prokey, "vlanen"));
+			//json.put("vlanid", jedis.hget(prokey, "vlanid"));
+			json.put("vlan0id", jedis.hget(prokey, "vlan0id"));
+			json.put("vlan1id", jedis.hget(prokey, "vlan1id"));
+			json.put("vlan2id", jedis.hget(prokey, "vlan2id"));
+			json.put("vlan3id", jedis.hget(prokey, "vlan3id"));
+			json.put("rxlimitsts", jedis.hget(prokey, "rxlimitsts"));
+			json.put("cpuportrxrate", jedis.hget(prokey, "cpuportrxrate"));
+			json.put("port0txrate", jedis.hget(prokey, "port0txrate"));
+			json.put("port1txrate", jedis.hget(prokey, "port1txrate"));
+			json.put("port2txrate", jedis.hget(prokey, "port2txrate"));
+			json.put("port3txrate", jedis.hget(prokey, "port3txrate"));    		
+			json.put("txlimitsts", jedis.hget(prokey, "txlimitsts"));
+			json.put("cpuporttxrate", jedis.hget(prokey, "cpuporttxrate"));
+			json.put("port0rxrate", jedis.hget(prokey, "port0rxrate"));
+			json.put("port1rxrate", jedis.hget(prokey, "port1rxrate"));
+			json.put("port2rxrate", jedis.hget(prokey, "port2rxrate"));
+			json.put("port3rxrate", jedis.hget(prokey, "port3rxrate"));
+			
+			String jsonString = json.toJSONString(); 
+			jedis.publish("node.pro.isedit", jsonString);
+		}else{
+			jedis.publish("node.pro.isedit", "");
+		}
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
 	private static void doProfileEdit(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
@@ -1261,6 +1307,9 @@ public class ServiceController {
         for(Iterator it = list.iterator(); it.hasNext(); ) {
         	JSONObject projson = new JSONObject();
         	String prokey = (String) it.next();
+        	if(jedis.hget(prokey, "profilename").equalsIgnoreCase("配置信息")){
+        		continue;
+        	}
         	int index1 = prokey.indexOf(':') +1;
     		int index2 = prokey.lastIndexOf(':');
     		String cid = prokey.substring(index1, index2);
@@ -1404,7 +1453,7 @@ public class ServiceController {
     		String oldip = jedis.hget(cbatkey, "ip");
     		//判断是否要跟设备交互
     		if((oldip.equalsIgnoreCase(ip))&&(mvlanenable.equalsIgnoreCase(jedis.hget(cbatinfokey, "mvlanenable")))&&(mvlanid.equalsIgnoreCase(jedis.hget(cbatinfokey, "mvlanid")))
-    				&&(trapserver.equalsIgnoreCase(jedis.hget(cbatinfokey, "trapserver")))&&(trap_port.equalsIgnoreCase(jedis.hget(cbatinfokey, "agentport")))
+    				&&(trapserver.equalsIgnoreCase(jedis.hget(cbatinfokey, "trapserverip")))&&(trap_port.equalsIgnoreCase(jedis.hget(cbatinfokey, "agentport")))
     				&&(netmask.equalsIgnoreCase(jedis.hget(cbatkey, "netmask")))&&(gateway.equalsIgnoreCase(jedis.hget(cbatkey, "gateway")))){
     			//保存
             	jedis.hset(cbatkey, "label", label);
@@ -1446,7 +1495,7 @@ public class ServiceController {
         	jedis.hset(cbatinfokey, "address", address);
         	jedis.hset(cbatinfokey, "mvlanenable", mvlanenable);
         	jedis.hset(cbatinfokey, "mvlanid", mvlanid);
-        	jedis.hset(cbatinfokey, "trapserver", trapserver);
+        	jedis.hset(cbatinfokey, "trapserverip", trapserver);
         	jedis.hset(cbatinfokey, "agentport", trap_port);
         	jedis.save();
     	}catch(Exception e){
@@ -1482,10 +1531,10 @@ public class ServiceController {
 		cnujson.put("phone", jedis.hget(cnukey,"phone"));
     	if(jedis.hget(cnukey, "active").equalsIgnoreCase("1")){
     		//设备在线,获取实时设备信息
-    		cnujson.put("active", "离线");
+    		cnujson.put("active", "在线");
     	}else{
     		//设备离线，获取redis信息
-    		cnujson.put("active", "在线");
+    		cnujson.put("active", "离线");
     	}
     	
     	//添加模板信息
@@ -1573,7 +1622,7 @@ public class ServiceController {
 		cbatjson.put("devicetype", result);	
 		//读取cbatinfo信息
 		String cbatinfokey = "cbatid:"+id+":cbatinfo";
-		cbatjson.put("trapserver", jedis.hget(cbatinfokey, "trapserver"));	
+		cbatjson.put("trapserver", jedis.hget(cbatinfokey, "trapserverip"));	
 		cbatjson.put("address", jedis.hget(cbatinfokey, "address"));	
 		cbatjson.put("phone", jedis.hget(cbatinfokey, "phone"));
 		cbatjson.put("bootver", jedis.hget(cbatinfokey, "bootver"));

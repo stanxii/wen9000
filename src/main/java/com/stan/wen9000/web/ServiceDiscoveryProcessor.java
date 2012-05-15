@@ -167,10 +167,12 @@ public class ServiceDiscoveryProcessor  {
 		
 		
 		String agentport =(String) jsonobj.get("cbatinfo:agentport");
+		String trapserverip =(String) jsonobj.get("cbatinfo:trapserverip");
 		String appver =(String) jsonobj.get("cbatinfo:appver");
 		String mvlanid =(String) jsonobj.get("cbatinfo:mvlanid");
 		String mvlanenable =(String) jsonobj.get("cbatinfo:mvlanenable");
-		
+		String netmask =(String) jsonobj.get("cbatinfo:netmask");
+		String gateway =(String) jsonobj.get("cbatinfo:gateway");
 
 		long start = System.currentTimeMillis();  
 		
@@ -187,8 +189,45 @@ public class ServiceDiscoveryProcessor  {
 		}catch(Exception e){
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			
+		}		
+		
+		//get cbatmac if exist in redis server
+		String scbatid = jedis.get(cbatmackey);		
+		
+				
+		long icbatid ;
+		
+		if(scbatid == null) {
+			icbatid = jedis.incr("global:deviceid");		
+			jedis.set(cbatmackey, Long.toString(icbatid) );
+		}else {
+			//icbatid = Long.parseLong(scbatid);
+			//不是新发现的头端
+			return;
 		}
 		
+	      
+	    
+		String scbatentitykey = "cbatid:" + String.valueOf(icbatid) + ":entity";
+		Map<String , String >  cbatentity = new HashMap<String, String>();
+		
+		cbatentity.put("deviceclass", "cbat");
+		cbatentity.put("mac", cbatmac.toLowerCase().trim());
+		cbatentity.put("active", "1");
+		cbatentity.put("ip", cbatip.toLowerCase().trim());
+		cbatentity.put("label", cbatmac.toLowerCase().trim());
+		cbatentity.put("devicetype", cbatdevicetype.toLowerCase().trim());
+		//20 not have upgradestatus
+		cbatentity.put("upgradestatus", "20");
+		
+		jedis.hmset(scbatentitykey, cbatentity);
+	    
+		//更新头端时间戳
+		Date date = new Date();
+		long time = date.getTime();
+		jedis.hset(scbatentitykey, "timeticks", String.valueOf(time));
+/////////////////////////////save cbatinfo
+	    
 		//发现新头端，通知前端		
 		JSONObject json = new JSONObject();
 		json.put("mac", cbatmac);
@@ -222,55 +261,22 @@ public class ServiceDiscoveryProcessor  {
 		}
 		jedis.publish("node.dis.findcbat", json.toJSONString());
 		
-		//get cbatmac if exist in redis server
-		String scbatid = jedis.get(cbatmackey);		
-		
-				
-		long icbatid ;
-		
-		if(scbatid == null) {
-			icbatid = jedis.incr("global:deviceid");		
-			jedis.set(cbatmackey, Long.toString(icbatid) );
-		}else {
-			icbatid = Long.parseLong(scbatid);
-					
-		}
-		
-	      
-	    
-		String scbatentitykey = "cbatid:" + icbatid + ":entity";
-		Map<String , String >  cbatentity = new HashMap<String, String>();
-		
-		cbatentity.put("deviceclass", "cbat");
-		cbatentity.put("mac", cbatmac.toLowerCase().trim());
-		cbatentity.put("active", "1");
-		cbatentity.put("ip", cbatip.toLowerCase().trim());
-		cbatentity.put("label", cbatmac.toLowerCase().trim());
-		cbatentity.put("devicetype", cbatdevicetype.toLowerCase().trim());
-		//20 not have upgradestatus
-		cbatentity.put("upgradestatus", "20");
-		
-		jedis.hmset(scbatentitykey, cbatentity);
-	    
-		//更新头端时间戳
-		Date date = new Date();
-		long time = date.getTime();
-		jedis.hset(scbatentitykey, "timeticks", String.valueOf(time));
-/////////////////////////////save cbatinfo
-	    
-	    
+		Sendstschange("cbat",String.valueOf(icbatid),jedis);
 		
 		Map<String , String >  hash = new HashMap<String, String>();
 		 
 		String scbatinfokey = "cbatid:" + icbatid + ":cbatinfo";
-		hash.put("address", "na");
+		hash.put("address", "N/A");
 		hash.put("phone", "13988777");
 		hash.put("bootver", "cml-boot-v1.1.0_for_linux_sdk");
-		hash.put("contact", "na");
+		hash.put("contact", "N/A");
 		hash.put("agentport", agentport);
+		hash.put("trapserverip", trapserverip);
 		hash.put("appver", appver);
 		hash.put("mvlanid", mvlanid);
 		hash.put("mvlanenable", mvlanenable);
+		hash.put("netmask", netmask);
+		hash.put("gateway", gateway);
 		
 		jedis.hmset(scbatinfokey, hash);
 		// hmset cnuid:1 cnuid 1 mac 30:71:b2:88:88:01 label 
@@ -354,6 +360,37 @@ public class ServiceDiscoveryProcessor  {
 		
 		
 		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void Sendstschange(String type,String devid,Jedis jedis){ 
+		JSONObject json = new JSONObject();
+		if(type == "cbat"){
+			String cbatkey = "cbatid:"+devid+":entity";
+			json.put("mac", jedis.hget(cbatkey,"mac"));
+			json.put("online", jedis.hget(cbatkey,"active"));
+			json.put("ip", jedis.hget(cbatkey,"ip"));
+			json.put("type", "cbat");
+		}else if(type == "cnu"){
+			String cbatid = jedis.hget("cnuid:"+devid+":entity","cbatid");
+			String cnukey = "cnuid:"+devid+":entity";
+			json.put("mac", jedis.hget(cnukey,"mac"));
+			json.put("online", jedis.hget(cnukey,"active"));
+			json.put("cbatmac", jedis.hget(cnukey,jedis.hget("cbatid:"+cbatid+":entity","mac")));
+			json.put("type", "cnu");
+			
+		}else if(type == "hfc"){
+			String hfckey = "hfcid:"+devid+":entity";
+			json.put("mac", jedis.hget(hfckey,"mac"));
+			json.put("active", jedis.hget(hfckey,"active"));
+			json.put("ip", jedis.hget(hfckey,"ip"));
+			json.put("type", "hfc");
+			json.put("sn", jedis.hget(hfckey,"serialnumber"));
+			json.put("hp", jedis.hget(hfckey,"hfctype"));
+			json.put("id", jedis.hget(hfckey,"logicalid"));
+			
+		}
+		String jsonString = json.toJSONString(); 
+	    jedis.publish("node.tree.statuschange", jsonString);
 	}
 
 }

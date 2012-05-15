@@ -212,7 +212,10 @@ public class WorkerDiscoveryProcessor{
 		int  mvlanenable; 
 		int mvlanid ;
 		String appver;
+		String trapserverip;
 		int agetnport;
+		String netmask;
+		String gateway;
 		
 		
 		currentip.trim().toUpperCase();
@@ -329,7 +332,9 @@ public class WorkerDiscoveryProcessor{
 				 appver = util.getStrPDU(currentip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
 				 mvlanid =  util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 }));				    				   
 			     mvlanenable = util.getINT32PDU(currentip, "161", new OID(	new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 }));
-				
+			     trapserverip = util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+			     netmask = (util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,2,0})));
+			     gateway = (util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0})));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				System.out.println("get cbatmac error");
@@ -355,6 +360,9 @@ public class WorkerDiscoveryProcessor{
 			 cbathash.put("cbatinfo:appver", appver.trim());				 
 			 cbathash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
 			 cbathash.put("cbatinfo:mvlanenable", mvlanenable == 1 ? "1" :"0");
+			 cbathash.put("cbatinfo:trapserverip", trapserverip);
+			 cbathash.put("cbatinfo:netmask", netmask);
+			 cbathash.put("cbatinfo:gateway", gateway);
 			 msgservice = JSONValue.toJSONString(cbathash);
 			
 			sendToPersist(msgservice,jedis);

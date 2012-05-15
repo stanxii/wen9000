@@ -158,8 +158,8 @@ public class ServiceCbatStatus{
 	private static void servicestart(String pat, String message){
 
 			
-			//System.out.println(" [x] ServiceCbatStatus Received '" + message
-			//		+ "'");
+			System.out.println(" [x] ServiceCbatStatus Received '" + message
+					+ "'");
 						
 			dowork(message);					
 
@@ -245,7 +245,7 @@ public class ServiceCbatStatus{
 					new Integer32(1)
 					);
 			
-			jedis.hset(cbatinfokey, "trapserver", devtrapserverip);
+			jedis.hset(cbatinfokey, "trapserverip", devtrapserverip);
 			//reset
 			/*
 			util.setV2PDU(currentip,

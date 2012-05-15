@@ -33,12 +33,19 @@
                   }
 
                 function addAlarmHead() {
-                        $( '<div class="ralarmHead">' +' 告警发生时间 ' + '&nbsp &nbsp &nbsp &nbsp &nbsp' +
-                                                   '头端mac地址' + '&nbsp &nbsp &nbsp &nbsp &nbsp' +
-                                                  '告警码' + '&nbsp &nbsp ' +
-                                                  '告警详细信息'+
+//                        $( '<div class="ralarmHead">' +' 告警发生时间 ' + '&nbsp &nbsp &nbsp &nbsp &nbsp' +
+//                                                   '头端mac地址' + '&nbsp &nbsp &nbsp &nbsp &nbsp' +
+//                                                  '告警码' + '&nbsp &nbsp ' +
+//                                                  '告警详细信息'+
+//
+//                           '</div>').prependTo('#alarmHead');
+                        
+                        $( '<ul class="ralarmHead" style="width:100%">' +'<li style="width:250px;text-align:center"> 告警发生时间 </li>' +
+                                '<li style="width:200px;text-align:center">头端mac地址</li>' +
+                               '<li style="width:100px;text-align:center">告警码</li>' +
+                               '<li style="width:700px;text-align:center">告警详细信息</li>'+
 
-                           '</div>').prependTo('#alarmHead');
+                        	'</ul>').prependTo('#alarmHead');
                 }
 
 
@@ -55,12 +62,12 @@
                          else background = "rgb(23, 245, 56)";
 
 
-                          $( '<div class="ralarm" >'+  data.salarmtime +  '&nbsp &nbsp' +
-                                                       data.cbatmac +  '&nbsp &nbsp' +
-                                                       data.alarmcode+ '&nbsp &nbsp' +
+                          $( '<ul class="ralarm" style="width:100%"><li style="width:250px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:200px;text-align:center;">' +
+                                                       data.cbatmac +  '</li><li style="width:100px;text-align:center">' +
+                                                       data.alarmcode+ '</li><li style="width:700px;text-align:center">' +
                                                        data.cnalarminfo +
 
-                                 '</div>').css({"background":background}).prependTo('#newAlarm');
+                                 '</li></ul>').css('background',background).prependTo('#newAlarm');
                 }
 
           });

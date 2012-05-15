@@ -74,9 +74,9 @@
 	
 	function fun_FindCbat(data){
 		$('#list').dataTable().fnAddData( [
-	        itemv.mac,
-	        itemv.active,
-	        itemv.ip,
-	        itemv.devtype] );
+	        data.mac,
+	        data.active,
+	        data.ip,
+	        data.devtype] );
 	}
 })(jQuery);

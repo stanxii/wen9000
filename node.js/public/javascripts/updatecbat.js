@@ -35,8 +35,25 @@
 		});
 		
 		$("#showproc").click(function(){
-			socket.emit('opt.updateinfo',"updateinfo");		
+			$( "#dialog:ui-dialog" ).dialog( "destroy" );
+			
+			$( "#dialog-message-proc" ).dialog({
+				autoOpen: false,
+				show: "blind",
+				modal: true,
+				resizable: false,
+				hide: "explode"
+			});
+			$("#dialog-message-proc").dialog("open");	
 		});
+		
+//		$("#showproc").onmouseenter(function(){
+//			document.body.style.cursor = 'default';
+//		});
+//		
+//		$("#showproc").onmouseleave(function(){
+//			document.body.style.cursor = 'default';
+//		});
 		
 		$("#btn_update").click(function(){
 			var objSelect = $("#combox_files");
@@ -119,6 +136,8 @@
 		 	});
 			
 			$("#btn_update").attr("disabled",false); 
+			$("#choosefile")._show();
+			
 		}			
 	}
 	
@@ -158,13 +177,6 @@
 				}
 			},
     		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
-	        	if ( aData[1] == "3" )
-	            {
-	            	$('td:eq(1)', nRow).html( '在线' );				               
-	            }else{
-	            	$('td:eq(1)', nRow).html( '下线' );
-	            } 
-	        	
 	        	if(aData[5] == "0"){
 	        		$('td:eq(5)', nRow).html( 'successful' );	
 	        	}else if(aData[5] == "1"){

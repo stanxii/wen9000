@@ -13,7 +13,7 @@
                   socket.on('cbat_sync', fun_CbatSync );
                   socket.on('cnu_sub', fun_CnuSub );
                   socket.on('cnusync', fun_CnuSync );
-      
+                  socket.on('statuschange', fun_Statuschange );
       
       $("#btn_cnusync").live('click', function(){
     	  if(isbusy != false){
@@ -91,7 +91,7 @@
 	    	var port3rxrate = document.getElementById('port3rxrate').value;
 			
 			var datastring = '{"proname":"'+proname+'","mac":"'+mac+'","vlanen":"'+vlanen+
-			'","vlan1id":"'+vlan1id+'","vlan2id":"'+vlan2id+'","vlan3id":"'+vlan3id+
+			'","vlan0id":"'+vlan0id+'","vlan1id":"'+vlan1id+'","vlan2id":"'+vlan2id+'","vlan3id":"'+vlan3id+
 			'","rxlimitsts":"'+rxlimitsts+'","cpuportrxrate":"'+cpuportrxrate+'","port0txrate":"'+port0txrate+
 			'","port1txrate":"'+port1txrate+'","port2txrate":"'+port2txrate+'","port3txrate":"'+port3txrate+
 			'","txlimitsts":"'+txlimitsts+'","cpuporttxrate":"'+cpuporttxrate+'","port0rxrate":"'+port0rxrate+
@@ -159,6 +159,97 @@
           initTree(treedata);
      }
       
+     function fun_Statuschange(itemv){
+					
+		var node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.mac);
+		//node.data.online = itemv.online;
+		if(itemv.type == "cbat"){
+			//	如果是新设备
+			if(node == null){
+				node = $("#navtree").dynatree("getTree").getNodeByKey("eocroot");
+				var img;
+				if(itemv.online == "1"){
+					img = "doc_with_children.gif";
+				}else{
+					img = "offline.png";
+				}
+				node.addChild({
+					title: itemv.ip,
+					key: itemv.mac,
+					online:itemv.online,
+					type:"cbat",
+					icon:img
+				});
+			}
+			if(itemv.online == "1"){
+				node.data.icon = "doc_with_children.gif";
+			}else{
+				node.data.icon = "offline.png";
+			}
+		}else if(itemv.type == "cnu"){
+			//	如果是新设备
+			if(node == null){
+				node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.cbatmac);
+				var img;
+				if(itemv.online == "1"){
+					img = "online.gif";
+				}else{
+					img = "offline.png";
+				}
+				node.addChild({
+						title: itemv.mac,
+						key: itemv.mac,
+						online:itemv.online,
+						type:"cnu",
+						icon:img
+					});
+			}			  					
+			if(itemv.online == "1"){
+				node.data.icon = "online.gif";
+			}else{
+				node.data.icon = "offline.png";
+			}
+		}else if(itemv.type == "hfc"){
+			if(node == null){
+				node = $("#navtree").dynatree("getTree").getNodeByKey("hfcroot");
+				var img;
+				if(itemv.online == "1"){
+					img = "doc_with_children.gif";
+				}else{
+					img = "offline.png";
+				}
+				node.addChild({
+						title: itemv.ip,
+						key: itemv.mac,
+						online:itemv.online,
+						type:"hfc",
+						icon:img
+					});
+				node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.mac);
+				node.addChild({
+						title: itemv.hp,
+						icon:"tp.png"
+					});	
+				node.addChild({
+					title: itemv.sn,
+					icon:"tp.png"
+				});	
+				node.addChild({
+						title: itemv.id,
+						icon:"tp.png"
+					});	
+				return false;
+			}			  					
+			if(itemv.online == "1"){
+				node.data.icon = "doc_with_children.gif";
+			}else{
+				node.data.icon = "offline.png";
+			}
+		}		  					
+		node.render();
+
+     }
+      
     function fun_CnuSync(data){
     	document.body.style.cursor = 'default';
 		isbusy = false;
@@ -178,7 +269,7 @@
 			});
 			$("#dialog-message-failed").dialog("open");
     	}else{
-    		document.getElementById('vlanen').value = data.vlanen;
+    		document.getElementById('vlan_en').value = data.vlanen;
         	//document.getElementById('vlanid').value = data.vlanid;
         	document.getElementById('vlan0id').value = data.vlan0id;
         	document.getElementById('vlan1id').value = data.vlan1id;
@@ -196,6 +287,10 @@
         	document.getElementById('port1rxrate').value = data.port1rxrate;
         	document.getElementById('port2rxrate').value = data.port2rxrate;
         	document.getElementById('port3rxrate').value = data.port3rxrate;
+        	
+        	if(document.getElementById('proname').textContent=="null"){
+        		document.getElementById('proname').textContent="未知模板";
+        	}
         	//成功提示对话框
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
@@ -278,9 +373,9 @@
 			document.getElementById('mvlanid').value = data.mvlanid;
 			document.getElementById('netmask').value = data.netmask;
 			document.getElementById('gateway').value = data.gateway;
-			document.getElementById('trapserverip').value = data.trapserverip;
+			document.getElementById('trapserver').value = data.trapserverip;
 			document.getElementById('trap_port').value = data.trap_port;
-			
+			document.getElementById('cbat_active').textContent = "在线";
 			//成功提示对话框
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
@@ -321,6 +416,7 @@
 
                 children: treedata,
 		        imagePath: "http://localhost:8080/wen9000/css/images/",
+		        minExpandLevel: 1,
 				onDblClick: function(node, event) {
 					var jsondata;
 			        if(node.data.type=="cbat"){	
@@ -368,12 +464,12 @@
      	$("#content").append('<div id="devinfo"><h3 style="color:green">终端设备信息</h3>'+
      	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:80px"/></div>'+
 		'<div style="height:80px;width:auto;margin:10px 0px 1px 210px"><lable>这里描述设备的功能信息</lable></div>'+							
-		'<div id="configinfo"><ul>'+
+		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#tabs-1">基本信息</a></li>'+
 			'<li><a href="#tabs-2">配置信息</a></li></ul>'+
 			'<div id="tabs-1">'+
 				'<table id="baseinfo"><tr><td><lable>mac :&nbsp &nbsp &nbsp &nbsp</lable><lable id="cnu_mac" style="margin-left:0px">'+ jsondata.mac+'</lable></td>'+
-		     	'<td><lable>状态 :'+ jsondata.active+'</lable></td>'+
+		     	'<td><lable>状态 :</lable><lable id="cnu_active" style="margin-left:0px">'+ jsondata.active+'</lable></td>'+
 		     	'<td><lable>设备类型: '+"待定"+'</lable></td></tr>'+
 		     	'<tr><td><lable>设备标识: </lable>&nbsp<input type="text" id="c_label" style="width:150px" value='+jsondata.label+'></input></td>'+
 				'<td><lable>地址: </lable><input type="text" id="c_address" style="width:150px" value='+jsondata.address+'></input></td>'+
@@ -466,7 +562,7 @@
 	   	'<div style="height:100px;width:auto;margin:10px 0px 1px 210px"><lable></lable></div>'+
 	   	'<h3 style="color:green">基本信息</h3>'+
 	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
-			'<td><lable>状态 : </lable></td><td><lable>'+jsondata.active+'</lable></td></tr>'+
+			'<td><lable>状态 : </lable></td><td><lable id="cbat_active">'+jsondata.active+'</lable></td></tr>'+
 			'<tr><td><lable>ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
 			'<td><lable>子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
 			'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td>'+

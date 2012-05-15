@@ -194,10 +194,10 @@ public class ServiceHeartProcessor{
 			if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1")==false){
 				//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
+				jedis.hset(cbatkey,"active", "1");
 				Sendstschange("cbat",deviceid,jedis);
 			}
-			//更新头端信息
-			jedis.hset(cbatkey,"active", "1");
+			//更新头端信息			
 			jedis.hset(cbatkey,"ip", cbatip);
 //			cbat.setAppversion(util.getStrPDU(cbatip, "161",
 //					new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8,4, 4, 0 })));
@@ -221,7 +221,7 @@ public class ServiceHeartProcessor{
 			cbatentity.put("label", cbatmac.toLowerCase().trim());
 			cbatentity.put("devicetype", type.toLowerCase().trim());
 			//20 not have upgradestatus
-			cbatentity.put("upgradestatus", "20");
+			cbatentity.put("upgrade", "20");
 			//保存头端信息
 			jedis.hmset(scbatentitykey, cbatentity);
 			
@@ -244,10 +244,16 @@ public class ServiceHeartProcessor{
 				 String appver = util.getStrPDU(cbatip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
 				 int mvlanid =  util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 }));				    				   
 			     int mvlanenable = util.getINT32PDU(cbatip, "161", new OID(	new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 }));
+			     String trapserverip = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+			     String netmask = (util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,2,0})));
+			     String gateway = (util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0})));
 				 hash.put("agentport", String.valueOf(agentport));
 				 hash.put("appver", appver);
 				 hash.put("mvlanid",String.valueOf(mvlanid));
 				 hash.put("mvlanenable", String.valueOf(mvlanenable));
+				 hash.put("trapserverip", trapserverip);
+				 hash.put("netmask", netmask);
+				 hash.put("gateway", gateway);
 			}catch(Exception e){
 				
 			}
@@ -282,8 +288,6 @@ public class ServiceHeartProcessor{
 	
 	public void doheartOnline(String cbatmac, String cnumac, String cnutype,
 			String cnuindex, String active) {
-		
-		
 
 		Jedis jedis=null;
 		try {
@@ -294,17 +298,17 @@ public class ServiceHeartProcessor{
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			e.printStackTrace();
 			return;
-		}
-		
+		}		
 		
 		//判断cnu是否已存在
 		if(jedis.exists("mac:"+cnumac+":deviceid")){
 			String cnuid = jedis.get("mac:"+cnumac+":deviceid");
+			//log.info("cnumac-----"+cnumac + "----------cnuid-----"+cnuid);
 			//cnu已存在
 			//以下判断是否有移机操作
 			//获取redis中CNU所属cbatmac
 			String tmpcbatid = jedis.hget("cnuid:"+cnuid+":entity", "cbatid");
-			if(jedis.hget("cbatid:"+tmpcbatid+":entity", "cbatmac").equalsIgnoreCase(cbatmac)){
+			if(jedis.hget("cbatid:"+tmpcbatid+":entity", "mac").equalsIgnoreCase(cbatmac)){
 				//没有移机
 				
 			}else{
@@ -317,11 +321,12 @@ public class ServiceHeartProcessor{
 			if(jedis.hget("cnuid:"+cnuid+":entity", "active").equalsIgnoreCase(active)==false){
 				//cnu状态有变迁,发往STSCHANGE_QUEUE_NAME
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
+				jedis.hset("cnuid:"+cnuid+":entity", "active", active);
 				Sendstschange("cnu",cnuid,jedis);
 				
 			}
 			//cnu其它信息修改
-			jedis.hset("cnuid:"+cnuid+":entity", "active", active);
+			
 			jedis.hset("cnuid:"+cnuid+":entity", "devcnuid", cnuindex);
 			
 		}else{
@@ -415,10 +420,11 @@ public class ServiceHeartProcessor{
 			if(jedis.hget("cnuid:"+cnuid+":entity", "active").equalsIgnoreCase("0")==false){
 				//cnu状态有变迁,发往STSCHANGE_QUEUE_NAME
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
+				//修改CNU相关信息
+				jedis.hset("cnuid:"+cnuid+":entity", "active", "0");
 				Sendstschange("cnu",cnuid,jedis);
 			}
-			//修改CNU相关信息
-			jedis.hset("cnuid:"+cnuid+":entity", "active", "0");
+			
 		}else{
 			//不是所属头端发出的心跳
 			redisUtil.getJedisPool().returnResource(jedis);

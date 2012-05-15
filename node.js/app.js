@@ -105,6 +105,13 @@ redis.on('pmessage', function(pat,ch,data) {
     }else if(ch == 'node.pro.get') {
     	data = JSON.parse(data);
     	sio.sockets.emit('profileGet',data);   
+    }else if(ch == 'node.pro.isedit') {
+    	if(data == ""){
+    		sio.sockets.emit('profileisedit',data);
+    	}else{
+    		data = JSON.parse(data);
+            sio.sockets.emit('profileisedit',data);
+    	}      
     }else if(ch == 'node.tree.cnusync') {
     	if(data == ""){
     		sio.sockets.emit('cnusync',data);
@@ -229,6 +236,11 @@ sio.sockets.on('connection', function (socket) {
   socket.on('profile_get', function (data) {
 	  	 console.log('nodeserver: profile_get==='+data);
 	     publish.publish('servicecontroller.profile_get', data);
+  });
+  
+  socket.on('profile_isedit', function (data) {
+	  	 console.log('nodeserver: profile_isedit==='+data);
+	     publish.publish('servicecontroller.profile_isedit', data);
   });
   
   socket.on('profile_edit', function (data) {
