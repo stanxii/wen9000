@@ -1,8 +1,11 @@
 (function($){
+	var proc = 0;
+	var total = 0;
 	$(function(){
 		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('opt.onlinecbats',"onlinecbats");
+		socket.emit('opt.updateinfo',"updateinfo");
 		
 		socket.on('opt.onlinecbats',fun_OnlineCbats);
 		socket.on('opt.ftpfilelist',fun_Ftpfilelist);
@@ -35,6 +38,7 @@
 		});
 		
 		$("#showproc").click(function(){
+			$("#up_proc")[0].textContent = proc+"/"+total;
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 			
 			$( "#dialog-message-proc" ).dialog({
@@ -81,7 +85,7 @@
 			});
 			$("#dialog-message-proc").dialog("open");
 			
-			$("#up_proc")[0].textContent = "正在初始化升级…………";
+			//$("#up_proc")[0].textContent = "";
 		});
 		
 		initTable();
@@ -89,8 +93,11 @@
 	
 	function fun_Updateinfo(data){
 		//获取进度信息
+		data = $.parseJSON(data);
+		total = data.total;
+		proc = data.proc;
 		if(data != ""){
-			$("#up_proc")[0].textContent = data;
+			$("#up_proc")[0].textContent = proc+"/"+total;
 			
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 			
@@ -107,7 +114,11 @@
 	}
 	
 	function fun_Updateproc(data){
-		$("#up_proc")[0].textContent = data;
+		proc = data;
+		$("#up_proc")[0].textContent = proc+"/"+total;
+		if(proc == total){
+			$("#dialog-message-proc").dialog("close");
+		}
 	}
 	
 	function fun_Ftpfilelist(data){

@@ -158,8 +158,8 @@ public class ServiceCbatStatus{
 	private static void servicestart(String pat, String message){
 
 			
-			System.out.println(" [x] ServiceCbatStatus Received '" + message
-					+ "'");
+			//System.out.println(" [x] ServiceCbatStatus Received '" + message
+			//		+ "'");
 						
 			dowork(message);					
 

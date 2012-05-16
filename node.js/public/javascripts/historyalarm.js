@@ -13,7 +13,7 @@
 		$.each(data, function(key, itemv) {  					
 				var item = [itemv.id,itemv.proname,itemv.vlanen,itemv.vlan0id,itemv.vlan1id,itemv.vlan2id,itemv.vlan3id,
 				itemv.rxlimitsts,itemv.cpuportrxrate,itemv.port0txrate,itemv.port1txrate,itemv.port2txrate,itemv.port3txrate,
-				itemv.txlimitsts,itemv.cpuporttxrate,itemv.port0rxrate,];
+				itemv.txlimitsts,itemv.cpuporttxrate,itemv.port0rxrate];
 				groupval[groupval.length] = item; 				
 								
 		 	}); 
@@ -82,4 +82,5 @@
 			
 	    } );
 	}
+  });
 })(jQuery);

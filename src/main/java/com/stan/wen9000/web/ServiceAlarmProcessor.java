@@ -181,9 +181,6 @@ public class ServiceAlarmProcessor {
 //			}
 //		
 		} else {
-			
-			
-
 			doalarm(alarm);			
 			savelarm(message, alarm);
 
@@ -287,21 +284,20 @@ public class ServiceAlarmProcessor {
 			
 			}catch(Exception e){
 				redisUtil.getJedisPool().returnBrokenResource(jedis);
-				
 			}
 			
 			String result = (String)alarm.get("alarmvalue");			
 			String cbatmac = (String)alarm.get("cbatmac");			
-			String cbatid = "mac:" +  cbatmac + ":deviceid";						
+			String cbatid = jedis.get("mac:" +  cbatmac + ":deviceid");						
 			String cbatkey = "cbatid:" + cbatid + ":entity";			
 			jedis.hset(cbatkey, "upgrade", result);			
 			if(!result.equalsIgnoreCase("1")){
 				//已升级头端加1
 				long num_t =jedis.incr("global:updated");
 				String num = String.valueOf(num_t);
-				String total = jedis.get("global:updatedtotal");
+				//String total = jedis.get("global:updatedtotal");
 				//通知前端此头端完成升级
-				jedis.publish("node.opt.updateproc", num+"/"+total);
+				jedis.publish("node.opt.updateproc", num);
 			}			
 			
 			redisUtil.getJedisPool().returnResource(jedis);
