@@ -5,28 +5,28 @@
                $("#tabs").tabs();
 	       $(".tabs-bottom .ui-tabs-nav, .tabs-bottom .ui-tabs-nav > *").removeClass("ui-corner-all ui-corner-top").addClass("ui-corner-bottom");
 
-
-
-
                   var socket = io.connect('http://localhost:3000');
+                  socket.emit('lastalarms', "");
                   socket.on('news', function (data) {
                     console.log(data);
-                    socket.emit('my other event', { my: 'data' });
+                    
                   });
-
+                  //计算实时告警区域高度
+                  var av_height = window.screen.availHeight;
+                  var xx = $("#newAlarm").css("heigt",(170+(av_height - 728))+"px");
                   socket.on('newAlarm', onGetNewAlarm);
 
                   addAlarmHead();
 		
-		  historyAlarmTable();
+                  historyAlarmTable();
 
                   function onGetNewAlarm(data) {
                         console.log(data);
-                        if(num <5) {
+                        if(num <15) {
                             addNewOne(data);
                             num++;
                         }else {
-                            $('.ralarm:eq(4)').remove();
+                            $('.ralarm:eq(14)').remove();
 
                             addNewOne(data);
 	                }
@@ -36,10 +36,10 @@
                         
                         $( '<ul class="ralarmHead" style="width:100%">' +
                         		'<li style="width:80px;text-align:center"> 告警等级 </li>' +
-                        		'<li style="width:250px;text-align:center"> 告警发生时间 </li>' +
+                        		'<li style="width:200px;text-align:center"> 告警发生时间 </li>' +
                                 '<li style="width:200px;text-align:center">头端mac地址</li>' +
-                               '<li style="width:100px;text-align:center">告警码</li>' +
-                               '<li style="width:550px;text-align:center">告警详细信息</li>'+
+                               '<li style="width:60px;text-align:center">告警码</li>' +
+                               '<li style="width:480px;text-align:center">告警详细信息</li>'+
 
                         	'</ul>').prependTo('#alarmHead');
                 }
@@ -58,9 +58,9 @@
                          else background = "http://localhost:8080/wen9000/images/ball_black.png";
 
 
-                          $( '<ul class="ralarm" style="width:100%"><li style="width:80px;text-align:center;"><img src='+  background +  ' /></li><li style="width:250px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:200px;text-align:center;">' +
-                                                       data.cbatmac +  '</li><li style="width:100px;text-align:center">' +
-                                                       data.alarmcode+ '</li><li style="width:550px;text-align:center">' +
+                          $( '<ul class="ralarm" style="width:100%"><li style="width:80px;text-align:center;"><img src='+  background +  ' /></li><li style="width:200px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:200px;text-align:center;">' +
+                                                       data.cbatmac +  '</li><li style="width:60px;text-align:center">' +
+                                                       data.alarmcode+ '</li><li style="width:480px;text-align:center">' +
                                                        data.cnalarminfo +
 
                                  '</li></ul>').prependTo('#newAlarm');

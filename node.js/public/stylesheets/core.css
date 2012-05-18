@@ -74,6 +74,10 @@ table input {
 	left:26%;
 }
 
+#pre_content {
+
+}
+
 #proTable_wrapper {
 	width:800px;
 }
@@ -130,6 +134,14 @@ table input {
 #configinfo {
 	float:left; 	
 	width:800px;
+}
+
+#precnus_wrapper {
+	width:700px;
+}
+
+#precnus td{
+    text-align:center;	
 }
 
 #menuclear {

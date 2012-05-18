@@ -1,5 +1,7 @@
 package com.stan.wen9000.web;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -8,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -343,21 +346,54 @@ public class ServiceHeartProcessor{
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
-			//暂将profileid置1
-			cnuentity.put("profileid", "1");
-			
+			//判断设备是否被预开户
+			if(jedis.exists("preconfig:"+cnumac.toLowerCase()+":entity")){
+				//预开户
+				String proid = jedis.get("preconfig:"+cnumac.toLowerCase()+":entity");
+				cnuentity.put("profileid", proid);
+				//添加cnu到profile集合中
+				jedis.sadd("profileid:"+proid+":cnus", cnumac.toLowerCase());
+				//发送配置事件	
+				JSONObject configjson = new JSONObject();
+				configjson.put("cbatip", jedis.hget("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":entity", "ip"));
+				configjson.put("devcnuid",cnuindex.toLowerCase().trim());
+				configjson.put("proid", proid);
+				jedis.publish("servicesendconfig.preconfig", configjson.toJSONString());
+				//删除预开户表
+				jedis.del("preconfig:"+cnumac.toLowerCase()+":entity");		
+				//预开户告警信息
+				Map<String, String> alarmhash=new LinkedHashMap();
+				alarmhash.put("runingtime", "N/A");
+				alarmhash.put("oid", "N/A");
+				alarmhash.put("alarmcode", "200932");
+				alarmhash.put("trapinfo", "头端标识为"+jedis.hget("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":entity", "label")+"下的CNU["+cnumac+"]预开户");
+				alarmhash.put("enalarminfo", "CNU["+cnumac+"] Under Cbat["+cbatmac+ "] PreConfig!" );
+				alarmhash.put("cbatmac", "N/A"); 
+				alarmhash.put("alarmlevel", "3");
+				Date date = new Date();
+				DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+				String alarmtimes = format.format(date);
+				alarmhash.put("salarmtime", alarmtimes);
+				String msgservice = JSONValue.toJSONString(alarmhash);
+				jedis.publish("servicealarm.new", msgservice);
+				
+			}else{
+				//未预开户设备
+				//暂将profileid置1
+				cnuentity.put("profileid", "1");				
+				//添加cnu到profile集合中
+				jedis.sadd("profileid:1:cnus", cnumac.toLowerCase());
+			}
 			//将cnuid添加到所属头端下的集合中
 			jedis.sadd("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":cnus", Long.toString(icnuid));
-			
-			//添加cnu到profile集合中
-			jedis.sadd("profileid:1:cnus", String.valueOf(icnuid));
-			
+
 			//save
 			jedis.hmset(scnuentitykey, cnuentity);
 			jedis.save();
 			//发现新cnu,发往STSCHANGE_QUEUE_NAME
 			//jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
 			Sendstschange("cnu",String.valueOf(icnuid),jedis);
+
 		}
 		
 		

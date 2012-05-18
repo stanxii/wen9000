@@ -1,0 +1,29 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/pre_config.js')
+  h1  设备预开户
+  div(style='position:relative;width:800px;min-height:100px')
+    div(style='border-style:dotted;border-width:1px;position:absolute;float:left;width:50%;max-height:180px;overflow:auto')
+      label  请选择添加模式:
+      input(type='radio',id='one',class='smodal',name='choose',value='')
+      |  单个添加
+      input(type='radio',id='batch',class='smodal',name='choose',value='')
+      |  批量添加
+      br
+      #pre_content(style='margin:5px 0 5px 30px')
+    div(style='position:absolute;left:51%')
+      label  请选择一条配置模板:
+      select#combox_profiles
+      
+    div(style='clear:both')
+  button(id='btn_presub',style='')  添加
+  br
+  br
+  h3(style='margin-left:320px')  预开户列表
+  table#precnus(style='width:700px')
+  div(id='dialog-message-preconfig-failed',title='预开户失败',style='display:none')
+    p
+      span.ui-icon.ui-icon-alert(style='float:left; margin:0 7px 50px 0;')
+      p  预开户错误
+    #errorinfo

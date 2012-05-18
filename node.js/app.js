@@ -62,6 +62,9 @@ app.get('/version', function( request, response ) {
 app.get('/historyalarm', function( request, response ) {
     response.render( 'historyalarm.jade', { title: 'Wen9000网路管理系统---历史告警' } );
 });
+app.get('/opt/pre_config', function( request, response ) {
+    response.render( 'opt/pre_config.jade', { title: 'Wen9000网路管理系统---设备预开户' } );
+});
 
 var node = http.createServer(app).listen(3000);
 var sio = io.listen(node);
@@ -205,6 +208,14 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('opt.updateproc',data);       
     }else if(ch == 'node.opt.updateinfo') {
     	sio.sockets.emit('opt.updateinfo',data);       
+    }else if(ch == 'node.opt.preconfig_one') {
+    	sio.sockets.emit('opt.preconfig_one',data);       
+    }else if(ch == 'node.opt.preconfig_batch') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('opt.preconfig_batch',data);       
+    }else if(ch == 'node.opt.preconfig_all') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('opt.preconfig_all',data);       
     }
 });
 
@@ -376,9 +387,30 @@ sio.sockets.on('connection', function (socket) {
 	  	 console.log('nodeserver: opt.updateinfo==='+data);
 	     publish.publish('ServiceUpdateProcess.updateinfo', data);
   });
-  
-  socket.on('my other event', function (data) {
-    console.log(data);
+  //获取实时告警信息
+  socket.on('lastalarms', function (data) {
+	  console.log(data);
+	  publish.publish('servicecontroller.opt.lastalarms', data);
+  });
+//单个预开户事件
+  socket.on('opt.preconfig_one', function (data) {
+	  console.log('nodeserver: opt.preconfig_one==='+data);
+	  publish.publish('servicecontroller.opt.preconfig_one', data);
+  });
+//批量预开户事件
+  socket.on('opt.preconfig_batch', function (data) {
+	  console.log('nodeserver: opt.preconfig_batch==='+data);
+	  publish.publish('servicecontroller.opt.preconfig_batch', data);
+  });
+//获取预开户列表
+  socket.on('preconfig_all', function (data) {
+	  console.log('nodeserver: preconfig_all==='+data);
+	  publish.publish('servicecontroller.opt.preconfig_all', data);
+  });
+//删除预开户设备
+  socket.on('pre_del', function (data) {
+	  console.log('nodeserver: pre_del==='+data);
+	  publish.publish('servicecontroller.opt.pre_del', data);
   });
 
   socket.on('channel', function(ch) {

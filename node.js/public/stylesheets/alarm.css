@@ -1,8 +1,7 @@
 #alarm {
 	height:200px;
 	border-style:dotted;
-	border-width:1px;
-	overflow:auto;
+	border-width:1px;	
 }
 
 .ralarmHead {
@@ -18,6 +17,12 @@
     margin: 2px;  
     position: relative; /*--Declare X and Y axis base for sub navigation--*/  
      
+}
+
+#newAlarm {
+	height:170px;
+	overflow:auto;
+	clear:both;
 }
 
 .ralarm{

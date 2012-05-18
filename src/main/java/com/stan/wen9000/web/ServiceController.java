@@ -1,14 +1,8 @@
 package com.stan.wen9000.web;
 
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,14 +11,10 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
@@ -196,10 +186,189 @@ public class ServiceController {
 			doOptUpdatedcbats(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.opt.ftpupdate")){
 			doOptFtpupdate(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.lastalarms")){
+			doOptLastAlarms(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.preconfig_one")){
+			doOptPreconfig_one(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.preconfig_batch")){
+			doOptPreconfig_batch(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.preconfig_all")){
+			doOptPreconfig_all(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.pre_del")){
+			doOptPre_Del(message);
 		}
 		
 
 
+	}
+	
+	private static void doOptPre_Del(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		//获取预开户设备模板id
+		String proid = jedis.get("preconfig:"+message+":entity");
+		//删除预开户键
+		jedis.del("preconfig:"+message+":entity");
+		//删除集合中的值
+		jedis.srem("profileid:"+proid+":cnus", message);
+		jedis.bgsave();
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptPreconfig_all(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		Set<String> preconfigs = jedis.keys("preconfig:*:entity");
+		JSONArray array = new JSONArray();
+		for(Iterator it=preconfigs.iterator();it.hasNext();){
+			JSONObject json = new JSONObject();
+			String key = it.next().toString();
+			String mac = key.substring(10, 27);
+			json.put("mac", mac);
+			json.put("proname", jedis.hget("profileid:"+jedis.get(key)+":entity", "profilename"));
+			//没有实际意义，用于创建删除列
+			json.put("tmp", "1");
+			array.add(json);
+		}
+		jedis.publish("node.opt.preconfig_all", array.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptPreconfig_batch(String message) throws ParseException{
+		Jedis jedis=null;
+		Boolean iserror = false;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String smac = jsondata.get("smac").toString();
+		String emac = jsondata.get("emac").toString();
+		String proid = jsondata.get("proid").toString();
+		JSONObject resjson = new JSONObject();
+		Long tmp1 = mactolong(smac.toUpperCase());
+		Long tmp2 = mactolong(emac.toUpperCase());
+		if(tmp1>tmp2){
+			resjson.put("code", "2");
+			jedis.publish("node.opt.preconfig_batch", resjson.toJSONString());
+			redisUtil.getJedisPool().returnResource(jedis);
+			return;
+		}
+		if(tmp2 - tmp1 >255)
+		{
+			resjson.put("code", "3");
+			jedis.publish("node.opt.preconfig_batch", resjson.toJSONString());
+			redisUtil.getJedisPool().returnResource(jedis);
+			return;
+		}
+		JSONArray array = new JSONArray();
+		while(tmp1<=tmp2)
+		{
+			String tmp_mac = longtomac(tmp1);
+			tmp1++;
+			//判断设备是否已被发现和预开户表中是否有此设备
+			if((jedis.exists("mac:"+tmp_mac+":deviceid"))||(jedis.exists("preconfig:"+tmp_mac+":entity"))){
+				//已存在
+				iserror = true;//有错误标志位
+				JSONObject json =new JSONObject();
+				json.put("mac", tmp_mac);
+				array.add(json);
+				continue;
+			}else{
+				jedis.set("preconfig:"+tmp_mac+":entity", proid);
+				//profile集合中加入此CNU
+				jedis.sadd("profileid:"+proid+":cnus", tmp_mac);
+
+			}
+		}
+		if(iserror){
+			jedis.publish("node.opt.preconfig_batch", array.toJSONString());
+			redisUtil.getJedisPool().returnResource(jedis);
+			return;
+		}else{
+			resjson.put("code", "0");
+		}
+		jedis.publish("node.opt.preconfig_batch", resjson.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptPreconfig_one(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String proid = jsondata.get("proid").toString();
+		//判断设备是否已被发现和预开户表中是否有此设备
+		if((jedis.exists("mac:"+mac+":deviceid"))||(jedis.exists("preconfig:"+mac+":entity"))){
+			//已存在
+			jedis.publish("node.opt.preconfig_one", "");
+		}else{
+			jedis.set("preconfig:"+mac+":entity", proid);
+			//profile集合中加入此CNU
+			jedis.sadd("profileid:"+proid+":cnus", mac);
+			jedis.publish("node.opt.preconfig_one", "preconfigok");
+		}
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptLastAlarms(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		String alarmid = jedis.get("global:lastalarmid");
+		//获取最后几条告警信息，发往前端
+		long id = Long.parseLong(alarmid);
+		String key = "";
+
+		for(int i=15;i>0;i--){
+			JSONObject json = new JSONObject();
+			key = "alarmid:"+(id - i)+":entity";
+			if(jedis.hget(key, "alarmlevel") == null){
+				continue;
+			}
+			json.put("alarmlevel", jedis.hget(key, "alarmlevel"));
+			json.put("salarmtime", jedis.hget(key, "salarmtime"));
+			json.put("cbatmac", jedis.hget(key, "cbatmac"));
+			json.put("alarmcode", jedis.hget(key, "alarmcode"));
+			json.put("cnalarminfo", jedis.hget(key, "cnalarminfo"));
+			jedis.publish("node.alarm.newalarm", json.toJSONString());
+
+		}
+		
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doOptFtpupdate(String message) throws ParseException{
@@ -661,7 +830,7 @@ public class ServiceController {
 			//更改CNU模板号
 			jedis.hset(cnukey, "profileid", proid);
 			//添加cnu到新profile集合中
-			jedis.sadd("profileid:"+proid+":cnus", cnuid);		
+			jedis.sadd("profileid:"+proid+":cnus", jedis.hget(cnukey, "mac"));		
 			
 			//保存数据到硬盘
 			jedis.bgsave();
@@ -921,7 +1090,7 @@ public class ServiceController {
 			editcustomprofile(jsondata,jedis,"profileid:"+old_proid+":entity");
 		}else{			
 			//删除原profile集合中此CNU
-			jedis.srem("profileid:"+old_proid+":cnus", cnuid);
+			jedis.srem("profileid:"+old_proid+":cnus", jedis.hget(key, "mac"));
 			
 			//新建自定义模板
 			String proid = newcustomprofile(jsondata,jedis);
@@ -2226,7 +2395,57 @@ public class ServiceController {
 		return true;
 	}
 	
+	private static long mactolong(String macstring)
+	{
+		int index1 = 0;
+		int index2 = 0;
+		String tmp_mac = "";
+		try {
+			index1 = macstring.indexOf(":");
+			tmp_mac=macstring.substring(0, index1);
+
+			index2 = macstring.indexOf(":", index1 + 1);
+			tmp_mac += macstring.substring(index1 + 1,index2);
+
+			index1 = index2;
+			index2 = macstring.indexOf(":", index1 + 1);
+			tmp_mac += macstring.substring(index1 + 1,index2);
+
+			index1 = index2;
+			index2 = macstring.indexOf(":", index1 + 1);
+			tmp_mac += macstring.substring(index1 + 1,index2);
+
+			index1 = index2;
+			index2 = macstring.indexOf(":", index1 + 1);
+			tmp_mac += macstring.substring(index1 + 1,index2);
+			
+			index1 = index2;
+			tmp_mac +=macstring.substring(index1 + 1);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			
+		}
+		System.out.println("mac_tmp="+tmp_mac);
+		
+		return Long.parseLong(tmp_mac, 16);
+	}
 	
+	private static String longtomac(Long Lmac)
+	{
+		String tmp_mac = Long.toHexString(Lmac);
+		String mac = "";
+		for(int i=0;i<=10;i+=2)
+		{
+			mac += tmp_mac.substring(i,i+2); 
+			if(i!=10)
+			{
+				mac += ":";
+			}
+		}
+		System.out.println("======>>>mac = "+ mac);
+		return mac;
+	}
 	
 
 

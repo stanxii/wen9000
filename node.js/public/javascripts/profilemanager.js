@@ -534,9 +534,6 @@
 			"iDisplayLength": 10,					//每页显示10条数据
 			"aaData": groupval,
     		"bInfo": false,	
-    		"sScrollX": "100%",
-	        "sScrollXInner": "110%",
-	        "bScrollCollapse": true,
 	        "sPaginationType": "full_numbers",
 	        "oLanguage": {							//汉化
 				"sLengthMenu": "每页显示 _MENU_ 条记录",

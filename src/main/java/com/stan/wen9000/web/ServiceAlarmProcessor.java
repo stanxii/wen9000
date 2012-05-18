@@ -216,6 +216,9 @@ public class ServiceAlarmProcessor {
 		Long alarmid = jedis.incr("global:alarmid");
 		String salarmid = String.valueOf(alarmid);
 		
+		//记录最后一条告警的id
+		jedis.set("global:lastalarmid", String.valueOf(alarmid));
+		
 		String alarmkey = "alarmid:" + salarmid + ":entity";
 		jedis.hmset(alarmkey, alarm);
 		
@@ -243,10 +246,7 @@ public class ServiceAlarmProcessor {
 		Double score = (double) System.currentTimeMillis();
 		jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
 		
-		
-		
-	  
-		
+
 		//publish to notify node.js a new alarm
 		jedis.publish("node.alarm.newalarm", message);
 		
