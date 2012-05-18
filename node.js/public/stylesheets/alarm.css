@@ -2,6 +2,7 @@
 	height:310px;
 	border-style:dotted;
 	border-width:1px;
+	overflow:auto;
 }
 
 .ralarmHead {

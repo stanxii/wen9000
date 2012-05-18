@@ -60,7 +60,7 @@ public class ServiceUpdateProcess{
 
 	      public void onPMessage(String arg0, String arg1, String msg) {
 	
-	      	System.out.println("[x]ServiceController  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
+	      	System.out.println("[x]ServiceUpdateProcess  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
 	      	try {
 	  			//arg2 is mssage now is currenti p
 	  			
@@ -110,7 +110,7 @@ public class ServiceUpdateProcess{
 		  
 		  if(pat.equalsIgnoreCase("ServiceUpdateProcess.update")){
 				doNodeUpdate(message);
-			}else if(pat.equalsIgnoreCase("servicecontroller.updateinfo")){
+			}else if(pat.equalsIgnoreCase("ServiceUpdateProcess.updateinfo")){
 				doNodeUpdateInfo(message);
 			}
 		  
@@ -128,7 +128,11 @@ public class ServiceUpdateProcess{
 			}
 			String num = jedis.get("global:updated");
 			String total = jedis.get("global:updatedtotal");
-			jedis.publish("node.opt.updateinfo", num+"/"+total);
+			JSONObject json = new JSONObject();
+			json.put("total", total);
+			json.put("proc", num);
+			log.info("------------------------------------>>>>");
+			jedis.publish("node.opt.updateinfo", json.toJSONString());
 			redisUtil.getJedisPool().returnResource(jedis);
 	  }
 	  
@@ -160,9 +164,11 @@ public class ServiceUpdateProcess{
 					//已升级头端加1
 					long num_t =jedis.incr("global:updated");
 					String num = String.valueOf(num_t);
-					String total = jedis.get("global:updatedtotal");
+					//String total = jedis.get("global:updatedtotal");
+					//删除集合中此头端
+					jedis.srem("global:updatedcbats", cbatid);
 					//通知前端此头端完成升级
-					jedis.publish("node.opt.updateproc", num+"/"+total);
+					jedis.publish("node.opt.updateproc", num);
 					redisUtil.getJedisPool().returnResource(jedis);
 					return;
 				}
@@ -208,7 +214,7 @@ public class ServiceUpdateProcess{
 						new OID(new int[] {1,3,6,1,4,1,36186,8,7,7,0}), 
 						new Integer32(1)
 						);
-					
+				
 				redisUtil.getJedisPool().returnResource(jedis);
 				
 			}catch(Exception e)
@@ -218,9 +224,11 @@ public class ServiceUpdateProcess{
 				//已升级头端加1
 				long num_t = jedis.incr("global:updated");
 				String num = String.valueOf(num_t);
-				String total = jedis.get("global:updatedtotal");
+				//String total = jedis.get("global:updatedtotal");
+				//删除集合中此头端
+				jedis.srem("global:updatedcbats", cbatid);
 				//通知前端此头端完成升级
-				jedis.publish("node.opt.updateproc", num+"/"+total);
+				jedis.publish("node.opt.updateproc", num);
 				redisUtil.getJedisPool().returnResource(jedis);
 				return;
 			}

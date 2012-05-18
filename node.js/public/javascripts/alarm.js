@@ -33,41 +33,37 @@
                   }
 
                 function addAlarmHead() {
-//                        $( '<div class="ralarmHead">' +' 告警发生时间 ' + '&nbsp &nbsp &nbsp &nbsp &nbsp' +
-//                                                   '头端mac地址' + '&nbsp &nbsp &nbsp &nbsp &nbsp' +
-//                                                  '告警码' + '&nbsp &nbsp ' +
-//                                                  '告警详细信息'+
-//
-//                           '</div>').prependTo('#alarmHead');
                         
-                        $( '<ul class="ralarmHead" style="width:100%">' +'<li style="width:250px;text-align:center"> 告警发生时间 </li>' +
+                        $( '<ul class="ralarmHead" style="width:100%">' +
+                        		'<li style="width:80px;text-align:center"> 告警等级 </li>' +
+                        		'<li style="width:250px;text-align:center"> 告警发生时间 </li>' +
                                 '<li style="width:200px;text-align:center">头端mac地址</li>' +
                                '<li style="width:100px;text-align:center">告警码</li>' +
-                               '<li style="width:700px;text-align:center">告警详细信息</li>'+
+                               '<li style="width:550px;text-align:center">告警详细信息</li>'+
 
                         	'</ul>').prependTo('#alarmHead');
                 }
 
 
 	        function addNewOne(data) {
-                        var background= "rgb(255, 0, 86)";
+                        var background= "";
 
-                         if(data.alarmlevel == 1 ) background = "rgb(23, 245, 56)";
-                         else if(data.alarmlevel == 2 ) background = "rgb(150, 205, 205)";
-                         else if(data.alarmlevel == 3 ) background = "rgb(238, 230, 133)";
-                         else if(data.alarmlevel == 4 ) background = "rgb(255, 255, 0)";
-                         else if(data.alarmlevel == 5 ) background = "rgb(198, 113, 113)";
-                         else if(data.alarmlevel == 6 ) background = "rgb(238, 64, 0)";
-                         else if(data.alarmlevel == 7 ) background = "rgb(205, 0, 0)";
-                         else background = "rgb(23, 245, 56)";
+                         if(data.alarmlevel == 1 ) background = "http://localhost:8080/wen9000/images/ball_white.png";
+                         else if(data.alarmlevel == 2 ) background = "http://localhost:8080/wen9000/images/ball_green.png";
+                         else if(data.alarmlevel == 3 ) background = "http://localhost:8080/wen9000/images/ball_blue.png";
+                         else if(data.alarmlevel == 4 ) background = "http://localhost:8080/wen9000/images/ball_hese.png";
+                         else if(data.alarmlevel == 5 ) background = "http://localhost:8080/wen9000/images/ball_yellow.png";
+                         else if(data.alarmlevel == 6 ) background = "http://localhost:8080/wen9000/images/ball_orange.png";
+                         else if(data.alarmlevel == 7 ) background = "http://localhost:8080/wen9000/images/ball_red.png";
+                         else background = "http://localhost:8080/wen9000/images/ball_black.png";
 
 
-                          $( '<ul class="ralarm" style="width:100%"><li style="width:250px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:200px;text-align:center;">' +
+                          $( '<ul class="ralarm" style="width:100%"><li style="width:80px;text-align:center;"><img src='+  background +  ' /></li><li style="width:250px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:200px;text-align:center;">' +
                                                        data.cbatmac +  '</li><li style="width:100px;text-align:center">' +
-                                                       data.alarmcode+ '</li><li style="width:700px;text-align:center">' +
+                                                       data.alarmcode+ '</li><li style="width:550px;text-align:center">' +
                                                        data.cnalarminfo +
 
-                                 '</li></ul>').css('background',background).prependTo('#newAlarm');
+                                 '</li></ul>').prependTo('#newAlarm');
                 }
 
           });

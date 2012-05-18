@@ -114,10 +114,6 @@ public class ServiceController {
 			
 		}
 		
-		
-		
-		
-		
 	}
 
 	
@@ -134,8 +130,6 @@ public class ServiceController {
 		
 	}
 	
-	
-
 	@SuppressWarnings("unchecked")
 	public static void dowork(String pat, String message) throws ParseException, IOException {
 		
@@ -233,6 +227,12 @@ public class ServiceController {
 		jedis.set("global:updatedtotal", String.valueOf(cbats.size()));
 		//记录已升级头端数，用户前端进度跟踪
 		jedis.set("global:updated", "0");
+
+		JSONObject jsonproc = new JSONObject();
+		jsonproc.put("total", String.valueOf(cbats.size()));
+		jsonproc.put("proc", "0");
+		
+		jedis.publish("node.opt.updateinfo", jsonproc.toJSONString());
 		
 		for(Iterator cbat=cbats.iterator();cbat.hasNext();){
 			String cbatid = cbat.next().toString();
@@ -243,7 +243,7 @@ public class ServiceController {
 			json.put("username", username);
 			json.put("password", password);
 			json.put("cbatid", cbatid);
-			
+			json.put("filename", filename);
 			jedis.publish("ServiceUpdateProcess.update", json.toJSONString());
 		}
 		

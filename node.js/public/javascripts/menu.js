@@ -297,6 +297,11 @@
         	if(document.getElementById('proname').textContent=="null"){
         		document.getElementById('proname').textContent="未知模板";
         	}
+        	
+        	document.getElementById('cnusts_l').textContent = "设备连接正常";
+			
+			$("#cnusts").css("color","#3ff83d");
+			
         	//成功提示对话框
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
@@ -381,7 +386,9 @@
 			document.getElementById('gateway').value = data.gateway;
 			document.getElementById('trapserver').value = data.trapserverip;
 			document.getElementById('trap_port').value = data.trap_port;
-			document.getElementById('cbat_active').textContent = "在线";
+			document.getElementById('cbatsts_l').textContent = "设备连接正常";
+			
+			$("#cbatsts").css("color","#3ff83d");
 			//成功提示对话框
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
@@ -466,16 +473,25 @@
    
    function fun_cnudetail(jsondata) {
 	   console.log(jsondata);
+	   var active;
+	   var style;
+	   if(jsondata.active == "在线"){
+		   active = "设备连接正常";
+		   style = "color:#3ff83d";
+	   }else{
+		   active = "设备失去连接";
+		   style = "color:red";
+	   }
+	   
 		$("#content").empty();			          				          		
      	$("#content").append('<div id="devinfo"><h3 style="color:green">终端设备信息</h3>'+
-     	'<div style="float:left"><img src="http://192.168.1.249:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:80px"/></div>'+
-		'<div style="height:80px;width:auto;margin:10px 0px 1px 210px"><lable>这里描述设备的功能信息</lable></div>'+							
+     	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:80px"/></div>'+
+     	'<div id="cnusts" style="height:80px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cnusts_l" style="font-size:30px;background-color:black;line-height:80px">'+active +'</lable></div>'+						
 		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#tabs-1">基本信息</a></li>'+
 			'<li><a href="#tabs-2">配置信息</a></li></ul>'+
 			'<div id="tabs-1">'+
-				'<table id="baseinfo"><tr><td><lable>mac :&nbsp &nbsp &nbsp &nbsp</lable><lable id="cnu_mac" style="margin-left:0px">'+ jsondata.mac+'</lable></td>'+
-		     	'<td><lable>状态 :</lable><lable id="cnu_active" style="margin-left:0px">'+ jsondata.active+'</lable></td>'+
+				'<table id="baseinfo"><tr><td><lable>mac :&nbsp &nbsp &nbsp &nbsp</lable><lable id="cnu_mac" style="margin-left:0px">'+ jsondata.mac+'</lable></td>'+		     	
 		     	'<td><lable>设备类型: '+"待定"+'</lable></td></tr>'+
 		     	'<tr><td><lable>设备标识: </lable>&nbsp<input type="text" id="c_label" style="width:150px" value='+jsondata.label+'></input></td>'+
 				'<td><lable>地址: </lable><input type="text" id="c_address" style="width:150px" value='+jsondata.address+'></input></td>'+
@@ -506,7 +522,7 @@
 				'<td><lable>3端口上行限速:</lable></td><td><input type="text" id="port2rxrate" value='+jsondata.port2rxrate+'></input></td>'+
 				'<td><lable>4端口上行限速:</lable></td><td><input type="text" id="port3rxrate" value='+jsondata.port3rxrate+'></input></td></tr>'+
 				'</table><br/>'+
-				'<button id="btn_cnusync" style="margin-left:200px">同步数据</button><button id="btn_cnusub" style="margin-left:60px">提交</button>'+
+				'<button id="btn_cnusync" style="margin-left:200px">刷新</button><button id="btn_cnusub" style="margin-left:60px">提交</button>'+
 			'</div>'+
 		'</div>'
 		);
@@ -515,6 +531,12 @@
 		document.getElementById('rxlimitsts').value=jsondata.rxlimitsts;
 			
 		document.getElementById('txlimitsts').value=jsondata.txlimitsts;
+		
+		var node = $("#navtree").dynatree("getActiveNode");
+	   if(node.getParent().data.online != "1"){
+		   $("#btn_cnusync")[0].disabled = "disabled";
+		   $("#btn_cnusub")[0].disabled = "disabled";
+	   }
 		
    }
    
@@ -564,37 +586,35 @@
 	   console.log(jsondata);
 	   var active;
 	   var style;
-	   if(jsondata.active == "1"){
+	   if(jsondata.active == "在线"){
 		   active = "设备连接正常";
-		   style = "color:green";
+		   style = "color:#3ff83d";
 	   }else{
 		   active = "设备失去连接";
 		   style = "color:red";
 	   }
 	   $("#content").empty();
 	   	$("#content").append('<div id="devinfo"><h3 style="color:green">头端设备信息</h3>'+
-	   	'<div style="float:left"><img src="http://192.168.1.249:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:100px"/></div>'+
-	   	'<div style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+	   	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:100px"/></div>'+
+	   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 	   	'<h3 style="color:green">基本信息</h3>'+
 	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
-			'<td><lable>状态 : </lable></td><td><lable id="cbat_active">'+jsondata.active+'</lable></td></tr>'+
+	   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td>'+
+	   		'<tr><td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
+			'<tr><td><lable>设备标识 : </lable></td><td><input type="text" id="label" value='+jsondata.label+'></input></td>'+
+			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp地址 : </lable></td><td><input type="text" id="address" value='+jsondata.address+'></input></td></tr>'+			
 			'<tr><td><lable>ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
-			'<td><lable>子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
-			'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td>'+
-			'<td><lable>设备标识 : </lable></td><td><input type="text" id="label" value='+jsondata.label+'></input></td></tr>'+
-			'<tr><td><lable>设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td>'+
-			'<td><lable>地址 : </lable></td><td><input type="text" id="address" value='+jsondata.address+'></input></td></tr>'+
-			'<tr><td><lable>内核版本 : </lable></td><td><lable>'+jsondata.bootver+'</lable></td>'+
-			'<td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
+			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
+			'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
 			'<tr><td><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
-			'<td><lable>端口号 : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
+			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp端口号 : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
 			'<tr><td><lable>管理VLAN使能 : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
 							'<option value="1">启动</option>'+
 							'<option value="2">禁用</option>'+
 						'</select></td>'+
-			'<td><lable>管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
+			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
 			'</table></div><br/>'+
-			'<div><hr/><button id="btn_sub" style="margin-left:60px">提交</button><button id="btn_sync" style="margin-left:190px">同步数据</button></div>');
+			'<div><hr/><button id="btn_sub" style="margin-left:60px">提交</button><button id="btn_sync" style="margin-left:190px">刷新</button></div>');
 			
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
    }

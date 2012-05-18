@@ -375,7 +375,7 @@ sio.sockets.on('connection', function (socket) {
   //升级头端进度信息
   socket.on('opt.updateinfo', function (data) {
 	  	 console.log('nodeserver: opt.updateinfo==='+data);
-	     publish.publish('servicecontroller.updateinfo', data);
+	     publish.publish('ServiceUpdateProcess.updateinfo', data);
   });
   
   socket.on('my other event', function (data) {
