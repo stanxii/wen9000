@@ -71,6 +71,7 @@ var sio = io.listen(node);
 
 
 redis.psubscribe('node.alarm.*');
+redis.psubscribe('node.historyalarm.*');
 redis.psubscribe('node.tree.*');
 redis.psubscribe('node.pro.*');
 redis.psubscribe('node.opt.*');
@@ -83,9 +84,9 @@ redis.on('pmessage', function(pat,ch,data) {
        data = JSON.parse(data);
        sio.sockets.emit('newAlarm',data);
     }
-    else if(ch == 'node.historyalarm') {
+    else if(ch == 'node.historyalarm.getall') {
        data = JSON.parse(data);
-       sio.sockets.emit('historyalarm_all',data);
+       sio.sockets.emit('historyalarmall',data);
     }
     else if(ch == 'node.tree.init') {
        data = JSON.parse(data);
@@ -228,9 +229,9 @@ sio.sockets.on('connection', function (socket) {
      publish.publish('servicecontroller.treeinit', 'inittree');
   });
   
-  socket.on('historyalarm_all', function (data) {
-     console.log('nodeserver: historyalarm_all');
-     publish.publish('servicecontroller.gethistoryalarm', '{istart:1, ilen: 1000}');
+  socket.on('historyalarmall', function (data) {
+     console.log('from client: nodeserver: historyalarmall');
+     publish.publish('servicecontroller.gethistoryalarm', '{"istart":1, "ilen": 1000}');
   });
 
   socket.on('cbatdetail', function (data) {

@@ -124,6 +124,7 @@ public class ServiceController {
 	public static void dowork(String pat, String message) throws ParseException, IOException {
 		
 		
+		System.out.println("dowork pat="+pat + "    msg=" + message);
 		if(pat.equalsIgnoreCase("servicecontroller.treeinit")){
 			doNodeTreeInit();
 		}else if(pat.equalsIgnoreCase("servicecontroller.cbatdetail")){
@@ -196,6 +197,8 @@ public class ServiceController {
 			doOptPreconfig_all(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.opt.pre_del")){
 			doOptPre_Del(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.gethistoryalarm")){
+			doGetHistoryAlarm(message);
 		}
 		
 
@@ -2446,7 +2449,58 @@ public class ServiceController {
 		System.out.println("======>>>mac = "+ mac);
 		return mac;
 	}
-	
+
+	private static void doGetHistoryAlarm(String message) {
+		Jedis jedis = null;
+
+		System.out.println("now doGet HistoryAlarm Spring get msg=" + message);
+		try {
+			jedis = redisUtil.getConnection();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+
+		try {
+			JSONArray jsonResponseArray = new JSONArray();
+			Set<String> results = jedis.keys("alarmid:*:entity");
+
+//			if( results.size() <=0 ) {
+//				
+//				System.out.println("set<results> size= " + results.size());
+//				redisUtil.getJedisPool().returnBrokenResource(jedis);
+//				return;
+//			}
+
+
+			for (String alarmkey : results) {
+
+				Map<String, String> alarmmap = jedis.hgetAll(alarmkey);
+				if (alarmmap != null) {
+					JSONArray row = new JSONArray();
+					row.addAll(alarmmap.values());
+					jsonResponseArray.add(row);
+					System.out
+							.println("historyalarm row=" + row.toJSONString());
+				}
+			}
+
+			String jsonString = jsonResponseArray.toJSONString();
+			// publish to notify node.js a new alarm
+			jedis.publish("node.historyalarm.getall", jsonString);
+
+			redisUtil.getJedisPool().returnResource(jedis);
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+
+		}
+
+	}
+
 
 
 	

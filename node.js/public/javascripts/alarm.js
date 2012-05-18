@@ -7,6 +7,7 @@
 
                   var socket = io.connect('http://localhost:3000');
                   socket.emit('lastalarms', "");
+
                   socket.on('news', function (data) {
                     console.log(data);
                     
@@ -112,7 +113,7 @@
 				"bFilter": false,						//不使用过滤功能
 				"bLengthChange": false,					//用户不可改变每页显示数量
 				"iDisplayLength": 8,					//每页显示8条数据
-				"sAjaxSource": "http://127.0.0.1:8080/wen9000/alarm/historyalarm", //获取数据的url				
+				"sAjaxSource": "http://localhost:8080/wen9000/alarm/historyalarm", //获取数据的url				
 				"fnServerData": retrieveData,			//获取数据的处理函数
 				"sPaginationType": "full_numbers",		//翻页界面类型
 				"oLanguage": {							//汉化
