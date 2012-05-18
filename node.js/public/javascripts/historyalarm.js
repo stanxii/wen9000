@@ -2,7 +2,7 @@
         var pTable;
         $(function(){
 
-                var socket = io.connect('http://192.168.1.249:3000');
+                var socket = io.connect('http://localhost:3000');
 
 
                 socket.emit('historyalarmall','historyalarmall');
@@ -24,9 +24,6 @@
                         "iDisplayLength": 10,                                   //Ã¿Ò³ÏÔÊ¾10ÌõÊý¾Ý
                         "aaData": groupval,
                 "bInfo": false,
-                "sScrollX": "100%",
-                "sScrollXInner": "110%",
-                "bScrollCollapse": true,
                 "sPaginationType": "full_numbers",
                 "oLanguage": {           
 			                                                        "sLengthMenu": "每页显示 _MENU_ 条记录",

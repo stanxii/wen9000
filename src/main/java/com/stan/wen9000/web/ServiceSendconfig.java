@@ -1,9 +1,15 @@
 package com.stan.wen9000.web;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.snmp4j.smi.Integer32;
@@ -114,6 +120,7 @@ public class ServiceSendconfig {
 	}
 	
 	private static void doPreConfig(String message) throws ParseException{
+		Boolean iserror = false;
 		Jedis jedis=null;
 		try {
 		 jedis = redisUtil.getConnection();	 
@@ -128,23 +135,49 @@ public class ServiceSendconfig {
 		String cbatip = jsondata.get("cbatip").toString();
 		String devcnuid = jsondata.get("devcnuid").toString();
 		String proid = jsondata.get("proid").toString();
+		String cbatmac = jsondata.get("cbatmac").toString();
+		String cnumac = jsondata.get("cnumac").toString();
 		//判断设备是否在线
 		try {
 			String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
 			if(tmp == ""){
-				
+				iserror = true;
 			}else{
 				//发送配置
 				if(!sendconfig(Integer.valueOf(proid),cbatip,Integer.valueOf(devcnuid),jedis)){
 					//发送失败
-					//将配置失败的设备id发往队列
-
+					iserror = true;
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-
+			iserror = true;
 		}
+		//预开户告警信息
+		Map<String, String> alarmhash=new LinkedHashMap();
+		alarmhash.put("runingtime", "N/A");
+		alarmhash.put("oid", "N/A");
+		alarmhash.put("alarmcode", "200932");		
+		alarmhash.put("cbatmac", "N/A"); 		
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String alarmtimes = format.format(date);
+		alarmhash.put("salarmtime", alarmtimes);
+		
+		if(iserror){
+			alarmhash.put("alarmlevel", "7");
+			alarmhash.put("trapinfo", "头端标识为"+jedis.hget("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":entity", "label")+"下的CNU["+cnumac+"]预开户失败");
+			alarmhash.put("enalarminfo", "CNU["+cnumac+"] Under Cbat["+cbatmac+ "] PreConfig!" );
+		}else{
+			alarmhash.put("alarmlevel", "5");
+			alarmhash.put("trapinfo", "头端标识为"+jedis.hget("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":entity", "label")+"下的CNU["+cnumac+"]预开户成功");
+			alarmhash.put("enalarminfo", "CNU["+cnumac+"] Under Cbat["+cbatmac+ "] PreConfig!" );
+		}
+		
+		String msgservice = JSONValue.toJSONString(alarmhash);
+		jedis.publish("servicealarm.new", msgservice);
+		
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	

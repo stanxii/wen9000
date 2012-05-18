@@ -2,7 +2,7 @@
 	var socket;
 	var isbusy = false;
   $(function() {
-	  socket = io.connect('http://192.168.1.249:3000');
+	  socket = io.connect('http://localhost:3000');
                   socket.emit('initDynatree', 'init tree' );
 
                   socket.on('initDynatree', onInitTree);
@@ -428,7 +428,7 @@
   			    //	},  			 	
 
                 children: treedata,
-		        imagePath: "http://192.168.1.249:8080/wen9000/css/images/",
+		        imagePath: "http://localhost:8080/wen9000/css/images/",
 		        minExpandLevel: 1,
 				onDblClick: function(node, event) {
 					var jsondata;
@@ -439,7 +439,7 @@
 			        	  socket.emit('cnudetail', node.data.key );				          			          		  	         	          		          	
 			          	
 			          }else if(node.data.type=="hfc"){
-			          		var urltext="http://192.168.1.249:8080/wen9000/global/hfcs/"+node.data.key;
+			          		var urltext="http://localhost:8080/wen9000/global/hfcs/"+node.data.key;
 				          	$.ajax({url:urltext,dataType:"text",success:function(text){
 				          		jsondata=$.parseJSON(text);			          		
 				          		$("#main").empty();		

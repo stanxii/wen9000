@@ -14,7 +14,7 @@
                   });
                   //计算实时告警区域高度
                   var av_height = window.screen.availHeight;
-                  var xx = $("#newAlarm").css("heigt",(170+(av_height - 728))+"px");
+                  var xx = $("#newAlarm").css("heigt",(250+(av_height - 728))+"px");
                   socket.on('newAlarm', onGetNewAlarm);
 
                   addAlarmHead();

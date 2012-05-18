@@ -358,6 +358,8 @@ public class ServiceHeartProcessor{
 				configjson.put("cbatip", jedis.hget("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":entity", "ip"));
 				configjson.put("devcnuid",cnuindex.toLowerCase().trim());
 				configjson.put("proid", proid);
+				configjson.put("cbatmac", cbatmac);
+				configjson.put("cnumac", cnumac);
 				jedis.publish("servicesendconfig.preconfig", configjson.toJSONString());
 				//删除预开户表
 				jedis.del("preconfig:"+cnumac.toLowerCase()+":entity");		
