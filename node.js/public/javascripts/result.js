@@ -2,7 +2,7 @@
 	var proc = 0;
 	var total = 0;
 	$(function(){
-		socket = io.connect('http://localhost:3000');
+		socket = io.connect('http://192.168.1.249:3000');
 		
 		socket.emit('dis.searchtotal',"searchtotal");
 		socket.on('dis.searchtotal',fun_SearchTotal);

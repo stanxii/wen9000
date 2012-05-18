@@ -2,8 +2,7 @@
 	var socket;
 	var isbusy = false;
   $(function() {
-  
-	  socket = io.connect('http://localhost:3000');
+	  socket = io.connect('http://192.168.1.249:3000');
                   socket.emit('initDynatree', 'init tree' );
 
                   socket.on('initDynatree', onInitTree);
@@ -422,7 +421,7 @@
   			    //	},  			 	
 
                 children: treedata,
-		        imagePath: "http://localhost:8080/wen9000/css/images/",
+		        imagePath: "http://192.168.1.249:8080/wen9000/css/images/",
 		        minExpandLevel: 1,
 				onDblClick: function(node, event) {
 					var jsondata;
@@ -433,7 +432,7 @@
 			        	  socket.emit('cnudetail', node.data.key );				          			          		  	         	          		          	
 			          	
 			          }else if(node.data.type=="hfc"){
-			          		var urltext="http://localhost:8080/wen9000/global/hfcs/"+node.data.key;
+			          		var urltext="http://192.168.1.249:8080/wen9000/global/hfcs/"+node.data.key;
 				          	$.ajax({url:urltext,dataType:"text",success:function(text){
 				          		jsondata=$.parseJSON(text);			          		
 				          		$("#main").empty();		
@@ -469,7 +468,7 @@
 	   console.log(jsondata);
 		$("#content").empty();			          				          		
      	$("#content").append('<div id="devinfo"><h3 style="color:green">终端设备信息</h3>'+
-     	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:80px"/></div>'+
+     	'<div style="float:left"><img src="http://192.168.1.249:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:80px"/></div>'+
 		'<div style="height:80px;width:auto;margin:10px 0px 1px 210px"><lable>这里描述设备的功能信息</lable></div>'+							
 		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#tabs-1">基本信息</a></li>'+
@@ -574,7 +573,7 @@
 	   }
 	   $("#content").empty();
 	   	$("#content").append('<div id="devinfo"><h3 style="color:green">头端设备信息</h3>'+
-	   	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:100px"/></div>'+
+	   	'<div style="float:left"><img src="http://192.168.1.249:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:100px"/></div>'+
 	   	'<div style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 	   	'<h3 style="color:green">基本信息</h3>'+
 	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
