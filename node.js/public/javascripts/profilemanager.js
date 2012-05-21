@@ -1,7 +1,7 @@
 (function($){
 	var pTable;
 	$(function(){
-		socket = io.connect('http://192.168.1.249:3000');
+		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('profile_all',"profile_all");
 		

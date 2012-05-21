@@ -2,6 +2,28 @@
 	var socket;
 	var isbusy = false;
   $(function() {
+	//根据屏幕分辨率更改页面布局
+//	  var ht1 = document.body.offsetHeight;
+//	  var ht2 = document.body.scrollHeight;
+//	  var ht3 = document.body.scrollTop;
+//	  var ht4 = document.body.screenTop;
+//	  var ht5 = window.screen.availHeight;
+//	  var ht6 = document.body.clientHeight;
+      if(window.screen.height >768){
+    	  var ht = window.screen.availHeight - 345;
+    	  $("#wapper").css("height",ht+"px");
+    	  $("#menu").css("height",ht+"px");
+      }else if(window.screen.height == 768){
+			  $("#menu").css("overflow","auto");
+   			  $("#menu").css("height","455px");
+   			  $("#navtree").css("height","445px");
+   			  $("#content").css("overflow","auto");
+   			  $("#content").css("height","455px");
+   			  $("#wapper").css("min-height","460px");
+   			$("#alarm").css("height","130px");
+   			$("#newAlarm").css("height","100x");
+   		  }
+      
 	  socket = io.connect('http://localhost:3000');
                   socket.emit('initDynatree', 'init tree' );
 
@@ -13,6 +35,7 @@
                   socket.on('cnu_sub', fun_CnuSub );
                   socket.on('cnusync', fun_CnuSync );
                   socket.on('statuschange', fun_Statuschange );
+      
       
       $("#btn_cnusync").live('click', function(){
     	  if(isbusy != false){
@@ -158,7 +181,6 @@
 	 });
   }); 
       function onInitTree(treedata) {
-          console.log(treedata);
           initTree(treedata);
      }
       
@@ -419,14 +441,6 @@
 		         this.reactivate();
 		        }, 
 		      	fx: { height: "toggle", duration: 200 },
-  			 		  			 			 	  			 	
-  			 	//initAjax: { 
-			    //type: "GET",
-			    //dataType: "json",
-		            //url: "http://192.168.1.250:8080/wen9000/global/eocs"
-	
-  			    //	},  			 	
-
                 children: treedata,
 		        imagePath: "http://localhost:8080/wen9000/css/images/",
 		        minExpandLevel: 1,
@@ -456,17 +470,16 @@
 				          	});		    
 			          }
 			    },
+			    strings: {
+			        loading: "Loading…",
+			        loadError: "Load error!"
+			    },
 		       // onDblClick: function(node, event) {
 			   //     node.toggleExpand();
 			   // },		                
 		        onActivate: function(node) {
 		        			        	       	
 			    },
-			    // onLazyRead: function(node){
-			    // 	node.appendAjax({
-			    // 		url: "/wen9000/global/cnu_read/"+node.data.mac			     		
-			    // 	});
-			    // }
 		    }); 	  		
 
    }

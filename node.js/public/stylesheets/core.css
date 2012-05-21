@@ -14,9 +14,9 @@ table input {
 }
 
 #wapper {
-      margin: 0 0 ;
       min-height:500px;
       position:relative;
+
 }
 
 /*menu */
@@ -72,6 +72,7 @@ table input {
 	position:absolute;
 	top:0;
 	left:26%;
+	width:74%
 }
 
 #pre_content {
@@ -79,7 +80,7 @@ table input {
 }
 
 #proTable_wrapper {
-	width:800px;
+	width:100%;
 }
 
 #proTable_wrapper td{
@@ -91,7 +92,7 @@ table input {
 }
 
 #cnuTable {
-	width:800px;
+	width:100%;
 	padding:30px 0 0 0;
 }
 
@@ -100,7 +101,7 @@ table input {
 }
 
 #upcbat_table {
-	width:800px;
+	width:100%;
 }
 
 #upcbat_table td {
@@ -108,7 +109,7 @@ table input {
 }
 
 #f_Table {
-	width:800px;
+	width:100%;
 }
 
 #f_Table td {
@@ -116,7 +117,7 @@ table input {
 }
 
 #s_Table {
-	width:800px;
+	width:100%;
 }
 
 #s_Table {
@@ -124,7 +125,7 @@ table input {
 }
 
 #list {
-	width:800px;
+	width:100%;
 }
 
 #list {
@@ -132,8 +133,8 @@ table input {
 }
 
 #configinfo {
-	float:left; 	
-	width:800px;
+	
+	width:100%;
 }
 
 #precnus_wrapper {
@@ -148,4 +149,6 @@ table input {
 	clear:both;
 }
 
- 
+#footer {
+	margin-top:5px;
+}

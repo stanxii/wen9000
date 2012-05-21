@@ -1,12 +1,21 @@
 #alarm {
-	height:310px;
-	border-style:dotted;
-	border-width:1px;	
+	height:190px;
+	min-width:1024px;
+	border-bottom-style:solid;
+	border-color:#BEBEBE;
+	border-width:3px;	
+	overflow:hidden;
+	clear:both;
+}
+
+#alarmHead {
+
 }
 
 .ralarmHead {
+	height:24px;
 	list-style:none; 
-    margin: 0 0 0 -40px;  
+    margin: 0 0 0 -45px;  
     float: left;
     font-size: 1.2em; 
     background: #ccc; 
@@ -20,20 +29,19 @@
 }
 
 #newAlarm {
-	height:250px;
+	height:160px;
 	overflow:auto;
 	clear:both;
 }
 
 .ralarm{
 	list-style: none;  
-    margin: 0 0 0 -40px; 
-    float: left;
+    margin: 2px 0 0 -45px; 
+	
 }
 
 .ralarm li {  
     float: left;  
     margin: 2px;
-    padding: 5px 0;  
     position: relative; /*--Declare X and Y axis base for sub navigation--*/  
 }
