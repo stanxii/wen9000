@@ -194,9 +194,9 @@
 				node = $("#navtree").dynatree("getTree").getNodeByKey("eocroot");
 				var img;
 				if(itemv.online == "1"){
-					img = "doc_with_children.gif";
+					img = "cbaton.png";
 				}else{
-					img = "offline.png";
+					img = "cbatoff.png";
 				}
 				node.addChild({
 					title: itemv.ip,
@@ -206,11 +206,14 @@
 					type:"cbat",
 					icon:img
 				});
+				return;
 			}
 			if(itemv.online == "1"){
-				node.data.icon = "doc_with_children.gif";
+				node.data.icon = "cbaton.png";
+				node.data.online = "1";
 			}else{
-				node.data.icon = "offline.png";
+				node.data.icon = "cbatoff.png";
+				node.data.online = "0";
 			}
 		}else if(itemv.type == "cnu"){
 			//	如果是新设备
@@ -230,11 +233,35 @@
 						type:"cnu",
 						icon:img
 					});
-			}			  					
+				return;
+			}		
+			//移机
+			if(node.getParent().data.key != itemv.cbatmac){
+				//删除原节点
+				node.remove();
+				node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.cbatmac);
+				var img;
+				if(itemv.online == "1"){
+					img = "online.gif";
+				}else{
+					img = "offline.png";
+				}
+				node.addChild({
+						title: itemv.mac,
+						key: itemv.mac,
+						online:itemv.online,
+						tooltip:itemv.mac,
+						type:"cnu",
+						icon:img
+					});
+				return;
+			}
 			if(itemv.online == "1"){
 				node.data.icon = "online.gif";
+				node.data.online = "1";
 			}else{
 				node.data.icon = "offline.png";
+				node.data.online = "0";
 			}
 		}else if(itemv.type == "hfc"){
 			if(node == null){
@@ -270,8 +297,10 @@
 			}			  					
 			if(itemv.online == "1"){
 				node.data.icon = "doc_with_children.gif";
+				node.data.online = "1";
 			}else{
 				node.data.icon = "offline.png";
+				node.data.online = "0";
 			}
 		}		  					
 		node.render();
@@ -318,11 +347,19 @@
         	
         	if(document.getElementById('proname').textContent=="null"){
         		document.getElementById('proname').textContent="未知模板";
+        	}else{
+        		document.getElementById('proname').textContent=data.profilename;
+        	}
+        	if(data.active == "1"){
+        		document.getElementById('cnusts_l').textContent = "设备连接正常";
+        		$("#cnusts").css("color","#3ff83d");
+        	}else{
+        		document.getElementById('cnusts_l').textContent = "设备失去连接";
+        		$("#cnusts").css("color","red");
         	}
         	
-        	document.getElementById('cnusts_l').textContent = "设备连接正常";
 			
-			$("#cnusts").css("color","#3ff83d");
+			
 			
         	//成功提示对话框
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
@@ -363,7 +400,9 @@
 			});
 			$("#dialog-message-failed").dialog("open");
   		}else{
-  		//成功提示对话框
+  			//更新模板名称
+  			document.getElementById('proname').textContent=data.profilename;
+  			//成功提示对话框
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
 			$( "#dialog-message" ).dialog({
@@ -497,15 +536,15 @@
 	   }
 	   
 		$("#content").empty();			          				          		
-     	$("#content").append('<div id="devinfo"><h3 style="color:green">终端设备信息</h3>'+
-     	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:80px"/></div>'+
-     	'<div id="cnusts" style="height:80px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cnusts_l" style="font-size:30px;background-color:black;line-height:80px">'+active +'</lable></div>'+						
+     	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">终端设备信息</h3>'+
+     	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/3702I.jpg" style="width:100px;height:80px"/></div>'+
+     	'<div id="cnusts" style="height:80px;width:200px;margin:10px 10px 1px 110px;'+style+'"><lable id="cnusts_l" style="font-size:30px;background-color:black;line-height:80px">'+active +'</lable></div>'+						
 		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#tabs-1">基本信息</a></li>'+
 			'<li><a href="#tabs-2">配置信息</a></li></ul>'+
 			'<div id="tabs-1">'+
 				'<table id="baseinfo"><tr><td><lable>mac :&nbsp &nbsp &nbsp &nbsp</lable><lable id="cnu_mac" style="margin-left:0px">'+ jsondata.mac+'</lable></td>'+		     	
-		     	'<td><lable>设备类型: '+"待定"+'</lable></td></tr>'+
+		     	'<td><lable>设备类型: '+jsondata.devicetype+'</lable></td></tr>'+
 		     	'<tr><td><lable>设备标识: </lable>&nbsp<input type="text" id="c_label" style="width:150px" value='+jsondata.label+'></input></td>'+
 				'<td><lable>地址: </lable><input type="text" id="c_address" style="width:150px" value='+jsondata.address+'></input></td>'+
 				'<td><lable>联系方式 : </lable><input type="text" id="c_contact" style="width:150px" value='+jsondata.contact+'></input></td></tr>'+
@@ -607,10 +646,10 @@
 		   style = "color:red";
 	   }
 	   $("#content").empty();
-	   	$("#content").append('<div id="devinfo"><h3 style="color:green">头端设备信息</h3>'+
-	   	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/Trans.jpg" style="width:200px;height:100px"/></div>'+
+	   	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">头端设备信息</h3>'+
+	   	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/3501I.jpg" style="width:200px;height:100px"/></div>'+
 	   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
-	   	'<h3 style="color:green">基本信息</h3>'+
+	   	'<h3 style="background-color:#ccc">基本信息</h3>'+
 	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
 	   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td>'+
 	   		'<tr><td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+

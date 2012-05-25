@@ -1,7 +1,7 @@
 (function($){
 	var count;
 	$(function(){
-		socket = io.connect('http://192.168.1.249:3000');
+		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('opt.allcheckedcnus', "allcheckedcnus" );
 		socket.emit('opt.selectedpro',"selectedpro");
@@ -65,7 +65,7 @@
 		}
 			
 		$("#profile_info").empty();	
-		$("#profile_info").append('<h3 style="color:green">配置信息</h3><div id="configinfo"><ul>'+
+		$("#profile_info").append('<h3>配置信息</h3><div id="configinfo"><ul>'+
 				'<li><a href="#tabs-1">基本配置</a></li>'+
 				'<li><a href="#tabs-2">下行配置</a></li>'+
 				'<li><a href="#tabs-3">上行配置</a></li></ul>'+
@@ -106,7 +106,7 @@
 								
 		 	}); 
 		 	count = groupval.length;
-		 	$('#cnuTable').dataTable( {
+		 	$('#conTable').dataTable( {
 			"bFilter": false,		//不使用过滤功能
 			"bStateSave": true,				
 			"bLengthChange": false,					//用户不可改变每页显示数量
@@ -132,7 +132,7 @@
 	            {
 	            	$('td:eq(1)', nRow).html( '在线' );				               
 	            }else{
-	            	$('td:eq(1)', nRow).html( '下线' );
+	            	$('td:eq(1)', nRow).html( '离线' );
 	            }     
 	            
 	        },		

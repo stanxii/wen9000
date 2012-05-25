@@ -2,7 +2,8 @@ extends ../main.layout
 
 block content
   script(type='text/javascript', src='/javascripts/discovery.js')
-  h1  设备搜索
+  h1  
+    label 设备搜索
   p
   p
   p
@@ -18,7 +19,7 @@ block content
       td
         input(type='text',id='stopip',value='192.168.223.10',style='width:200px')
   br
-  button(id='submit',style='float:right')  搜索
+  button(id='submit',style='margin-left:250px')  搜索
 
   div(id='dialog-dis-warn',title='提示',style='display:none')
     p

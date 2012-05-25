@@ -9,6 +9,16 @@ a {
   color: #00B7FF;
 }
 
+h1 {
+	border-bottom-style:solid;
+	border-color:#BEBEBE;
+	border-width:3px;
+}
+
+h1 label{
+	background-color:#ccc;
+}
+
 table input {
 	width:150px;
 }
@@ -23,7 +33,7 @@ table input {
 #menu {
 	position:absolute;
 	float:left;
-	width:25%;
+	width:20%;
 	margin-right:15px;
 	top:0;	
 }
@@ -39,6 +49,8 @@ table input {
 
 #baseinfo {
 	margin-left:20px;	
+	font-family: Verdana,Arial,sans-serif;
+    font-size: 1.0em;
 }
 
 #devinfo {
@@ -71,8 +83,8 @@ table input {
 #content {
 	position:absolute;
 	top:0;
-	left:26%;
-	width:74%
+	left:21%;
+	width:79%
 }
 
 #pre_content {
@@ -80,7 +92,7 @@ table input {
 }
 
 #proTable_wrapper {
-	width:100%;
+	width:98%;
 }
 
 #proTable_wrapper td{
@@ -97,6 +109,14 @@ table input {
 }
 
 #cnuTable td {
+	text-align:center;
+}
+
+#conTable {
+	width:98%;
+}
+
+#conTable td {
 	text-align:center;
 }
 
@@ -117,7 +137,7 @@ table input {
 }
 
 #s_Table {
-	width:100%;
+	width:10%;
 }
 
 #s_Table {
@@ -134,7 +154,7 @@ table input {
 
 #configinfo {
 	
-	width:100%;
+	width:98%;
 }
 
 #precnus_wrapper {
@@ -151,4 +171,16 @@ table input {
 
 #footer {
 	margin-top:5px;
+}
+/*history alarm*/
+#historyAlarm {	
+	padding:30px 0 0 0;
+}
+
+#historyAlarm td{
+	text-align:center;
+}
+
+#historyAlarm_filter {
+	margin-right:30px;	
 }

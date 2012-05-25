@@ -1,5 +1,4 @@
 #alarm {
-	height:190px;
 	min-width:1024px;
 	border-bottom-style:solid;
 	border-color:#BEBEBE;
@@ -29,7 +28,7 @@
 }
 
 #newAlarm {
-	height:160px;
+	height:110px;
 	overflow:auto;
 	clear:both;
 }

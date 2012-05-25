@@ -326,11 +326,11 @@ public class TrapReceiverBean {
 				alarmhash.put("cnutype", cnutype);
 				
 				if( 1 == isOnline){
-				alarmhash.put("cnalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"的终端上线");
-				alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"'s slave online");
+					alarmhash.put("cnalarminfo", "头端:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"上线");
+					alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"'s slave[" + cnumac+"]"+" online");
 				}else{
-					alarmhash.put("cnalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"的终端下线");
-					alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"'s slave offline");
+					alarmhash.put("cnalarminfo", "头端:" + (String)alarmhash.get("cbatmac") +"下的 CNU[" + cnumac+"]"+"下线");
+					alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"'s slave[" + cnumac+"]"+" offline");
 				}
 				
 				
@@ -339,11 +339,11 @@ public class TrapReceiverBean {
 				isOnline = Integer.parseInt((String)alarmhash.get("alarmvalue"));
 				alarmhash.put("alarmlevel", "4");
 				if( 1 == isOnline){
-					alarmhash.put("cnalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"发现线卡   " + alarmhash.get("cltindex") );
+					alarmhash.put("cnalarminfo", "头端:" + (String)alarmhash.get("cbatmac") +"发现线卡   " + alarmhash.get("cltindex") );
 					alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"discovery  clt index " + alarmhash.get("cltindex") );
 					
 				}else{
-					alarmhash.put("cnalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +" 丢失线 卡 " + alarmhash.get("cltindex") );
+					alarmhash.put("cnalarminfo", "头端:" + (String)alarmhash.get("cbatmac") +" 丢失线 卡 " + alarmhash.get("cltindex") );
 					alarmhash.put("enalarminfo", "cbatmac:" + (String)alarmhash.get("cbatmac") +"loss clt index " + alarmhash.get("cltindex") );
 					
 				}
@@ -360,21 +360,21 @@ public class TrapReceiverBean {
 				{				
 					alarmhash.put("alarmlevel", "1");
 					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级失败");
-					alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +" Upgrade Failed!");
+					alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +" Upgrade Failed!");
 					
 				}
 				else if(istatus==1)
 				{
 					alarmhash.put("alarmlevel", "7");
 					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级告警信息");
-					alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +" Upgrade  Alarm information!");
+					alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +" Upgrade  Alarm information!");
 									
 				}
 				else if(istatus == 0)
 				{
 					alarmhash.put("alarmlevel", "6");
 					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级成功");
-					alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +" Upgrade Successful!");
+					alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +" Upgrade Successful!");
 									
 				}
 				
@@ -426,48 +426,57 @@ public class TrapReceiverBean {
 				{
 					alarmhash.put("alarmlevel", "6");
 					alarmhash.put("cnalarminfo", "阻止 CNU注册 成功");
-					alarmhash.put("enalarminfo", "Prevent  CNU Register Successful");					
+					alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));					
 				}
 				else
 				{
 					alarmhash.put("alarmlevel", "3");
 					alarmhash.put("cnalarminfo", "阻止 CNU注册 失败");
-					alarmhash.put("enalarminfo", "Prevent  CNU Register Failed");					
+					alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));					
 				}
 				break;
 			case 200915:
-			case 200916:				
-				alarmhash.put("alarmlevel", "3");
+			case 200916:
+				if(Integer.parseInt((String)alarmhash.get("alarmvalue"))==1){
+					alarmhash.put("alarmlevel", "5");
+					alarmhash.put("cnalarminfo", "头端["+alarmhash.get("cbatmac")+"]下发MOD["+alarmhash.get("cnuindex")+"]成功");
+					alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));
+				}else{
+					alarmhash.put("alarmlevel", "2");
+					alarmhash.put("cnalarminfo", "头端["+alarmhash.get("cbatmac")+"]下发MOD["+alarmhash.get("cnuindex")+"]失败");
+					alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));
+				}
+				
 				break;
 			case 200918:
 				if( Integer.parseInt((String)alarmhash.get("alarmvalue"))==1)
 				{
 					alarmhash.put("alarmlevel", "6");
 					alarmhash.put("cnalarminfo", "KICK OFF CNU 成功");
-					alarmhash.put("enalarminfo", "KICK OFF CNU Successful");					
+					alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));					
 				}
 				else
 				{
 					alarmhash.put("alarmlevel", "3");
 					alarmhash.put("cnalarminfo", "KICK OFF CNU 失败");
-					alarmhash.put("enalarminfo", "KICK OFF CNU Failed");					
+					alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));					
 				}
 				break;
 			case 200919:
 				alarmhash.put("alarmlevel", "6");
 				alarmhash.put("cnalarminfo", "CNU强制重新注册");
-				alarmhash.put("enalarminfo", "CNU forced to registration again");				
+				alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));				
 				break;
 			case 200920:			
 				// 告警				
 				alarmhash.put("alarmlevel", "6");
-				alarmhash.put("cnalarminfo", "CbatMac为"+ (String)alarmhash.get("cbatmac") +"的头端上线");
-				alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +"  Master online!");
+				alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端上线");
+				alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +"  Master online!");
 				break;
 			case 200921:				
 				alarmhash.put("alarmlevel", "2");
-				alarmhash.put("cnalarminfo", "CbatMac为"+ (String)alarmhash.get("cbatmac") +"的头端下线");
-				alarmhash.put("enalarminfo", "cbatMac:"+ (String)alarmhash.get("cbatmac") +"  Master offline!");
+				alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端下线");
+				alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +"  Master offline!");
 				break;
 			case 200912:				
 				alarmhash.put("alarmlevel", "5");
@@ -508,7 +517,6 @@ public class TrapReceiverBean {
 
 	private void sendToAlarmQueue(String msg) {
 		try {
-			
 			Jedis jedis = redisUtil.getConnection();
 			jedis.publish("servicealarm.new", msg);
 			redisUtil.closeConnection(jedis);

@@ -13,6 +13,8 @@ import org.json.simple.JSONValue;
 import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.snmp4j.smi.Integer32;
+import org.snmp4j.smi.OID;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
@@ -29,7 +31,7 @@ public class ServiceDiscoveryProcessor  {
 
 	EocDeviceType devicetype;
 
-	
+	private static SnmpUtil util = new SnmpUtil();
 	  private static RedisUtil redisUtil;
 	  
 	  public static RedisUtil getRedisUtil() {
@@ -235,29 +237,27 @@ public class ServiceDiscoveryProcessor  {
 		json.put("ip", cbatip);
 		switch(Integer.parseInt(cbatdevicetype))
 		{
-        	case 1:
-        		//break;
-        	case 2:
-        		
-        		//break;
-        	case 3:
-        		//break;
-        	case 4:
-        		
-        		//break;
-        	case 5:
-        		//break;
-        	case 6:
-        		
-        		//break;
-        	case 7:
-        		//break;
-        	case 8:
-        		json.put("devtype", "中文测试");
-        		break;
-        	default:
-        		json.put("devtype", "Unknown");
-        		break;
+			case 1:
+				json.put("devicetype", "WEC-3501I X7");
+	    		break;
+	    	case 2:
+	    		json.put("devicetype", "WEC-3501I E31");
+	    		break;
+	    	case 3:
+	    		json.put("devicetype", "WEC-3501I Q31");
+	    		break;
+	    	case 4:
+	    		json.put("devicetype", "WEC-3501I C22");
+	    		break;
+	    	case 5:
+	    		json.put("devicetype", "WEC-3501I S220");
+	    		break;
+	    	case 6:
+	    		json.put("devicetype", "WEC-3501I S60");
+	    		break;
+	    	default:
+	    		json.put("devicetype", "Unknown");
+	    		break;
 		}
 		jedis.publish("node.dis.findcbat", json.toJSONString());
 		
@@ -279,11 +279,9 @@ public class ServiceDiscoveryProcessor  {
 		hash.put("gateway", gateway);
 		
 		jedis.hmset(scbatinfokey, hash);
-		// hmset cnuid:1 cnuid 1 mac 30:71:b2:88:88:01 label 
-		 		
-				
-		long end = System.currentTimeMillis();  
-		System.out.println("one cbat and cbat info SET: " + ((end - start)) + " milliseconds");  
+		
+		//trapserverip and port
+		SaveTrapServer(jedis,String.valueOf(icbatid));
 		
 		redisUtil.getJedisPool().returnResource(jedis);
 
@@ -356,10 +354,89 @@ public class ServiceDiscoveryProcessor  {
 		
 		jedis.hmset(shfcentitykey, hfcentity);
 		
+		
 		jedis.save();
 		
 		
 		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void SaveTrapServer(Jedis jedis,String cbatid){
+		//判断并修改设备trapserver ip/port
+		String devtrapserverip = null;
+		Integer trap_port = 0;
+		String cbatip = jedis.hget("cbatid:"+cbatid+":entity", "ip");
+		String cbatinfokey = "cbatid:"+cbatid+":cbatinfo";
+		try {
+			devtrapserverip = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+			trap_port = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}));
+		}
+		catch(Exception e){
+			return;
+		}
+
+		if(devtrapserverip==""){
+			return;
+		}
+		
+		//如果global:trapserver:ip键不存在，创建之
+		if(jedis.get("global:trapserver:ip")==null){
+			jedis.set("global:trapserver:ip", "192.168.223.253");
+			jedis.set("global:trapserver:port", "162");
+		}
+
+		//if systemconfig db trap ip = device trap ip not need set trap server ip
+		if( !jedis.get("global:trapserver:ip").equalsIgnoreCase(devtrapserverip)){
+			try {
+				//set trap server ip
+			util.setV2StrPDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}), 
+					jedis.get("global:trapserver:ip")
+					);
+			//save
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
+					new Integer32(1)
+					);
+			
+			jedis.hset(cbatinfokey, "trapserverip", devtrapserverip);
+			//reset
+			/*
+			util.setV2PDU(currentip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), 
+					new Integer32(1)
+					);
+			 */
+			 		
+			}catch(Exception e){
+				//e.printStackTrace();
+			}
+		}
+		//if trap port != systemconfig db trap port
+		if(trap_port != Integer.valueOf(jedis.get("global:trapserver:port")))
+		{
+			try {
+				//set trap server ip
+				util.setV2PDU(cbatip,
+						"161",
+						new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}), 
+						new Integer32(Integer.valueOf(jedis.get("global:trapserver:port")))
+						);
+				//save
+				util.setV2PDU(cbatip,
+						"161",
+						new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
+						new Integer32(1)
+						);
+				
+				jedis.hset(cbatinfokey, "agentport", String.valueOf(trap_port));
+			}catch(Exception e){
+				
+			}
+		}
 	}
 	
 	private static void Sendstschange(String type,String devid,Jedis jedis){ 

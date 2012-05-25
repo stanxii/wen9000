@@ -319,7 +319,14 @@ public class ServiceHeartProcessor{
 				String cur_cbatid = jedis.get("mac:"+cbatmac+":deviceid");
 				//修改CNU移机先关信息
 				jedis.hset("cnuid:"+cnuid+":entity", "cbatid", cur_cbatid);
-				jedis.smove("cbatid:"+tmpcbatid+":cnus", "cbatid:"+cur_cbatid+":cnus", cnuid);				
+				jedis.smove("cbatid:"+tmpcbatid+":cnus", "cbatid:"+cur_cbatid+":cnus", cnuid);	
+				
+				//通知前端移机事件
+				jedis.hset("cnuid:"+cnuid+":entity", "devcnuid", cnuindex);
+				jedis.hset("cnuid:"+cnuid+":entity", "active", active);
+				Sendstschange("cnu",cnuid,jedis);
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
 			}
 			if(jedis.hget("cnuid:"+cnuid+":entity", "active").equalsIgnoreCase(active)==false){
 				//cnu状态有变迁,发往STSCHANGE_QUEUE_NAME
@@ -368,7 +375,7 @@ public class ServiceHeartProcessor{
 				alarmhash.put("runingtime", "N/A");
 				alarmhash.put("oid", "N/A");
 				alarmhash.put("alarmcode", "200932");
-				alarmhash.put("trapinfo", "头端标识为"+jedis.hget("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":entity", "label")+"下的CNU["+cnumac+"]预开户");
+				alarmhash.put("cnalarminfo", "头端标识为"+jedis.hget("cbatid:"+jedis.get("mac:"+cbatmac+":deviceid")+":entity", "label")+"下的CNU["+cnumac+"]预开户");
 				alarmhash.put("enalarminfo", "CNU["+cnumac+"] Under Cbat["+cbatmac+ "] PreConfig!" );
 				alarmhash.put("cbatmac", "N/A"); 
 				alarmhash.put("alarmlevel", "3");
@@ -441,7 +448,7 @@ public class ServiceHeartProcessor{
 			jedis.hmset(scnuentitykey, cnuentity);
 			
 			//添加cnu到profile集合中
-			jedis.sadd("profileid:1:cnus", String.valueOf(icnuid));
+			jedis.sadd("profileid:1:cnus", cnumac);
 			
 			jedis.bgsave();
 			//发现新cnu,发往STSCHANGE_QUEUE_NAME
@@ -487,7 +494,8 @@ public class ServiceHeartProcessor{
 			String cnukey = "cnuid:"+devid+":entity";
 			json.put("mac", jedis.hget(cnukey,"mac"));
 			json.put("online", jedis.hget(cnukey,"active"));
-			json.put("cbatmac", jedis.hget(cnukey,jedis.hget("cbatid:"+cbatid+":entity","mac")));
+			json.put("cbatmac", jedis.hget("cbatid:"+cbatid+":entity","mac"));
+			json.put("srcmac", "");
 			json.put("type", "cnu");
 			
 		}else if(type == "hfc"){

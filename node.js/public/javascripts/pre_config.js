@@ -95,13 +95,14 @@
 					      { "sTitle": "操作", "sClass": "center" }
 						],
 			
-	    } );
+	    } );		
+		
 	}
 	
 	function fun_PreconfigBatch(data){
 		if(data.code == "0"){
 			//成功
-			//成功提示对话框
+			//成功提示对话框		
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 				
 			$( "#dialog-message" ).dialog({
@@ -111,11 +112,13 @@
 				resizable: false,
 				hide: "explode",
 				buttons: {
-					Ok: function() {
+					Ok: function() {						
 						$( this ).dialog( "close" );
+						window.location.reload();
 					}
 				}
 			});
+
 			$("#dialog-message").dialog("open");
 		}else if(data.code == "2"){
 			$("#errorinfo").empty();
@@ -171,6 +174,7 @@
 				buttons: {
 					Ok: function() {
 						$( this ).dialog( "close" );
+						window.location.reload();
 					}
 				}
 			});
@@ -198,6 +202,10 @@
 			});
 			$("#dialog-message-preconfig-failed").dialog("open");
     	}else{
+    		$('#precnus').dataTable().fnAddData( [
+               	        data.mac,
+               	        data.profile,
+               	        data.html] );
     		//成功提示对话框
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 

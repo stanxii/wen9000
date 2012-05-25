@@ -87,7 +87,12 @@
 		/* Add a click handler for the delete row */
 	    $('#btn_delete').click( function() {
 	        var anSelected = fnGetSelected( pTable );
-	        socket.emit('profile_del',anSelected[0].firstChild.textContent);
+	        var proid = anSelected[0].firstChild.textContent;
+	        if(proid <4){
+	        	alert("出厂模板无法删除");
+	        	return;
+	        }
+	        socket.emit('profile_del',proid);
 	        
 	    } );    	
 	    
@@ -135,7 +140,7 @@
 							
 							socket.emit('profile_create',datastring);
 							$("#dialog-form").dialog("close");						
-						
+							window.location.reload();
 					}},
 					"取消": function() {
 						$( this ).dialog("close");
@@ -151,8 +156,13 @@
 	    
 	    /* Add a click handler for the edit row */
 	    $('#btn_edit').click( function() {
-	        var anSelected = fnGetSelected( pTable );
-	        socket.emit('profile_isedit',anSelected[0].firstChild.textContent);
+	    	var anSelected = fnGetSelected( pTable );
+	        var proid = anSelected[0].firstChild.textContent;
+	        if(proid <4){
+	        	alert("出厂模板无法修改！");
+	        	return;
+	        }
+	        socket.emit('profile_isedit',proid);
 	      }); 
 	});
 
@@ -284,7 +294,7 @@
 				width: 600,
 				buttons: {					
 					"确定": function() {
-						$( "#dialog-detail" ).dialog("close");
+						$( "#dialog-detail" ).dialog("close");						
 					}
 				},
 				close: function() {
@@ -463,7 +473,7 @@
 							$("#dialog-edit").dialog("close");
 							pTable=$('#proTable').dataTable();
 
-						
+							window.location.reload();
 					}},
 					"取消": function() {
 						$( this ).dialog("close");
@@ -573,7 +583,7 @@
 	            
 	        },		
 			"aoColumns": [							//设定各列宽度
-			              { "sTitle": "ID" },
+			              { "sTitle": "ID" ,"sWidth":"50px"},
 						  { "sTitle": "模板名称" },
 					      { "sTitle": "vlan使能" },
 					      { "sTitle": "下行限速使能" },

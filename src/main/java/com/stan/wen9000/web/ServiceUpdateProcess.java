@@ -168,7 +168,11 @@ public class ServiceUpdateProcess{
 					//删除集合中此头端
 					jedis.srem("global:updatedcbats", cbatid);
 					//通知前端此头端完成升级
-					jedis.publish("node.opt.updateproc", num);
+					String total = jedis.get("global:updatedtotal");
+					JSONObject json = new JSONObject();
+					json.put("proc", num);
+					json.put("total", total);
+					jedis.publish("node.opt.updateproc", json.toJSONString());
 					redisUtil.getJedisPool().returnResource(jedis);
 					return;
 				}
@@ -228,7 +232,11 @@ public class ServiceUpdateProcess{
 				//删除集合中此头端
 				jedis.srem("global:updatedcbats", cbatid);
 				//通知前端此头端完成升级
-				jedis.publish("node.opt.updateproc", num);
+				String total = jedis.get("global:updatedtotal");
+				JSONObject json = new JSONObject();
+				json.put("proc", num);
+				json.put("total", total);
+				jedis.publish("node.opt.updateproc", json.toJSONString());
 				redisUtil.getJedisPool().returnResource(jedis);
 				return;
 			}

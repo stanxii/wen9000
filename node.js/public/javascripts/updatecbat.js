@@ -2,15 +2,16 @@
 	var proc = 0;
 	var total = 0;
 	$(function(){
-		socket = io.connect('http://192.168.1.249:3000');
+		socket = io.connect('http://localhost:3000');
 		
-		socket.emit('opt.onlinecbats',"onlinecbats");
-		socket.emit('opt.updateinfo',"updateinfo");
-		
+		socket.emit('opt.updateproc',"updateproc");
+		socket.emit('opt.onlinecbats',"onlinecbats");		
+
 		socket.on('opt.onlinecbats',fun_OnlineCbats);
 		socket.on('opt.ftpfilelist',fun_Ftpfilelist);
 		socket.on('opt.updateproc',fun_Updateproc);
 		socket.on('opt.updateinfo',fun_Updateinfo);
+		socket.on('opt.checkedcbats',fun_CheckedCbats);
 		
 		$('.chk').live('click', function () {
 	        var checkbox = $(this);
@@ -19,7 +20,12 @@
 	        socket.emit('opt.updatedcbats', data );
 	    } );
 		
+		$("#refresh").click(function(){
+			window.location.reload();
+		})
+		
 		$("#ftp_connect").click(function(){
+			
 			var objSelect = $("#combox_files");		
 			if(objSelect[0].options.length>0){
 				var length = document.getElementById('combox_files').options.length;
@@ -32,34 +38,29 @@
 			var ftpuser = document.getElementById("username").value;
 			var ftppassword = document.getElementById("password").value;
 			var data = '{"ftpip":"'+ftpip+'","ftpport":"'+ftpport+'","username":"'+ftpuser+'","password":"'+ftppassword+'"}';
+			document.body.style.cursor = 'wait';
+			$("#ftp_connect").attr("disabled","disabled");
 			socket.emit('opt.ftpconnet',data);
 			
 			
 		});
 		
 		$("#showproc").click(function(){
-			$("#up_proc")[0].textContent = proc+"/"+total;
-			$( "#dialog:ui-dialog" ).dialog( "destroy" );
-			
-			$( "#dialog-message-proc" ).dialog({
-				autoOpen: false,
-				show: "blind",
-				modal: true,
-				resizable: false,
-				hide: "explode"
-			});
-			$("#dialog-message-proc").dialog("open");	
+			socket.emit('opt.updateinfo',"updateinfo");	
 		});
 		
-//		$("#showproc").onmouseenter(function(){
-//			document.body.style.cursor = 'default';
-//		});
-//		
-//		$("#showproc").onmouseleave(function(){
-//			document.body.style.cursor = 'default';
-//		});
-		
 		$("#btn_update").click(function(){
+			socket.emit('opt.checkedcbats',"opt.checkedcbats");
+			$("#btn_update").attr("disabled","disabled");
+
+		});
+		
+		initTable();
+	});
+	
+	function fun_CheckedCbats(data){
+		if(data != ""){
+			$("#choosefile").css("display","none");
 			var objSelect = $("#combox_files");
 			var ftpip = document.getElementById("serverip").value;
 			var ftpport = document.getElementById("serverport").value;
@@ -69,13 +70,13 @@
 			var data = '{"ftpip":"'+ftpip+'","ftpport":"'+ftpport+'","username":"'+ftpuser+'","password":"'+ftppassword+ 
 			'","filename":"' + filename + '"}';
 			if(filename == ""){
-				Alert("没有选择升级文件!!!");
+				alert("没有选择升级文件!!!");
 				return;
 			}
 			socket.emit('opt.ftpupdate',data);
 			
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
-			
+
 			$( "#dialog-message-proc" ).dialog({
 				autoOpen: false,
 				show: "blind",
@@ -84,12 +85,10 @@
 				hide: "explode"
 			});
 			$("#dialog-message-proc").dialog("open");
-			
-			//$("#up_proc")[0].textContent = "";
-		});
-		
-		initTable();
-	});
+		}else{
+			alert("请选择要升级的头端!")
+		}
+	}
 	
 	function fun_Updateinfo(data){
 		//获取进度信息
@@ -97,7 +96,13 @@
 		total = data.total;
 		proc = data.proc;
 		if(data != ""){
-			$("#up_proc")[0].textContent = proc+"/"+total;
+			if(proc == total){
+				$("#up_proc")[0].textContent = "升级完成！！！！";
+				$("#dialog-message-proc img").css("display","none");
+			}else{
+				$("#up_proc")[0].textContent = proc+"/"+total;
+				$("#dialog-message-proc img")._show();
+			}
 			
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 			
@@ -114,14 +119,23 @@
 	}
 	
 	function fun_Updateproc(data){
-		proc = data;
+		proc = data.proc;
+		total = data.total;
+		if(proc < total){
+			//如果有设备正在升级，升级按钮不可用
+			$("#btn_update").attr("disabled","disabled");
+		}
 		$("#up_proc")[0].textContent = proc+"/"+total;
 		if(proc == total){
+			$("#btn_update").removeAttr("disabled");
 			$("#dialog-message-proc").dialog("close");
 		}
 	}
 	
 	function fun_Ftpfilelist(data){
+		document.body.style.cursor = 'default';
+		
+		$("#ftp_connect").removeAttr("disabled");
 		if(data == ""){
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 			
@@ -146,7 +160,6 @@
 				objSelect[0].options.add(varItem);  							
 		 	});
 			
-			$("#btn_update").attr("disabled",false); 
 			$("#choosefile")._show();
 			
 		}			
@@ -225,7 +238,7 @@
 	        	}else if(aData[5] == "19"){
 	        		$('td:eq(5)', nRow).html( 'Pending' );	
 	        	}else if(aData[5] == "20"){
-	        		$('td:eq(5)', nRow).html( 'A/N' );	
+	        		$('td:eq(5)', nRow).html( 'N/A' );	
 	        	}
 	            
 	        },		

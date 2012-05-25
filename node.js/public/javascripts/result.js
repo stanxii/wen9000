@@ -2,21 +2,13 @@
 	var proc = 0;
 	var total = 0;
 	$(function(){
-		socket = io.connect('http://192.168.1.249:3000');
+		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('dis.searchtotal',"searchtotal");
+
 		socket.on('dis.searchtotal',fun_SearchTotal);
 		socket.on('dis.proc',fun_Proc);
-		socket.on('dis.findcbat',fun_FindCbat);
-		//弹出进度窗口
-		$( "#dialog:ui-dialog" ).dialog( "destroy" );
-		$( "#dialog-dis-proc" ).dialog({
-			show: "blind",
-			modal: true,
-			resizable: false,
-			hide: "explode"
-		});
-		$("#dialog-dis-proc").dialog("open");
+		socket.on('dis.findcbat',fun_FindCbat);		
 		
 		//table
 		$('#list').dataTable( {	  			 		
@@ -64,12 +56,27 @@
 		$("#dis_proc")[0].textContent= proc + "/"+total;
 		if(proc == total){
 			$("#dialog-dis-proc").dialog("close");
+			$("#dialog-dis-proc img").css("display","none");
+			$("#dis_proc")[0].textContent="搜索结束!!!";
 		}
 	}
 	
 	function fun_SearchTotal(data){
 		total = data.total;
 		proc = data.proc;
+		if(proc == total){
+			$("#dialog-dis-proc img").css("display","none");
+			$("#dis_proc")[0].textContent="搜索结束!!!";
+		}
+		//弹出进度窗口
+		$( "#dialog:ui-dialog" ).dialog( "destroy" );
+		$( "#dialog-dis-proc" ).dialog({
+			show: "blind",
+			modal: true,
+			resizable: false,
+			hide: "explode"
+		});
+		$("#dialog-dis-proc").dialog("open");
 	}
 	
 	function fun_FindCbat(data){
@@ -77,6 +84,6 @@
 	        data.mac,
 	        data.active,
 	        data.ip,
-	        data.devtype] );
+	        data.devicetype] );
 	}
 })(jQuery);

@@ -77,6 +77,9 @@ redis.psubscribe('node.pro.*');
 redis.psubscribe('node.opt.*');
 redis.psubscribe('node.dis.*');
 
+//redis初始化
+publish.publish('servicecontroller.index.init', '');
+
 redis.on('pmessage', function(pat,ch,data) {
 
    console.log('pmessage receive from redis with pubsub pat='+ pat + ' ch = ' + ch + ' data' + data);
@@ -138,7 +141,12 @@ redis.on('pmessage', function(pat,ch,data) {
             sio.sockets.emit('cnusync',data);
     	}        
     }else if(ch == 'node.tree.cnu_sub') {
-    	sio.sockets.emit('cnu_sub',data);   
+    	if(data == ""){
+    		sio.sockets.emit('cnu_sub',data);
+    	}else{
+    		data = JSON.parse(data);
+            sio.sockets.emit('cnu_sub',data);
+    	}  
     }else if(ch == 'node.opt.cnus') {
     	data = JSON.parse(data);
     	sio.sockets.emit('opt.allcnus',data);   
@@ -205,12 +213,20 @@ redis.on('pmessage', function(pat,ch,data) {
     		data = JSON.parse(data);
             sio.sockets.emit('opt.ftpfilelist',data);
     	}        
+    }else if(ch == 'node.opt.checkedcbats') {
+    	sio.sockets.emit('opt.checkedcbats',data);       
     }else if(ch == 'node.opt.updateproc') {
+    	data = JSON.parse(data);
     	sio.sockets.emit('opt.updateproc',data);       
     }else if(ch == 'node.opt.updateinfo') {
     	sio.sockets.emit('opt.updateinfo',data);       
     }else if(ch == 'node.opt.preconfig_one') {
-    	sio.sockets.emit('opt.preconfig_one',data);       
+    	if(data == ""){
+    		sio.sockets.emit('opt.preconfig_one',data);
+    	}else{
+    		data = JSON.parse(data);
+            sio.sockets.emit('opt.preconfig_one',data);
+    	}        
     }else if(ch == 'node.opt.preconfig_batch') {
     	data = JSON.parse(data);
     	sio.sockets.emit('opt.preconfig_batch',data);       
@@ -378,10 +394,20 @@ sio.sockets.on('connection', function (socket) {
 	  	 console.log('nodeserver: opt.updatedcbats==='+data);
 	     publish.publish('servicecontroller.opt.updatedcbats', data);
   });
+//获得要升级的头端设备
+  socket.on('opt.checkedcbats', function (data) {
+	  	 console.log('nodeserver: opt.checkedcbats==='+data);
+	     publish.publish('servicecontroller.opt.checkedcbats', data);
+  });
   //升级头端设备
   socket.on('opt.ftpupdate', function (data) {
 	  	 console.log('nodeserver: opt.ftpupdate==='+data);
 	     publish.publish('servicecontroller.opt.ftpupdate', data);
+  });
+  //查询升级进度
+  socket.on('opt.updateproc', function (data) {
+	  	 console.log('nodeserver: opt.updateproc==='+data);
+	     publish.publish('servicecontroller.opt.updateproc', data);
   });
   //升级头端进度信息
   socket.on('opt.updateinfo', function (data) {

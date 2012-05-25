@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.snmp4j.smi.OID;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
@@ -22,14 +24,14 @@ public class ServiceAlarmProcessor {
 	
 	private static Logger log = Logger.getLogger(ServiceAlarmProcessor.class);
 
-
+ 
 	private static final String  ALARM_EXPIRE_SECONDS =  "alarm:expire:seconds" ;
 	private static final String  ALARM_REALTIME_MAX_NUM =  "alarm:realtime:max" ;
 	private static final String ALARM_REALTIME_QUEUE_NAME = "alarm_realtime_queue";
 	private static final String ALARM_HISTORY_QUEUE_NAME = "alarm_history_queue";
 	
 
-	
+	private static SnmpUtil util = new SnmpUtil();
 	private static RedisUtil redisUtil;
 
 	  
@@ -290,14 +292,26 @@ public class ServiceAlarmProcessor {
 			String cbatmac = (String)alarm.get("cbatmac");			
 			String cbatid = jedis.get("mac:" +  cbatmac + ":deviceid");						
 			String cbatkey = "cbatid:" + cbatid + ":entity";			
-			jedis.hset(cbatkey, "upgrade", result);			
+			jedis.hset(cbatkey, "upgrade", result);	
+			if(result.equalsIgnoreCase("0")){
+				//升级成功
+				//更新软件版本信息
+				String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+				if(appver != ""){
+					jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", appver);
+				}
+			}
 			if(!result.equalsIgnoreCase("1")){
 				//已升级头端加1
 				long num_t =jedis.incr("global:updated");
 				String num = String.valueOf(num_t);
 				//String total = jedis.get("global:updatedtotal");
 				//通知前端此头端完成升级
-				jedis.publish("node.opt.updateproc", num);
+				String total = jedis.get("global:updatedtotal");
+				JSONObject json = new JSONObject();
+				json.put("proc", num);
+				json.put("total", total);
+				jedis.publish("node.opt.updateproc", json.toJSONString());
 			}			
 			
 			redisUtil.getJedisPool().returnResource(jedis);

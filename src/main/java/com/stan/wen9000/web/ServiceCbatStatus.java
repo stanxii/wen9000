@@ -204,84 +204,84 @@ public class ServiceCbatStatus{
 			return;
 		}
 		
-		//判断并修改设备trapserver ip/port
-		String devtrapserverip = null;
-		Integer trap_port = 0;
-		String cbatip = jedis.hget(message, "ip");
-		String cbatinfokey = "cbatid:"+id+":cbatinfo";
-		try {
-			devtrapserverip = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
-			trap_port = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}));
-		}
-		catch(Exception e){
-			redisUtil.getJedisPool().returnBrokenResource(jedis);
-			return;
-		}
-
-		if(devtrapserverip==""){
-			redisUtil.getJedisPool().returnResource(jedis);
-			return;
-		}
-		
-		//如果global:trapserver:ip键不存在，创建之
-		if(jedis.get("global:trapserver:ip")==null){
-			jedis.set("global:trapserver:ip", "192.168.223.253");
-			jedis.set("global:trapserver:port", "162");
-		}
-
-		//if systemconfig db trap ip = device trap ip not need set trap server ip
-		if( !jedis.get("global:trapserver:ip").equalsIgnoreCase(devtrapserverip)){
-			try {
-				//set trap server ip
-			util.setV2StrPDU(cbatip,
-					"161",
-					new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}), 
-					jedis.get("global:trapserver:ip")
-					);
-			//save
-			util.setV2PDU(cbatip,
-					"161",
-					new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
-					new Integer32(1)
-					);
-			
-			jedis.hset(cbatinfokey, "trapserverip", devtrapserverip);
-			//reset
-			/*
-			util.setV2PDU(currentip,
-					"161",
-					new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), 
-					new Integer32(1)
-					);
-			 */
-			 		
-			}catch(Exception e){
-				redisUtil.getJedisPool().returnBrokenResource(jedis);
-				//e.printStackTrace();
-			}
-		}
-		//if trap port != systemconfig db trap port
-		if(trap_port != Integer.valueOf(jedis.get("global:trapserver:port")))
-		{
-			try {
-				//set trap server ip
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}), 
-						new Integer32(Integer.valueOf(jedis.get("global:trapserver:port")))
-						);
-				//save
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
-						new Integer32(1)
-						);
-				
-				jedis.hset(cbatinfokey, "agentport", String.valueOf(trap_port));
-			}catch(Exception e){
-				redisUtil.getJedisPool().returnBrokenResource(jedis);
-			}
-		}
+//		//判断并修改设备trapserver ip/port
+//		String devtrapserverip = null;
+//		Integer trap_port = 0;
+//		String cbatip = jedis.hget(message, "ip");
+//		String cbatinfokey = "cbatid:"+id+":cbatinfo";
+//		try {
+//			devtrapserverip = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+//			trap_port = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}));
+//		}
+//		catch(Exception e){
+//			redisUtil.getJedisPool().returnBrokenResource(jedis);
+//			return;
+//		}
+//
+//		if(devtrapserverip==""){
+//			redisUtil.getJedisPool().returnResource(jedis);
+//			return;
+//		}
+//		
+//		//如果global:trapserver:ip键不存在，创建之
+//		if(jedis.get("global:trapserver:ip")==null){
+//			jedis.set("global:trapserver:ip", "192.168.223.253");
+//			jedis.set("global:trapserver:port", "162");
+//		}
+//
+//		//if systemconfig db trap ip = device trap ip not need set trap server ip
+//		if( !jedis.get("global:trapserver:ip").equalsIgnoreCase(devtrapserverip)){
+//			try {
+//				//set trap server ip
+//			util.setV2StrPDU(cbatip,
+//					"161",
+//					new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}), 
+//					jedis.get("global:trapserver:ip")
+//					);
+//			//save
+//			util.setV2PDU(cbatip,
+//					"161",
+//					new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
+//					new Integer32(1)
+//					);
+//			
+//			jedis.hset(cbatinfokey, "trapserverip", devtrapserverip);
+//			//reset
+//			/*
+//			util.setV2PDU(currentip,
+//					"161",
+//					new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), 
+//					new Integer32(1)
+//					);
+//			 */
+//			 		
+//			}catch(Exception e){
+//				redisUtil.getJedisPool().returnBrokenResource(jedis);
+//				//e.printStackTrace();
+//			}
+//		}
+//		//if trap port != systemconfig db trap port
+//		if(trap_port != Integer.valueOf(jedis.get("global:trapserver:port")))
+//		{
+//			try {
+//				//set trap server ip
+//				util.setV2PDU(cbatip,
+//						"161",
+//						new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}), 
+//						new Integer32(Integer.valueOf(jedis.get("global:trapserver:port")))
+//						);
+//				//save
+//				util.setV2PDU(cbatip,
+//						"161",
+//						new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
+//						new Integer32(1)
+//						);
+//				
+//				jedis.hset(cbatinfokey, "agentport", String.valueOf(trap_port));
+//			}catch(Exception e){
+//				redisUtil.getJedisPool().returnBrokenResource(jedis);
+//			}
+//		}
 		redisUtil.getJedisPool().returnResource(jedis);
 		
 	}
