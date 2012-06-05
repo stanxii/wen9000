@@ -5,9 +5,40 @@
 		var socket = io.connect('http://localhost:3000');
 
 		socket.emit('historyalarmall', 'historyalarmall');
+		socket.emit('historypage', 'historypage');
 
 		socket.on('historyalarmall', fun_AllHistoryAlarms);
+		socket.on('historypage', fun_HistoryPage);
+		socket.on('historynp', fun_HistoryNP);
+		
+		$("#btn_next").click(function(){
+			socket.emit('historynext', 'historynext');
+		});
+		
+		$("#btn_pre").click(function(){
+			socket.emit('historypre', 'historypre');
+		});
 
+		function fun_HistoryNP(data){
+			window.location.reload();
+		}
+		
+		function fun_HistoryPage(data){
+			if(data.haspre == "1"){
+				$("#btn_pre").removeAttr("disabled");
+			}else{
+				$("#btn_pre").attr("disabled","disable");
+			}
+			if(data.hasnext == "1"){
+				$("#btn_next").removeAttr("disabled");
+			}else{
+				$("#btn_next").attr("disabled","disable");
+			}
+			$("#from")[0].textContent = data.from;
+			$("#end")[0].textContent = data.end;
+			$("#total")[0].textContent = data.total;
+		}
+		
 		function fun_AllHistoryAlarms(data) {
 			var groupval = [];
 
@@ -15,8 +46,7 @@
 				var item = [itemv.alarmlevel,itemv.salarmtime, itemv.alarmcode,itemv.cbatmac,itemv.runingtime,itemv.cnalarminfo];
 				groupval[groupval.length] = item;
 			});
-
-			// $('#historyAlarm').show();
+			
 			pTable = $('#historyAlarm').dataTable({
 				"bLengthChange": false,	
 				"bFilter" : true,
@@ -65,8 +95,6 @@
 					]
 
 			});
-
-			oTable.fnDraw();
 
 		}
 

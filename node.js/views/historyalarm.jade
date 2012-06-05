@@ -5,3 +5,16 @@ block content
   h1
     label  历史告警
   table#historyAlarm(style='width:96%')
+  br
+  br
+  div(style='margin-right:10px;float:right')
+    button#btn_pre(disabled='disable')  上一页
+    label  从第
+    label#from  0
+    label  条到第
+    label#end
+    label  条
+    label  /共
+    label#total
+    label  条告警  
+    button#btn_next(disabled='disable')  下一页

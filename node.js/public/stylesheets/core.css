@@ -26,7 +26,6 @@ table input {
 #wapper {
       min-height:500px;
       position:relative;
-
 }
 
 /*menu */
@@ -84,7 +83,7 @@ table input {
 	position:absolute;
 	top:0;
 	left:21%;
-	width:79%
+	width:79%;
 }
 
 #pre_content {
@@ -137,7 +136,7 @@ table input {
 }
 
 #s_Table {
-	width:10%;
+	width:100%;
 }
 
 #s_Table {

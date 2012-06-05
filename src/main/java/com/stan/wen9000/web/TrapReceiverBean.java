@@ -497,14 +497,13 @@ public class TrapReceiverBean {
 		
 	}
 	private void doAlarm(Map alarm) {
-		
-		//System.out.println("================================>>>>>code"+ alarm.getAlarmcode());
-		
-		
 		 String msgservice = JSONValue.toJSONString(alarm);
-			
-		 sendToAlarmQueue(msgservice);
-		 
+		//int i = 0;
+		//while(i<150000){
+		//	i++;
+			sendToAlarmQueue(msgservice);
+		//}
+ 
 	}
 
 	private void doheart(Map heart) {

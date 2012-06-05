@@ -13,11 +13,10 @@
                     
                   });
                   socket.on('newAlarm', onGetNewAlarm);
+                  addAlarmHead();                 
                   
+                  historyAlarmTable();             
                   
-                  addAlarmHead();
-		
-                  historyAlarmTable();
 
                   function onGetNewAlarm(data) {
                         console.log(data);
@@ -38,7 +37,7 @@
                         		'<li style="width:200px;text-align:center"> 告警发生时间 </li>' +
                                 '<li style="width:150px;text-align:center">头端mac地址</li>' +
                                '<li style="width:110px;text-align:center">告警码</li>' +
-                               '<li style="width:*;text-align:center;margin-left:50px">告警详细信息</li>'+
+                               '<li class="alarminfo" style="width:260px;text-align:center">告警详细信息</li>'+
 
                         	'</ul>').prependTo('#alarmHead');
                 }
@@ -46,7 +45,7 @@
 
 	        function addNewOne(data) {
                         var background= "";
-
+                        
                          if(data.alarmlevel == 1 ) background = "http://localhost:8080/wen9000/images/ball_red.png";
                          else if(data.alarmlevel == 2 ) background = "http://localhost:8080/wen9000/images/ball_orange.png";
                          else if(data.alarmlevel == 3 ) background = "http://localhost:8080/wen9000/images/ball_yellow.png";
@@ -57,12 +56,18 @@
                          else background = "http://localhost:8080/wen9000/images/ball_black.png";
 
 
-                          $( '<ul class="ralarm" style="width:100%;height:24px"><li style="width:80px;text-align:center;"><img src='+  background +  ' /></li><li style="width:200px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:150px;text-align:center;">' +
+                          $( '<ul class="ralarm" style="height:24px"><li style="width:80px;text-align:center;"><img src='+  background +  ' /></li><li style="width:200px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:150px;text-align:center;">' +
                                                        data.cbatmac +  '</li><li style="width:110px;text-align:center">' +
-                                                       data.alarmcode+ '</li><li style="width:*;text-align:center">' +
+                                                       data.alarmcode+ '</li><li class="alarminfo" style="width:260px;text-align:center">' +
                                                        data.cnalarminfo +
 
                                  '</li></ul>').prependTo('#newAlarm');
+                          
+                          if(window.screen.width<=1024){
+                          	  $(".ralarm").css("width","104%");
+                            }else{
+                          	  $(".ralarm").css("width","100%");
+                            }
                 }
 	        
 	        $(".ralarm").live('mouseover',function(){

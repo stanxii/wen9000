@@ -86,17 +86,18 @@ redis.on('pmessage', function(pat,ch,data) {
    if(pat == 'node.alarm.*') {
        data = JSON.parse(data);
        sio.sockets.emit('newAlarm',data);
-    }
-    else if(ch == 'node.historyalarm.getall') {
+    }else if(ch == 'node.historyalarm.getall') {
        data = JSON.parse(data);
        sio.sockets.emit('historyalarmall',data);
-    }
-    else if(ch == 'node.tree.init') {
+    }else if(ch == 'node.historyalarm.gethistorypage') {
+        data = JSON.parse(data);
+        sio.sockets.emit('historypage',data);
+    }else if(ch == 'node.historyalarm.gethistorynp') {
+        sio.sockets.emit('historynp',data);
+     }else if(ch == 'node.tree.init') {
        data = JSON.parse(data);
        sio.sockets.emit('initDynatree',data);
-    }
-
-    else if(ch == 'node.tree.cbatdetail') {
+    }else if(ch == 'node.tree.cbatdetail') {
         data = JSON.parse(data);
         sio.sockets.emit('cbatdetail',data);
     }else if(ch == 'node.tree.cnudetail') {
@@ -233,6 +234,12 @@ redis.on('pmessage', function(pat,ch,data) {
     }else if(ch == 'node.opt.preconfig_all') {
     	data = JSON.parse(data);
     	sio.sockets.emit('opt.preconfig_all',data);       
+    }else if(ch == 'node.opt.cbatreset') {
+    	sio.sockets.emit('cbatreset',data);       
+    }
+    else if(ch == 'node.opt.ftpinfo') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('ftpinfo',data);       
     }
 });
 
@@ -248,6 +255,24 @@ sio.sockets.on('connection', function (socket) {
   socket.on('historyalarmall', function (data) {
      console.log('from client: nodeserver: historyalarmall');
      publish.publish('servicecontroller.gethistoryalarm', '{"istart":1, "ilen": 1000}');
+  });
+  
+//历史告警导航
+  socket.on('historypage', function (data) {
+	  console.log('nodeserver: historypage==='+data);
+	  publish.publish('servicecontroller.historypage', data);
+  });
+  
+//历史告警导航下一页
+  socket.on('historynext', function (data) {
+	  console.log('nodeserver: historynext==='+data);
+	  publish.publish('servicecontroller.historynext', data);
+  });
+  
+//历史告警导航上一页
+  socket.on('historypre', function (data) {
+	  console.log('nodeserver: historypre==='+data);
+	  publish.publish('servicecontroller.historypre', data);
   });
 
   socket.on('cbatdetail', function (data) {
@@ -440,8 +465,24 @@ sio.sockets.on('connection', function (socket) {
 	  publish.publish('servicecontroller.opt.pre_del', data);
   });
 
+//头端恢复出厂设置
+  socket.on('cbatreset', function (data) {
+	  console.log('nodeserver: cbatreset==='+data);
+	  publish.publish('servicecontroller.opt.cbatreset', data);
+  });
+//FTP信息
+  socket.on('opt.ftpinfo', function (data) {
+	  console.log('nodeserver: opt.ftpinfo==='+data);
+	  publish.publish('servicecontroller.opt.ftpinfo', data);
+  });
+//删除设备节点
+  socket.on('delnode', function (data) {
+	  console.log('nodeserver: delnode==='+data);
+	  publish.publish('servicecontroller.delnode', data);
+  });
+  
   socket.on('channel', function(ch) {
-      console.log('channel receive ch=='+ch);
+      //console.log('channel receive ch=='+ch);
         socket.join(ch);
    });
 

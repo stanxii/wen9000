@@ -325,6 +325,25 @@ public class ServiceHeartProcessor{
 				jedis.hset("cnuid:"+cnuid+":entity", "devcnuid", cnuindex);
 				jedis.hset("cnuid:"+cnuid+":entity", "active", active);
 				Sendstschange("cnu",cnuid,jedis);
+				//产生移机告警信息
+				Map<String, String> alarmhash=new LinkedHashMap();
+				alarmhash.put("runingtime", "N/A");
+				alarmhash.put("oid", "N/A");
+				alarmhash.put("alarmcode", "200933");		
+				alarmhash.put("cbatmac", cbatmac); 		
+				Date date = new Date();
+				DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+				String alarmtimes = format.format(date);
+				alarmhash.put("salarmtime", alarmtimes);
+				alarmhash.put("alarmlevel", "3");
+				String cbatid = jedis.get("mac:"+cbatmac+":deviceid");
+				alarmhash.put("cnalarminfo", "CNU["+cnumac+"]从头端["+jedis.hget("cbatid:"+tmpcbatid+":entity", "label")+"]移动到["+
+						jedis.hget("cbatid:"+cbatid+":entity", "label")+"]");
+				alarmhash.put("enalarminfo", "CNU["+cnumac+"] Move from Cbat["+jedis.hget("cbatid:"+tmpcbatid+":entity", "label")+ "]To ["
+						+jedis.hget("cbatid:"+cbatid+":entity", "label")+"]");
+				
+				String msgservice = JSONValue.toJSONString(alarmhash);
+				jedis.publish("servicealarm.new", msgservice);
 				redisUtil.getJedisPool().returnResource(jedis);
 				return;
 			}
@@ -388,8 +407,22 @@ public class ServiceHeartProcessor{
 				
 			}else{
 				//未预开户设备
-				//暂将profileid置1
-				cnuentity.put("profileid", "1");				
+				//发送到配置进程，下发默认初始配置
+//				String defaultproid;
+//				if((defaultproid = jedis.get("global:defaultprofileid"))==null){
+//					jedis.set("global:defaultprofileid", "1");
+//					defaultproid = "1";
+//				}
+//				JSONObject sendjson = new JSONObject();
+//				String cbatid = jedis.get("mac:"+cbatmac+":deviceid");
+//				sendjson.put("cbatip", jedis.hget("cbatid:"+cbatid+":entity", "ip"));
+//				sendjson.put("devcnuid", cnuindex.toLowerCase().trim());
+//				sendjson.put("proid", defaultproid);
+//				jedis.publish("servicesendconfig.defaultconfig", sendjson.toJSONString());
+//				
+//				cnuentity.put("profileid", defaultproid);
+				//暂不下发配置
+				cnuentity.put("profileid", "1");
 				//添加cnu到profile集合中
 				jedis.sadd("profileid:1:cnus", cnumac.toLowerCase());
 			}
@@ -404,8 +437,7 @@ public class ServiceHeartProcessor{
 			Sendstschange("cnu",String.valueOf(icnuid),jedis);
 
 		}
-		
-		
+
 		redisUtil.getJedisPool().returnResource(jedis);
 					
 	}
@@ -415,7 +447,7 @@ public class ServiceHeartProcessor{
 		
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
+			jedis = redisUtil.getConnection();
 		
 		
 		}catch(Exception e){
@@ -488,6 +520,7 @@ public class ServiceHeartProcessor{
 			json.put("mac", jedis.hget(cbatkey,"mac"));
 			json.put("online", jedis.hget(cbatkey,"active"));
 			json.put("ip", jedis.hget(cbatkey,"ip"));
+			json.put("label", jedis.hget(cbatkey,"label"));
 			json.put("type", "cbat");
 		}else if(type == "cnu"){
 			String cbatid = jedis.hget("cnuid:"+devid+":entity","cbatid");

@@ -260,7 +260,7 @@ public class ServiceDiscoveryProcessor  {
 	    		break;
 		}
 		jedis.publish("node.dis.findcbat", json.toJSONString());
-		
+
 		Sendstschange("cbat",String.valueOf(icbatid),jedis);
 		
 		Map<String , String >  hash = new HashMap<String, String>();
@@ -381,7 +381,7 @@ public class ServiceDiscoveryProcessor  {
 		
 		//如果global:trapserver:ip键不存在，创建之
 		if(jedis.get("global:trapserver:ip")==null){
-			jedis.set("global:trapserver:ip", "192.168.223.253");
+			jedis.set("global:trapserver:ip", "192.168.223.251");
 			jedis.set("global:trapserver:port", "162");
 		}
 
@@ -400,8 +400,8 @@ public class ServiceDiscoveryProcessor  {
 					new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
 					new Integer32(1)
 					);
-			
-			jedis.hset(cbatinfokey, "trapserverip", devtrapserverip);
+
+			jedis.hset(cbatinfokey, "trapserverip", jedis.get("global:trapserver:ip"));
 			//reset
 			/*
 			util.setV2PDU(currentip,
@@ -446,6 +446,7 @@ public class ServiceDiscoveryProcessor  {
 			json.put("mac", jedis.hget(cbatkey,"mac"));
 			json.put("online", jedis.hget(cbatkey,"active"));
 			json.put("ip", jedis.hget(cbatkey,"ip"));
+			json.put("label", jedis.hget(cbatkey,"label"));
 			json.put("type", "cbat");
 		}else if(type == "cnu"){
 			String cbatid = jedis.hget("cnuid:"+devid+":entity","cbatid");

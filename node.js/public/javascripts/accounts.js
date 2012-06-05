@@ -76,7 +76,7 @@
 	function fun_Allcnus(data){
 		var groupval=[];
 		$.each(data, function(key, itemv) {  					
-				var item = [itemv.check,itemv.mac,itemv.active,itemv.label,itemv.devicetype,itemv.proname];
+				var item = [itemv.check,itemv.mac,itemv.active,itemv.label,itemv.devicetype,itemv.cbatip,itemv.proname];
 				groupval[groupval.length] = item; 				
 								
 		 	}); 
@@ -126,6 +126,7 @@
 						  { "sTitle": "状态" , "sClass": "center"},
 					      { "sTitle": "标识" , "sClass": "center"},
 					      { "sTitle": "设备类型" , "sClass": "center"},
+					      { "sTitle": "头端IP" , "sClass": "center"},
 					      { "sTitle": "当前模板" , "sClass": "center"}
 						],
 			

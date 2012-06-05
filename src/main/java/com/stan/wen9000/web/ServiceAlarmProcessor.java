@@ -1,9 +1,11 @@
 package com.stan.wen9000.web;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
@@ -93,13 +95,25 @@ public class ServiceAlarmProcessor {
 
 		log.info("[#3] ..... service alarm");
 
-		
-		System.out.println("[#3] ..... service discovery starting");
 		Jedis jedis=null;
 		try {
 		 jedis = redisUtil.getConnection();
+		//删除3个月以前的告警信息
+		 log.info("Del alarms which 3 months ago.............................START");
+		 Double now = (double) System.currentTimeMillis();
+		 long lseconds= 3*30*24*60*60;
+		 Set<String> alarms = jedis.zrangeByScore(ALARM_HISTORY_QUEUE_NAME, 0, (now - lseconds));
+		 //Set<String> alarms = jedis.zrangeByScore(ALARM_HISTORY_QUEUE_NAME, 0, now );
+		 //log.info("---------------------------->>>>size-----"+alarms.size());
+		 for(Iterator it = alarms.iterator();it.hasNext(); ){
+			 String alarmid = it.next().toString();
+			 jedis.del("alarmid:"+alarmid+":entity");
+			 jedis.zrem(ALARM_HISTORY_QUEUE_NAME, alarmid);
+		 }
+		 log.info("Del alarms which 3 months ago.............................END");
 		 
 		 jedis.psubscribe(jedissubSub, "servicealarm.*");
+		 
 		redisUtil.getJedisPool().returnResource(jedis);
 		}catch(Exception e){
 			e.printStackTrace();
@@ -116,14 +130,14 @@ public class ServiceAlarmProcessor {
 	
 	public static void servicestart(String message) throws Exception {
 
-			System.out.println(" [x] ServiceAlarmProcessor Received '" + message
-					+ "'");
-			
-			long start = System.currentTimeMillis();  			
+//			System.out.println(" [x] ServiceAlarmProcessor Received '" + message
+//					+ "'");
+//			
+//			long start = System.currentTimeMillis();  			
 			dowork(message);					
-			long end = System.currentTimeMillis();  
-			System.out.println("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
-			
+//			long end = System.currentTimeMillis();  
+//			System.out.println("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
+//			
 		
 	}
 	
@@ -185,12 +199,7 @@ public class ServiceAlarmProcessor {
 		} else {
 			doalarm(alarm);			
 			savelarm(message, alarm);
-
-			
-			
-			
-
-			
+	
 		}
 
 		// System.out.println("save end msg===========================");
@@ -200,9 +209,6 @@ public class ServiceAlarmProcessor {
 
 	public static void savelarm(String message, Map<String, String> alarm) {
 		//presist alarm		
-		
-		
-		
 		Jedis jedis=null;
 		try {
 		 jedis = redisUtil.getConnection();
@@ -218,30 +224,27 @@ public class ServiceAlarmProcessor {
 		Long alarmid = jedis.incr("global:alarmid");
 		String salarmid = String.valueOf(alarmid);
 		
-		//记录最后一条告警的id
-		jedis.set("global:lastalarmid", String.valueOf(alarmid));
-		
 		String alarmkey = "alarmid:" + salarmid + ":entity";
 		jedis.hmset(alarmkey, alarm);
 		
 		//expire alarm key three months
-		int lseconds= 3*30*24*60*60;
-		String seconds = jedis.get(ALARM_EXPIRE_SECONDS);
-		if(seconds != null)
-			 lseconds = Integer.parseInt(seconds);								
-		jedis.expire(alarmkey, lseconds);
+//		int lseconds= 3*30*24*60*60;
+//		String seconds = jedis.get(ALARM_EXPIRE_SECONDS);
+//		if(seconds != null)
+//			 lseconds = Integer.parseInt(seconds);								
+//		jedis.expire(alarmkey, lseconds);
+//		
+//		String smax = jedis.get(ALARM_REALTIME_MAX_NUM);
+//		int imax = 100;
+//		if(smax != null)
+//			imax = Integer.parseInt(smax);
+//		else{
+//			jedis.set(ALARM_REALTIME_MAX_NUM, Integer.toString(imax));
+//		}
 		
-		String smax = jedis.get(ALARM_REALTIME_MAX_NUM);
-		int imax = 100;
-		if(smax != null)
-			imax = Integer.parseInt(smax);
-		else{
-			jedis.set(ALARM_REALTIME_MAX_NUM, Integer.toString(imax));
-		}
-		
-		//set realtime alarm list queue
-		jedis.lpush(ALARM_REALTIME_QUEUE_NAME, salarmid);
-		jedis.ltrim(ALARM_REALTIME_QUEUE_NAME, 0, imax -1);
+//		//set realtime alarm list queue
+//		jedis.lpush(ALARM_REALTIME_QUEUE_NAME, salarmid);
+//		jedis.ltrim(ALARM_REALTIME_QUEUE_NAME, 0, imax -1);
 		
 		
 		//history alarm sorted sets score is timestamp
@@ -281,9 +284,7 @@ public class ServiceAlarmProcessor {
 
 			Jedis jedis=null;
 			try {
-			 jedis = redisUtil.getConnection();
-			
-			
+				jedis = redisUtil.getConnection();
 			}catch(Exception e){
 				redisUtil.getJedisPool().returnBrokenResource(jedis);
 			}
@@ -322,14 +323,4 @@ public class ServiceAlarmProcessor {
 	}
 
 
-
-
-	
-
-	
-	
-	
-
-
-	
 }

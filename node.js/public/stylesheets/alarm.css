@@ -31,11 +31,13 @@
 	height:110px;
 	overflow:auto;
 	clear:both;
+	width:100%;
 }
 
 .ralarm{
 	list-style: none;  
     margin: 2px 0 0 -45px; 
+    white-space:nowrap;
 	
 }
 

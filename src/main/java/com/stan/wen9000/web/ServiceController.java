@@ -205,16 +205,133 @@ public class ServiceController {
 			doOptPre_Del(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.gethistoryalarm")){
 			doGetHistoryAlarm(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.historypage")){
+			doGetHistoryPage(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.historynext")){
+			doGetHistoryNext(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.historypre")){
+			doGetHistoryPre(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.cbatreset")){
+			doCbatReset(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.ftpinfo")){
+			doFtpInfo(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.delnode")){
+			doDelNode(message);
 		}
 		
 
 
 	}
 	
+	private static void doDelNode(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		//获取设备id		
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String type = jsondata.get("type").toString();
+		String id = jedis.get("mac:"+mac+":deviceid");
+		jedis.del("mac:"+mac+":deviceid");
+		if(type.equalsIgnoreCase("cbat")){
+			//删除头端下的所有终端
+			Set<String> cnus = jedis.smembers("cbatid:"+id+":cnus");
+			for(Iterator it = cnus.iterator();it.hasNext();){
+				String cnuid = it.next().toString();
+				jedis.del("mac:"+jedis.hget("cnuid:"+cnuid+":entity", "mac")+":deviceid");
+				jedis.del("cnuid:"+cnuid+":entity");
+				
+				//jedis.decr("global:deviceid");
+			}
+			//删除头端
+			jedis.del("cbatid:"+id+":entity");
+			jedis.del("cbatid:"+id+":cnus");
+			jedis.del("cbatid:"+id+":cbatinfo");
+		}else if(type.equalsIgnoreCase("cnu")){
+			String cbatid = jedis.hget("cnuid:"+id+":entity", "cbatid");
+			jedis.srem("cbatid:"+cbatid+":cnus", id);
+			jedis.del("cnuid:"+id+":entity");
+		}else{
+			//hfc
+			//TODO
+			
+			
+			
+			
+		}
+		
+		jedis.save();
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doFtpInfo(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		String ip = jedis.get("global:ftpip");
+		String port = jedis.get("global:ftpport");
+		String username = jedis.get("global:ftpusername");
+		String password = jedis.get("global:ftppassword");
+		JSONObject json = new JSONObject();
+		json.put("ftpip", ip);
+		json.put("ftpport", port);
+		json.put("username", username);
+		json.put("password", password);
+		jedis.publish("node.opt.ftpinfo", json.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doCbatReset(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		String cbatid = jedis.get("mac:"+message+":deviceid");
+		String cbatip = jedis.hget("cbatid:"+cbatid+":entity", "ip");
+		
+		try {
+			String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+			if(tmp == ""){
+				jedis.publish("node.opt.cbatreset", "");
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
+			}
+			//恢复出厂设置
+			util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,6,3,0}), 
+				new Integer32(1)
+			);
+			jedis.publish("node.opt.cbatreset", "resetok");
+
+		}catch(Exception e){
+			jedis.publish("node.opt.cbatreset", "");
+		}
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
 	private static void doNodeIndexInit(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -256,7 +373,6 @@ public class ServiceController {
 	    	proentity = new HashMap<String, String>();
 	    	proentity.put("profilename", "标准2M");
 	    	proentity.put("vlanen", "2");
-	    	//proentity.put("vlanid", vlanid);
 	    	proentity.put("vlan0id", "1");
 	    	proentity.put("vlan1id", "1");
 	    	proentity.put("vlan2id", "1");
@@ -283,7 +399,6 @@ public class ServiceController {
 	    	proentity = new HashMap<String, String>();
 	    	proentity.put("profilename", "标准4M");
 	    	proentity.put("vlanen", "2");
-	    	//proentity.put("vlanid", vlanid);
 	    	proentity.put("vlan0id", "1");
 	    	proentity.put("vlan1id", "1");
 	    	proentity.put("vlan2id", "1");
@@ -315,7 +430,7 @@ public class ServiceController {
 	private static void doOptPre_Del(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -335,7 +450,7 @@ public class ServiceController {
 	private static void doOptPreconfig_all(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -362,7 +477,7 @@ public class ServiceController {
 		Jedis jedis=null;
 		Boolean iserror = false;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -424,7 +539,7 @@ public class ServiceController {
 	private static void doOptPreconfig_one(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -455,14 +570,14 @@ public class ServiceController {
 	private static void doOptLastAlarms(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		String alarmid = jedis.get("global:lastalarmid");
+		String alarmid = jedis.get("global:alarmid");
 		if(alarmid == null){
 			redisUtil.getJedisPool().returnResource(jedis);
 			return;
@@ -492,7 +607,7 @@ public class ServiceController {
 	private static void doOptFtpupdate(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -537,7 +652,7 @@ public class ServiceController {
 	private static void doOptUpdatedProc(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -559,7 +674,7 @@ public class ServiceController {
 	private static void doOptUpdatedcbats(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -579,15 +694,14 @@ public class ServiceController {
     		//删除选择的cbat
     		jedis.srem("global:updatedcbats", cnuid);
     	}
-    	
-    	
+
     	redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doOptCheckedCbats(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -608,7 +722,7 @@ public class ServiceController {
 		FTPClient ftpClient;
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -620,6 +734,12 @@ public class ServiceController {
 		String port = jsondata.get("ftpport").toString();
 		String username = jsondata.get("username").toString();
 		String password = jsondata.get("password").toString();
+		//保存到数据库
+		jedis.set("global:ftpip", ip);
+		jedis.set("global:ftpport", port);
+		jedis.set("global:ftpusername", username);
+		jedis.set("global:ftppassword", password);
+		
 		//连接ftp
 		try
 		  {
@@ -665,7 +785,7 @@ public class ServiceController {
 	private static void doOptOnlineCbats(String message){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -728,7 +848,7 @@ public class ServiceController {
 	private static void doOptSaveRedis(String message){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -744,7 +864,7 @@ public class ServiceController {
 	private static void doOptGlobalSave(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -809,7 +929,7 @@ public class ServiceController {
 	private static void doDisSearchTotal(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -829,7 +949,7 @@ public class ServiceController {
 	private static void doDisSearch(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -875,7 +995,7 @@ public class ServiceController {
 	private static void doOptConSuccess(String message){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -902,7 +1022,7 @@ public class ServiceController {
 	private static void doOptConFailed(String message){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -929,7 +1049,7 @@ public class ServiceController {
 	private static void doOptSendConfig(String message){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1029,7 +1149,7 @@ public class ServiceController {
 	private static void doOptSelectedPro(String message) throws ParseException, IOException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1073,7 +1193,7 @@ public class ServiceController {
 	private static void doOptAllCheckedCnus(String message) throws ParseException, IOException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1087,7 +1207,7 @@ public class ServiceController {
         for(Iterator it = list.iterator(); it.hasNext(); ) {
         	String cnuid = (String) it.next();
         	JSONObject json = new JSONObject();
-    		String cnukey = "cnuid:"+cnuid+":entity";
+    		String cnukey = "cnuid:"+cnuid+":entity";    		
     		json.put("mac", jedis.hget(cnukey, "mac"));
     		json.put("active", jedis.hget(cnukey, "active"));
     		json.put("label", jedis.hget(cnukey, "label"));
@@ -1106,6 +1226,7 @@ public class ServiceController {
             		result = "Unknown";
             		break;
     		}
+    		json.put("cbatip", jedis.hget("cbatid:"+jedis.hget(cnukey, "cbatid")+":entity", "ip"));
     		json.put("devicetype", result);
     		json.put("contact", jedis.hget(cnukey, "contact"));
     		json.put("phone", jedis.hget(cnukey, "phone"));
@@ -1122,7 +1243,7 @@ public class ServiceController {
 	private static void doOptCheckedCnus(String message) throws ParseException, IOException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1150,7 +1271,7 @@ public class ServiceController {
 	private static void doOptCnus(String message) throws ParseException, IOException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1180,7 +1301,8 @@ public class ServiceController {
     		}else{
     			cnujson.put("check", "<input type=checkbox class=chk />");
     		}
-        	
+    		String cbatid = jedis.hget(prokey, "cbatid");
+    		cnujson.put("cbatip", jedis.hget("cbatid:"+cbatid+":entity", "ip"));
     		cnujson.put("mac", jedis.hget(prokey, "mac"));
     		cnujson.put("active", jedis.hget(prokey, "active"));
     		cnujson.put("label", jedis.hget(prokey, "label"));
@@ -1218,7 +1340,7 @@ public class ServiceController {
 	private static void doCnuSub(String message) throws ParseException, IOException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1278,7 +1400,7 @@ public class ServiceController {
 	private static void doCnuSync(String message) throws ParseException, IOException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1357,7 +1479,7 @@ public class ServiceController {
 	private static void doCnuBase(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1385,7 +1507,7 @@ public class ServiceController {
 	private static void doProfileCreate(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1455,7 +1577,7 @@ public class ServiceController {
 	private static void doProfileGet(String message){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
@@ -1495,7 +1617,7 @@ public class ServiceController {
 	private static void doProfileDetail(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
+			jedis = redisUtil.getConnection();
 		 
 		
 		}catch(Exception e){
@@ -1533,9 +1655,7 @@ public class ServiceController {
 	private static void doProfileIsEdit(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -1577,7 +1697,7 @@ public class ServiceController {
 	private static void doProfileEdit(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
+			jedis = redisUtil.getConnection();
 		 
 		
 		}catch(Exception e){
@@ -1648,9 +1768,7 @@ public class ServiceController {
 	private static void doProfileDel(String message){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -1675,9 +1793,7 @@ public class ServiceController {
 	private static void doProfileAll(String message){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -1730,9 +1846,7 @@ public class ServiceController {
 	private static void doCbatSync(String message) throws IOException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -1803,9 +1917,7 @@ public class ServiceController {
 	private static void doCbatModify(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -1856,17 +1968,31 @@ public class ServiceController {
     			jedis.publish("node.tree.cbatmodify", "");
     			return;
     		}
+    		//判断Ip地址是否和其它头端冲突
+    		Set<String> cbats = jedis.keys("cbatid:*:entity");
+    		for(Iterator it=cbats.iterator();it.hasNext();){
+    			String key = it.next().toString();
+    			if((jedis.hget(key, "ip").equalsIgnoreCase(ip))&&(!cbatkey.equalsIgnoreCase(key))){
+    				redisUtil.getJedisPool().returnBrokenResource(jedis);
+        			jedis.publish("node.tree.cbatmodify", "ipconflict");
+        			return;
+    			}
+    		}
     		util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,4,0}), new Integer32(Integer.valueOf(mvlanenable)));
     		util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,5,0}), new Integer32(Integer.valueOf(mvlanid)));    		
     		util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}), trapserver);
     		util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}), new Integer32(Integer.valueOf(trap_port)));
-    		util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,4,0}), netmask);
-    		util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0}), gateway);
-    		if(!oldip.equalsIgnoreCase(ip)){
+    		
+    		if((!oldip.equalsIgnoreCase(ip))||(!netmask.equalsIgnoreCase(jedis.hget(cbatinfokey, "netmask")))||(!gateway.equalsIgnoreCase(jedis.hget(cbatinfokey, "gateway")))){
     			util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,1,0}), ip);
+    			util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,4,0}), netmask);
+        		util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0}), gateway);
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), new Integer32(1));
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), new Integer32(1));
-    		}    		
+    		}else{
+    			//save
+    			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), new Integer32(1));
+    		}
     		
     		//保存
         	jedis.hset(cbatkey, "ip", ip);
@@ -1893,9 +2019,7 @@ public class ServiceController {
 	private static void doNodeCnudetail(String mac){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -1967,9 +2091,7 @@ public class ServiceController {
 	private static void doNodeCbatdetail(String mac){
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -2045,22 +2167,15 @@ public class ServiceController {
 	}
 	
 	private static void doNodeTreeInit() {
-		
-		
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		
-		
-	
-		
+
         JSONArray jsonResponseArray = new JSONArray();
 
     	Set<String> list = jedis.keys("cbatid:*:entity");
@@ -2083,8 +2198,6 @@ public class ServiceController {
     		
     		JSONObject cbatjson = new JSONObject();
 
-            
-    
     		String key = it.next().toString();
    
     		//add head;
@@ -2118,9 +2231,6 @@ public class ServiceController {
         		
         		String key_cnuid = jt.next().toString();  
         		String key_cnu = "cnuid:" + key_cnuid + ":entity";
-        		//logger.info("keys::::::key_cnu"+ key_cnu);
-        		
-        	
         		cnujson.put("title", jedis.hget(key_cnu, "label"));
         		cnujson.put("key", jedis.hget(key_cnu, "mac"));
         		cnujson.put("online", jedis.hget(key_cnu, "active"));
@@ -2271,7 +2381,6 @@ public class ServiceController {
 	private static Boolean sendconfig(int proid,String cbatip, int cnuindex,Jedis jedis ){
 		String prokey = "profileid:"+proid+":entity";
 		try{
-			
 			//vlansts
 		util.setV2PDU(cbatip,
 			"161",
@@ -2638,7 +2747,6 @@ public class ServiceController {
 
 	private static void doGetHistoryAlarm(String message) {
 		Jedis jedis = null;
-
 		System.out.println("now doGet HistoryAlarm Spring get msg=" + message);
 		try {
 			jedis = redisUtil.getConnection();
@@ -2647,26 +2755,58 @@ public class ServiceController {
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
+		}		
+		String historypage;
+		//历史告警导航记录
+		if(jedis.exists("global:historypage")){
+			historypage = jedis.get("global:historypage");
+		}else{
+			jedis.set("global:historypage", "1");
+			historypage = "1";
 		}
-
-		
 		try {
 			JSONArray jsonResponseArray = new JSONArray();
-			Set<String> results = jedis.keys("alarmid:*:entity");
-
-			for (String alarmkey : results) {
-				
-				JSONObject alarmjson = new JSONObject();
-				alarmjson.put("salarmtime", jedis.hget(alarmkey, "salarmtime"));
-				alarmjson.put("alarmcode", jedis.hget(alarmkey, "alarmcode"));
-				alarmjson.put("cnalarminfo", jedis.hget(alarmkey, "cnalarminfo"));
-				alarmjson.put("alarmlevel", jedis.hget(alarmkey, "alarmlevel"));
-				alarmjson.put("runingtime", jedis.hget(alarmkey, "runingtime"));
-				alarmjson.put("cbatmac", jedis.hget(alarmkey, "cbatmac"));
-				jsonResponseArray.add(alarmjson);
-				
+			String alarmid = jedis.get("global:alarmid");
+			if(alarmid == null){
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
 			}
+			
+			//获取最后几条告警信息，发往前端
+			long id = Long.parseLong(alarmid);
+			String alarmkey = "";
+			if(id>=1000){
+				for(int i=1000*Integer.parseInt(historypage);i>-1;i--){
+					JSONObject alarmjson = new JSONObject();
+					alarmkey = "alarmid:"+(id - i)+":entity";
+					if(jedis.hget(alarmkey, "alarmlevel") == null){
+						continue;
+					}
+					alarmjson.put("salarmtime", jedis.hget(alarmkey, "salarmtime"));
+					alarmjson.put("alarmcode", jedis.hget(alarmkey, "alarmcode"));
+					alarmjson.put("cnalarminfo", jedis.hget(alarmkey, "cnalarminfo"));
+					alarmjson.put("alarmlevel", jedis.hget(alarmkey, "alarmlevel"));
+					alarmjson.put("runingtime", jedis.hget(alarmkey, "runingtime"));
+					alarmjson.put("cbatmac", jedis.hget(alarmkey, "cbatmac"));
+					jsonResponseArray.add(alarmjson);
 
+				}
+			}else{
+				Set<String> alarms = jedis.keys("alarmid:*:entity");
+				for(Iterator it=alarms.iterator();it.hasNext();){
+					alarmkey = it.next().toString();
+					JSONObject alarmjson = new JSONObject();
+					alarmjson.put("salarmtime", jedis.hget(alarmkey, "salarmtime"));
+					alarmjson.put("alarmcode", jedis.hget(alarmkey, "alarmcode"));
+					alarmjson.put("cnalarminfo", jedis.hget(alarmkey, "cnalarminfo"));
+					alarmjson.put("alarmlevel", jedis.hget(alarmkey, "alarmlevel"));
+					alarmjson.put("runingtime", jedis.hget(alarmkey, "runingtime"));
+					alarmjson.put("cbatmac", jedis.hget(alarmkey, "cbatmac"));
+					jsonResponseArray.add(alarmjson);
+				}
+			}
+						
+			
 			String jsonString = jsonResponseArray.toJSONString();
 			// publish to notify node.js a new alarm
 			jedis.publish("node.historyalarm.getall", jsonString);
@@ -2674,14 +2814,83 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnResource(jedis);
 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 
 		}
 
 	}
 
+	private static void doGetHistoryPage(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		int historypage = Integer.parseInt(jedis.get("global:historypage"));
 
+		long count = jedis.zcard("alarm_history_queue");
+		JSONObject json = new JSONObject();
+		if((count/(historypage*1000) != 0)&&(count!=(historypage*1000))){
+			//有下一页
+			json.put("from", (historypage-1)*1000);
+			json.put("end", historypage*1000);
+			json.put("hasnext", "1");
+			json.put("total", count);
+			if(historypage>1){
+				json.put("haspre", "1");
+			}else{
+				json.put("haspre", "0");
+			}
+		}else{
+			//已到最后一页
+			json.put("from", (historypage-1)*1000);
+			json.put("end", count);
+			json.put("hasnext", "0");
+			
+			json.put("total", count);
+			if(historypage>1){
+				json.put("haspre", "1");
+			}else{
+				json.put("haspre", "0");
+			}
+		}
+		
+		jedis.publish("node.historyalarm.gethistorypage", json.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
 
+	private static void doGetHistoryNext(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		jedis.incr("global:historypage");
+		jedis.publish("node.historyalarm.gethistorynp", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
 	
+	private static void doGetHistoryPre(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		jedis.decr("global:historypage");
+		jedis.publish("node.historyalarm.gethistorynp", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
 }

@@ -5,13 +5,15 @@
 		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('opt.updateproc',"updateproc");
-		socket.emit('opt.onlinecbats',"onlinecbats");		
+		socket.emit('opt.onlinecbats',"onlinecbats");	
+		socket.emit('opt.ftpinfo',"ftpinfo");
 
 		socket.on('opt.onlinecbats',fun_OnlineCbats);
 		socket.on('opt.ftpfilelist',fun_Ftpfilelist);
 		socket.on('opt.updateproc',fun_Updateproc);
 		socket.on('opt.updateinfo',fun_Updateinfo);
 		socket.on('opt.checkedcbats',fun_CheckedCbats);
+		socket.on('ftpinfo',fun_FtpInfo);
 		
 		$('.chk').live('click', function () {
 	        var checkbox = $(this);
@@ -57,6 +59,16 @@
 		
 		initTable();
 	});
+	
+	function fun_FtpInfo(data){
+		if(data.ftpip == null){
+			return;
+		}
+		document.getElementById("serverip").value = data.ftpip;
+		document.getElementById("serverport").value = data.ftpport;
+		document.getElementById("username").value = data.username;
+		document.getElementById("password").value = data.password;
+	}
 	
 	function fun_CheckedCbats(data){
 		if(data != ""){

@@ -70,9 +70,6 @@ public class ServiceSendconfig {
       	System.out.println("[x]ServiceSendconfig  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
       	try {
   			//arg2 is mssage now is currenti p
-  			
-  			
-  			
   			servicestart(arg1, msg);
   			
   		}catch(Exception e){
@@ -89,10 +86,10 @@ public class ServiceSendconfig {
 
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		 jedis.psubscribe(jedissubSub, "servicesendconfig.*");
-		redisUtil.getJedisPool().returnResource(jedis);
+			 jedis = redisUtil.getConnection();
+			 
+			 jedis.psubscribe(jedissubSub, "servicesendconfig.*");
+			redisUtil.getJedisPool().returnResource(jedis);
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -107,8 +104,6 @@ public class ServiceSendconfig {
 			System.out.println(" [x] Service sendconfig Received '" + message
 					+ "'");		
 			dowork(pat, message);					  
-			
-		
 	}
 	
 	public static void dowork(String pat, String message) throws ParseException, IOException {
@@ -116,14 +111,36 @@ public class ServiceSendconfig {
 			doPreConfig(message);
 		}else if(pat.equalsIgnoreCase("servicesendconfig.config")){
 			//doNodeCbatdetail(message);
+		}else if(pat.equalsIgnoreCase("servicesendconfig.defaultconfig")){
+			doNodeDefaultconfig(message);
 		}
+	}
+	
+	private static void doNodeDefaultconfig(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String cbatip = jsondata.get("cbatip").toString();
+		String devcnuid = jsondata.get("devcnuid").toString();
+		String proid = jsondata.get("proid").toString();
+		sendconfig(Integer.valueOf(proid),cbatip,Integer.valueOf(devcnuid),jedis);
+		
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doPreConfig(String message) throws ParseException{
 		Boolean iserror = false;
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();	 
+			jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();

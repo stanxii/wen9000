@@ -13,7 +13,7 @@
     	  var ht = window.screen.availHeight - 345;
     	  $("#wapper").css("height",ht+"px");
     	  $("#menu").css("height",ht+"px");
-      }else if(window.screen.height == 768){
+      }else if(window.screen.height <= 768){
 			  $("#menu").css("overflow","auto");
    			  $("#menu").css("height","455px");
    			  $("#navtree").css("height","445px");
@@ -22,7 +22,7 @@
    			  $("#wapper").css("min-height","460px");
    			$("#alarm").css("height","130px");
    			$("#newAlarm").css("height","100x");
-   		  }
+   	  }
       
 	  socket = io.connect('http://localhost:3000');
                   socket.emit('initDynatree', 'init tree' );
@@ -35,6 +35,7 @@
                   socket.on('cnu_sub', fun_CnuSub );
                   socket.on('cnusync', fun_CnuSync );
                   socket.on('statuschange', fun_Statuschange );
+                  socket.on('cbatreset', fun_Cbatreset );
       
       
       $("#btn_cnusync").live('click', function(){
@@ -85,6 +86,20 @@
 	  		$(this).tabs();
       });
 	 
+      $("#btn_reset").live('click', function() { 
+    	  if((confirm( "要恢复出厂设置吗？ ")==true))
+    	  {
+    		  if(isbusy != false){
+  				return;
+	  			} 
+	  			isbusy = true;
+	  			document.body.style.cursor = 'wait';
+    		  var mac = document.getElementById('mac').textContent;
+    		  //alert("恢复出厂设置");
+    		  socket.emit('cbatreset',mac);
+    	  }
+      });
+      
 	 $("#btn_cnusub").live('click', function() { 
 		 if(isbusy != false){
 				return;
@@ -111,7 +126,18 @@
 	    	var port1rxrate = document.getElementById('port1rxrate').value;
 	    	var port2rxrate = document.getElementById('port2rxrate').value;
 	    	var port3rxrate = document.getElementById('port3rxrate').value;
-			
+			if((vlan0id>4095)||(vlan0id<0)||(vlan1id>4095)||(vlan1id<0)||(vlan2id>4095)||(vlan2id<0)||(vlan3id>4095)||(vlan3id<0)){
+				document.body.style.cursor = 'default';
+		 		isbusy = false;
+				alert("VLAN值应在0~4095之间！");
+				return;
+			}
+			if(isNaN(cpuportrxrate)||isNaN(port0txrate)||isNaN(port1txrate)||isNaN(port2txrate)||isNaN(port3txrate)||isNaN(cpuporttxrate)||isNaN(port0rxrate)||isNaN(port1rxrate)||isNaN(port2rxrate)||isNaN(port3rxrate)){
+				 document.body.style.cursor = 'default';
+		 		 isbusy = false;
+				 alert("速率值必须是数字！");
+				 return;
+			}
 			var datastring = '{"proname":"'+proname+'","mac":"'+mac+'","vlanen":"'+vlanen+
 			'","vlan0id":"'+vlan0id+'","vlan1id":"'+vlan1id+'","vlan2id":"'+vlan2id+'","vlan3id":"'+vlan3id+
 			'","rxlimitsts":"'+rxlimitsts+'","cpuportrxrate":"'+cpuportrxrate+'","port0txrate":"'+port0txrate+
@@ -147,14 +173,49 @@
 				isbusy = false;
 				return;
 			}  
+			reg = netmask.match(exp);
+			if(reg==null) 
+			{ 
+				alert("子网掩码不合法！"); 
+				document.body.style.cursor = 'default';
+				isbusy = false;
+				return;
+			}
+			if(gateway != ""){
+				reg = gateway.match(exp);
+				if(reg==null) 
+				{ 
+					alert("网关地址不合法！"); 
+					document.body.style.cursor = 'default';
+					isbusy = false;
+					return;
+				}
+			}
+			
+			reg = trapserver.match(exp);
+			if(reg==null) 
+			{ 
+				alert("TrapServer不合法！"); 
+				document.body.style.cursor = 'default';
+				isbusy = false;
+				return;
+			}
+			if(isNaN(trap_port)||(trap_port>65535)||(trap_port<0)){
+				document.body.style.cursor = 'default';
+				isbusy = false;
+				alert("端口号必须是数字,且在0~65535之间"); 
+				return;
+			}
 			if(isNaN(mvlanid)){
 				document.body.style.cursor = 'default';
 				isbusy = false;
+				alert("VLAN值应在0~4095之间！"); 
 				return;
 			}
 			if(mvlanid>4095 || mvlanid <0){
 				document.body.style.cursor = 'default';
 				isbusy = false;
+				alert("VLAN值应在0~4095之间！"); 
 				return;
 			}
 			var datastring = '{"mac":"'+mac+'","ip":"'+ip+'","label":"'+label+'","address":"'+address+'","mvlanenable":"'+mvlanenable
@@ -199,7 +260,7 @@
 					img = "cbatoff.png";
 				}
 				node.addChild({
-					title: itemv.ip,
+					title: itemv.label,
 					key: itemv.mac,
 					online:itemv.online,
 					tooltip:itemv.ip,
@@ -306,6 +367,44 @@
 		node.render();
 
      }
+     
+     function fun_Cbatreset(data){
+    	 document.body.style.cursor = 'default';
+ 		 isbusy = false;
+    	 if(data == ""){
+    		//失败提示对话框					
+ 			$( "#dialog-message-failed" ).dialog({
+ 				autoOpen: false,
+ 				show: "blind",
+ 				modal: true,
+ 				resizable: false,
+ 				hide: "explode",
+ 				buttons: {
+ 					Ok: function() {
+ 						$( this ).dialog( "close" );
+ 					}
+ 				}
+ 			});
+ 			$("#dialog-message-failed").dialog("open");
+    	 }else{
+    		//成功提示对话框
+ 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
+
+ 			$( "#dialog-message" ).dialog({
+ 				autoOpen: false,
+ 				show: "blind",
+ 				modal: true,
+ 				resizable: false,
+ 				hide: "explode",
+ 				buttons: {
+ 					Ok: function() {
+ 						$( this ).dialog( "close" );
+ 					}
+ 				}
+ 			});
+ 			$("#dialog-message").dialog("open");
+    	 }
+     }
       
     function fun_CnuSync(data){
     	document.body.style.cursor = 'default';
@@ -327,7 +426,6 @@
 			$("#dialog-message-failed").dialog("open");
     	}else{
     		document.getElementById('vlan_en').value = data.vlanen;
-        	//document.getElementById('vlanid').value = data.vlanid;
         	document.getElementById('vlan0id').value = data.vlan0id;
         	document.getElementById('vlan1id').value = data.vlan1id;
         	document.getElementById('vlan2id').value = data.vlan2id;
@@ -358,9 +456,7 @@
         		$("#cnusts").css("color","red");
         	}
         	
-			
-			
-			
+
         	//成功提示对话框
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
@@ -509,19 +605,50 @@
 				          	});		    
 			          }
 			    },
+			    onClick: function(node, event) {
+			        // Close menu on click
+			        if( $(".contextMenu:visible").length > 0 ){
+			          $(".contextMenu").hide();
+//			          return false;
+			        }
+			    },
+			    onCreate: function(node, span){
+			        bindContextMenu(span);
+			    },
 			    strings: {
 			        loading: "Loading…",
 			        loadError: "Load error!"
-			    },
-		       // onDblClick: function(node, event) {
-			   //     node.toggleExpand();
-			   // },		                
+			    },		                
 		        onActivate: function(node) {
 		        			        	       	
 			    },
 		    }); 	  		
 
    }
+   
+   function bindContextMenu(span) {
+	    // Add context menu to this node:
+	    $(span).contextMenu({menu: "myMenu"}, function(action, el, pos) {
+	      // The event was bound to the <span> tag, but the node object
+	      // is stored in the parent <li> tag
+	      var node = $.ui.dynatree.getNode(el);
+	      switch( action ) {
+	      case "cut":
+	      case "copy":
+	      case "paste":
+	        copyPaste(action, node);
+	        break;
+	      case "quit":		        
+		        break;
+	      default:
+	        //删除节点
+	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
+	    	  socket.emit('delnode',datastring);
+	    	  node.remove();
+	      }
+	    });
+   };
+
    
    function fun_cnudetail(jsondata) {
 	   console.log(jsondata);
@@ -574,7 +701,7 @@
 				'<td><lable>3端口上行限速:</lable></td><td><input type="text" id="port2rxrate" value='+jsondata.port2rxrate+'></input></td>'+
 				'<td><lable>4端口上行限速:</lable></td><td><input type="text" id="port3rxrate" value='+jsondata.port3rxrate+'></input></td></tr>'+
 				'</table><br/>'+
-				'<button id="btn_cnusync" style="margin-left:200px">刷新</button><button id="btn_cnusub" style="margin-left:60px">提交</button>'+
+				'<button id="btn_cnusync" style="margin-left:200px">刷新</button><button id="btn_cnusub" style="margin-left:60px">提交</button>'+			
 			'</div>'+
 		'</div>'
 		);
@@ -613,6 +740,8 @@
 				}
 			});
 			$("#dialog-message-failed").dialog("open");
+		}else if(jsondata=="ipconflict"){
+			alert("头端IP与其它头端冲突！");
 		}else{
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
@@ -666,7 +795,9 @@
 						'</select></td>'+
 			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
 			'</table></div><br/>'+
-			'<div><hr/><button id="btn_sub" style="margin-left:60px">提交</button><button id="btn_sync" style="margin-left:190px">刷新</button></div>');
+			'<div><hr/><button id="btn_sub" style="margin-left:60px">提交</button><button id="btn_sync" style="margin-left:190px">刷新</button>'+
+			'<button id="btn_reset" style="margin-left:160px">恢复出厂设置</button>'+
+			'</div>');
 			
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
    }

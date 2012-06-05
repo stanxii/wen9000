@@ -299,7 +299,8 @@ public class ServiceCbatStatus{
 			String cnukey = "cnuid:"+devid+":entity";
 			json.put("mac", jedis.hget(cnukey,"mac"));
 			json.put("online", jedis.hget(cnukey,"active"));
-			json.put("cbatmac", jedis.hget(cnukey,jedis.hget("cbatid:"+cbatid+":entity","mac")));
+			json.put("cbatmac", jedis.hget("cbatid:"+cbatid+":entity","mac"));
+			json.put("srcmac", "");
 			json.put("type", "cnu");
 			
 		}else if(type == "hfc"){

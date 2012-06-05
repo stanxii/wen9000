@@ -12,7 +12,6 @@
 		
 		var proname = $( "#proname" ),
 		vlanen = $( "#vlanen" ),
-		//vlanid = $( "#vlanid" ),
 		vlan0id = $( "#vlan0id" ),
 		vlan1id = $( "#vlan1id" ),
 		vlan2id = $( "#vlan2id" ),
@@ -28,8 +27,7 @@
 		port0rxrate = $( "#port0rxrate" ),
 		port1rxrate = $( "#port1rxrate" ),
 		port2rxrate = $( "#port2rxrate" ),
-		port3rxrate = $( "#port3rxrate" ),
-		
+		port3rxrate = $( "#port3rxrate" );		
 		
 		allFields = $( [] ).add( proname ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
 		.add( vlan3id ).add( rxlimitsts ).add( cpuportrxrate ).add( port0txrate ).add( port1txrate ).add( port2txrate )
@@ -80,6 +78,11 @@
 				updateTips( n + "必须是数字!");
 				return false;
 			}else{
+				if(o.val()>65535 || o.val()<0){
+					o.addClass( "ui-state-error" );
+					updateTips( n + "数值必须在0~65535之间!");
+					return false;
+				}
 				return true;
 			}
 		}
@@ -87,6 +90,10 @@
 		/* Add a click handler for the delete row */
 	    $('#btn_delete').click( function() {
 	        var anSelected = fnGetSelected( pTable );
+	        if(anSelected.length == 0){
+	        	alert("请选择模板!");
+	        	return;
+	        }
 	        var proid = anSelected[0].firstChild.textContent;
 	        if(proid <4){
 	        	alert("出厂模板无法删除");
@@ -97,14 +104,30 @@
 	    } );    	
 	    
 	    $('#pro_detail').live('click', function() {
-	        var anSelected = $(this);
+	        var anSelected = $(this);	        
 	        var proid = anSelected[0].parentNode.parentElement.cells[0].textContent;
+
 	        socket.emit('profile_detail',proid);
 	        
 	    } ); 
 	    
 	    $("#btn_create").click( function() { 
 	    	$( "#dialog:ui-dialog" ).dialog( "destroy" );	
+	    	$( "#proname" )[0].value = "";
+			$( "#vlan0id" )[0].value = 0;
+			$( "#vlan1id" )[0].value = 0;
+			$( "#vlan2id" )[0].value = 0;
+			$( "#vlan3id" )[0].value = 0;
+			$( "#cpuportrxrate" )[0].value = 0;
+			$( "#port0txrate" )[0].value = 0;
+			$( "#port1txrate" )[0].value = 0;
+			$( "#port2txrate" )[0].value = 0;
+			$( "#port3txrate" )[0].value = 0;
+			$( "#cpuporttxrate" )[0].value = 0;
+			$( "#port0rxrate" )[0].value = 0;
+			$( "#port1rxrate" )[0].value = 0;
+			$( "#port2rxrate" )[0].value = 0;
+			$( "#port3rxrate" )[0].value = 0;
 			
 			$("#dialog-form").dialog({
 				autoOpen: false,
@@ -157,6 +180,10 @@
 	    /* Add a click handler for the edit row */
 	    $('#btn_edit').click( function() {
 	    	var anSelected = fnGetSelected( pTable );
+	    	if(anSelected.length == 0){
+	        	alert("请选择模板!");
+	        	return;
+	        }
 	        var proid = anSelected[0].firstChild.textContent;
 	        if(proid <4){
 	        	alert("出厂模板无法修改！");
@@ -199,6 +226,11 @@
 			updateTips( n + "必须是数字!");
 			return false;
 		}else{
+			if(o.val()>65535 || o.val()<0){
+				o.addClass( "ui-state-error" );
+				updateTips( n + "数值必须在0~65535之间!");
+				return false;
+			}
 			return true;
 		}
 	}

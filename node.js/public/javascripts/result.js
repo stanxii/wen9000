@@ -50,6 +50,14 @@
 	    } );
 	});
 	
+	function fun_FindCbat(data){
+		$('#list').dataTable().fnAddData( [
+	        data.mac,
+	        data.active,
+	        data.ip,
+	        data.devicetype] );
+	}
+	
 	function fun_Proc(data){
 		//搜索进度监控器
 		proc++;
@@ -77,13 +85,6 @@
 			hide: "explode"
 		});
 		$("#dialog-dis-proc").dialog("open");
-	}
+	}	
 	
-	function fun_FindCbat(data){
-		$('#list').dataTable().fnAddData( [
-	        data.mac,
-	        data.active,
-	        data.ip,
-	        data.devicetype] );
-	}
 })(jQuery);
