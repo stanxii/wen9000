@@ -78,9 +78,9 @@
 				updateTips( n + "必须是数字!");
 				return false;
 			}else{
-				if(o.val()>65535 || o.val()<0){
+				if(o.val()>102400 || o.val()<0){
 					o.addClass( "ui-state-error" );
-					updateTips( n + "数值必须在0~65535之间!");
+					updateTips( n + "数值必须在0~102400之间!");
 					return false;
 				}
 				return true;
@@ -226,9 +226,9 @@
 			updateTips( n + "必须是数字!");
 			return false;
 		}else{
-			if(o.val()>65535 || o.val()<0){
+			if(o.val()>102400 || o.val()<0){
 				o.addClass( "ui-state-error" );
-				updateTips( n + "数值必须在0~65535之间!");
+				updateTips( n + "数值必须在0~102400之间!");
 				return false;
 			}
 			return true;

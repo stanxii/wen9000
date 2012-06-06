@@ -166,7 +166,7 @@ public class ServiceUpdateProcess{
 					String num = String.valueOf(num_t);
 					//String total = jedis.get("global:updatedtotal");
 					//删除集合中此头端
-					jedis.srem("global:updatedcbats", cbatid);
+					//jedis.srem("global:updatedcbats", cbatid);
 					//通知前端此头端完成升级
 					String total = jedis.get("global:updatedtotal");
 					JSONObject json = new JSONObject();
@@ -228,9 +228,8 @@ public class ServiceUpdateProcess{
 				//已升级头端加1
 				long num_t = jedis.incr("global:updated");
 				String num = String.valueOf(num_t);
-				//String total = jedis.get("global:updatedtotal");
 				//删除集合中此头端
-				jedis.srem("global:updatedcbats", cbatid);
+				//jedis.srem("global:updatedcbats", cbatid);
 				//通知前端此头端完成升级
 				String total = jedis.get("global:updatedtotal");
 				JSONObject json = new JSONObject();

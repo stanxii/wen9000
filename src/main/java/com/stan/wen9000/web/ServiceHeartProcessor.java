@@ -4,10 +4,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -211,7 +214,34 @@ public class ServiceHeartProcessor{
 			
 		}else{
 			//新头端
-			String cbatmackey = "mac:" +  cbatmac.toLowerCase().trim() + ":deviceid";
+			//判断新头端ip是否与已发现头端重复
+			Set<String> cbats = jedis.keys("cbatid:*:entity");
+			for(Iterator it= cbats.iterator();it.hasNext();){
+				String cbatkey = it.next().toString();
+				if(jedis.hget(cbatkey, "ip").equalsIgnoreCase(cbatip)){
+					//编辑告警信息
+					Map<String, String> alarmhash=new LinkedHashMap();
+					alarmhash.put("runingtime", "N/A");
+					alarmhash.put("oid", "N/A");
+					alarmhash.put("alarmcode", "200934");		
+					alarmhash.put("cbatmac", cbatmac); 		
+					Date date = new Date();
+					DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+					String alarmtimes = format.format(date);
+					alarmhash.put("salarmtime", alarmtimes);
+					alarmhash.put("alarmlevel", "1");
+					String cbatid = jedis.get("mac:"+cbatmac+":deviceid");
+					alarmhash.put("cnalarminfo", "新发现头端["+jedis.hget(cbatkey, "label")+"]IP地址冲突！");
+					alarmhash.put("enalarminfo", "New Cbat["+jedis.hget(cbatkey, "label")+ "]IP Conflict!");
+					
+					String msgservice = JSONValue.toJSONString(alarmhash);
+					jedis.publish("servicealarm.new", msgservice);
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
+			}
+			
+ 			String cbatmackey = "mac:" +  cbatmac.toLowerCase().trim() + ":deviceid";
 			long icbatid = jedis.incr("global:deviceid");
 			jedis.set(cbatmackey, Long.toString(icbatid) );
 			
@@ -237,10 +267,10 @@ public class ServiceHeartProcessor{
 			Map<String , String >  hash = new HashMap<String, String>();
 			 
 			String scbatinfokey = "cbatid:" + icbatid + ":cbatinfo";
-			hash.put("address", "na");
-			hash.put("phone", "13988777");
+			hash.put("address", "N/A");
+			hash.put("phone", "N/A");
 			hash.put("bootver", "cml-boot-v1.1.0_for_linux_sdk");
-			hash.put("contact", "na");
+			hash.put("contact", "N/A");
 			//获取设备相关信息
 			try{
 				 int agentport = util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					

@@ -217,6 +217,8 @@ public class ServiceController {
 			doFtpInfo(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.delnode")){
 			doDelNode(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.updatereset")){
+			doUpdateReset(message);
 		}
 		
 
@@ -604,11 +606,27 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
-	private static void doOptFtpupdate(String message) throws ParseException{
+	private static void doUpdateReset(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
 			jedis = redisUtil.getConnection();	 
 		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		//记录已升级头端数，用户前端进度跟踪
+		jedis.set("global:updated", "0");
+
+		jedis.set("global:updatedtotal","0");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doOptFtpupdate(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();			
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -623,15 +641,16 @@ public class ServiceController {
 		//获取所有要升级的头端
 		Set<String> cbats = jedis.smembers("global:updatedcbats");
 		//记录升级头端数，用户前端进度跟踪
-		jedis.set("global:updatedtotal", String.valueOf(cbats.size()));
+		String total = jedis.get("global:updatedtotal");
+		jedis.set("global:updatedtotal", String.valueOf(total)+String.valueOf(cbats.size()));
 		//记录已升级头端数，用户前端进度跟踪
-		jedis.set("global:updated", "0");
+		//jedis.set("global:updated", "0");
 
-		JSONObject jsonproc = new JSONObject();
-		jsonproc.put("total", String.valueOf(cbats.size()));
-		jsonproc.put("proc", "0");
-		
-		jedis.publish("node.opt.updateinfo", jsonproc.toJSONString());
+//		JSONObject jsonproc = new JSONObject();
+//		jsonproc.put("total", String.valueOf(cbats.size()));
+//		jsonproc.put("proc", "0");
+//		
+//		jedis.publish("node.opt.updateinfo", jsonproc.toJSONString());
 		
 		for(Iterator cbat=cbats.iterator();cbat.hasNext();){
 			String cbatid = cbat.next().toString();

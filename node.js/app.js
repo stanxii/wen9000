@@ -480,6 +480,11 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: delnode==='+data);
 	  publish.publish('servicecontroller.delnode', data);
   });
+//初始化升级信息
+  socket.on('opt.updatereset', function (data) {
+	  console.log('nodeserver: updatereset==='+data);
+	  publish.publish('servicecontroller.opt.updatereset', data);
+  });
   
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);

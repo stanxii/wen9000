@@ -111,6 +111,7 @@
 			if(proc == total){
 				$("#up_proc")[0].textContent = "升级完成！！！！";
 				$("#dialog-message-proc img").css("display","none");
+				socket.emit('opt.updatereset',"");
 			}else{
 				$("#up_proc")[0].textContent = proc+"/"+total;
 				$("#dialog-message-proc img")._show();
@@ -135,11 +136,12 @@
 		total = data.total;
 		if(proc < total){
 			//如果有设备正在升级，升级按钮不可用
-			$("#btn_update").attr("disabled","disabled");
+			//$("#btn_update").attr("disabled","disabled");
 		}
 		$("#up_proc")[0].textContent = proc+"/"+total;
 		if(proc == total){
-			$("#btn_update").removeAttr("disabled");
+			//$("#btn_update").removeAttr("disabled");
+			socket.emit('opt.updatereset',"");
 			$("#dialog-message-proc").dialog("close");
 		}
 	}

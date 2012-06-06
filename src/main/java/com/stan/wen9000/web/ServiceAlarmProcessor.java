@@ -101,10 +101,10 @@ public class ServiceAlarmProcessor {
 		//删除3个月以前的告警信息
 		 log.info("Del alarms which 3 months ago.............................START");
 		 Double now = (double) System.currentTimeMillis();
-		 long lseconds= 3*30*24*60*60;
+		 long lseconds= 3*30*24*60*60*1000000;
 		 Set<String> alarms = jedis.zrangeByScore(ALARM_HISTORY_QUEUE_NAME, 0, (now - lseconds));
 		 //Set<String> alarms = jedis.zrangeByScore(ALARM_HISTORY_QUEUE_NAME, 0, now );
-		 //log.info("---------------------------->>>>size-----"+alarms.size());
+
 		 for(Iterator it = alarms.iterator();it.hasNext(); ){
 			 String alarmid = it.next().toString();
 			 jedis.del("alarmid:"+alarmid+":entity");
