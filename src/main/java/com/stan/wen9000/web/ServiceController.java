@@ -642,15 +642,19 @@ public class ServiceController {
 		Set<String> cbats = jedis.smembers("global:updatedcbats");
 		//记录升级头端数，用户前端进度跟踪
 		String total = jedis.get("global:updatedtotal");
-		jedis.set("global:updatedtotal", String.valueOf(total)+String.valueOf(cbats.size()));
+		if(total == null){
+			total = "0";
+		}
+		int itotal = Integer.valueOf(total)+ cbats.size();
+		jedis.set("global:updatedtotal", String.valueOf(itotal));
 		//记录已升级头端数，用户前端进度跟踪
 		//jedis.set("global:updated", "0");
 
-//		JSONObject jsonproc = new JSONObject();
-//		jsonproc.put("total", String.valueOf(cbats.size()));
-//		jsonproc.put("proc", "0");
-//		
-//		jedis.publish("node.opt.updateinfo", jsonproc.toJSONString());
+		JSONObject jsonproc = new JSONObject();
+		jsonproc.put("total", String.valueOf(itotal));
+		jsonproc.put("proc",jedis.get("global:updated"));
+		
+		jedis.publish("node.opt.updateinfo", jsonproc.toJSONString());
 		
 		for(Iterator cbat=cbats.iterator();cbat.hasNext();){
 			String cbatid = cbat.next().toString();
@@ -1921,7 +1925,7 @@ public class ServiceController {
 		    cbatjson.put("gateway", gateway);
 		    cbatjson.put("trapserverip", trapserverip);
 		    cbatjson.put("trap_port", trap_port);
-		    
+		    cbatjson.put("cbatip", cbatip);
 		    String jsonString = cbatjson.toJSONString(); 
 		    redisUtil.getJedisPool().returnResource(jedis);
 		    jedis.publish("node.tree.cbatsync", jsonString);

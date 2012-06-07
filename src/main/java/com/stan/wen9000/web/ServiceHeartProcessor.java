@@ -157,6 +157,7 @@ public class ServiceHeartProcessor{
 		cbattype = heart.get("cbattype");
 		//处理cbat 心跳信息
 		doheartcbat(cbatmac, cbatip, cbattype);
+		
 		//解析cnu 心跳信息
 		String cnumac = "";
 		String cnutype = "";
@@ -202,6 +203,31 @@ public class ServiceHeartProcessor{
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
 				jedis.hset(cbatkey,"active", "1");
 				Sendstschange("cbat",deviceid,jedis);
+				//判断新头端ip是否与已发现头端重复
+				Set<String> cbats = jedis.keys("cbatid:*:entity");
+				for(Iterator it= cbats.iterator();it.hasNext();){
+					String ckey = it.next().toString();
+					if(jedis.hget(ckey, "ip").equalsIgnoreCase(cbatip) && (!jedis.hget(ckey, "mac").equalsIgnoreCase(cbatmac))){
+						//编辑告警信息
+						Map<String, String> alarmhash=new LinkedHashMap();
+						alarmhash.put("runingtime", "N/A");
+						alarmhash.put("oid", "N/A");
+						alarmhash.put("alarmcode", "200934");		
+						alarmhash.put("cbatmac", cbatmac); 		
+						Date date = new Date();
+						DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+						String alarmtimes = format.format(date);
+						alarmhash.put("salarmtime", alarmtimes);
+						alarmhash.put("alarmlevel", "1");
+						alarmhash.put("cnalarminfo", "新发现头端["+cbatmac+"]IP地址冲突！");
+						alarmhash.put("enalarminfo", "New Cbat["+cbatmac+ "]IP Conflict!");
+						
+						String msgservice = JSONValue.toJSONString(alarmhash);
+						jedis.publish("servicealarm.new", msgservice);
+						redisUtil.getJedisPool().returnResource(jedis);
+						return;
+					}
+				}
 			}
 			//更新头端信息			
 			jedis.hset(cbatkey,"ip", cbatip);
@@ -230,9 +256,8 @@ public class ServiceHeartProcessor{
 					String alarmtimes = format.format(date);
 					alarmhash.put("salarmtime", alarmtimes);
 					alarmhash.put("alarmlevel", "1");
-					String cbatid = jedis.get("mac:"+cbatmac+":deviceid");
-					alarmhash.put("cnalarminfo", "新发现头端["+jedis.hget(cbatkey, "label")+"]IP地址冲突！");
-					alarmhash.put("enalarminfo", "New Cbat["+jedis.hget(cbatkey, "label")+ "]IP Conflict!");
+					alarmhash.put("cnalarminfo", "新发现头端["+cbatmac+"]IP地址冲突！");
+					alarmhash.put("enalarminfo", "New Cbat["+cbatmac+ "]IP Conflict!");
 					
 					String msgservice = JSONValue.toJSONString(alarmhash);
 					jedis.publish("servicealarm.new", msgservice);
@@ -331,8 +356,11 @@ public class ServiceHeartProcessor{
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			e.printStackTrace();
 			return;
-		}		
-		
+		}	
+		//判断所属头端是否存在
+		if(jedis.get("mac:"+cbatmac+":deviceid")==null){
+			return;
+		}
 		//判断cnu是否已存在
 		if(jedis.exists("mac:"+cnumac+":deviceid")){
 			String cnuid = jedis.get("mac:"+cnumac+":deviceid");
@@ -484,7 +512,10 @@ public class ServiceHeartProcessor{
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			
 		}
-		
+		//判断所属头端是否存在
+		if(jedis.get("mac:"+cbatmac+":deviceid")==null){
+			return;
+		}
 		//判断cnu是否已存在
 		//可注释此段代码，离线设备不予发现
 		if(!(jedis.exists("mac:"+cnumac+":deviceid"))){
@@ -521,7 +552,9 @@ public class ServiceHeartProcessor{
 		}
 		//以下判断是否是所属头端发出的心跳
 		String cnuid = jedis.get("mac:"+cnumac+":deviceid");
+
 		String cur_cbatid = jedis.hget("cnuid:"+cnuid+":entity", "cbatid");
+
 		if(jedis.hget("cbatid:"+cur_cbatid+":entity", "mac").equalsIgnoreCase(cbatmac)){
 			//是所属头端发出的心跳
 			if(jedis.hget("cnuid:"+cnuid+":entity", "active").equalsIgnoreCase("0")==false){

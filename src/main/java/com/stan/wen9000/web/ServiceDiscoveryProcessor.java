@@ -221,8 +221,8 @@ public class ServiceDiscoveryProcessor  {
 					alarmhash.put("salarmtime", alarmtimes);
 					alarmhash.put("alarmlevel", "1");
 					String cbatid = jedis.get("mac:"+cbatmac+":deviceid");
-					alarmhash.put("cnalarminfo", "新发现头端["+jedis.hget(cbatkey, "label")+"]IP地址冲突！");
-					alarmhash.put("enalarminfo", "New Cbat["+jedis.hget(cbatkey, "label")+ "]IP Conflict!");
+					alarmhash.put("cnalarminfo", "新发现头端["+cbatmac+"]IP地址冲突！");
+					alarmhash.put("enalarminfo", "New Cbat["+cbatmac+ "]IP Conflict!");
 					
 					String msgservice = JSONValue.toJSONString(alarmhash);
 					jedis.publish("servicealarm.new", msgservice);

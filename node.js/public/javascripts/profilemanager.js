@@ -56,6 +56,9 @@
 		}
 
 		function checkvalue( o, n, min, max){
+			if(o.val()==""){
+				o.val() = 2;
+			}
 			if(isNaN(o.val())){
 				o.addClass( "ui-state-error" );
 				updateTips( n + "必须是数字!" );
@@ -72,6 +75,9 @@
 		}
 		
 		function checknum( o, n){
+			if(o.val()==""){
+				o[0].value = 0;
+			}
 			if(isNaN(o.val()))
 			{
 				o.addClass( "ui-state-error" );
@@ -147,8 +153,8 @@
 							updateTips( "模板名称 不能为空! ");
 							bValid = false;
 						}
-						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"1端口限速")&& checknum(port1txrate,"2端口限速")&& checknum(port2txrate,"3端口限速")&& checknum(port3txrate,"4端口限速")
-							&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"1端口限速")&& checknum(port1rxrate,"2端口限速")&& checknum(port2rxrate,"3端口限速")&& checknum(port3rxrate,"4端口限速"); 
+						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"ETH1限速")&& checknum(port1txrate,"ETH2限速")&& checknum(port2txrate,"ETH3限速")&& checknum(port3txrate,"ETH4限速")
+							&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"ETH1限速")&& checknum(port1rxrate,"ETH2限速")&& checknum(port2rxrate,"ETH3限速")&& checknum(port3rxrate,"ETH4限速"); 
 							
 						bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2)&& checkvalue(vlan0id,"vlan0id",0,4095)&& checkvalue(vlan1id,"vlan1id",0,4095)
 						&& checkvalue(vlan2id,"vlan2id",0,4095)&& checkvalue(vlan3id,"vlan3id",0,4095)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);
@@ -220,6 +226,9 @@
 	}
 	
 	function checknum( o, n){
+		if(o.val()==""){
+			o[0].value = 0;
+		}
 		if(isNaN(o.val()))
 		{
 			o.addClass( "ui-state-error" );
@@ -288,13 +297,13 @@
 						'</td>'+
 						'<td><label for="cpuportrxrate_e">&nbsp &nbsp &nbsp &nbsp 全局下行限速:</label></td>'+
 						'<td><label >'+tmpdata.cpuportrxrate+ '</label></td></tr>'+
-						'<tr><td><label for="port0txrate_e">1端口限速:</label></td>'+
+						'<tr><td><label for="port0txrate_e">ETH1限速:</label></td>'+
 						'<td><label>'+tmpdata.port0txrate+ '</label></td>'+
-						'<td><label for="port1txrate_e">&nbsp &nbsp &nbsp &nbsp 2端口限速:</label></td>'+
+						'<td><label for="port1txrate_e">&nbsp &nbsp &nbsp &nbsp ETH2限速:</label></td>'+
 						'<td><label>'+tmpdata.port1txrate+ '</label></td></tr>'+
-						'<tr><td><label for="port2txrate_e">3端口限速:</label></td>'+
+						'<tr><td><label for="port2txrate_e">ETH3限速:</label></td>'+
 						'<td><label>'+tmpdata.port2txrate+ '</label></td>'+
-						'<td><label for="port3txrate_e">&nbsp &nbsp &nbsp &nbsp 4端口限速:</label></td>'+
+						'<td><label for="port3txrate_e">&nbsp &nbsp &nbsp &nbsp ETH4限速:</label></td>'+
 						'<td><label>'+tmpdata.port3txrate+ '</label></td></tr>'+
 					'</table></form></fieldset>'+
 					'<fieldset><legend>上行配置(KB)</legend>'+
@@ -304,13 +313,13 @@
 						'</td>'+
 						'<td><label for="cpuporttxrate_e">&nbsp &nbsp &nbsp &nbsp 全局上行限速:</label></td>'+
 						'<td><label>'+tmpdata.cpuporttxrate+ '</label></td></tr>'+
-						'<tr><td><label for="port0rxrate_e">1端口限速:</label></td>'+
+						'<tr><td><label for="port0rxrate_e">ETH1限速:</label></td>'+
 						'<td><label>'+tmpdata.port0rxrate+ '</label></td>'+
-						'<td><label for="port1txrate_e">&nbsp &nbsp &nbsp &nbsp 2端口限速:</label></td>'+
+						'<td><label for="port1txrate_e">&nbsp &nbsp &nbsp &nbsp ETH2限速:</label></td>'+
 						'<td><label>'+tmpdata.port1rxrate+ '</label></td></tr>'+
-						'<tr><td><label for="port2rxrate_e">3端口限速:</label></td>'+
+						'<tr><td><label for="port2rxrate_e">ETH3限速:</label></td>'+
 						'<td><label>'+tmpdata.port2rxrate+ '</label></td>'+
-						'<td><label for="port3txrate_e">&nbsp &nbsp &nbsp &nbsp 4端口限速:</label></td>'+
+						'<td><label for="port3txrate_e">&nbsp &nbsp &nbsp &nbsp ETH4限速:</label></td>'+
 						'<td><label>'+tmpdata.port3rxrate+ '</label></td></tr>'+
 					'</table></form></fieldset>');
 				
@@ -417,13 +426,13 @@
 						'</select></td>'+
 						'<td><label for="cpuportrxrate_e">全局下行限速:</label></td>'+
 						'<td><input type="text" name="cpuportrxrate_e" id="cpuportrxrate_e" value='+tmpdata.cpuportrxrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
-						'<tr><td><label for="port0txrate_e">1端口限速:</label></td>'+
+						'<tr><td><label for="port0txrate_e">ETH1限速:</label></td>'+
 						'<td><input type="text" name="port0txrate_e" id="port0txrate_e" value='+tmpdata.port0txrate+ ' class="text ui-widget-content ui-corner-all" /></td>'+
-						'<td><label for="port1txrate_e">2端口限速:</label></td>'+
+						'<td><label for="port1txrate_e">ETH2限速:</label></td>'+
 						'<td><input type="text" name="port1txrate_e" id="port1txrate_e" value='+tmpdata.port1txrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
-						'<tr><td><label for="port2txrate_e">3端口限速:</label></td>'+
+						'<tr><td><label for="port2txrate_e">ETH3限速:</label></td>'+
 						'<td><input type="text" name="port2txrate_e" id="port2txrate_e" value='+tmpdata.port2txrate+ ' class="text ui-widget-content ui-corner-all" /></td>'+
-						'<td><label for="port3txrate_e">4端口限速:</label></td>'+
+						'<td><label for="port3txrate_e">ETH4限速:</label></td>'+
 						'<td><input type="text" name="port3txrate_e" id="port3txrate_e" value='+tmpdata.port3txrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
 					'</table></form></fieldset>'+
 					'<fieldset><legend>上行配置(KB)</legend>'+
@@ -434,13 +443,13 @@
 						'</select></td>'+
 						'<td><label for="cpuporttxrate_e">全局上行限速:</label></td>'+
 						'<td><input type="text" name="cpuporttxrate_e" id="cpuporttxrate_e" value='+tmpdata.cpuporttxrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
-						'<tr><td><label for="port0rxrate_e">1端口限速:</label></td>'+
+						'<tr><td><label for="port0rxrate_e">ETH1限速:</label></td>'+
 						'<td><input type="text" name="port0rxrate_e" id="port0rxrate_e" value='+tmpdata.port0rxrate+ ' class="text ui-widget-content ui-corner-all" /></td>'+
-						'<td><label for="port1txrate_e">2端口限速:</label></td>'+
+						'<td><label for="port1txrate_e">ETH2限速:</label></td>'+
 						'<td><input type="text" name="port1rxrate_e" id="port1rxrate_e" value='+tmpdata.port1rxrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
-						'<tr><td><label for="port2rxrate_e">3端口限速:</label></td>'+
+						'<tr><td><label for="port2rxrate_e">ETH3限速:</label></td>'+
 						'<td><input type="text" name="port2rxrate_e" id="port2rxrate_e" value='+tmpdata.port2rxrate+ ' class="text ui-widget-content ui-corner-all" /></td>'+
-						'<td><label for="port3txrate_e">4端口限速:</label></td>'+
+						'<td><label for="port3txrate_e">ETH4限速:</label></td>'+
 						'<td><input type="text" name="port3rxrate_e" id="port3rxrate_e" value='+tmpdata.port3rxrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
 					'</table></form></fieldset>');
 
@@ -487,8 +496,8 @@
 							updateTips( "模板名称 不能为空! ");
 							bValid = false;
 						}
-						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"1端口限速")&& checknum(port1txrate,"2端口限速")&& checknum(port2txrate,"3端口限速")&& checknum(port3txrate,"4端口限速")
-							&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"1端口限速")&& checknum(port1rxrate,"2端口限速")&& checknum(port2rxrate,"3端口限速")&& checknum(port3rxrate,"4端口限速"); 
+						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"ETH1限速")&& checknum(port1txrate,"ETH2限速")&& checknum(port2txrate,"ETH3限速")&& checknum(port3txrate,"ETH4限速")
+							&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"ETH1限速")&& checknum(port1rxrate,"ETH2限速")&& checknum(port2rxrate,"ETH3限速")&& checknum(port3rxrate,"ETH4限速"); 
 							
 						bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2)&& checkvalue(vlan0id,"vlan0id",0,4095)&& checkvalue(vlan1id,"vlan1id",0,4095)
 						&& checkvalue(vlan2id,"vlan2id",0,4095)&& checkvalue(vlan3id,"vlan3id",0,4095)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);

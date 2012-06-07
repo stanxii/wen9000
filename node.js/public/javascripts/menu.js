@@ -145,6 +145,18 @@
 				 alert("速率值必须在0~102400之间！");
 				 return;
 			}
+			if(checknull("vlan0id",vlan0id)&&checknull("vlan1id",vlan1id)&&checknull("vlan2id",vlan2id)&&checknull("vlan3id",vlan3id)
+					&&checknull("cpuportrxrate",cpuportrxrate)&&checknull("port0txrate",port0txrate)
+					&&checknull("port1txrate",port1txrate)&&checknull("port2txrate",port2txrate)
+					&&checknull("port3txrate",port3txrate)&&checknull("cpuporttxrate",cpuporttxrate)
+					&&checknull("port0rxrate",port0rxrate)&&checknull("port1rxrate",port1rxrate)
+					&&checknull("port2rxrate",port2rxrate)&&checknull("port3rxrate",port3rxrate)){
+				
+			}else{
+				alert("不能存在空值！");
+				return;
+			}
+			
 			var datastring = '{"proname":"'+proname+'","mac":"'+mac+'","vlanen":"'+vlanen+
 			'","vlan0id":"'+vlan0id+'","vlan1id":"'+vlan1id+'","vlan2id":"'+vlan2id+'","vlan3id":"'+vlan3id+
 			'","rxlimitsts":"'+rxlimitsts+'","cpuportrxrate":"'+cpuportrxrate+'","port0txrate":"'+port0txrate+
@@ -544,6 +556,7 @@
 			});
 			$("#dialog-message-failed").dialog("open");
 		}else{
+			document.getElementById('ip').value = data.cbatip;
 			document.getElementById('vlanen_e').value = data.mvlanenable;
 			document.getElementById('mvlanid').value = data.mvlanid;
 			document.getElementById('netmask').value = data.netmask;
@@ -671,7 +684,7 @@
 	   
 		$("#content").empty();			          				          		
      	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">终端设备信息</h3>'+
-     	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/3702I.jpg" style="width:100px;height:80px"/></div>'+
+     	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/WEC-3702I C4.jpg" style="width:100px;height:80px"/></div>'+
      	'<div id="cnusts" style="height:80px;width:200px;margin:10px 10px 1px 110px;'+style+'"><lable id="cnusts_l" style="font-size:30px;background-color:black;line-height:80px">'+active +'</lable></div>'+						
 		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#tabs-1">基本信息</a></li>'+
@@ -689,24 +702,24 @@
 				'<table id="optinfo"><tr><td><lable>模板名称 :</lable></td><td><lable id="proname">'+jsondata.profilename+'</lable></td>'+
 				'<td><lable>VLAN使能 : </lable></td><td><select id="vlan_en"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
 				'</tr>'+
-				'<tr><td><lable>1端口VLAN: </lable></td><td><input type="text" id="vlan0id" value='+jsondata.vlan0id+'></input></td>'+
-				'<td><lable>2端口VLAN: </lable></td><td><input type="text" id="vlan1id" value='+jsondata.vlan1id+'></input></td>'+
-				'<td><lable>3端口VLAN: </lable></td><td><input type="text" id="vlan2id" value= '+jsondata.vlan2id+'></input></td></tr>'+
-				'<tr><td><lable>4端口VLAN: </lable></td><td><input type="text" id="vlan3id" value='+jsondata.vlan3id+'></input></td></tr>'+
+				'<tr><td><lable>ETH1VLAN: </lable></td><td><input type="text" id="vlan0id" value='+jsondata.vlan0id+'></input></td>'+
+				'<td><lable>ETH2VLAN: </lable></td><td><input type="text" id="vlan1id" value='+jsondata.vlan1id+'></input></td>'+
+				'<td><lable>ETH3VLAN: </lable></td><td><input type="text" id="vlan2id" value= '+jsondata.vlan2id+'></input></td></tr>'+
+				'<tr><td><lable>ETH4VLAN: </lable></td><td><input type="text" id="vlan3id" value='+jsondata.vlan3id+'></input></td></tr>'+
 				
 				'<tr><td><lable>下行限速使能 :</lable></td><td><select id="rxlimitsts"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
 				'<td><lable>下行全局限速 :</lable></td><td><input type="text" id="cpuportrxrate" value='+ jsondata.cpuportrxrate+'></input></td>'+
-				'<td><lable>1端口下行限速:</lable></td><td><input type="text" id="port0txrate" value='+jsondata.port0txrate+'></input></td></tr>'+
-				'<tr><td><lable>2端口下行限速:</lable></td><td><input type="text" id="port1txrate" value='+jsondata.port1txrate+'></input></td>'+
-				'<td><lable>3端口下行限速:</lable></td><td><input type="text" id="port2txrate" value='+jsondata.port2txrate+'></input></td>'+
-				'<td><lable>4端口下行限速:</lable></td><td><input type="text" id="port3txrate" value='+jsondata.port3txrate+'></input></td></tr>'+
+				'<td><lable>ETH1下行限速:</lable></td><td><input type="text" id="port0txrate" value='+jsondata.port0txrate+'></input></td></tr>'+
+				'<tr><td><lable>ETH2下行限速:</lable></td><td><input type="text" id="port1txrate" value='+jsondata.port1txrate+'></input></td>'+
+				'<td><lable>ETH3下行限速:</lable></td><td><input type="text" id="port2txrate" value='+jsondata.port2txrate+'></input></td>'+
+				'<td><lable>ETH4下行限速:</lable></td><td><input type="text" id="port3txrate" value='+jsondata.port3txrate+'></input></td></tr>'+
 				
 				'<tr><td><lable>上行限速使能 :</lable></td><td><select id="txlimitsts"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
 				'<td><lable>上行全局限速 :</lable></td><td><input type="text" id="cpuporttxrate" value='+ jsondata.cpuporttxrate+'></input></td>'+
-				'<td><lable>1端口上行限速:</lable></td><td><input type="text" id="port0rxrate" value='+jsondata.port0rxrate+'></input></td></tr>'+
-				'<tr><td><lable>2端口上行限速:</lable></td><td><input type="text" id="port1rxrate" value='+jsondata.port1rxrate+'></input></td>'+
-				'<td><lable>3端口上行限速:</lable></td><td><input type="text" id="port2rxrate" value='+jsondata.port2rxrate+'></input></td>'+
-				'<td><lable>4端口上行限速:</lable></td><td><input type="text" id="port3rxrate" value='+jsondata.port3rxrate+'></input></td></tr>'+
+				'<td><lable>ETH1上行限速:</lable></td><td><input type="text" id="port0rxrate" value='+jsondata.port0rxrate+'></input></td></tr>'+
+				'<tr><td><lable>ETH2上行限速:</lable></td><td><input type="text" id="port1rxrate" value='+jsondata.port1rxrate+'></input></td>'+
+				'<td><lable>ETH3上行限速:</lable></td><td><input type="text" id="port2rxrate" value='+jsondata.port2rxrate+'></input></td>'+
+				'<td><lable>ETH4上行限速:</lable></td><td><input type="text" id="port3rxrate" value='+jsondata.port3rxrate+'></input></td></tr>'+
 				'</table><br/>'+
 				'<button id="btn_cnusync" style="margin-left:200px">刷新</button><button id="btn_cnusub" style="margin-left:60px">提交</button>'+			
 			'</div>'+
@@ -783,7 +796,7 @@
 	   }
 	   $("#content").empty();
 	   	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">头端设备信息</h3>'+
-	   	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/3501I.jpg" style="width:200px;height:100px"/></div>'+
+	   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
 	   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 	   	'<h3 style="background-color:#ccc">基本信息</h3>'+
 	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
@@ -807,5 +820,17 @@
 			'</div>');
 			
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
+			if(jsondata.devicetype == "WEC-3501I C22"){
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
+			}else if(jsondata.devicetype == "WEC-3501I S220"){
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 S220.jpg";
+			}
+   }
+   
+   function checknull(name,val){
+	   if(val == ""){
+		   return false;
+	   }
+	   return true;
    }
 })(jQuery);

@@ -83,7 +83,10 @@ public class ServiceUpdateProcess{
 			Jedis jedis=null;
 			try {
 			 jedis = redisUtil.getConnection();
-			 
+			//重置已升级头端数，用户前端进度跟踪
+			jedis.set("global:updated", "0");
+			jedis.set("global:updatedtotal","0");
+			
 			 jedis.psubscribe(jedissubSub, "ServiceUpdateProcess.*");
 			redisUtil.getJedisPool().returnResource(jedis);
 			}catch(Exception e){
