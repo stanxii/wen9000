@@ -288,6 +288,7 @@
 				});
 				return;
 			}
+			node.data.tooltip = itemv.ip;
 			if(itemv.online == "1"){
 				node.data.icon = "cbaton.png";
 				node.data.online = "1";
@@ -428,7 +429,7 @@
     function fun_CnuSync(data){
     	document.body.style.cursor = 'default';
 		isbusy = false;
-    	if(data==""){
+    	if(data == ""){
     		//失败提示对话框					
 			$( "#dialog-message-failed" ).dialog({
 				autoOpen: false,
@@ -462,10 +463,10 @@
         	document.getElementById('port2rxrate').value = data.port2rxrate;
         	document.getElementById('port3rxrate').value = data.port3rxrate;
         	
-        	if(document.getElementById('proname').textContent=="null"){
-        		document.getElementById('proname').textContent="未知模板";
+        	if(document.getElementById('proname').textContent == "null"){
+        		document.getElementById('proname').textContent = "未知模板";
         	}else{
-        		document.getElementById('proname').textContent=data.profilename;
+        		document.getElementById('proname').textContent = data.profilename;
         	}
         	if(data.active == "1"){
         		document.getElementById('cnusts_l').textContent = "设备连接正常";

@@ -198,11 +198,10 @@ public class ServiceHeartProcessor{
 			//头端已存在
 			String deviceid = jedis.get("mac:"+cbatmac+":deviceid");
 			String cbatkey = "cbatid:"+deviceid+":entity";
-			if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1")==false){
-				//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
+			if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1")==false){				
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
 				jedis.hset(cbatkey,"active", "1");
-				Sendstschange("cbat",deviceid,jedis);
+				
 				//判断新头端ip是否与已发现头端重复
 				Set<String> cbats = jedis.keys("cbatid:*:entity");
 				for(Iterator it= cbats.iterator();it.hasNext();){
@@ -229,8 +228,11 @@ public class ServiceHeartProcessor{
 					}
 				}
 			}
+			
 			//更新头端信息			
 			jedis.hset(cbatkey,"ip", cbatip);
+			//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
+			Sendstschange("cbat",deviceid,jedis);
 //			cbat.setAppversion(util.getStrPDU(cbatip, "161",
 //					new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8,4, 4, 0 })));
 			//更新头端时间戳
@@ -349,9 +351,7 @@ public class ServiceHeartProcessor{
 
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		
-		
+			jedis = redisUtil.getConnection();
 		}catch(Exception e){
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			e.printStackTrace();

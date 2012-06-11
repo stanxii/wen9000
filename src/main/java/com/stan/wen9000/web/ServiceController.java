@@ -1837,7 +1837,6 @@ public class ServiceController {
     		projson.put("id", cid);
     		projson.put("proname", jedis.hget(prokey, "profilename"));
     		projson.put("vlanen", jedis.hget(prokey, "vlanen"));
-    		//projson.put("vlanid", jedis.hget(prokey, "vlanid"));
     		projson.put("vlan0id", jedis.hget(prokey, "vlan0id"));
     		projson.put("vlan1id", jedis.hget(prokey, "vlan1id"));
     		projson.put("vlan2id", jedis.hget(prokey, "vlan2id"));

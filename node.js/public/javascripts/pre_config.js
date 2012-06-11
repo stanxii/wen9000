@@ -253,5 +253,32 @@
 				var varItem = new Option(item, itemv.id);      
 			objSelect[0].options.add(varItem);  							
 		 	});
+		sortOption();
+	}
+	
+	function sortRule(a,b) {
+		 var x = a._value;
+		 var y = b._value;
+		 return x.localeCompare(y);
+	}
+	
+	function op(){
+		 var _value;
+		 var _text;
+	}
+	function sortOption(){
+		 var obj = document.getElementById("combox_profiles");
+		 var tmp = new Array();
+		 for(var i=0;i<obj.options.length;i++){
+			  var ops = new op();
+			  ops._value = obj.options[i].value;
+			  ops._text = obj.options[i].text;
+			  tmp.push(ops);
+		 }
+		 tmp.sort(sortRule);
+		 for(var j=0;j<tmp.length;j++){
+			  obj.options[j].value = tmp[j]._value;
+			  obj.options[j].text = tmp[j]._text;
+		 }
 	}
 })(jQuery);

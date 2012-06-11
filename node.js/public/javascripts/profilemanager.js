@@ -395,7 +395,7 @@
 			tips = $( ".validateTips" );
 			//组装弹出窗口html	
 			$("#dialog-edit").empty();
-			$("#dialog-edit").append('<p class="validateTips">All form fields are required.</p>'+	
+			$("#dialog-edit").append('<p class="validateTips">所有选项都不能为空.</p>'+	
 				'<fieldset>'+
 					'<legend>基本配置</legend>'+
 					'<form>'+
@@ -485,7 +485,7 @@
 				hide: "explode",
 				modal: true,
 				height: 550,
-				width: 600,
+				width: 650,
 				buttons: {
 					"保存": function() {
 						var bValid = true;
