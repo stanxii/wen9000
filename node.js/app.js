@@ -103,6 +103,9 @@ redis.on('pmessage', function(pat,ch,data) {
     }else if(ch == 'node.tree.cnudetail') {
         data = JSON.parse(data);
         sio.sockets.emit('cnudetail',data);
+    }else if(ch == 'node.tree.hfcdetail') {
+        data = JSON.parse(data);
+        sio.sockets.emit('hfcdetail',data);
     }else if(ch == 'node.tree.cbatmodify') {
         //data = JSON.parse(data);
         sio.sockets.emit('cbat_modify',data);
@@ -484,6 +487,11 @@ sio.sockets.on('connection', function (socket) {
   socket.on('opt.updatereset', function (data) {
 	  console.log('nodeserver: updatereset==='+data);
 	  publish.publish('servicecontroller.opt.updatereset', data);
+  });
+//HFC详细信息
+  socket.on('hfcdetail', function (data) {
+	  console.log('nodeserver: hfcdetail==='+data);
+	  publish.publish('servicecontroller.hfcdetail', data);
   });
   
   socket.on('channel', function(ch) {

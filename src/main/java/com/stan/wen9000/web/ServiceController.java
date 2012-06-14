@@ -219,9 +219,37 @@ public class ServiceController {
 			doDelNode(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.opt.updatereset")){
 			doUpdateReset(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.hfcdetail")){
+			doHfcDetail(message);
 		}
 		
 
+
+	}
+	
+	private static void doHfcDetail(String message){
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		String id = jedis.get("mac:"+message+":deviceid");
+		String hfckey = "hfcid:"+id+":entity";
+		
+		JSONObject json = new JSONObject();
+		json.put("mac", jedis.hget(hfckey,"mac"));
+		json.put("ip", jedis.hget(hfckey, "ip"));
+		json.put("oid", jedis.hget(hfckey, "oid"));
+		json.put("hfctype", jedis.hget(hfckey, "hfctype"));
+		
+		json.put("logicalid", jedis.hget(hfckey, "logicalid"));
+		json.put("modelnumber", jedis.hget(hfckey, "modelnumber"));
+		json.put("serialnumber", jedis.hget(hfckey, "serialnumber"));
+		jedis.publish("node.tree.hfcdetail", json.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
 
 	}
 	
@@ -259,13 +287,9 @@ public class ServiceController {
 			String cbatid = jedis.hget("cnuid:"+id+":entity", "cbatid");
 			jedis.srem("cbatid:"+cbatid+":cnus", id);
 			jedis.del("cnuid:"+id+":entity");
-		}else{
+		}else if(type.equalsIgnoreCase("hfc")){
 			//hfc
-			//TODO
-			
-			
-			
-			
+			jedis.del("hfcid:"+id+":entity");
 		}
 		
 		jedis.save();
@@ -2278,12 +2302,21 @@ public class ServiceController {
     	
    
     	eocjson.put("children", cbatarray);
+    	
+    	jsonResponseArray.add(eocjson);
+    	//hfc
+    	//W9000显示模式判断
+		if((jedis.get("global:displaymode")) != null){
+			if(jedis.get("global:displaymode").equalsIgnoreCase("1")){
+				//显示HFC设备
+				hfctreeinit(jedis,jsonResponseArray);
+			}
+		}			
+    	
+    	
     	    	 
     	redisUtil.getJedisPool().returnResource(jedis);
 
-    	 
-    	 jsonResponseArray.add(eocjson);
-    	 
     	 String jsonString = jsonResponseArray.toJSONString();
     	 
     
@@ -2291,6 +2324,51 @@ public class ServiceController {
  		jedis.publish("node.tree.init", jsonString);
  		
     	 
+	}
+	
+	private static void hfctreeinit(Jedis jedis,JSONArray jsonResponseArray){
+		Set<String> hfclist = jedis.keys("hfcid:*:entity");
+		JSONObject hfchome = new JSONObject();
+    	if(hfclist.size()>0){    		
+    		hfchome.put((String)"title", (String)"HFC设备");
+    		hfchome.put("key", "hfcroot");
+    		hfchome.put("isFolder", "true");
+    		hfchome.put("expand", "true");
+    		hfchome.put("icon", "home.png");
+    	}else{
+    		return;
+    	}
+    	
+    	//"children"
+		
+		JSONArray hfcarray = new JSONArray();
+    	for(Iterator it = hfclist.iterator(); it.hasNext(); ) 
+    	{ 
+    		JSONObject hfcjson = new JSONObject();
+    		JSONObject hfcinfo = new JSONObject();
+
+    		String key = it.next().toString();
+   
+    		//add head;
+    		hfcjson.put("title", jedis.hget(key, "logicalid"));
+    		hfcjson.put("key", jedis.hget(key, "mac"));
+    		hfcjson.put("online", jedis.hget(key, "active"));
+    		hfcjson.put("icon", "cbaton.png");    		
+    		//添加tips
+    		hfcjson.put("tooltip",jedis.hget(key, "ip"));
+    		hfcjson.put("type", "hfc");
+    		
+    		//hfcinfo
+    		hfcinfo.put("hp", jedis.hget(key, "hfctype"));
+    		hfcinfo.put("sn", jedis.hget(key, "serialnumber"));
+    		hfcinfo.put("modelnumber", jedis.hget(key, "modelnumber"));
+    		
+    		hfcjson.put("children", hfcinfo);
+    		hfcarray.add(hfcjson);
+    	}
+    	hfchome.put("children", hfcarray);
+    	
+    	jsonResponseArray.add(hfchome);
 	}
 	
 	private static String newcustomprofile(JSONObject jsondata, Jedis jedis){

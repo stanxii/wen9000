@@ -147,8 +147,6 @@ public class ServiceDiscoveryProcessor  {
 
 	private static void doCbat(String message) throws ParseException {
 
-		
-		
 		JSONParser parser = new JSONParser();
 		
 		ContainerFactory containerFactory = new ContainerFactory(){
@@ -164,14 +162,11 @@ public class ServiceDiscoveryProcessor  {
 		                
 		  
 		Map jsonobj = (Map)parser.parse(message, containerFactory);
-		    
-		
-		
+
 		String cbatip =(String) jsonobj.get("ip");
 		String cbatmac =(String) jsonobj.get("cbatmac");
 		String cbatdevicetype =(String) jsonobj.get("cbatdevicetype");
-		
-		
+
 		String agentport =(String) jsonobj.get("cbatinfo:agentport");
 		String trapserverip =(String) jsonobj.get("cbatinfo:trapserverip");
 		String appver =(String) jsonobj.get("cbatinfo:appver");
@@ -181,17 +176,12 @@ public class ServiceDiscoveryProcessor  {
 		String gateway =(String) jsonobj.get("cbatinfo:gateway");
 
 		long start = System.currentTimeMillis();  
-		
-		
-		
+
 		String cbatmackey = "mac:" +  cbatmac.toLowerCase().trim() + ":deviceid";
-		
-		
+
 		Jedis jedis=null;
 		try {
 		 jedis = redisUtil.getConnection();
-		
-		
 		}catch(Exception e){
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			
@@ -199,8 +189,7 @@ public class ServiceDiscoveryProcessor  {
 		
 		//get cbatmac if exist in redis server
 		String scbatid = jedis.get(cbatmackey);		
-		
-				
+	
 		long icbatid ;
 		
 		if(scbatid == null) {
@@ -220,7 +209,6 @@ public class ServiceDiscoveryProcessor  {
 					String alarmtimes = format.format(date);
 					alarmhash.put("salarmtime", alarmtimes);
 					alarmhash.put("alarmlevel", "1");
-					String cbatid = jedis.get("mac:"+cbatmac+":deviceid");
 					alarmhash.put("cnalarminfo", "新发现头端["+cbatmac+"]IP地址冲突！");
 					alarmhash.put("enalarminfo", "New Cbat["+cbatmac+ "]IP Conflict!");
 					
@@ -237,9 +225,7 @@ public class ServiceDiscoveryProcessor  {
 			//不是新发现的头端
 			return;
 		}
-		
-	      
-	    
+
 		String scbatentitykey = "cbatid:" + String.valueOf(icbatid) + ":entity";
 		Map<String , String >  cbatentity = new HashMap<String, String>();
 		
@@ -350,13 +336,10 @@ public class ServiceDiscoveryProcessor  {
 		
 		Jedis jedis=null;
 		try {
-			 jedis = redisUtil.getConnection();
-			
-			
-			}catch(Exception e){
-				redisUtil.getJedisPool().returnBrokenResource(jedis);
-				
-			}
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);			
+		}
 		
 		//get hfcmac if exist in redis server
 		String shfcid = jedis.get(hfckey);
@@ -365,10 +348,11 @@ public class ServiceDiscoveryProcessor  {
 		
 		if(shfcid == null) {
 			hfcid = jedis.incr("global:deviceid");
-			jedis.set(hfckey, Long.toString(hfcid) );
+			jedis.set(hfckey, Long.toString(hfcid));
 		}else {
 			hfcid = Long.parseLong(shfcid);			
 		}
+		Sendstschange("hfc",String.valueOf(hfcid),jedis);
 		
 		String shfcentitykey = "hfcid:" + hfcid + ":entity";
 		Map<String , String >  hfcentity = new HashMap<String, String>();
@@ -376,6 +360,7 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("mac", hfcmac.toLowerCase().trim());
 		hfcentity.put("oid", oid);
 		hfcentity.put("ip", ip.toLowerCase().trim());
+		hfcentity.put("active", "1");
 		hfcentity.put("hfctype", hfctype.toLowerCase().trim());
 		hfcentity.put("version", version.toLowerCase().trim());
 		hfcentity.put("logicalid", logicalid.toLowerCase().trim());
@@ -383,11 +368,9 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("serialnumber", serialnumber.toLowerCase().trim());
 		
 		jedis.hmset(shfcentitykey, hfcentity);
-		
-		
+
 		jedis.save();
-		
-		
+
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -410,7 +393,7 @@ public class ServiceDiscoveryProcessor  {
 		}
 		
 		//如果global:trapserver:ip键不存在，创建之
-		if(jedis.get("global:trapserver:ip")==null){
+		if(jedis.get("global:trapserver:ip") == null){
 			jedis.set("global:trapserver:ip", "192.168.223.251");
 			jedis.set("global:trapserver:port", "162");
 		}

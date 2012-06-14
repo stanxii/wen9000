@@ -31,6 +31,7 @@ public class WorkerDiscoveryProcessor{
 	private static SnmpUtil util = new SnmpUtil();
 
 	private static RedisUtil redisUtil;
+	private static String dismode;
 
 	  
 	public static void setRedisUtil(RedisUtil redisUtil) {
@@ -234,88 +235,16 @@ public class WorkerDiscoveryProcessor{
 			return;
 		}
 		
-//		if (hfcping(currentip, "161")) {
-//			//tong
-//			String oid = "";
-//			String hfc_mac = "30:71:b2:00:00:00";
-//			String hfc_version = "";
-//			String hfc_LogicalID = "";
-//			String hfc_ModelNumber = "";
-//			String hfc_SerialNumber = "";
-//			try{
-//				oid = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
-//					2, 1, 1, 2, 0 }));
-//				hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}) );
-//				hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}) );
-//				hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}) );
-//				hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}) );
-//			}
-//			catch(Exception e){
-//				logger.info("read hfc info error!");
-//			}
-//			String hfctype = "";
-//			if (oid.toString().equals("1.3.6.1.4.1.2000.1.3000"))
-//	        {
-//				hfctype = "光平台";
-//	        }
-//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.8888.1"))
-//	        {
-//	        	hfctype = "万隆8槽WOS2000";
-//	        }
-//	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.8686"))
-//	        {
-//	        	hfctype = "万隆增强光开关";
-//	        }
-//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.11"))
-//	        {
-//	        	hfctype = "掺铒光纤放大器";
-//	        }
-//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.6"))
-//	        {
-//	        	hfctype = "1310nm光发射机";
-//	        }
-//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.10"))
-//	        {
-//	        	hfctype = "光工作站";
-//	        }
-//	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.9"))
-//	        {
-//	        	hfctype = "光接收机";
-//	        }
-//	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.7"))
-//	        {
-//	        	hfctype = "1550光发射机";
-//	        }
-//	        else
-//	        {
-//	        	hfctype = "未知设备类型";
-//	        }
-//			
-//			 String msgservice="";
-//			 Map paramhash=new LinkedHashMap();				 
-//			 paramhash.put("msgcode", "003");
-//			 paramhash.put("ip", currentip);
-//			 paramhash.put("oid", oid);	
-//			 paramhash.put("hfcmac", hfc_mac);
-//			 paramhash.put("hfctype", hfctype);	
-//			 paramhash.put("version", hfc_version);	
-//			 paramhash.put("logicalid", hfc_LogicalID);
-//			 paramhash.put("modelnumber", hfc_ModelNumber);
-//			 paramhash.put("serialnumber", hfc_SerialNumber);
-//			 
-//			 msgservice = JSONValue.toJSONString(paramhash);
-//			
-//			sendToPersist(msgservice);
-//			//System.out.println("hfc tong ");
-//			return;
-//		}
+		//W9000显示模式判断
+		if((dismode = jedis.get("global:displaymode")) != null){
+			if(dismode == "1"){
+				//显示HFC设备
+				hfcdis(currentip,jedis);
+				return;
+			}
+		}		
 		
-		
-		//eoc
-
-		
-
-		
+		//eoc	
 		devicetype = eocping(currentip, "161");	
 		
 		// ///////////////////////////////////////////////////
@@ -383,6 +312,84 @@ public class WorkerDiscoveryProcessor{
 
 	}
 
+	static void hfcdis(String currentip, Jedis jedis){
+		if (hfcping(currentip, "161")) {
+			//tong
+			String oid = "";
+			String hfc_mac = "30:71:b2:00:00:00";
+			String hfc_version = "";
+			String hfc_LogicalID = "";
+			String hfc_ModelNumber = "";
+			String hfc_SerialNumber = "";
+			try{
+				oid = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
+					2, 1, 1, 2, 0 }));
+				hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}) );
+				hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}) );
+				hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}) );
+				hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}) );
+			}
+			catch(Exception e){
+				logger.info("read hfc info error!");
+			}
+			String hfctype = "";
+			if (oid.toString().equals("1.3.6.1.4.1.2000.1.3000"))
+	        {
+				hfctype = "光平台";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.8888.1"))
+	        {
+	        	hfctype = "万隆8槽WOS2000";
+	        }
+	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.8686"))
+	        {
+	        	hfctype = "万隆增强光开关";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.11"))
+	        {
+	        	hfctype = "掺铒光纤放大器";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.6"))
+	        {
+	        	hfctype = "1310nm光发射机";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.10"))
+	        {
+	        	hfctype = "光工作站";
+	        }
+	        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.9"))
+	        {
+	        	hfctype = "光接收机";
+	        }
+	        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.7"))
+	        {
+	        	hfctype = "1550光发射机";
+	        }
+	        else
+	        {
+	        	hfctype = "未知设备类型";
+	        }
+			
+			 String msgservice="";
+			 Map paramhash=new LinkedHashMap();				 
+			 paramhash.put("msgcode", "003");
+			 paramhash.put("ip", currentip);
+			 paramhash.put("oid", oid);	
+			 paramhash.put("hfcmac", hfc_mac);
+			 paramhash.put("hfctype", hfctype);	
+			 paramhash.put("version", hfc_version);	
+			 paramhash.put("logicalid", hfc_LogicalID);
+			 paramhash.put("modelnumber", hfc_ModelNumber);
+			 paramhash.put("serialnumber", hfc_SerialNumber);
+			 
+			 msgservice = JSONValue.toJSONString(paramhash);
+			
+			sendToPersist(msgservice,jedis);
+			//System.out.println("hfc tong ");
+			return;
+		}
+	}
+	
 	static Boolean ping(String ip) {
 		int timeOut = 3000; // I recommend 3 seconds at least
 

@@ -10,18 +10,19 @@
 //	  var ht5 = window.screen.availHeight;
 //	  var ht6 = document.body.clientHeight;
       if(window.screen.height >768){
-    	  var ht = window.screen.availHeight - 345;
+    	  var ht = window.screen.availHeight - 348;
     	  $("#wapper").css("height",ht+"px");
     	  $("#menu").css("height",ht+"px");
+    	  $("#navtree").css("height",ht+"px");    	  
       }else if(window.screen.height <= 768){
-			  $("#menu").css("overflow","auto");
-   			  $("#menu").css("height","455px");
-   			  $("#navtree").css("height","445px");
-   			  $("#content").css("overflow","auto");
-   			  $("#content").css("height","455px");
-   			  $("#wapper").css("min-height","460px");
-   			$("#alarm").css("height","130px");
-   			$("#newAlarm").css("height","100x");
+		  $("#menu").css("overflow","auto");
+		  $("#menu").css("height","455px");
+		  $("#navtree").css("height","445px");
+		  $("#content").css("overflow","auto");
+		  $("#content").css("height","455px");
+		  $("#wapper").css("min-height","460px");
+		  $("#alarm").css("height","130px");
+		  $("#newAlarm").css("height","100x");
    	  }
       
 	  socket = io.connect('http://localhost:3000');
@@ -30,6 +31,7 @@
                   socket.on('initDynatree', onInitTree);
                   socket.on('cbatdetail', fun_cbatdetail );
                   socket.on('cnudetail', fun_cnudetail );
+                  socket.on('hfcdetail', fun_hfcdetail );
                   socket.on('cbat_modify', fun_cbatmodify );
                   socket.on('cbat_sync', fun_CbatSync );
                   socket.on('cnu_sub', fun_CnuSub );
@@ -90,7 +92,7 @@
     	  if((confirm( "要恢复出厂设置吗？ ")==true))
     	  {
     		  if(isbusy != false){
-  				return;
+  					return;
 	  			} 
 	  			isbusy = true;
 	  			document.body.style.cursor = 'wait';
@@ -109,7 +111,6 @@
 			var proname = document.getElementById('proname').textContent;
 			var mac = document.getElementById('cnu_mac').textContent;
 	 		var vlanen = document.getElementById('vlan_en').value;
-	    	//var vlanid = document.getElementById('vlanid').value;
 	    	var vlan0id = document.getElementById('vlan0id').value;
 	    	var vlan1id = document.getElementById('vlan1id').value;
 	    	var vlan2id = document.getElementById('vlan2id').value;
@@ -153,6 +154,8 @@
 					&&checknull("port2rxrate",port2rxrate)&&checknull("port3rxrate",port3rxrate)){
 				
 			}else{
+				document.body.style.cursor = 'default';
+		 		isbusy = false;
 				alert("不能存在空值！");
 				return;
 			}
@@ -349,9 +352,11 @@
 				node = $("#navtree").dynatree("getTree").getNodeByKey("hfcroot");
 				var img;
 				if(itemv.online == "1"){
-					img = "doc_with_children.gif";
+					img = "online.gif";
+					node.data.online = "1";
 				}else{
 					img = "offline.png";
+					node.data.online = "0";
 				}
 				node.addChild({
 						title: itemv.ip,
@@ -374,10 +379,10 @@
 						title: itemv.id,
 						icon:"tp.png"
 					});	
-				return false;
+				return;
 			}			  					
 			if(itemv.online == "1"){
-				node.data.icon = "doc_with_children.gif";
+				node.data.icon = "online.gif";
 				node.data.online = "1";
 			}else{
 				node.data.icon = "offline.png";
@@ -609,21 +614,7 @@
 			        	  socket.emit('cnudetail', node.data.key );				          			          		  	         	          		          	
 			          	
 			          }else if(node.data.type=="hfc"){
-			          		var urltext="http://localhost:8080/wen9000/global/hfcs/"+node.data.key;
-				          	$.ajax({url:urltext,dataType:"text",success:function(text){
-				          		jsondata=$.parseJSON(text);			          		
-				          		$("#main").empty();		
-				          		$('.ui-dialog #dialog').remove();	          				          		
-					          	$("#main").append('<div id="devinfo"><h6>HFC设备信息</h6>'+
-					          	'<div style="float:left"><img src="/wen9000/css/images/Trans.jpg" style="width:200px;height:100px"/></div>'+
-					        	'<div style=" height:100px;width:auto;margin:10px 0px 1px 210px"><lable>这里描述设备的功能信息</lable></div>'+
-					        	'<h3 style="color:green">基本信息</h3><hr/>'+
-					          	'<table id="baseinfo"><tr><td><lable>mac ='+ jsondata.mac+'</lable></td>'+
-					          	'<td><lable>ip ='+ jsondata.ip+'</lable></td></tr></div>'
-
-								);
-				          	}
-				          	});		    
+			        	  socket.emit('hfcdetail', node.data.key );	    
 			          }
 			    },
 			    onClick: function(node, event) {
@@ -657,22 +648,55 @@
 	      case "cut":
 	      case "copy":
 	      case "paste":
-	        copyPaste(action, node);
+	        //copyPaste(action, node);
 	        break;
 	      case "quit":		        
-		        break;
+		      break;
 	      default:
 	        //删除节点
 	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
 	    	  socket.emit('delnode',datastring);
 	    	  node.remove();
+	    	  window.location.reload();
 	      }
 	    });
    };
+   
+   function fun_hfcdetail(jsondata){
+	   var active;
+	   var style;
+	   if(jsondata.active == "在线"){
+		   active = "设备连接正常";
+		   style = "color:#3ff83d";
+	   }else{
+		   active = "设备失去连接";
+		   style = "color:red";
+	   }
+	   $("#content").empty();
+	   	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+	   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
+	   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+	   	'<h3 style="background-color:#ccc">基本信息</h3>'+
+	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
+	   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.hfctype+'</lable></td>'+
+	   		'<tr><td><lable>逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+
+			'<tr><td><lable>序列号 : </lable></td><td><lable>'+jsondata.serialnumber+'</lable></td></tr>'+			
+		'</table></div><br/>'+
+		'</div>');
+
+		if(jsondata.hfctype == "WEC-3501I C22"){
+			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
+		}else if(jsondata.hfctype == "WEC-3501I S220"){
+			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 S220.jpg";
+		}else{
+			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/Trans.jpg";
+		}
+	   
+   }
 
    
    function fun_cnudetail(jsondata) {
-	   console.log(jsondata);
+	   //console.log(jsondata);
 	   var active;
 	   var style;
 	   if(jsondata.active == "在线"){
