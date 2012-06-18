@@ -38,7 +38,24 @@
                   socket.on('cnusync', fun_CnuSync );
                   socket.on('statuschange', fun_Statuschange );
                   socket.on('cbatreset', fun_Cbatreset );
+                  socket.on('hfcbase', fun_HfcBase );
       
+      $("#btn_hbase").live('click', function(){
+    	  if(isbusy != false){
+				return;
+			} 
+			isbusy = true;
+			document.body.style.cursor = 'wait';
+    	  var hfcmac = document.getElementById('hfc_mac').textContent;
+    	  var hfcip = document.getElementById('hfc_ip').value;
+    	  var hfclable = document.getElementById('hfc_lable').value;
+    	  var datastring = '{"hfcip":"'+hfcip+'","hfclable":"'+hfclable+'","hfcmac":"'+hfcmac+'"}';
+    	  socket.emit('hfc_baseinfo',datastring);
+    	  
+    	  var node = $("#navtree").dynatree("getTree").getNodeByKey(hfcmac);
+		  node.data.title = hfclable;
+		  node.render();
+      });
       
       $("#btn_cnusync").live('click', function(){
     	  if(isbusy != false){
@@ -359,10 +376,10 @@
 					node.data.online = "0";
 				}
 				node.addChild({
-						title: itemv.ip,
+						title: itemv.lable,
 						key: itemv.mac,
 						online:itemv.online,
-						tooltip:itemv.mac,
+						tooltip:itemv.ip,
 						type:"hfc",
 						icon:img
 					});
@@ -372,7 +389,7 @@
 						icon:"tp.png"
 					});	
 				node.addChild({
-					title: itemv.sn,
+					title: itemv.mn,
 					icon:"tp.png"
 				});	
 				node.addChild({
@@ -391,6 +408,44 @@
 		}		  					
 		node.render();
 
+     }
+     
+     function fun_HfcBase(data){
+    	 document.body.style.cursor = 'default';
+ 		 isbusy = false;
+    	 if(data == ""){
+    		//失败提示对话框					
+ 			$( "#dialog-message-failed" ).dialog({
+ 				autoOpen: false,
+ 				show: "blind",
+ 				modal: true,
+ 				resizable: false,
+ 				hide: "explode",
+ 				buttons: {
+ 					Ok: function() {
+ 						$( this ).dialog( "close" );
+ 					}
+ 				}
+ 			});
+ 			$("#dialog-message-failed").dialog("open");
+    	 }else{
+    		//成功提示对话框
+ 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
+
+ 			$( "#dialog-message" ).dialog({
+ 				autoOpen: false,
+ 				show: "blind",
+ 				modal: true,
+ 				resizable: false,
+ 				hide: "explode",
+ 				buttons: {
+ 					Ok: function() {
+ 						$( this ).dialog( "close" );
+ 					}
+ 				}
+ 			});
+ 			$("#dialog-message").dialog("open");
+    	 }
      }
      
      function fun_Cbatreset(data){
@@ -676,12 +731,34 @@
 	   	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
 	   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
 	   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
-	   	'<h3 style="background-color:#ccc">基本信息</h3>'+
-	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
+	   	'<br/><div id="configinfo"><ul>'+
+		'<li><a href="#tabs-1">基本信息</a></li>'+
+		'<li><a href="#tabs-2">相关参数</a></li>'+
+		'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+		'<div id="tabs-1">'+
+			'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+		   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.hfctype+'</lable></td>'+
+		   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
+				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+				'<tr><td><lable>设备标识 : </lable></td><td><input id = "hfc_lable" value='+jsondata.lable+ '></input></td>'+
+				'<tr><td><lable>IP : </lable></td><td><input id = "hfc_ip" value='+jsondata.ip+ '></input></td>'+
+				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp网关 : </lable></td><td><input id = "hfc_gateway" value='+jsondata.gateway+ '></input></td></tr>'+	
+			'</table>'+
+			'<br/><button id="btn_hbase" style="margin-left:300px">提交</button>'+
+		'</div>'+
+		'<div id="tabs-2">'+
+		'<table id="baseinfo"><tr><td><lable>直流电源电压 : </lable></td><td><lable style="margin-left:0px">'+0+' V</lable></td>'+
 	   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.hfctype+'</lable></td>'+
-	   		'<tr><td><lable>逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+
-			'<tr><td><lable>序列号 : </lable></td><td><lable>'+jsondata.serialnumber+'</lable></td></tr>'+			
-		'</table></div><br/>'+
+	   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
+			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+			'<tr><td><lable>设备标识 : </lable></td><td><input id = "hfc_lable" value='+jsondata.lable+ '></input></td>'+
+			'<tr><td><lable>IP : </lable></td><td><input id = "hfc_ip" value='+jsondata.ip+ '></input></td>'+
+			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp网关 : </lable></td><td><input id = "hfc_gateway" value='+jsondata.gateway+ '></input></td></tr>'+	
+	'</table>'+			
+		'</div>'+
+		'<div id="tabs-3">'+
+			
+		'</div>'+
 		'</div>');
 
 		if(jsondata.hfctype == "WEC-3501I C22"){

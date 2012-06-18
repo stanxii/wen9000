@@ -170,13 +170,8 @@ public class TrapReceiverBean {
 				
 				
 				 parseAlarmMsg(alarmhash );
-				
-				
-				
-				
 				return;
 			}else if(recVBs.size() == 6){
-				//System.out.println("============>>do heart");
 				//heart alarm
 				Map hearthash=new LinkedHashMap();
 				for (int i = 0; i < recVBs.size(); i++) {
@@ -211,6 +206,9 @@ public class TrapReceiverBean {
 				
 				//String msgservice = JSONValue.toJSONString(hearthash);
 				parseHeartMsg(hearthash);
+			}else{
+				//hfc alarm
+				System.out.println("-------------------------->>>>>>>>len====="+recVBs.size());
 			}
 
 		}

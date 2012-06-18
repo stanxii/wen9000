@@ -324,6 +324,7 @@ public class ServiceDiscoveryProcessor  {
 		    
 		
 		String ip =(String) jsonobj.get("ip");
+		String gateway =(String) jsonobj.get("gateway");
 		String oid =(String) jsonobj.get("oid");
 		String hfcmac =(String) jsonobj.get("hfcmac");
 		String hfctype =(String) jsonobj.get("hfctype");
@@ -331,6 +332,7 @@ public class ServiceDiscoveryProcessor  {
 		String logicalid =(String) jsonobj.get("logicalid");
 		String modelnumber =(String) jsonobj.get("modelnumber");
 		String serialnumber =(String) jsonobj.get("serialnumber");
+		String trapip =(String) jsonobj.get("trapip");
 		
 		String hfckey = "mac:" +  hfcmac.toLowerCase().trim() + ":deviceid";
 		
@@ -351,8 +353,7 @@ public class ServiceDiscoveryProcessor  {
 			jedis.set(hfckey, Long.toString(hfcid));
 		}else {
 			hfcid = Long.parseLong(shfcid);			
-		}
-		Sendstschange("hfc",String.valueOf(hfcid),jedis);
+		}		
 		
 		String shfcentitykey = "hfcid:" + hfcid + ":entity";
 		Map<String , String >  hfcentity = new HashMap<String, String>();
@@ -360,17 +361,22 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("mac", hfcmac.toLowerCase().trim());
 		hfcentity.put("oid", oid);
 		hfcentity.put("ip", ip.toLowerCase().trim());
+		hfcentity.put("gateway", gateway.toLowerCase().trim());
 		hfcentity.put("active", "1");
+		hfcentity.put("lable", hfcmac.toLowerCase().trim());
 		hfcentity.put("hfctype", hfctype.toLowerCase().trim());
 		hfcentity.put("version", version.toLowerCase().trim());
 		hfcentity.put("logicalid", logicalid.toLowerCase().trim());
 		hfcentity.put("modelnumber", modelnumber.toLowerCase().trim());
 		hfcentity.put("serialnumber", serialnumber.toLowerCase().trim());
+		hfcentity.put("trapip", trapip.toLowerCase().trim());
 		
 		jedis.hmset(shfcentitykey, hfcentity);
 
 		jedis.save();
-
+		
+		Sendstschange("hfc",String.valueOf(hfcid),jedis);
+		
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -472,10 +478,11 @@ public class ServiceDiscoveryProcessor  {
 		}else if(type == "hfc"){
 			String hfckey = "hfcid:"+devid+":entity";
 			json.put("mac", jedis.hget(hfckey,"mac"));
-			json.put("active", jedis.hget(hfckey,"active"));
+			json.put("lable", jedis.hget(hfckey,"lable"));
+			json.put("online", jedis.hget(hfckey,"active"));
 			json.put("ip", jedis.hget(hfckey,"ip"));
 			json.put("type", "hfc");
-			json.put("sn", jedis.hget(hfckey,"serialnumber"));
+			json.put("mn", jedis.hget(hfckey,"modelnumber"));
 			json.put("hp", jedis.hget(hfckey,"hfctype"));
 			json.put("id", jedis.hget(hfckey,"logicalid"));
 			

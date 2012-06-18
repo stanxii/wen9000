@@ -290,6 +290,57 @@ public class SnmpUtil {
 		return bstatus;
 
 	}
+	
+	public boolean sethfcPDU(String host, String port, OID oid, Integer32 value) {
+		// /////////////////////////////////////
+
+		boolean bstatus = false;
+		try {
+
+			Snmp snmp = new Snmp(new DefaultUdpTransportMapping());
+
+			CommunityTarget target = new CommunityTarget();
+
+			target.setCommunity(new OctetString("public"));
+
+			target.setVersion(SnmpConstants.version1);
+
+			target.setAddress(new UdpAddress(host + "/" + port));
+
+
+			target.setRetries(1); 
+
+			target.setTimeout(3000); 
+
+			PDU response = null;// 
+
+			PDU request = new PDU();
+			request.add(new VariableBinding(oid, value));
+			request.setType(PDU.SET);
+
+			snmp.listen(); 
+
+			ResponseEvent responseEvent = snmp.send(request, target); 
+			if (response != null) {
+				if (response.getErrorIndex() == response.noError
+						&& response.getErrorStatus() == response.noError) {
+					bstatus = true;
+				}
+
+			}
+
+			snmp.close();
+		} catch (IOException e) {
+
+			// TODO Auto-generated catch block
+
+			e.printStackTrace();
+
+		}
+
+		return bstatus;
+
+	}
 
 	////
 	/* SNMP V2 SET PDU */
@@ -343,6 +394,58 @@ public class SnmpUtil {
 		return bstatus;
 
 	}
+	
+	public boolean sethfcStrPDU(String host, String port, OID oid, String value) {
+		// /////////////////////////////////////
+
+		boolean bstatus = false;
+		try {
+
+			Snmp snmp = new Snmp(new DefaultUdpTransportMapping());
+
+			CommunityTarget target = new CommunityTarget();
+
+			target.setCommunity(new OctetString("public"));
+
+			target.setVersion(SnmpConstants.version1);
+
+			target.setAddress(new UdpAddress(host + "/" + port));
+
+
+			target.setRetries(1); 
+
+			target.setTimeout(3000); 
+
+			PDU response = null;// 
+
+			PDU request = new PDU();
+			request.add(new VariableBinding(oid, new OctetString(value)));
+			request.setType(PDU.SET);
+
+			snmp.listen(); 
+
+			ResponseEvent responseEvent = snmp.send(request, target); 
+			if (response != null) {
+				if (response.getErrorIndex() == response.noError
+						&& response.getErrorStatus() == response.noError) {
+					bstatus = true;
+				}
+
+			}
+
+			snmp.close();
+		} catch (IOException e) {
+
+			// TODO Auto-generated catch block
+
+			e.printStackTrace();
+
+		}
+
+		return bstatus;
+
+	}
+
 
 	// /////////////////
 

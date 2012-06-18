@@ -239,10 +239,11 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('opt.preconfig_all',data);       
     }else if(ch == 'node.opt.cbatreset') {
     	sio.sockets.emit('cbatreset',data);       
-    }
-    else if(ch == 'node.opt.ftpinfo') {
+    }else if(ch == 'node.opt.ftpinfo') {
     	data = JSON.parse(data);
     	sio.sockets.emit('ftpinfo',data);       
+    }else if(ch == 'node.tree.hfcbase') {
+    	sio.sockets.emit('hfcbase',data);       
     }
 });
 
@@ -492,6 +493,11 @@ sio.sockets.on('connection', function (socket) {
   socket.on('hfcdetail', function (data) {
 	  console.log('nodeserver: hfcdetail==='+data);
 	  publish.publish('servicecontroller.hfcdetail', data);
+  });
+//HFC基本信息提交
+  socket.on('hfc_baseinfo', function (data) {
+	  console.log('nodeserver: hfc_baseinfo==='+data);
+	  publish.publish('servicecontroller.hfc_baseinfo', data);
   });
   
   socket.on('channel', function(ch) {

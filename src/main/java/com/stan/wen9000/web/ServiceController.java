@@ -221,10 +221,52 @@ public class ServiceController {
 			doUpdateReset(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.hfcdetail")){
 			doHfcDetail(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.hfc_baseinfo")){
+			doHfcBase(message);
 		}
 		
 
 
+	}
+	
+	private static void doHfcBase(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String mac = jsondata.get("hfcmac").toString();
+		String ip = jsondata.get("hfcip").toString();
+		String lable = jsondata.get("hfclable").toString();
+		String id = jedis.get("mac:"+mac+":deviceid");
+		String key = "hfcid:"+id+":entity";
+		//save		
+		jedis.hset(key, "lable", lable);
+		//log.info("----------->>key===="+key+"------------------->>>ip==="+jedis.hget(key, "ip"));
+		if(!jedis.hget(key, "ip").equalsIgnoreCase(ip)){			
+			String oid = null;
+			try {
+				oid = util.gethfcStrPDU(jedis.hget(key, "ip"), "162", new OID(new int[] { 1, 3, 6, 1,
+						2, 1, 1, 2, 0 }));
+				if ((oid != null) && (oid != "")) {
+					jedis.publish("node.tree.hfcbase", "");
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
+					return;
+				}else{
+					util.sethfcStrPDU(jedis.hget(key, "ip"), "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,9,0}), ip);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			jedis.hset(key, "ip", ip);
+		}
+		jedis.save();
+		jedis.publish("node.tree.hfcbase", "ok");
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doHfcDetail(String message){
@@ -243,8 +285,15 @@ public class ServiceController {
 		json.put("mac", jedis.hget(hfckey,"mac"));
 		json.put("ip", jedis.hget(hfckey, "ip"));
 		json.put("oid", jedis.hget(hfckey, "oid"));
+		json.put("lable", jedis.hget(hfckey, "lable"));
 		json.put("hfctype", jedis.hget(hfckey, "hfctype"));
-		
+		if(jedis.hget(hfckey, "active").equalsIgnoreCase("1") ){
+			//设备在线，实时获得设备信息
+			json.put("active", "在线");			
+		}else{
+			//设备离线，从redis获取设备信息
+			json.put("active", "离线");					
+		}
 		json.put("logicalid", jedis.hget(hfckey, "logicalid"));
 		json.put("modelnumber", jedis.hget(hfckey, "modelnumber"));
 		json.put("serialnumber", jedis.hget(hfckey, "serialnumber"));
@@ -2342,15 +2391,14 @@ public class ServiceController {
     	//"children"
 		
 		JSONArray hfcarray = new JSONArray();
-    	for(Iterator it = hfclist.iterator(); it.hasNext(); ) 
-    	{ 
+    	for(Iterator it = hfclist.iterator(); it.hasNext(); )     	{ 
     		JSONObject hfcjson = new JSONObject();
-    		JSONObject hfcinfo = new JSONObject();
-
+    		
+    		JSONArray hfcinfos= new JSONArray();
     		String key = it.next().toString();
    
     		//add head;
-    		hfcjson.put("title", jedis.hget(key, "logicalid"));
+    		hfcjson.put("title", jedis.hget(key, "lable"));
     		hfcjson.put("key", jedis.hget(key, "mac"));
     		hfcjson.put("online", jedis.hget(key, "active"));
     		hfcjson.put("icon", "cbaton.png");    		
@@ -2359,11 +2407,28 @@ public class ServiceController {
     		hfcjson.put("type", "hfc");
     		
     		//hfcinfo
-    		hfcinfo.put("hp", jedis.hget(key, "hfctype"));
-    		hfcinfo.put("sn", jedis.hget(key, "serialnumber"));
-    		hfcinfo.put("modelnumber", jedis.hget(key, "modelnumber"));
+    		JSONObject hfcinfo = new JSONObject();
+    		hfcinfo.put("key", jedis.hget(key, "hfctype"));
+    		hfcinfo.put("title", jedis.hget(key, "hfctype"));
+    		hfcinfo.put("icon", "tp.png");
+    		hfcinfo.put("tooltip","HP");
+    		hfcinfos.add(hfcinfo);
     		
-    		hfcjson.put("children", hfcinfo);
+    		hfcinfo = new JSONObject();
+    		hfcinfo.put("key", jedis.hget(key, "modelnumber"));
+    		hfcinfo.put("title", jedis.hget(key, "modelnumber"));
+    		hfcinfo.put("icon", "tp.png");
+    		hfcinfo.put("tooltip","MN");
+    		hfcinfos.add(hfcinfo);
+    		
+    		hfcinfo = new JSONObject();
+    		hfcinfo.put("key", jedis.hget(key, "logicalid"));
+    		hfcinfo.put("title", jedis.hget(key, "logicalid"));
+    		hfcinfo.put("icon", "tp.png");
+    		hfcinfo.put("tooltip","ID");
+    		hfcinfos.add(hfcinfo);
+    		
+    		hfcjson.put("children", hfcinfos);
     		hfcarray.add(hfcjson);
     	}
     	hfchome.put("children", hfcarray);
