@@ -15,13 +15,16 @@
           li
             a(href='/opt/updatecbat')  局端升级
       li
-        a(href="/opt/global_opt")  全局配置 
-        ul.subnav
-          li 
-            a(href="/opt/global_opt")  全局参数配置
+        a(href="/global_opt")  全局配置 
       li
         a(href="/profilemanager") 模板管理
       li
         a(href="/historyalarm") 告警管理
       li
         a(href="/version")  版本信息
+    #logininfo(style='float:right;margin:8px 30px;color:white')
+      lable  欢迎,
+      a(id='loginuser',href="/userManager")
+      lable  [
+      a(id='logout',href="/login")  注销
+      lable  ]

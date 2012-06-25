@@ -8,10 +8,11 @@ var express = require('express')
   , http = require('http')
   , io = require('socket.io');
 
-
+var MemStore = express.session.MemoryStore;
 var app = express();
 var redis = require('redis').createClient();
 var publish = require('redis').createClient();
+var jedis = require('redis').createClient();
 
 app.configure(function(){
   app.set('views', __dirname + '/views');
@@ -20,15 +21,81 @@ app.configure(function(){
   app.use(express.logger('dev'));
   app.use(express.static(__dirname + '/public'));
   app.use(express.bodyParser());
-  app.use(express.methodOverride());
+  app.use(express.cookieParser("thissecretrocks"));
+  app.use(express.methodOverride());  
+  app.use(express.session({secret: 'alessios', store: MemStore({
+	    reapInterval: 60000 * 10
+  })}));
   app.use(app.router);
-});
-
-app.configure('development', function(){
   app.use(express.errorHandler());
 });
 
-app.get('/', routes.index);
+//app.configure('development', function(){
+//  app.use(express.errorHandler());
+//});
+
+//app.get('/', routes.index);
+
+app.get('/login', function (req, res) {
+	console.log("-----------------old user====>>>"+req.session.user);
+	
+	res.render('login.jade', { title: 'Wen9000网路管理系统---登录' });
+});
+
+app.get('/register', function (req, res) {
+	res.render('register.jade', { title: 'Wen9000网路管理系统---注册' });
+});
+//用户不存在
+app.get('/101', function (req, res) {
+	res.render('101.jade', { title: 'Wen9000网路管理系统---错误' });
+});
+//密码错误
+app.get('/102', function (req, res) {
+	res.render('102.jade', { title: 'Wen9000网路管理系统---错误' });
+});
+
+app.get('/', function (req, res) {
+	if (req.session.user) {
+		//console.log("---------------------------------------->>>>>"+req.session.user);
+		jedis.exists('user:'+req.session.user, function(error, result) {
+		    if(result){
+		    	jedis.hget('user:'+req.session.user,"password", function(error, result) {
+		    	    if(result == req.session.password){
+		    	    	res.render('index', { title: 'Wen9000网路管理系统' });
+		    	    }else{
+		    	    	res.redirect('/102');
+		    	    }
+		    	});
+		    }else{
+		    	res.redirect('/101');
+		    }
+		});
+		
+		
+	} else {
+		res.redirect('/login');
+	}
+});
+
+
+//登陆post路由
+app.post('/login', function (req, res) {
+	var name = req.body.userName;	
+	var password = req.body.password;	
+	req.session.user = name;
+	req.session.password = password;
+	res.redirect('/');
+});
+
+//注册用户
+app.post('/register', function (req, res) {
+	var name = req.body.userName;	
+	var password = req.body.password;
+    jedis.hset("user:"+name,"password",password);
+    jedis.hset("user:"+name,"flag","2");
+	res.redirect('/login');
+});
+
 app.get('/profilemanager', function( request, response ) {
     response.render( 'profilemanager.jade', { title: 'Wen9000网路管理系统---模板管理' } );
 });
@@ -50,8 +117,8 @@ app.get('/dis/search', function( request, response ) {
 app.get('/dis/result', function( request, response ) {
     response.render( 'discovery/result.jade', { title: 'Wen9000网路管理系统---搜索结果' } );
 });
-app.get('/opt/global_opt', function( request, response ) {
-    response.render( 'opt/global_opt.jade', { title: 'Wen9000网路管理系统---全局管理' } );
+app.get('/global_opt', function( request, response ) {
+    response.render( 'global_opt.jade', { title: 'Wen9000网路管理系统---全局管理' } );
 });
 app.get('/opt/updatecbat', function( request, response ) {
     response.render( 'opt/updatecbat.jade', { title: 'Wen9000网路管理系统---局端升级' } );
@@ -65,7 +132,11 @@ app.get('/historyalarm', function( request, response ) {
 app.get('/opt/pre_config', function( request, response ) {
     response.render( 'opt/pre_config.jade', { title: 'Wen9000网路管理系统---设备预开户' } );
 });
+app.get('/userManager', function( request, response ) {
+    response.render( 'userManager.jade', { title: 'Wen9000网路管理系统---用户管理' } );
+});
 
+//app.listen(3000);
 var node = http.createServer(app).listen(3000);
 var sio = io.listen(node);
 
@@ -244,12 +315,28 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('ftpinfo',data);       
     }else if(ch == 'node.tree.hfcbase') {
     	sio.sockets.emit('hfcbase',data);       
+    }else if(ch == 'node.tree.hfcrealtime') {
+    	if(data == ""){
+    		sio.sockets.emit('hfcrealtime',data);
+    	}else{
+    		data = JSON.parse(data);
+            sio.sockets.emit('hfcrealtime',data);
+    	}     
+    }else if(ch == 'node.opt.userinfo') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('userinfo',data);       
+    }else if(ch == 'node.opt.userlist') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('userlist',data);       
+    }else if(ch == 'node.opt.pwdmodify') {
+    	sio.sockets.emit('pwdmodify',data);       
+    }else if(ch == 'node.opt.userres') {
+    	sio.sockets.emit('userres',data);       
     }
 });
 
 sio.sockets.on('connection', function (socket) {
   console.log('socket connected!' + socket.id);
-
 
   socket.on('initDynatree', function (data) {
      console.log('nodeserver: inittree');
@@ -499,7 +586,36 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: hfc_baseinfo==='+data);
 	  publish.publish('servicecontroller.hfc_baseinfo', data);
   });
-  
+//HFC实时参数获取
+  socket.on('hfcrealtime', function (data) {
+	  console.log('nodeserver: hfcrealtime==='+data);
+	  publish.publish('servicecontroller.hfcrealtime', data);
+  });
+//一般用户信息获取
+  socket.on('userinfo', function (data) {
+	  console.log('nodeserver: userinfo==='+data);
+	  publish.publish('servicecontroller.userinfo', data);
+  });
+//用户列表获取
+  socket.on('userlist', function (data) {
+	  console.log('nodeserver: userlist==='+data);
+	  publish.publish('servicecontroller.userlist', data);
+  });
+//用户密码修改
+  socket.on('pwd_modify', function (data) {
+	  console.log('nodeserver: pwd_modify==='+data);
+	  publish.publish('servicecontroller.pwd_modify', data);
+  });
+//用户删除
+  socket.on('userdel', function (data) {
+	  console.log('nodeserver: userdel==='+data);
+	  publish.publish('servicecontroller.userdel', data);
+  });
+//创建用户
+  socket.on('usercreate', function (data) {
+	  console.log('nodeserver: usercreate==='+data);
+	  publish.publish('servicecontroller.usercreate', data);
+  });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
         socket.join(ch);

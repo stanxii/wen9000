@@ -1,6 +1,8 @@
 (function($) {
 	var socket;
 	var isbusy = false;
+	var hfcactive = false;
+	var Hfcclock;
   $(function() {
 	//根据屏幕分辨率更改页面布局
 //	  var ht1 = document.body.offsetHeight;
@@ -25,6 +27,10 @@
 		  $("#newAlarm").css("height","100x");
    	  }
       
+      var user = getCookie("userName");
+      $("#loginuser")[0].text = user;
+
+      
 	  socket = io.connect('http://localhost:3000');
                   socket.emit('initDynatree', 'init tree' );
 
@@ -39,6 +45,8 @@
                   socket.on('statuschange', fun_Statuschange );
                   socket.on('cbatreset', fun_Cbatreset );
                   socket.on('hfcbase', fun_HfcBase );
+                  socket.on('hfcrealtime', fun_Hfcrealtime );                 
+      
       
       $("#btn_hbase").live('click', function(){
     	  if(isbusy != false){
@@ -279,13 +287,59 @@
 			socket.emit('cbat_sync',mac);
 
 	 });
+	 
+	//table
+		$('#power').dataTable( {	  			 		
+			"bFilter": false,						//不使用过滤功能
+			"bLengthChange": false,					//用户不可改变每页显示数量
+			"iDisplayLength": 5,					//每页显示5条数据
+ 		"bInfo": false,	
+	        "sPaginationType": "full_numbers",				        
+	        "oLanguage": {							//汉化
+				"sLengthMenu": "每页显示 _MENU_ 条记录",
+				"sZeroRecords": "没有检索到数据",
+				"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
+				"sInfoEmtpy": "没有数据",
+				"sProcessing": "正在加载数据...",
+				"oPaginate": {
+					"sFirst": "首页",
+					"sPrevious": "前页",
+					"sNext": "后页",
+					"sLast": "尾页"
+				}
+			},
+			"aoColumns": [	
+						  { "sTitle": "电源名称" , "sClass": "center"},
+						  { "sTitle": "电源电压" , "sClass": "center"}
+						],
+			
+	    } );
   }); 
       function onInitTree(treedata) {
           initTree(treedata);
      }
+
+     function hfcinterval(){       	
+    	 if(hfcactive){
+    		 //获取实时参数
+    		 var mac = document.getElementById('hfc_mac').textContent;
+    		 var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
+    		 if(node.data.online == "1"){
+    			 socket.emit('hfcrealtime',mac);
+    		 }
+    		 
+    	 }
+     }
+     
+     function fun_Hfcrealtime(data){
+    	 if(data == ""){
+    		 //alert("获取数据失败！");
+    	 }else{
+    		 
+    	 }
+     }
       
-     function fun_Statuschange(itemv){
-					
+     function fun_Statuschange(itemv){					
 		var node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.mac);
 		//node.data.online = itemv.online;
 		if(itemv.type == "cbat"){
@@ -699,6 +753,10 @@
 	      // The event was bound to the <span> tag, but the node object
 	      // is stored in the parent <li> tag
 	      var node = $.ui.dynatree.getNode(el);
+	      if(node.data.online != "1"){
+	    	  alert("在线设备无法删除！");
+	    	  return;
+	      }
 	      switch( action ) {
 	      case "cut":
 	      case "copy":
@@ -708,7 +766,7 @@
 	      case "quit":		        
 		      break;
 	      default:
-	        //删除节点
+	        //删除节点	    	  
 	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
 	    	  socket.emit('delnode',datastring);
 	    	  node.remove();
@@ -717,9 +775,13 @@
 	    });
    };
    
-   function fun_hfcdetail(jsondata){
+   function fun_hfcdetail(jsondata){	   
 	   var active;
 	   var style;
+	   hfcactive = true;
+	   //hfc实时参数获取定时器
+	   Hfcclock = setInterval(hfcinterval,5000);
+	   
 	   if(jsondata.active == "在线"){
 		   active = "设备连接正常";
 		   style = "color:#3ff83d";
@@ -728,38 +790,51 @@
 		   style = "color:red";
 	   }
 	   $("#content").empty();
-	   	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
-	   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
-	   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
-	   	'<br/><div id="configinfo"><ul>'+
-		'<li><a href="#tabs-1">基本信息</a></li>'+
-		'<li><a href="#tabs-2">相关参数</a></li>'+
-		'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
-		'<div id="tabs-1">'+
-			'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
-		   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.hfctype+'</lable></td>'+
-		   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
-				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
-				'<tr><td><lable>设备标识 : </lable></td><td><input id = "hfc_lable" value='+jsondata.lable+ '></input></td>'+
-				'<tr><td><lable>IP : </lable></td><td><input id = "hfc_ip" value='+jsondata.ip+ '></input></td>'+
-				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp网关 : </lable></td><td><input id = "hfc_gateway" value='+jsondata.gateway+ '></input></td></tr>'+	
-			'</table>'+
-			'<br/><button id="btn_hbase" style="margin-left:300px">提交</button>'+
-		'</div>'+
-		'<div id="tabs-2">'+
-		'<table id="baseinfo"><tr><td><lable>直流电源电压 : </lable></td><td><lable style="margin-left:0px">'+0+' V</lable></td>'+
-	   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.hfctype+'</lable></td>'+
-	   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
-			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
-			'<tr><td><lable>设备标识 : </lable></td><td><input id = "hfc_lable" value='+jsondata.lable+ '></input></td>'+
-			'<tr><td><lable>IP : </lable></td><td><input id = "hfc_ip" value='+jsondata.ip+ '></input></td>'+
-			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp网关 : </lable></td><td><input id = "hfc_gateway" value='+jsondata.gateway+ '></input></td></tr>'+	
-	'</table>'+			
-		'</div>'+
-		'<div id="tabs-3">'+
-			
-		'</div>'+
-		'</div>');
+	   if(jsondata.hfctype == "1310nm光发射机"){
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+				   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
+				   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+				   	'<br/><div id="configinfo"><ul>'+
+					'<li><a href="#tabs-1">基本信息</a></li>'+
+					'<li><a href="#tabs-2">相关参数</a></li>'+
+					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<div id="tabs-1">'+
+						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.hfctype+'</lable></td>'+
+					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<tr><td><lable>设备标识 : </lable></td><td><input id = "hfc_lable" value='+jsondata.lable+ '></input></td>'+
+							'<tr><td><lable>IP : </lable></td><td><input id = "hfc_ip" value='+jsondata.ip+ '></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp网关 : </lable></td><td><input id = "hfc_gateway" value='+jsondata.gateway+ '></input></td></tr>'+	
+						'</table>'+
+						'<br/><button id="btn_hbase" style="margin-left:300px">提交</button>'+
+					'</div>'+
+					'<div id="tabs-2">'+
+						'<table id = "power"/>'+
+					'<table id="baseinfo">'+
+				   		'<tr><td><lable>当前AGC偏移量 : </lable></td><td><lable id="hfc_agc"></lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp电视信号频道数量 : </lable></td><td><lable id = "hfc_channelnum"></lable></td></tr>'+
+						'<tr><td><lable>AGC控制使能 : </lable></td><td><select id="agc_e">'+
+							'<option value="1">启动</option>'+
+							'<option value="2">禁用</option>'+
+						'</select></td>'+	
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp激光器制冷电流 : </lable></td><td><lable id = "hfc_liu"></lable></td></tr>'+
+						'<tr><td><lable>激光器温度 : </lable></td><td><lable id = "hfc_jitemp"></lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><input id = "hfc_gonglv" value="0"></input></td></tr>'+
+						'<tr><td><lable>激光器偏置电流 : </lable></td><td><lable id = "hfc_biasliu"></lable></td>'+	
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp当前MGC衰减量 : </lable></td><td><input id = "hfc_mgc" value="0"></input></td></tr>'+
+						'<tr><td><lable>射频信号衰减量范围 : </lable></td><td><lable id = "hfc_jianrange"></lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp激光器激励电平 : </lable></td><td><input id = "hfc_jilevel" value="0"></input></td></tr>'+
+						'<tr><td><lable>激光器类型 : </lable></td><td><lable id = "hfc_jirange"></lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp机内温度 : </lable></td><td><lable id = "hfc_innertemp"></lable></td></tr>'+
+				'</table>'+			
+					'</div>'+
+					'<div id="tabs-3">'+
+						'<lable>TrapIP : </lable></td><td><input id = "hfc_trapip" value='+jsondata.trapip+ '></input>'+
+					'</div>'+
+					'</div>');
+	   }
+	   	
 
 		if(jsondata.hfctype == "WEC-3501I C22"){
 			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
@@ -776,6 +851,7 @@
 	   //console.log(jsondata);
 	   var active;
 	   var style;
+	   hfcactive = false;
 	   if(jsondata.active == "在线"){
 		   active = "设备连接正常";
 		   style = "color:#3ff83d";
@@ -889,6 +965,7 @@
 	   console.log(jsondata);
 	   var active;
 	   var style;
+	   hfcactive = false;
 	   if(jsondata.active == "在线"){
 		   active = "设备连接正常";
 		   style = "color:#3ff83d";
@@ -935,4 +1012,18 @@
 	   }
 	   return true;
    }
+   
+   function getCookie(objName)//获取指定名称的cookie的值
+	{    
+	    var arrStr = document.cookie.split(";");
+	    
+	        for(var i = 0;i < arrStr.length;i++)
+	            {
+	                var temp = arrStr[i].split("=");
+	                if(objName.trim()==temp[0].trim()) //此处如果没有去掉字符串空格就不行,偶在这里折腾了半死,主要是这种错误不好跟踪啊
+	                {                
+	                	return temp[1];
+	                }                            
+	            }
+	}
 })(jQuery);

@@ -1,0 +1,37 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/userManager.js')
+  h1
+    label  用户管理
+  #usercontent
+  
+  #pwdmodify(title='修改密码',style='display:none')
+    table
+      tr
+        td
+          lable  旧密码:
+        td
+          input(type='password',id='old_pwd')
+      tr
+        td
+          lable  新密码:
+        td
+          input(type='password',id='new_pwd')
+      tr
+        td
+          lable  确认密码:
+        td
+          input(type='password',id='rep_pwd')  
+  #dialog-user-create(title='创建用户',style='display:none')
+    table
+      tr
+        td
+          lable  用户名:
+        td
+          input(type='text',id='name')
+      tr
+        td
+          lable  密码:
+        td
+          input(type='password',id='password')                                     

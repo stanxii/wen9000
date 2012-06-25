@@ -124,7 +124,7 @@ public class ServiceController {
 	public static void dowork(String pat, String message) throws ParseException, IOException {
 		
 		
-		System.out.println("dowork pat="+pat + "    msg=" + message);
+		//System.out.println("dowork pat="+pat + "    msg=" + message);
 		if(pat.equalsIgnoreCase("servicecontroller.treeinit")){
 			doNodeTreeInit();
 		}else if(pat.equalsIgnoreCase("servicecontroller.index.init")){
@@ -223,10 +223,155 @@ public class ServiceController {
 			doHfcDetail(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.hfc_baseinfo")){
 			doHfcBase(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.hfcrealtime")){
+			doHfcRealtime(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.userinfo")){
+			doUserInfo(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.userlist")){
+			doUserList(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.pwd_modify")){
+			doPwdModify(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.userdel")){
+			doUserDel(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.usercreate")){
+			doUserCreate(message);
+		}		
+
+
+	}
+	
+	private static void doUserCreate(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
 		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String name = jsondata.get("username").toString();
+		String password = jsondata.get("password").toString();
+		if(jedis.exists("user:"+name)){
+			jedis.publish("node.opt.userres", "2");
+			redisUtil.getJedisPool().returnResource(jedis);
+			return;
+		}
+		jedis.hset("user:"+name, "password", password);
+		jedis.hset("user:"+name, "flag", "2");
+		jedis.save();
+		jedis.publish("node.opt.userres", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doUserDel(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		//log.info("------------------------->>>>>"+"user:"+message.trim());
+		jedis.del("user:"+message.trim());			
+		jedis.save();
+		jedis.publish("node.opt.userres", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doPwdModify(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String username = jsondata.get("username").toString();
+		String password = jsondata.get("password").toString();
+		if(!jedis.exists("user:"+username)){
+			jedis.publish("node.opt.pwdmodify", "");
+			redisUtil.getJedisPool().returnResource(jedis);
+			return;
+		}
+		jedis.hset("user:"+username, "password", password);
+		jedis.save();
+		jedis.publish("node.opt.pwdmodify", "ok");
 		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doUserList(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
 
-
+		Set<String> users = jedis.keys("user:*");
+		JSONArray array = new JSONArray();
+		for(Iterator it=users.iterator();it.hasNext();){
+			String key = it.next().toString();
+			if(key.equalsIgnoreCase("user:admin")){
+				continue;
+			}
+			JSONObject json = new JSONObject();
+			json.put("username", key.substring(5));
+			json.put("password", jedis.hget(key, "password"));
+			json.put("flag", jedis.hget(key, "flag"));
+			array.add(json);
+		}
+		jedis.publish("node.opt.userlist", array.toJSONString());
+		
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	
+	private static void doUserInfo(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		String flag = jedis.hget("user:"+message, "flag");
+		
+		JSONObject json = new JSONObject();
+		json.put("password", jedis.hget("user:"+message, "password"));
+		json.put("flag", jedis.hget("user:"+message, "flag"));
+		jedis.publish("node.opt.userinfo", json.toJSONString());
+			
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doHfcRealtime(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		String id = jedis.get("mac:"+message+":deviceid");
+		String key = "hfcid:"+id+":entity";
+		String ip = jedis.hget("key", "ip");
+		//获取相关参数并返回
+		//TODO
+		
+		
+		jedis.publish("node.tree.hfcrealtime", "");
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doHfcBase(String message) throws ParseException{
@@ -298,6 +443,9 @@ public class ServiceController {
 		json.put("modelnumber", jedis.hget(hfckey, "modelnumber"));
 		json.put("serialnumber", jedis.hget(hfckey, "serialnumber"));
 		jedis.publish("node.tree.hfcdetail", json.toJSONString());
+		//发送hfc 电源信息和trap主机地址信息
+		//TODO
+		
 		redisUtil.getJedisPool().returnResource(jedis);
 
 	}

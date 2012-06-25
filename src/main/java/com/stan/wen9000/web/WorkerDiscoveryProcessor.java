@@ -236,16 +236,16 @@ public class WorkerDiscoveryProcessor{
 		}
 		
 		//W9000显示模式判断
-//		if((dismode = jedis.get("global:displaymode")) != null){
-//			if(dismode.equalsIgnoreCase("1")){
-//				//显示HFC设备
-//				//logger.info("------------------------------>>>>>>dismode==1");
-//				if(hfcdis(currentip,jedis)){
-//					return;
-//				}
-//			}
-//		}		
-//		
+		if((dismode = jedis.get("global:displaymode")) != null){
+			if(dismode.equalsIgnoreCase("1")){
+				//显示HFC设备
+				//logger.info("------------------------------>>>>>>dismode==1");
+				if(hfcdis(currentip,jedis)){
+					return;
+				}
+			}
+		}		
+		
 		//eoc	
 		devicetype = eocping(currentip, "161");	
 		
@@ -325,7 +325,8 @@ public class WorkerDiscoveryProcessor{
 			String trapip="";
 			
 			//相关参数
-			//TODO
+			//String powername = "";
+			//String powervolate = "";
 
 			try{
 				oid = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
@@ -333,6 +334,9 @@ public class WorkerDiscoveryProcessor{
 				hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}) );
 
 				hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}) );
+				if(hfc_LogicalID == ""){
+					return false;
+				}
 				hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}) );
 				hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}) );
 				if (oid.toString().equals("1.3.6.1.4.1.2000.1.3000"))
@@ -354,10 +358,11 @@ public class WorkerDiscoveryProcessor{
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.6"))
 		        {
 		        	hfctype = "1310nm光发射机";
-		        	trapip = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,0}));
+		        	trapip = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,0,0}));
 		        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}) );
 		        	//gateway = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,8888,1,5,0}) );
-
+		        	//powername = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,4,0}) );
+		        	//powervolate = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,2,0}) );
 		        }
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.10"))
 		        {

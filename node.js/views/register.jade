@@ -1,0 +1,26 @@
+!!! 5
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/login.css')
+    script(type='text/javascript', src='/socket.io/socket.io.js')
+    script(type='text/javascript', src='/javascripts/jquery-1.7.2.min.js')
+    script(type='text/javascript', src='/javascripts/jquery-ui-1.8.19.custom.min.js')
+    script(type='text/javascript', src='/javascripts/register.js')
+
+  body
+    .wrap
+      form(action='/register', method='post')
+        section(class='loginForm')
+          header
+            h1  用户注册
+          .loginForm_content
+            fieldset
+              .inputWrap
+                input(type='text',name='userName',placeholder='请输入用户名',id='name')
+              .inputWrap
+                input(type='password',name='password',placeholder='请输入密码')
+            fieldset
+              br              
+              input(type='button',style='margin-left:30px', value='返回',onclick= 'javascript:history.go(-1)')
+              input(type='submit',style='margin-left:100px', value='注册',disabled='disable',id='btn_sub')

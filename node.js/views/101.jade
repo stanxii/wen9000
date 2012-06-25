@@ -1,0 +1,23 @@
+!!! 5
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/login.css')
+
+  body
+    .wrap
+      form(action='/login', method='post')
+        section(class='loginForm')
+          header
+            h1  错误
+          .loginForm_conten
+            br
+          
+            lable(style='margin-left:120px;color:red;font-size:1.2em')  用户名不存在!!!
+            br
+            br        
+            br
+            br    
+            a(href='/login',style='margin-left:50px;font-size:1.1em')  返回
+            a(href='/register', style='margin-left:150px;font-size:1.1em')  注册新用户
+              
