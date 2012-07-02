@@ -202,37 +202,38 @@ public class ServiceHeartProcessor{
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
 				jedis.hset(cbatkey,"active", "1");
 				
-				//判断新头端ip是否与已发现头端重复
-				Set<String> cbats = jedis.keys("cbatid:*:entity");
-				for(Iterator it= cbats.iterator();it.hasNext();){
-					String ckey = it.next().toString();
-					if(jedis.hget(ckey, "ip").equalsIgnoreCase(cbatip) && (!jedis.hget(ckey, "mac").equalsIgnoreCase(cbatmac))){
-						//编辑告警信息
-						Map<String, String> alarmhash=new LinkedHashMap();
-						alarmhash.put("runingtime", "N/A");
-						alarmhash.put("oid", "N/A");
-						alarmhash.put("alarmcode", "200934");		
-						alarmhash.put("cbatmac", cbatmac); 		
-						Date date = new Date();
-						DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
-						String alarmtimes = format.format(date);
-						alarmhash.put("salarmtime", alarmtimes);
-						alarmhash.put("alarmlevel", "1");
-						alarmhash.put("cnalarminfo", "新发现头端["+cbatmac+"]IP地址冲突！");
-						alarmhash.put("enalarminfo", "New Cbat["+cbatmac+ "]IP Conflict!");
-						
-						String msgservice = JSONValue.toJSONString(alarmhash);
-						jedis.publish("servicealarm.new", msgservice);
-						redisUtil.getJedisPool().returnResource(jedis);
-						return;
-					}
-				}
+//				//判断新头端ip是否与已发现头端重复
+//				Set<String> cbats = jedis.keys("cbatid:*:entity");
+//				for(Iterator it= cbats.iterator();it.hasNext();){
+//					String ckey = it.next().toString();
+//					if(jedis.hget(ckey, "ip").equalsIgnoreCase(cbatip) && (!jedis.hget(ckey, "mac").equalsIgnoreCase(cbatmac))){
+//						//编辑告警信息
+//						Map<String, String> alarmhash=new LinkedHashMap();
+//						alarmhash.put("runingtime", "N/A");
+//						alarmhash.put("oid", "N/A");
+//						alarmhash.put("alarmcode", "200934");		
+//						alarmhash.put("cbatmac", cbatmac); 		
+//						Date date = new Date();
+//						DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+//						String alarmtimes = format.format(date);
+//						alarmhash.put("salarmtime", alarmtimes);
+//						alarmhash.put("alarmlevel", "1");
+//						alarmhash.put("cnalarminfo", "新发现头端["+cbatmac+"]IP地址冲突！");
+//						alarmhash.put("enalarminfo", "New Cbat["+cbatmac+ "]IP Conflict!");
+//						
+//						String msgservice = JSONValue.toJSONString(alarmhash);
+//						jedis.publish("servicealarm.new", msgservice);
+//						redisUtil.getJedisPool().returnResource(jedis);
+//						return;
+//					}
+//				}
+				//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
+				Sendstschange("cbat",deviceid,jedis);
 			}
 			
 			//更新头端信息			
 			jedis.hset(cbatkey,"ip", cbatip);
-			//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
-			Sendstschange("cbat",deviceid,jedis);
+			
 //			cbat.setAppversion(util.getStrPDU(cbatip, "161",
 //					new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8,4, 4, 0 })));
 			//更新头端时间戳

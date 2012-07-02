@@ -82,20 +82,7 @@ public class ServiceUpdateProcess{
 	
 			Jedis jedis=null;
 			try {
-			 jedis = redisUtil.getConnection();
-			//重置已升级头端数，用户前端进度跟踪
-			jedis.set("global:updated", "0");
-			jedis.set("global:updatedtotal","0");
-			//此进程启动较空闲用来初始化redis字段
-			if(!jedis.exists("global:trapserver:ip")){
-				jedis.set("global:trapserver:ip", "192.168.223.251");
-				jedis.set("global:trapserver:port", "162");
-			}
-			//初始化超级用户
-			if(!jedis.exists("user:admin")){
-				jedis.hset("user:admin", "password", "admin");
-				jedis.hset("user:admin", "flag", "1");
-			}
+			 jedis = redisUtil.getConnection();			
 			
 			 jedis.psubscribe(jedissubSub, "ServiceUpdateProcess.*");
 			redisUtil.getJedisPool().returnResource(jedis);
@@ -159,6 +146,9 @@ public class ServiceUpdateProcess{
 				redisUtil.getJedisPool().returnBrokenResource(jedis);
 				return;
 			}
+			//正在升级中
+			jedis.set("global:isupdating", "true");
+			
 			JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 			String ftpip = jsondata.get("ftpip").toString();
 			String ftpport = jsondata.get("ftpport").toString();

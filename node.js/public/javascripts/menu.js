@@ -28,6 +28,7 @@
    	  }
       
       var user = getCookie("userName");
+      var flag = getCookie("flag");
       $("#loginuser")[0].text = user;
 
       
@@ -49,6 +50,10 @@
       
       
       $("#btn_hbase").live('click', function(){
+    	  if(flag == "3"){
+    		  alert("只读用户，权限不足！");
+    		  return;
+    	  }
     	  if(isbusy != false){
 				return;
 			} 
@@ -76,6 +81,10 @@
       });
       
       $("#btn_cbsave").live('click', function(){
+    	  if(flag == "3"){
+    		  alert("只读用户，权限不足！");
+    		  return;
+    	  }
 	  		var c_address = document.getElementById('c_address').value;
 	  		var c_contact = document.getElementById('c_contact').value;
 	  		var c_phone = document.getElementById('c_phone').value;
@@ -114,6 +123,10 @@
       });
 	 
       $("#btn_reset").live('click', function() { 
+    	  if(flag == "3"){
+    		  alert("只读用户，权限不足！");
+    		  return;
+    	  }
     	  if((confirm( "要恢复出厂设置吗？ ")==true))
     	  {
     		  if(isbusy != false){
@@ -128,6 +141,10 @@
       });
       
 	 $("#btn_cnusub").live('click', function() { 
+		 if(flag == "3"){
+   		  alert("只读用户，权限不足！");
+   		  return;
+   	  	}
 		 if(isbusy != false){
 				return;
 			} 
@@ -196,6 +213,10 @@
 	 });
 	 
 	 $("#btn_sub").live('click', function() { 	
+		    if(flag == "3"){
+	   		  alert("只读用户，权限不足！");
+	   		  return;
+   	  		}
 			if(isbusy != false){
 				return;
 			} 
@@ -748,15 +769,20 @@
    }
    
    function bindContextMenu(span) {
+	   var flag = getCookie("flag");
+	   if(flag == "3"){
+ 		  //alert("只读用户，权限不足！");
+ 		  return;
+ 	   }
 	    // Add context menu to this node:
 	    $(span).contextMenu({menu: "myMenu"}, function(action, el, pos) {
 	      // The event was bound to the <span> tag, but the node object
 	      // is stored in the parent <li> tag
 	      var node = $.ui.dynatree.getNode(el);
-	      if(node.data.online != "1"){
-	    	  alert("在线设备无法删除！");
+	      if((confirm( "确定要删除吗？ ")!=true))
+    	  {
 	    	  return;
-	      }
+    	  }
 	      switch( action ) {
 	      case "cut":
 	      case "copy":
@@ -773,7 +799,7 @@
 	    	  window.location.reload();
 	      }
 	    });
-   };
+   }
    
    function fun_hfcdetail(jsondata){	   
 	   var active;
@@ -1003,6 +1029,8 @@
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicetype == "WEC-3501I S220"){
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 S220.jpg";
+			}else if(jsondata.devicetype == "WEC9720EK_C22"){
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
 			}
    }
    

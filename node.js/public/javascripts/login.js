@@ -2,6 +2,7 @@
 	$(function(){
 		socket = io.connect('http://localhost:3000');
 		
+		socket.on('getflag',fun_flag);
 		Login_init();
 
 		$("#btn_sub").hover(function(){
@@ -13,13 +14,17 @@
 		});
 	});
 	
+	function fun_flag(data){
+		document.cookie ="flag="+data;
+	}
+	
 	function Login_init(){
 		var init_name = getCookie("userName");
-		if(init_name == "undefined"){
+		if(init_name == undefined){
 			init_name = "";
 		}
 		$("#userName")[0].value = init_name;
-		if(getCookie("checked")=="true"){
+		if((getCookie("checked")=="true")&&(init_name != "")){
 			$("#remember")[0].checked = true;			
 			$("#password")[0].value = getCookie("password");
 		}
@@ -51,6 +56,7 @@
 			document.cookie ="userName="+document.getElementById ('userName').value;
 			document.cookie ="password=";
 		}
+		socket.emit('getflag',document.getElementById ('userName').value);
 		
 	}
 })(jQuery);

@@ -194,7 +194,7 @@ public class WorkerDiscoveryProcessor{
   
 			
 			
-		}
+	}
 		
 	
 	@SuppressWarnings("unchecked")

@@ -1,16 +1,31 @@
 package com.stan.wen9000.web;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+
+
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
+import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,6 +36,8 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 import com.stan.wen9000.action.jedis.util.RedisUtil;
+
+import flexjson.JSONTokener;
 
 
 @RequestMapping("/opts/**")
@@ -214,24 +231,41 @@ public class OptController {
 			String cid = jedis.hget(cnukey, "cbatid");
 			String cip = jedis.hget("cbatid:"+cid+":entity", "ip");
 			
+			String cnumac = jedis.hget(cnukey, "mac");
+			String devicetype = jedis.hget("cbatid"+cid+"entity", "devicetype");
+			
 			//下面是具体节点配置过程或发往其它进程进行异步配置
 			//判断设备是否在线
 			try {
-				String tmp = util.getStrPDU(cip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+				//String tmp = util.getStrPDU(cip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+				
+				String tmp = "sss";
+				devicetype ="20";
 				if(tmp == ""){
 					//将配置失败的设备id发往队列
 					jedis.lpush("Config_failed", cnuid);
 					continue;
 				}else{
-					//发送配置
-					if(!sendconfig(Integer.valueOf(proid),cip,Integer.valueOf(cnuindex),jedis)){
-						//发送失败
-						//将配置失败的设备id发往队列
-						jedis.lpush("Config_failed", cnuid);
-						continue;
+					//发送配置  74 SEND JSON
+					System.out.println("Fuck send json 740000000000000000");
+					if(devicetype.equalsIgnoreCase("20") ||devicetype.equalsIgnoreCase("21") 
+							||	devicetype.equalsIgnoreCase("22") ||devicetype.equalsIgnoreCase("23")||devicetype.equalsIgnoreCase("24")
+							){
+						
+						System.out.println("Fuck send json 740000111111111111111111111000000000000");
+						sendjsonconfig(Integer.valueOf(proid),cip, cnumac,jedis);
+					}else {
+						System.out.println("Fuck send json 0000000000000000");
+						if(!sendconfig(Integer.valueOf(proid),cip,Integer.valueOf(cnuindex),jedis)){
+							//发送失败
+							//将配置失败的设备id发往队列
+							jedis.lpush("Config_failed", cnuid);
+							continue;
+						}
 					}
+					
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 
 				e.printStackTrace();
 				continue;
@@ -421,6 +455,98 @@ public class OptController {
 		
 		}
 	}
+	
+
+	private Boolean sendjsonconfig(int proid,String cbatip, String cnumac,Jedis jedis ){
+		String prokey = "profileid:"+proid+":entity";
+		try{
+			String sjson="";
+			Map jsonmap=new LinkedHashMap();
+
+			 jsonmap.put("type", 2);
+			 
+			 jsonmap.put("mac", jedis.hget(prokey, "vlanen"));
+			 jsonmap.put("vlanen", jedis.hget(prokey, "vlanen"));
+			 jsonmap.put("vlan0id", jedis.hget(prokey, "vlan0id"));
+			 jsonmap.put("vlan1id", jedis.hget(prokey, "vlan1id"));
+			 jsonmap.put("vlan2id", jedis.hget(prokey, "vlan2id"));
+			 jsonmap.put("vlan3id", jedis.hget(prokey, "vlan3id"));	 
+			 jsonmap.put("txlimitsts", jedis.hget(prokey, "txlimitsts"));
+			 if(jedis.hget(prokey, "txlimitsts").equalsIgnoreCase("1")){
+				 jsonmap.put("cpuporttxrate",jedis.hget(prokey, "cpuporttxrate"));
+				 jsonmap.put("port0txrate", jedis.hget(prokey, "port0txrate"));	
+				 jsonmap.put("port1txrate", jedis.hget(prokey, "port1txrate"));	
+				 jsonmap.put("port2txrate", jedis.hget(prokey, "port2txrate"));	
+				 jsonmap.put("port3txrate", jedis.hget(prokey, "port3txrate"));	
+			 }
+			if(jedis.hget(prokey, "rxlimitsts").equalsIgnoreCase("1")){
+				 jsonmap.put("port0rxrate", jedis.hget(prokey, "port0rxrate"));
+				 jsonmap.put("port1rxrate", jedis.hget(prokey, "port1rxrate"));
+				 jsonmap.put("port2rxrate", jedis.hget(prokey, "port2rxrate"));
+				 jsonmap.put("port3rxrate", jedis.hget(prokey, "port3rxrate"));
+				 jsonmap.put("rxlimitsts", jedis.hget(prokey, "rxlimitsts"));
+			}
+			 
+			 
+				
+			 
+			 
+			 jsonmap.put("permit", 1);		
+			 
+			 
+			
+			 sjson = JSONValue.toJSONString(jsonmap);
+			 
+			 
+			 
+			 
+			 post("192.168.1.194", (JSONObject)JSONValue.parse(sjson));
+			 
+		}catch(Exception e){
+				return false;
+		}
+			 
+			
+			 
+		return true;
+			
+			
+	}
+	
+	
+	public static JSONObject post(String url,JSONObject json){  
+        HttpClient client = new DefaultHttpClient();  
+        HttpPost post = new HttpPost(url);  
+        JSONObject response = null;  
+        try {  
+            StringEntity s = new StringEntity(json.toString());  
+    
+            s.setContentEncoding("UTF-8");  
+            s.setContentType("application/json");  
+            post.setEntity(s);  
+              
+            HttpResponse res = client.execute(post);  
+            
+            System.out.println("----------------------------------------");
+            System.out.println(((HttpResponse) response).getStatusLine());
+            
+            if(res.getStatusLine().getStatusCode() == HttpStatus.SC_OK){  
+                HttpEntity entity = (HttpEntity) res.getEntity();  
+                
+                //String charset = EntityUtils.getContentCharSet(entity);  
+                
+                //EntityUtils.consume(entity);
+                
+                System.out.println( entity.getBody().toString());
+                
+                response = (JSONObject) JSONValue.parse(entity.getBody().toString());
+                
+            }  
+        } catch (Exception e) {  
+            throw new RuntimeException(e);  
+        }  
+        return response;  
+    }  
 	
 	@RequestMapping(value="/get_globalinfo")
 	@ResponseBody

@@ -5,13 +5,15 @@ block content
   div
     h1  
       label  批量开户
+    input(type='checkbox',id='checkalllist',style='margin-left:50px')
+    |  整列全选
     table#cnuTable(style='width:100%')
   br
   br
   br
   div
     input(type='checkbox',id='checkall',style='margin-left:50px')
-    |  整列全选
+    |  全选
     button(id='btn_acount',style='float:right')  下一步
   div(id='dialog-message-acount-failed',title='提示',style='display:none')
     p

@@ -10,6 +10,7 @@
 		socket.on('profileisedit',fun_Editprofile);
 		socket.on('profiledetail',fun_Detail);
 		
+		var flag = getCookie("flag");
 		var proname = $( "#proname" ),
 		vlanen = $( "#vlanen" ),
 		vlan0id = $( "#vlan0id" ),
@@ -95,6 +96,10 @@
 		
 		/* Add a click handler for the delete row */
 	    $('#btn_delete').click( function() {
+	    	if(flag == "3"){
+	    		  alert("只读用户，权限不足！");
+	    		  return;
+	    	  }
 	        var anSelected = fnGetSelected( pTable );
 	        if(anSelected.length == 0){
 	        	alert("请选择模板!");
@@ -118,6 +123,10 @@
 	    } ); 
 	    
 	    $("#btn_create").click( function() { 
+	    	if(flag == "3"){
+	    		  alert("只读用户，权限不足！");
+	    		  return;
+	    	  }
 	    	$( "#dialog:ui-dialog" ).dialog( "destroy" );	
 	    	$( "#proname" )[0].value = "";
 			$( "#vlan0id" )[0].value = 0;
@@ -161,11 +170,11 @@
 						
 						if(bValid){
 							var datastring = '{"proname":"'+proname.val()+'","vlanen":"'+vlanen.val()+
-							'","vlan0id":"'+vlan0id.val()+'","vlan1id":"'+vlan1id.val()+'","vlan2id":"'+vlan2id.val()+'","vlan3id":"'+vlan3id.val()+
-							'","rxlimitsts":"'+rxlimitsts.val()+'","cpuportrxrate":"'+cpuportrxrate.val()+'","port0txrate":"'+port0txrate.val()+
-							'","port1txrate":"'+port1txrate.val()+'","port2txrate":"'+port2txrate.val()+'","port3txrate":"'+port3txrate.val()+
-							'","txlimitsts":"'+txlimitsts.val()+'","cpuporttxrate":"'+cpuporttxrate.val()+'","port0rxrate":"'+port0rxrate.val()+
-							'","port1rxrate":"'+port1rxrate.val()+'","port2rxrate":"'+port2rxrate.val()+'","port3rxrate":"'+port3rxrate.val()+'"}';
+							'","vlan0id":"'+parseInt(vlan0id.val(),10)+'","vlan1id":"'+parseInt(vlan1id.val(),10)+'","vlan2id":"'+parseInt(vlan2id.val())+'","vlan3id":"'+parseInt(vlan3id.val(),10)+
+							'","rxlimitsts":"'+parseInt(rxlimitsts.val(),10)+'","cpuportrxrate":"'+parseInt(cpuportrxrate.val(),10)+'","port0txrate":"'+parseInt(port0txrate.val(),10)+
+							'","port1txrate":"'+parseInt(port1txrate.val(),10)+'","port2txrate":"'+parseInt(port2txrate.val(),10)+'","port3txrate":"'+parseInt(port3txrate.val(),10)+
+							'","txlimitsts":"'+parseInt(txlimitsts.val(),10)+'","cpuporttxrate":"'+parseInt(cpuporttxrate.val(),10)+'","port0rxrate":"'+parseInt(port0rxrate.val(),10)+
+							'","port1rxrate":"'+parseInt(port1rxrate.val(),10)+'","port2rxrate":"'+parseInt(port2rxrate.val(),10)+'","port3rxrate":"'+parseInt(port3rxrate.val(),10)+'"}';
 							
 							socket.emit('profile_create',datastring);
 							$("#dialog-form").dialog("close");						
@@ -185,6 +194,10 @@
 	    
 	    /* Add a click handler for the edit row */
 	    $('#btn_edit').click( function() {
+	    	if(flag == "3"){
+	    		  alert("只读用户，权限不足！");
+	    		  return;
+	    	  }
 	    	var anSelected = fnGetSelected( pTable );
 	    	if(anSelected.length == 0){
 	        	alert("请选择模板!");
@@ -505,11 +518,11 @@
 						if(bValid){
 							var anSelected = fnGetSelected( pTable );
 							var datastring = '{"proid":"'+anSelected[0].firstChild.textContent+'","proname":"'+proname.val()+'","vlanen":"'+vlanen.val()+
-							'","vlan0id":"'+vlan0id.val()+'","vlan1id":"'+vlan1id.val()+'","vlan2id":"'+vlan2id.val()+'","vlan3id":"'+vlan3id.val()+
-							'","rxlimitsts":"'+rxlimitsts.val()+'","cpuportrxrate":"'+cpuportrxrate.val()+'","port0txrate":"'+port0txrate.val()+
-							'","port1txrate":"'+port1txrate.val()+'","port2txrate":"'+port2txrate.val()+'","port3txrate":"'+port3txrate.val()+
-							'","txlimitsts":"'+txlimitsts.val()+'","cpuporttxrate":"'+cpuporttxrate.val()+'","port0rxrate":"'+port0rxrate.val()+
-							'","port1rxrate":"'+port1rxrate.val()+'","port2rxrate":"'+port2rxrate.val()+'","port3rxrate":"'+port3rxrate.val()+'"}';
+							'","vlan0id":"'+parseInt(vlan0id.val(),10)+'","vlan1id":"'+parseInt(vlan1id.val(),10)+'","vlan2id":"'+parseInt(vlan2id.val(),10)+'","vlan3id":"'+parseInt(vlan3id.val(),10)+
+							'","rxlimitsts":"'+parseInt(rxlimitsts.val(),10)+'","cpuportrxrate":"'+parseInt(cpuportrxrate.val(),10)+'","port0txrate":"'+parseInt(port0txrate.val(),10)+
+							'","port1txrate":"'+parseInt(port1txrate.val(),10)+'","port2txrate":"'+parseInt(port2txrate.val(),10)+'","port3txrate":"'+parseInt(port3txrate.val(),10)+
+							'","txlimitsts":"'+parseInt(txlimitsts.val(),10)+'","cpuporttxrate":"'+parseInt(cpuporttxrate.val(),10)+'","port0rxrate":"'+parseInt(port0rxrate.val(),10)+
+							'","port1rxrate":"'+parseInt(port1rxrate.val(),10)+'","port2rxrate":"'+parseInt(port2rxrate.val(),10)+'","port3rxrate":"'+parseInt(port3rxrate.val(),10)+'"}';
 							socket.emit('profile_edit',datastring);
 							$("#dialog-edit").dialog("close");
 							pTable=$('#proTable').dataTable();
@@ -635,5 +648,19 @@
 						],
 			
 	    } );
+	}
+	
+	function getCookie(objName)//获取指定名称的cookie的值
+	{    
+	    var arrStr = document.cookie.split(";");
+	    
+	        for(var i = 0;i < arrStr.length;i++)
+	            {
+	                var temp = arrStr[i].split("=");
+	                if(objName.trim()==temp[0].trim()) //此处如果没有去掉字符串空格就不行,偶在这里折腾了半死,主要是这种错误不好跟踪啊
+	                {                
+	                	return temp[1];
+	                }                            
+	            }
 	}
 })(jQuery);

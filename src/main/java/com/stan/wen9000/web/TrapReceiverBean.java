@@ -481,6 +481,14 @@ public class TrapReceiverBean {
 				alarmhash.put("cnalarminfo", "非法用户试图注册");
 				alarmhash.put("enalarminfo", "llegal users trying to register");				
 				break;
+			case 200922:
+				alarmhash.put("alarmlevel", "5");
+				alarmhash.put("cnalarminfo", "线卡丢失");
+				alarmhash.put("enalarminfo", "Lose CLT");
+			default:
+				alarmhash.put("alarmlevel", "7");
+				alarmhash.put("cnalarminfo", "未知告警");
+				alarmhash.put("enalarminfo", "Unkonwn");
 			}
 
 

@@ -6,6 +6,7 @@
 var express = require('express')
   , routes = require('./routes')
   , http = require('http')
+  , querystring = require('querystring')
   , io = require('socket.io');
 
 var MemStore = express.session.MemoryStore;
@@ -55,8 +56,13 @@ app.get('/102', function (req, res) {
 });
 
 app.get('/', function (req, res) {
-	if (req.session.user) {
+	if ((req.session.user != null)||((req.session.user != "undefined"))) {
 		//console.log("---------------------------------------->>>>>"+req.session.user);
+		jedis.get('global:isupdating',function(error,result){
+			if(result == "true"){
+				res.redirect('/103');
+			}
+		});
 		jedis.exists('user:'+req.session.user, function(error, result) {
 		    if(result){
 		    	jedis.hget('user:'+req.session.user,"password", function(error, result) {
@@ -92,7 +98,7 @@ app.post('/register', function (req, res) {
 	var name = req.body.userName;	
 	var password = req.body.password;
     jedis.hset("user:"+name,"password",password);
-    jedis.hset("user:"+name,"flag","2");
+    jedis.hset("user:"+name,"flag","3");
 	res.redirect('/login');
 });
 
@@ -140,6 +146,70 @@ app.get('/userManager', function( request, response ) {
 var node = http.createServer(app).listen(3000);
 var sio = io.listen(node);
 
+
+//test
+function PostCode() {
+	  var date = new Date();
+	  // Build the post string from an object
+	  var post_data = querystring.stringify({
+		  "type":2,    //0-cbat, 1-clt, 2-cnu
+		  "mac":"F0:4D:A2:FD:6A:DF",
+		  "vlanen":"1",  //0-disable, 1-enable
+		  "vlan0id":1,
+		  "vlan1id":1,
+		  "vlan2id":1,
+		  "vlan3id":1,
+		  "txlimitsts":1,   //1-enable, 2-disable  if 1 then have follow param else no
+		  "cpuporttxrate":1024,   //K
+		  "port0rxrate":1024,
+		  "port1rxrate":1024,
+		  "port2rxrate":1024,
+		  "port3rxrate":1024,
+		  "rxlimitsts":1, //1-enable, 2-disable  if 1 then have follow param else no
+		  "cpuportrxrate":1024,
+		  "port0txrate":1024,
+		  "port1txrate":1024,
+		  "port2txrate":1024,
+		  "port3txrate":1024,
+		  "permit":1   //1-kaitong, 2-guanduan
+		  });
+
+	  // An object of options to indicate where to post to
+	  var post_options = {
+	      host: '192.168.1.194',
+	      port: '80',
+	      path: '/setcnu.json',
+	      auth: 'support:support',
+	      method: 'POST',
+	      headers: {
+	          'Content-Type': 'text/json',
+	          'Content-Length': post_data.length
+	      }
+	  };
+
+	  // Set up the request
+	  var post_req = http.request(post_options, function(res) {
+		  res.setEncoding('utf8');
+		  //res.on('response', function (response) {
+			  res.on('data', function (chunk) {
+				date = new Date();
+				console.log("end time ===================="+date.getSeconds()+"=====millsecends==="+date.getMilliseconds());
+			    console.log('BODY: ' + chunk);
+			  });
+			//});		      
+		  });
+	      
+	  post_req.on('error', function (error) {
+		    console.log('server_http:Error: ' + error);
+		});
+	  console.log("first time ====================secends=="+date.getSeconds()+"=====millsecends==="+date.getMilliseconds());
+	  post_req.write(post_data);
+	  post_req.end();
+
+	};
+
+
+//PostCode();
 
 redis.psubscribe('node.alarm.*');
 redis.psubscribe('node.historyalarm.*');
@@ -332,6 +402,10 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('pwdmodify',data);       
     }else if(ch == 'node.opt.userres') {
     	sio.sockets.emit('userres',data);       
+    }else if(ch == 'node.opt.getflag') {
+    	sio.sockets.emit('getflag',data);       
+    }else if(ch == 'node.opt.checkallcnusres') {
+    	sio.sockets.emit('checkallcnusres',data);       
     }
 });
 
@@ -444,6 +518,11 @@ sio.sockets.on('connection', function (socket) {
   socket.on('opt.checkedcnus', function (data) {
 	  	 console.log('nodeserver: opt.checkedcnus==='+data);
 	     publish.publish('servicecontroller.opt.checkedcnus', data);
+  });
+  
+  socket.on('opt.checkallcnus', function (data) {
+	  	 console.log('nodeserver: opt.checkallcnus==='+data);
+	     publish.publish('servicecontroller.opt.checkallcnus', data);
   });
   
   socket.on('opt.allcheckedcnus', function (data) {
@@ -616,6 +695,17 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: usercreate==='+data);
 	  publish.publish('servicecontroller.usercreate', data);
   });
+//获取用户权限
+  socket.on('getflag', function (data) {
+	  console.log('nodeserver: getflag==='+data);
+	  publish.publish('servicecontroller.getflag', data);
+  });
+//用户权限修改
+  socket.on('PermissionChange', function (data) {
+	  console.log('nodeserver: PermissionChange==='+data);
+	  publish.publish('servicecontroller.PermissionChange', data);
+  });
+  
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
         socket.join(ch);

@@ -15,7 +15,13 @@
 		socket.on('opt.checkedcbats',fun_CheckedCbats);
 		socket.on('ftpinfo',fun_FtpInfo);
 		
+		var flag = getCookie("flag");
+		
 		$('.chk').live('click', function () {
+			if(flag == "3"){
+	    		  alert("只读用户，权限不足！");
+	    		  return;
+	    	  }
 	        var checkbox = $(this);
 	        var mac = checkbox[0].parentElement.parentElement.cells[1].textContent;
 	        var data = '{"mac":"'+mac+'","value":"'+checkbox[0].checked+'"}';
@@ -52,6 +58,10 @@
 		});
 		
 		$("#btn_update").click(function(){
+			if(flag == "3"){
+	    		  alert("只读用户，权限不足！");
+	    		  return;
+	    	  }
 			socket.emit('opt.checkedcbats',"opt.checkedcbats");
 			$("#btn_update").attr("disabled","disabled");
 
@@ -268,4 +278,19 @@
 			
 	    } );
 	}
+	
+	function getCookie(objName)//获取指定名称的cookie的值
+	{    
+	    var arrStr = document.cookie.split(";");
+	    
+	        for(var i = 0;i < arrStr.length;i++)
+	            {
+	                var temp = arrStr[i].split("=");
+	                if(objName.trim()==temp[0].trim()) //此处如果没有去掉字符串空格就不行,偶在这里折腾了半死,主要是这种错误不好跟踪啊
+	                {                
+	                	return temp[1];
+	                }                            
+	            }
+	}
+
 })(jQuery);

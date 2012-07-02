@@ -227,26 +227,6 @@ public class ServiceAlarmProcessor {
 		String alarmkey = "alarmid:" + salarmid + ":entity";
 		jedis.hmset(alarmkey, alarm);
 		
-		//expire alarm key three months
-//		int lseconds= 3*30*24*60*60;
-//		String seconds = jedis.get(ALARM_EXPIRE_SECONDS);
-//		if(seconds != null)
-//			 lseconds = Integer.parseInt(seconds);								
-//		jedis.expire(alarmkey, lseconds);
-//		
-//		String smax = jedis.get(ALARM_REALTIME_MAX_NUM);
-//		int imax = 100;
-//		if(smax != null)
-//			imax = Integer.parseInt(smax);
-//		else{
-//			jedis.set(ALARM_REALTIME_MAX_NUM, Integer.toString(imax));
-//		}
-		
-//		//set realtime alarm list queue
-//		jedis.lpush(ALARM_REALTIME_QUEUE_NAME, salarmid);
-//		jedis.ltrim(ALARM_REALTIME_QUEUE_NAME, 0, imax -1);
-		
-		
 		//history alarm sorted sets score is timestamp
 		Double score = (double) System.currentTimeMillis();
 		jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
@@ -278,7 +258,6 @@ public class ServiceAlarmProcessor {
 	}
 
 
-	
 	public static void doupgrade(Map<String, String> alarm) {
 		try {		
 
@@ -296,8 +275,9 @@ public class ServiceAlarmProcessor {
 			jedis.hset(cbatkey, "upgrade", result);	
 			if(result.equalsIgnoreCase("0")){
 				//升级成功
-				//更新软件版本信息
+				//更新软件版本信息				
 				String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+				log.info("-------------------------->>upgrade successful!refresh cbat appversion!======>>"+appver);
 				if(appver != ""){
 					jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", appver);
 				}

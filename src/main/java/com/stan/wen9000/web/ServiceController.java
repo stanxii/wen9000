@@ -3,14 +3,27 @@ package com.stan.wen9000.web;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.AbstractHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.snmp4j.smi.Integer32;
@@ -161,6 +174,8 @@ public class ServiceController {
 			doOptCnus(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.opt.checkedcnus")){
 			doOptCheckedCnus(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.opt.checkallcnus")){
+			doOptCheckallCnus(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.opt.allcheckedcnus")){
 			doOptAllCheckedCnus(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.opt.selectedpro")){
@@ -235,9 +250,50 @@ public class ServiceController {
 			doUserDel(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.usercreate")){
 			doUserCreate(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.getflag")){
+			doGetFlag(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.PermissionChange")){
+			doPermissionChange(message);
 		}		
 
 
+	}
+	
+	private static void doPermissionChange(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String name = jsondata.get("username").toString();
+		String flag = jsondata.get("flag").toString();
+		
+		String key = "user:"+name.trim();
+		jedis.hset(key, "flag", flag);
+		jedis.save();
+
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doGetFlag(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		String flag = jedis.hget("user:"+message.trim(),"flag");	
+		log.info("------------------------->>>>>"+"flag:"+flag);
+		jedis.publish("node.opt.getflag", flag);
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doUserCreate(String message) throws ParseException{
@@ -252,13 +308,14 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String name = jsondata.get("username").toString();
 		String password = jsondata.get("password").toString();
+		String flag = jsondata.get("flag").toString();
 		if(jedis.exists("user:"+name)){
 			jedis.publish("node.opt.userres", "2");
 			redisUtil.getJedisPool().returnResource(jedis);
 			return;
 		}
 		jedis.hset("user:"+name, "password", password);
-		jedis.hset("user:"+name, "flag", "2");
+		jedis.hset("user:"+name, "flag", flag);
 		jedis.save();
 		jedis.publish("node.opt.userres", "");
 		redisUtil.getJedisPool().returnResource(jedis);
@@ -560,6 +617,21 @@ public class ServiceController {
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
+		}
+		//重置已升级头端数，用户前端进度跟踪
+		jedis.set("global:updated", "0");
+		jedis.set("global:updatedtotal","0");
+		//此进程启动较空闲用来初始化redis字段
+		if(!jedis.exists("global:trapserver:ip")){
+			jedis.set("global:trapserver:ip", "192.168.223.251");
+			jedis.set("global:trapserver:port", "162");
+		}
+		//全局头端升级判断
+		jedis.set("global:isupdating", "false");
+		//初始化超级用户
+		if(!jedis.exists("user:admin")){
+			jedis.hset("user:admin", "password", "admin");
+			jedis.hset("user:admin", "flag", "0");
 		}
 		if(!jedis.exists("profileid:1:entity")){
 			//插入默认模板
@@ -1334,6 +1406,9 @@ public class ServiceController {
 			String cid = jedis.hget(cnukey, "cbatid");
 			String cip = jedis.hget("cbatid:"+cid+":entity", "ip");
 			
+			String cnumac = jedis.hget(cnukey, "mac");
+			String devicetype = jedis.hget("cbatid"+cid+"entity", "devicetype");
+			//String devicetype = "20";
 			//下面是具体节点配置过程或发往其它进程进行异步配置
 			//判断设备是否在线
 			try {
@@ -1345,15 +1420,21 @@ public class ServiceController {
 					continue;
 				}else{
 					//发送配置
-					if(!sendconfig(Integer.valueOf(proid),cip,Integer.valueOf(cnuindex),jedis)){
-						//发送失败
-						//将配置失败的设备id发往队列
-						jedis.sadd("global:configfailed", cnuid);
-						jedis.publish("node.opt.proc", proc);
-						continue;
+					if(devicetype.equalsIgnoreCase("20") ||devicetype.equalsIgnoreCase("21") 
+							||	devicetype.equalsIgnoreCase("22") ||devicetype.equalsIgnoreCase("23")||devicetype.equalsIgnoreCase("24")
+							||	devicetype.equalsIgnoreCase("36") ||devicetype.equalsIgnoreCase("40")||devicetype.equalsIgnoreCase("41")){
+						sendjsonconfig(Integer.valueOf(proid),cip, cnumac,jedis);
+					}else {
+							if(!sendconfig(Integer.valueOf(proid),cip,Integer.valueOf(cnuindex),jedis)){
+								//发送失败
+								//将配置失败的设备id发往队列
+								jedis.sadd("global:configfailed", cnuid);
+								jedis.publish("node.opt.proc", proc);
+								continue;
+							}
 					}
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				jedis.publish("node.opt.proc", proc);
 				continue;
@@ -1484,6 +1565,38 @@ public class ServiceController {
         redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
+	private static void doOptCheckallCnus(String message) throws ParseException, IOException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		Set<String> cnus = jedis.keys("cnuid:*:entity");
+		for(Iterator it = cnus.iterator(); it.hasNext();){
+			String key = it.next().toString();
+			String cbatid = jedis.hget(key, "cbatid");
+			if(jedis.hget("cbatid:"+cbatid+":entity", "active").equalsIgnoreCase("0")){
+				continue;
+			}
+			int index1 = key.indexOf(':') +1;
+    		int index2 = key.lastIndexOf(':');
+    		String cid = key.substring(index1, index2);
+			if(message.equalsIgnoreCase("true")){				
+				jedis.sadd("global:checkedcnus", cid);
+			}else{				
+				jedis.srem("global:checkedcnus", cid);
+			}
+		}
+		jedis.publish("node.opt.checkallcnusres", "");
+    	
+    	redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
 	private static void doOptCheckedCnus(String message) throws ParseException, IOException{
 		Jedis jedis=null;
 		try {
@@ -1607,14 +1720,23 @@ public class ServiceController {
 			jedis.publish("node.tree.cnu_sub", "");
 			return;
 		}
-    	//配置CNU
-		if(Cnuconfig(jsondata,cbatip,Integer.parseInt(devid),jedis)){
-			
+		String devtype = jedis.hget("cbatid:"+cbatid+":entity", "devicetype");
+		if(devtype.equalsIgnoreCase("20")||devtype.equalsIgnoreCase("21")
+				||devtype.equalsIgnoreCase("22")||devtype.equalsIgnoreCase("23")
+				||devtype.equalsIgnoreCase("24")||devtype.equalsIgnoreCase("36")
+				||devtype.equalsIgnoreCase("40")||devtype.equalsIgnoreCase("41")){
+			cnujsonconfig(jsondata,cbatip, jsondata.get("mac").toString(),jedis);
 		}else{
-			jedis.publish("node.tree.cnu_sub", "");
-			redisUtil.getJedisPool().returnResource(jedis);
-			return;
+			//配置6400 CNU
+			if(Cnuconfig(jsondata,cbatip,Integer.parseInt(devid),jedis)){
+				
+			}else{
+				jedis.publish("node.tree.cnu_sub", "");
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
+			}
 		}
+    	
 		
 		//获取cnu原profileid号
 		String old_proid = jedis.hget(key, "profileid");
@@ -2375,6 +2497,30 @@ public class ServiceController {
         	case 8:
         		result = "中文测试";
         		break;
+        	case 20:
+        		result ="WEC9720EK_C22";
+        		break;
+        	case 21:
+        		result ="WEC9720EK_E31";
+        		break;
+        	case 22:
+        		result ="WEC9720EK_Q31";
+        		break;
+        	case 23:
+        		result ="WEC9720EK_S220";
+        		break;
+        	case 24:
+        		result ="WEC9720EK_SD220";
+        		break;
+        	case 36:
+        		result ="WEC701_M0";
+        		break;
+        	case 40:
+        		result ="WEC701_C2";
+        		break;
+        	case 41:
+        		result ="WEC701_C4";
+        		break;
         	default:
         		result = "Unknown";
         		break;
@@ -2852,6 +2998,150 @@ public class ServiceController {
 			return false;
 		
 		}
+	}
+	
+	
+	private static Boolean sendjsonconfig(int proid,String cbatip, String cnumac,Jedis jedis ){
+		String prokey = "profileid:"+proid+":entity";
+		try{
+			String sjson="";
+			Map jsonmap=new LinkedHashMap();
+
+			 jsonmap.put("type", 2);
+			 
+			 jsonmap.put("mac", cnumac);
+			 jsonmap.put("vlanen", Integer.valueOf(jedis.hget(prokey, "vlanen")));
+			 jsonmap.put("vlan0id", Integer.valueOf(jedis.hget(prokey, "vlan0id")));
+			 jsonmap.put("vlan1id", Integer.valueOf(jedis.hget(prokey, "vlan1id")));
+			 jsonmap.put("vlan2id", Integer.valueOf(jedis.hget(prokey, "vlan2id")));
+			 jsonmap.put("vlan3id", Integer.valueOf(jedis.hget(prokey, "vlan3id")));	 
+			 jsonmap.put("txlimitsts", Integer.valueOf(jedis.hget(prokey, "txlimitsts")));
+			 jsonmap.put("rxlimitsts", Integer.valueOf(jedis.hget(prokey, "rxlimitsts")));
+			 if(jedis.hget(prokey, "txlimitsts").equalsIgnoreCase("1")){
+				 jsonmap.put("cpuporttxrate",Integer.valueOf(jedis.hget(prokey, "cpuporttxrate")));
+				 jsonmap.put("port0rxrate", Integer.valueOf(jedis.hget(prokey, "port0rxrate")));
+				 jsonmap.put("port1rxrate", Integer.valueOf(jedis.hget(prokey, "port1rxrate")));
+				 jsonmap.put("port2rxrate", Integer.valueOf(jedis.hget(prokey, "port2rxrate")));
+				 jsonmap.put("port3rxrate", Integer.valueOf(jedis.hget(prokey, "port3rxrate")));	
+			 }
+			if(jedis.hget(prokey, "rxlimitsts").equalsIgnoreCase("1")){				 				 
+				 jsonmap.put("cpuportrxrate",Integer.valueOf(jedis.hget(prokey, "cpuportrxrate")));				 
+				 jsonmap.put("port0txrate", Integer.valueOf(jedis.hget(prokey, "port0txrate")));	
+				 jsonmap.put("port1txrate", Integer.valueOf(jedis.hget(prokey, "port1txrate")));	
+				 jsonmap.put("port2txrate", Integer.valueOf(jedis.hget(prokey, "port2txrate")));	
+				 jsonmap.put("port3txrate", Integer.valueOf(jedis.hget(prokey, "port3txrate")));
+			}
+			
+			 jsonmap.put("permit", 1);		
+			 
+			
+			 sjson = JSONValue.toJSONString(jsonmap);
+			 
+			 post("http://192.168.1.194/setcnu.json", (JSONObject)JSONValue.parse(sjson));
+			 
+		}catch(Exception e){
+				return false;
+		}
+			 
+			
+			 
+		return true;
+			
+			
+	}
+	
+	
+	public static JSONObject post(String url,JSONObject json){  
+		String targethost="192.168.1.194";
+		int targetport=80;
+        HttpClient client = new DefaultHttpClient();  
+     
+   
+        
+        ((AbstractHttpClient) client).getCredentialsProvider().setCredentials(
+        		new AuthScope(targethost, targetport),
+        		new UsernamePasswordCredentials("support", "support"));
+
+        
+
+        
+        HttpPost post = new HttpPost(url);  
+        JSONObject response = null;  
+        try {  
+            StringEntity s = new StringEntity(json.toString());  
+    
+            s.setContentEncoding("UTF-8");  
+            s.setContentType("text/json");  
+            post.setEntity(s); 
+            HttpResponse res = client.execute(post);  
+
+            System.out.println(((HttpResponse) res).getStatusLine());
+            
+            if(res.getStatusLine().getStatusCode() == HttpStatus.SC_OK){  
+                HttpEntity entity =   res.getEntity();  
+                
+                //String charset = EntityUtils.getContentCharSet(entity);  
+                
+                //EntityUtils.consume(entity);
+                
+                System.out.println( entity.getContent().toString());
+                
+                response = (JSONObject) JSONValue.parse(entity.getContent().toString());
+                
+            }  
+        } catch (Exception e) {  
+        	e.printStackTrace();
+            throw new RuntimeException(e);  
+        }  
+        return response;  
+    }  
+	
+	private static Boolean cnujsonconfig(JSONObject jsondata,String cbatip, String cnumac,Jedis jedis ){
+		try{			
+			String sjson="";
+			Map jsonmap=new LinkedHashMap();
+
+			 jsonmap.put("type", 2);
+			 
+			 jsonmap.put("mac", cnumac);
+			 jsonmap.put("vlanen", Integer.valueOf(jsondata.get("vlanen").toString()));
+			 jsonmap.put("vlan0id", Integer.valueOf(jsondata.get("vlan0id").toString()));
+			 jsonmap.put("vlan1id", Integer.valueOf(jsondata.get("vlan1id").toString()));
+			 jsonmap.put("vlan2id", Integer.valueOf(jsondata.get("vlan2id").toString()));
+			 jsonmap.put("vlan3id", Integer.valueOf(jsondata.get("vlan3id").toString()));	 
+			 jsonmap.put("txlimitsts", Integer.valueOf(jsondata.get("txlimitsts").toString()));
+			 jsonmap.put("rxlimitsts", Integer.valueOf(jsondata.get("rxlimitsts").toString()));
+			 if(jsondata.get("txlimitsts").toString().equalsIgnoreCase("1")){
+				 jsonmap.put("cpuporttxrate",Integer.valueOf(jsondata.get("cpuporttxrate").toString()));
+				 jsonmap.put("port0rxrate", Integer.valueOf(jsondata.get("port0rxrate").toString()));
+				 jsonmap.put("port1rxrate", Integer.valueOf(jsondata.get("port1rxrate").toString()));
+				 jsonmap.put("port2rxrate", Integer.valueOf(jsondata.get("port2rxrate").toString()));
+				 jsonmap.put("port3rxrate", Integer.valueOf(jsondata.get("port3rxrate").toString()));	
+			 }
+			if(jsondata.get("rxlimitsts").toString().equalsIgnoreCase("1")){				 				 
+				 jsonmap.put("cpuportrxrate",Integer.valueOf(jsondata.get("cpuportrxrate").toString()));				 
+				 jsonmap.put("port0txrate", Integer.valueOf(jsondata.get("port0txrate").toString()));	
+				 jsonmap.put("port1txrate", Integer.valueOf(jsondata.get("port1txrate").toString()));	
+				 jsonmap.put("port2txrate", Integer.valueOf(jsondata.get("port2txrate").toString()));	
+				 jsonmap.put("port3txrate", Integer.valueOf(jsondata.get("port3txrate").toString()));
+			}
+			
+			 jsonmap.put("permit", 1);		
+			 
+			
+			 sjson = JSONValue.toJSONString(jsonmap);
+			 
+			 post("http://192.168.1.194/setcnu.json", (JSONObject)JSONValue.parse(sjson));
+		
+		
+		}catch(Exception e)
+		{
+			System.out.println("=============================>Cnujsonconfig error");
+			//e.printStackTrace();
+			return false;
+		
+		}
+		return true;
 	}
 
 	private static Boolean Cnuconfig(JSONObject jsondata,String cbatip, int cnuindex,Jedis jedis ){
