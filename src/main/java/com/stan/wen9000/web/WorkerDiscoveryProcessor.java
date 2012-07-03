@@ -287,7 +287,7 @@ public class WorkerDiscoveryProcessor{
 			 cbathash.put("cbatinfo:agentport", Integer.toString(agetnport));
 			 cbathash.put("cbatinfo:appver", appver.trim());				 
 			 cbathash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
-			 cbathash.put("cbatinfo:mvlanenable", mvlanenable == 1 ? "1" :"0");
+			 cbathash.put("cbatinfo:mvlanenable", Integer.toString(mvlanenable));
 			 cbathash.put("cbatinfo:trapserverip", trapserverip);
 			 cbathash.put("cbatinfo:netmask", netmask);
 			 cbathash.put("cbatinfo:gateway", gateway);

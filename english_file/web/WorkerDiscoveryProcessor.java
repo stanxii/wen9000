@@ -266,6 +266,7 @@ public class WorkerDiscoveryProcessor{
 			     trapserverip = util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
 			     netmask = (util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,2,0})));
 			     gateway = (util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0})));
+
 			} catch (IOException e) {
 				System.out.println("get cbatmac error");
 				jedis.publish("node.dis.proc", "");
@@ -287,12 +288,11 @@ public class WorkerDiscoveryProcessor{
 			 cbathash.put("cbatinfo:agentport", Integer.toString(agetnport));
 			 cbathash.put("cbatinfo:appver", appver.trim());				 
 			 cbathash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
-			 cbathash.put("cbatinfo:mvlanenable", mvlanenable == 1 ? "1" :"0");
+			 cbathash.put("cbatinfo:mvlanenable", Integer.toString(mvlanenable));
 			 cbathash.put("cbatinfo:trapserverip", trapserverip);
 			 cbathash.put("cbatinfo:netmask", netmask);
 			 cbathash.put("cbatinfo:gateway", gateway);
 			 msgservice = JSONValue.toJSONString(cbathash);
-			
 			sendToPersist(msgservice,jedis);
 			msgservice = "";
 

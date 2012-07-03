@@ -1023,7 +1023,7 @@
 			'<div><hr/><button id="btn_sub" style="margin-left:60px">提交</button><button id="btn_sync" style="margin-left:190px">刷新</button>'+
 			'<button id="btn_reset" style="margin-left:160px">恢复出厂设置</button>'+
 			'</div>');
-			
+
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
 			if(jsondata.devicetype == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";

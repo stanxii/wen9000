@@ -57,7 +57,7 @@ app.get('/102', function (req, res) {
 
 app.get('/', function (req, res) {
 	if ((req.session.user != null)&&((req.session.user != "undefined"))) {
-		console.log("---------------------------------------->>>>>"+req.session.user);
+		//console.log("---------------------------------------->>>>>"+req.session.user);
 		jedis.get('global:isupdating',function(error,result){
 			if(result == "true"){
 				res.redirect('/103');
@@ -75,9 +75,7 @@ app.get('/', function (req, res) {
 		    }else{
 		    	res.redirect('/101');
 		    }
-		});
-		
-		
+		});		
 	} else {
 		res.redirect('/login');
 	}

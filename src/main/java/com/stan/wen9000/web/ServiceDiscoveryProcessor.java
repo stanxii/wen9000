@@ -280,7 +280,7 @@ public class ServiceDiscoveryProcessor  {
 		Sendstschange("cbat",String.valueOf(icbatid),jedis);
 		
 		Map<String , String >  hash = new HashMap<String, String>();
-		 
+
 		String scbatinfokey = "cbatid:" + icbatid + ":cbatinfo";
 		hash.put("address", "N/A");
 		hash.put("phone", "13988777");

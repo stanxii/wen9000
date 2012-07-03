@@ -73,5 +73,6 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     left: 0;
     top: 0;
     width: 100%;
+    min-width: 1024px;
     z-index: 5;
 }

@@ -1,12 +1,17 @@
 package com.stan.wen9000.web;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
 
@@ -200,6 +205,22 @@ public class ServiceCbatStatus{
 				Sendstschange("cnu",cnuid,jedis);
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);
 			}
+			//产生下线告警信息
+			Map<String, String> alarmhash=new LinkedHashMap();
+			alarmhash.put("runingtime", "N/A");
+			alarmhash.put("oid", "N/A");
+			alarmhash.put("alarmcode", "200921");		
+			alarmhash.put("cbatmac", jedis.hget(message, "mac")); 		
+			Date date = new Date();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String alarmtimes = format.format(date);
+			alarmhash.put("salarmtime", alarmtimes);
+			alarmhash.put("alarmlevel", "1");
+			alarmhash.put("cnalarminfo", "Mac为"+ jedis.hget(message, "mac") +"的头端下线");
+			alarmhash.put("enalarminfo", "Mac:"+ jedis.hget(message, "mac") +"  Master offline!");
+			
+			String msgservice = JSONValue.toJSONString(alarmhash);
+			jedis.publish("servicealarm.new", msgservice);
 			redisUtil.getJedisPool().returnResource(jedis);
 			return;
 		}

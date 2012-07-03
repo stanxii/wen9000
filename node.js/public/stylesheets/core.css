@@ -25,6 +25,7 @@ table input {
 
 #wapper {
       min-height:500px;
+      min-width:1024px;
       position:relative;
 }
 
@@ -170,6 +171,7 @@ table input {
 
 #footer {
 	margin-top:5px;
+	min-width:1024px;
 }
 /*history alarm*/
 #historyAlarm {	
