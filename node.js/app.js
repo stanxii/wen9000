@@ -58,11 +58,11 @@ app.get('/102', function (req, res) {
 app.get('/', function (req, res) {
 	if ((req.session.user != null)&&((req.session.user != "undefined"))) {
 		//console.log("---------------------------------------->>>>>"+req.session.user);
-		jedis.get('global:isupdating',function(error,result){
-			if(result == "true"){
-				res.redirect('/103');
-			}
-		});
+//		jedis.get('global:isupdating',function(error,result){
+//			if(result == "true"){
+//				res.redirect('/103');
+//			}
+//		});
 		jedis.exists('user:'+req.session.user, function(error, result) {
 		    if(result){
 		    	jedis.hget('user:'+req.session.user,"password", function(error, result) {

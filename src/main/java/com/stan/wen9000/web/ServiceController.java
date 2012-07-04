@@ -291,7 +291,7 @@ public class ServiceController {
 		}
 		
 		String flag = jedis.hget("user:"+message.trim(),"flag");	
-		log.info("------------------------->>>>>"+"flag:"+flag);
+		//log.info("------------------------->>>>>"+"flag:"+flag);
 		jedis.publish("node.opt.getflag", flag);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
@@ -1407,7 +1407,7 @@ public class ServiceController {
 			String cip = jedis.hget("cbatid:"+cid+":entity", "ip");
 			
 			String cnumac = jedis.hget(cnukey, "mac");
-			String devicetype = jedis.hget("cbatid"+cid+"entity", "devicetype");
+			String devicetype = jedis.hget("cbatid:"+cid+":entity", "devicetype");
 			//String devicetype = "20";
 			//下面是具体节点配置过程或发往其它进程进行异步配置
 			//判断设备是否在线

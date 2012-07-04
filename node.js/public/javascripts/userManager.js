@@ -95,6 +95,7 @@
 								alert("两次输入的密码不一致！");
 								return;
 							}
+							password = newpwd;
 							$("#new_pwd").css("");
 							$("#rep_pwd").css("");
 							var datastring = '{"username":"'+username+'","password":"'+newpwd+'"}';

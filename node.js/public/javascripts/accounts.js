@@ -57,7 +57,7 @@
    			if(flag == "3"){
 	    		  alert("只读用户，权限不足！");
 	    		  return;
-	    	  }
+	    	}
    			var c_box = $(this);
    			var mac;
    			if(c_box[0].checked){
@@ -72,9 +72,8 @@
    			}else{   
    				for(var i=1;i<cTable[0].rows.length;i++){
        				if(cTable[0].rows[i].firstChild.firstChild.checked){
-       					continue;
-       				}
-       				cTable[0].rows[i].firstChild.firstChild.checked = false;
+       					cTable[0].rows[i].firstChild.firstChild.checked = false;
+       				}       				
        			}
    				$("#checkalllist")[0].checked = false;
        		    socket.emit('opt.checkallcnus', "false" );       			
