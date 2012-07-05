@@ -55,7 +55,7 @@ app.get('/102', function (req, res) {
 	res.render('102.jade', { title: 'Wen9000网路管理系统---错误' });
 });
 
-app.get('/', function (req, res) {
+app.get('/validate', function (req, res) {
 	if ((req.session.user != null)&&((req.session.user != "undefined"))) {
 		//console.log("---------------------------------------->>>>>"+req.session.user);
 //		jedis.get('global:isupdating',function(error,result){
@@ -81,6 +81,14 @@ app.get('/', function (req, res) {
 	}
 });
 
+app.get('/', function (req, res) {
+	if ((req.session.user != null)&&((req.session.user != "undefined"))) {
+		res.render('index', { title: 'Wen9000网路管理系统' });	
+	} else {
+		res.redirect('/login');
+	}
+});
+
 
 //登陆post路由
 app.post('/login', function (req, res) {
@@ -88,7 +96,7 @@ app.post('/login', function (req, res) {
 	var password = req.body.password;	
 	req.session.user = name;
 	req.session.password = password;
-	res.redirect('/');
+	res.redirect('/validate');
 });
 
 //注册用户
@@ -101,43 +109,79 @@ app.post('/register', function (req, res) {
 });
 
 app.get('/profilemanager', function( request, response ) {
-    response.render( 'profilemanager.jade', { title: 'Wen9000网路管理系统---模板管理' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'profilemanager.jade', { title: 'Wen9000网路管理系统---模板管理' } );
+	} else {
+		response.redirect('/login');
+	}    
 });
 app.get('/opt/accounts', function( request, response ) {
-    response.render( 'opt/accounts.jade', { title: 'Wen9000网路管理系统---选择配置用户' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'opt/accounts.jade', { title: 'Wen9000网路管理系统---选择配置用户' } );
+	} else {
+		response.redirect('/login');
+	}    
 });
 app.get('/opt/selectprofiles', function( request, response ) {
-    response.render( 'opt/selectprofiles.jade', { title: 'Wen9000网路管理系统---选择模板' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'opt/selectprofiles.jade', { title: 'Wen9000网路管理系统---选择模板' } );
+	} else {
+		response.redirect('/login');
+	}        
 });
 app.get('/opt/confirm', function( request, response ) {
-    response.render( 'opt/confirm.jade', { title: 'Wen9000网路管理系统---操作确认' } );
+	response.render( 'opt/confirm.jade', { title: 'Wen9000网路管理系统---操作确认' } );	        
 });
 app.get('/opt/config_results', function( request, response ) {
     response.render( 'opt/config_results.jade', { title: 'Wen9000网路管理系统---结果查询' } );
 });
 app.get('/dis/search', function( request, response ) {
-    response.render( 'discovery/discovery.jade', { title: 'Wen9000网路管理系统---设备搜索' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'discovery/discovery.jade', { title: 'Wen9000网路管理系统---设备搜索' } );
+	} else {
+		response.redirect('/login');
+	}     
 });
 app.get('/dis/result', function( request, response ) {
     response.render( 'discovery/result.jade', { title: 'Wen9000网路管理系统---搜索结果' } );
 });
 app.get('/global_opt', function( request, response ) {
-    response.render( 'global_opt.jade', { title: 'Wen9000网路管理系统---全局管理' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'global_opt.jade', { title: 'Wen9000网路管理系统---全局管理' } );
+	} else {
+		response.redirect('/login');
+	}      
 });
 app.get('/opt/updatecbat', function( request, response ) {
-    response.render( 'opt/updatecbat.jade', { title: 'Wen9000网路管理系统---局端升级' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'opt/updatecbat.jade', { title: 'Wen9000网路管理系统---局端升级' } );
+	} else {
+		response.redirect('/login');
+	}     
 });
 app.get('/version', function( request, response ) {
     response.render( 'version.jade', { title: 'Wen9000网路管理系统---版本信息' } );
 });
 app.get('/historyalarm', function( request, response ) {
-    response.render( 'historyalarm.jade', { title: 'Wen9000网路管理系统---历史告警' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'historyalarm.jade', { title: 'Wen9000网路管理系统---历史告警' } );
+	} else {
+		response.redirect('/login');
+	}       
 });
 app.get('/opt/pre_config', function( request, response ) {
-    response.render( 'opt/pre_config.jade', { title: 'Wen9000网路管理系统---设备预开户' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'opt/pre_config.jade', { title: 'Wen9000网路管理系统---设备预开户' } );
+	} else {
+		response.redirect('/login');
+	}      
 });
 app.get('/userManager', function( request, response ) {
-    response.render( 'userManager.jade', { title: 'Wen9000网路管理系统---用户管理' } );
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'userManager.jade', { title: 'Wen9000网路管理系统---用户管理' } );
+	} else {
+		response.redirect('/login');
+	}     
 });
 
 //app.listen(3000);
