@@ -156,8 +156,11 @@ public class ServiceHeartProcessor{
 
 		cbattype = heart.get("cbattype");
 		//处理cbat 心跳信息
-		doheartcbat(cbatmac, cbatip, cbattype);
-		
+		try{
+			doheartcbat(cbatmac, cbatip, cbattype);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		//解析cnu 心跳信息
 		String cnumac = "";
 		String cnutype = "";

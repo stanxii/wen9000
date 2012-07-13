@@ -137,6 +137,7 @@ public class WorkerCbatStatus{
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
+		//log.info("----------------------------->>>>log testing~~~~");
 		String key;
 		Set<String> cbats = jedis.keys("cbatid:*:entity");
 		for(Iterator it=cbats.iterator();it.hasNext();){

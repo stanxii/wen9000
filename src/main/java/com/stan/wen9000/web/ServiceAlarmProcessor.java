@@ -275,12 +275,9 @@ public class ServiceAlarmProcessor {
 			jedis.hset(cbatkey, "upgrade", result);	
 			if(result.equalsIgnoreCase("0")){
 				//升级成功
-				//更新软件版本信息				
-				String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
-				log.info("-------------------------->>upgrade successful!refresh cbat appversion!======>>"+appver);
-				if(appver != ""){
-					jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", appver);
-				}
+				//清空版本信息
+				jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", "");
+				
 			}
 			if(!result.equalsIgnoreCase("1")){
 				//已升级头端加1

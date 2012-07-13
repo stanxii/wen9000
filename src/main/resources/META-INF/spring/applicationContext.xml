@@ -246,7 +246,7 @@
 	</bean>
 	<bean id="workerCbatStatusTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 	 <property name="jobDetail" ref="workerCbatStatusjob" />
-	 <property name="startDelay" value="3000" />
+	 <property name="startDelay" value="40000" />
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="0" />		  	 
 	</bean>

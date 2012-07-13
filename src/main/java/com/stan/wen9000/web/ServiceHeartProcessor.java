@@ -1,5 +1,6 @@
 package com.stan.wen9000.web;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -109,7 +110,7 @@ public class ServiceHeartProcessor{
 		
 	}
 	
-	private void servicestart(String message) throws InterruptedException, ParseException{
+	private void servicestart(String message) throws InterruptedException, ParseException, IOException{
 	
 	
 		
@@ -127,7 +128,7 @@ public class ServiceHeartProcessor{
 	
 	
 	
-	private void dowork(String message) throws ParseException{
+	private void dowork(String message) throws ParseException, IOException{
 		JSONParser parser = new JSONParser();
 		
 		ContainerFactory containerFactory = new ContainerFactory(){
@@ -146,7 +147,7 @@ public class ServiceHeartProcessor{
 		  doheart(heart);
 	}
 	
-	private void doheart(Map<String,String> heart){
+	private void doheart(Map<String,String> heart) throws IOException{
 		String cbatip = "";
 		String cbatmac = "";
 		String cbattype = "";
@@ -178,7 +179,7 @@ public class ServiceHeartProcessor{
 		}
 	}
 	
-	private void doheartcbat(String cbatmac, String cbatip, String type) {
+	private void doheartcbat(String cbatmac, String cbatip, String type) throws IOException {
 		
 		
 
@@ -198,6 +199,13 @@ public class ServiceHeartProcessor{
 			//头端已存在
 			String deviceid = jedis.get("mac:"+cbatmac+":deviceid");
 			String cbatkey = "cbatid:"+deviceid+":entity";
+			if(jedis.hget("cbatid:"+deviceid+":cbatinfo", "appver").equalsIgnoreCase("")){
+				String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+				
+				if(appver != ""){
+					jedis.hset("cbatid:"+deviceid+":cbatinfo", "appver", appver);
+				}
+			}
 			if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1")==false){				
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
 				jedis.hset(cbatkey,"active", "1");

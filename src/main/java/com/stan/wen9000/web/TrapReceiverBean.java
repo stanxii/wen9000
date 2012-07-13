@@ -33,7 +33,6 @@ public class TrapReceiverBean {
 	
 	
 	private static final String Upgrade_QUEUE_NAME = "upgrade_result_queue";
-
 	public static String TRAP_ADDRESS = "udp:0.0.0.0/";	
 	private static final String TRAP_SERVER_PORT_KEY = "global:trapserver:port";
 
@@ -108,14 +107,13 @@ public class TrapReceiverBean {
 
 	@SuppressWarnings("unchecked")
 	public void doReceive(CommandResponderEvent event) {
-
 		// /process response
 		if (event != null && event.getPDU() != null) {
 			Vector<VariableBinding> recVBs = event.getPDU()
 					.getVariableBindings();
 
 			// size=9 is cbat alarm
-
+			//logger.info("heart receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
 			if (recVBs.size() == 10) {
 				
 				
@@ -203,7 +201,7 @@ public class TrapReceiverBean {
 						break;
 					}
 				}
-				
+				//logger.info("heart receive------>>>"+hearthash.get("cbatsys").toString());
 				//String msgservice = JSONValue.toJSONString(hearthash);
 				parseHeartMsg(hearthash);
 			}else{

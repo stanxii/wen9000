@@ -25,6 +25,9 @@
 	        var checkbox = $(this);
 	        var mac = checkbox[0].parentElement.parentElement.cells[1].textContent;
 	        var data = '{"mac":"'+mac+'","value":"'+checkbox[0].checked+'"}';
+	        if(checkbox[0].checked){
+	        	$("#btn_update").removeAttr("disabled");
+	        }
 	        socket.emit('opt.updatedcbats', data );
 	    } );
 		
