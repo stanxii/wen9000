@@ -109,11 +109,11 @@ public class TrapReceiverBean {
 	public void doReceive(CommandResponderEvent event) {
 		// /process response
 		if (event != null && event.getPDU() != null) {
-			Vector<VariableBinding> recVBs = event.getPDU()
+			Vector<VariableBinding> recVBs = (Vector<VariableBinding>) event.getPDU()
 					.getVariableBindings();
 
 			// size=9 is cbat alarm
-			//logger.info("heart receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
+			logger.info("heart receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
 			if (recVBs.size() == 10) {
 				
 				
