@@ -641,6 +641,7 @@ public class ServiceController {
 	    	//组合存储字符串
 	    	Map<String , String >  proentity = new HashMap<String, String>();
 	    	proentity.put("profilename", "出厂模板");
+	    	proentity.put("authorization", "1");
 	    	proentity.put("vlanen", "2");
 	    	proentity.put("vlan0id", "1");
 	    	proentity.put("vlan1id", "1");
@@ -666,7 +667,35 @@ public class ServiceController {
 	    	proid = String.valueOf(jedis.incr("global:profileid"));
 	    	prokey = "profileid:"+proid + ":entity";
 	    	proentity = new HashMap<String, String>();
+	    	proentity.put("profilename", "关断模板");
+	    	proentity.put("authorization", "2");
+	    	proentity.put("vlanen", "2");
+	    	proentity.put("vlan0id", "1");
+	    	proentity.put("vlan1id", "1");
+	    	proentity.put("vlan2id", "1");
+	    	proentity.put("vlan3id", "1");
+	    	
+	    	proentity.put("rxlimitsts", "1");
+	    	proentity.put("cpuportrxrate", "32");
+	    	proentity.put("port0txrate", "0");
+	    	proentity.put("port1txrate", "0");
+	    	proentity.put("port2txrate", "0");
+	    	proentity.put("port3txrate", "0");
+	    	
+	    	proentity.put("txlimitsts", "1");
+	    	proentity.put("cpuporttxrate", "32");
+	    	proentity.put("port0rxrate", "0");
+	    	proentity.put("port1rxrate", "0");
+	    	proentity.put("port2rxrate", "0");
+	    	proentity.put("port3rxrate", "0");
+	    	//save
+	    	jedis.hmset(prokey, proentity);
+	    	
+	    	proid = String.valueOf(jedis.incr("global:profileid"));
+	    	prokey = "profileid:"+proid + ":entity";
+	    	proentity = new HashMap<String, String>();
 	    	proentity.put("profilename", "标准2M");
+	    	proentity.put("authorization", "1");
 	    	proentity.put("vlanen", "2");
 	    	proentity.put("vlan0id", "1");
 	    	proentity.put("vlan1id", "1");
@@ -693,6 +722,7 @@ public class ServiceController {
 	    	prokey = "profileid:"+proid + ":entity";
 	    	proentity = new HashMap<String, String>();
 	    	proentity.put("profilename", "标准4M");
+	    	proentity.put("authorization", "1");
 	    	proentity.put("vlanen", "2");
 	    	proentity.put("vlan0id", "1");
 	    	proentity.put("vlan1id", "1");
@@ -1488,6 +1518,7 @@ public class ServiceController {
 		
 		JSONObject json = new JSONObject();
 		json.put("proname", jedis.hget(prokey, "profilename"));
+		json.put("authorization", jedis.hget(prokey, "authorization"));
 		json.put("vlanen", jedis.hget(prokey, "vlanen"));
 		//json.put("vlanid", jedis.hget(prokey, "vlanid"));
 		json.put("vlan0id", jedis.hget(prokey, "vlan0id"));
@@ -1792,6 +1823,7 @@ public class ServiceController {
 		}
     	//获取终端信息
 		try{
+			int authorization = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,6,Integer.parseInt(devid)}));
 			int vlanenable = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,36,Integer.parseInt(devid)}));
 			int port0vid = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,37,Integer.parseInt(devid)}));
 			int port1vid = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,8,1,38,Integer.parseInt(devid)}));
@@ -1816,6 +1848,7 @@ public class ServiceController {
 			json.put("active", jedis.hget(key, "active"));
 			String proid = jedis.hget(key, "profileid");
 			json.put("profilename", jedis.hget("profileid:"+proid+":entity", "profilename"));
+			json.put("authorization", String.valueOf(authorization));
 			json.put("vlanen", String.valueOf(vlanenable));
 			json.put("vlan0id", String.valueOf(port0vid));
 			json.put("vlan1id", String.valueOf(port1vid));
@@ -1883,6 +1916,7 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		//获取传递参数
     	String proname = jsondata.get("proname").toString();
+    	String authorization = jsondata.get("authorization").toString();
     	String vlanen = jsondata.get("vlanen").toString();
     	//String vlanid = jsondata.get("vlanid").toString();
     	String vlan0id = jsondata.get("vlan0id").toString();
@@ -1910,6 +1944,7 @@ public class ServiceController {
     	//组合存储字符串
     	Map<String , String >  proentity = new HashMap<String, String>();
     	proentity.put("profilename", proname.toLowerCase());
+    	proentity.put("authorization", authorization);
     	proentity.put("vlanen", vlanen);
     	//proentity.put("vlanid", vlanid);
     	proentity.put("vlan0id", vlan0id);
@@ -1956,6 +1991,7 @@ public class ServiceController {
 		String prokey = "profileid:"+message+":entity";
 		JSONObject json = new JSONObject();
 		json.put("proname", jedis.hget(prokey, "profilename"));		
+		json.put("authorization", jedis.hget(prokey, "authorization"));
 		json.put("vlanen", jedis.hget(prokey, "vlanen"));
 		//json.put("vlanid", jedis.hget(prokey, "vlanid"));
 		json.put("vlan0id", jedis.hget(prokey, "vlan0id"));
@@ -1993,7 +2029,8 @@ public class ServiceController {
 		}
 		String prokey = "profileid:"+message+":entity";
 		JSONObject json = new JSONObject();
-		json.put("proname", jedis.hget(prokey, "profilename"));		
+		json.put("proname", jedis.hget(prokey, "profilename"));	
+		json.put("authorization", jedis.hget(prokey, "authorization"));
 		json.put("vlanen", jedis.hget(prokey, "vlanen"));
 		//json.put("vlanid", jedis.hget(prokey, "vlanid"));
 		json.put("vlan0id", jedis.hget(prokey, "vlan0id"));
@@ -2032,7 +2069,8 @@ public class ServiceController {
 		if(jedis.smembers("profileid:"+message+":cnus").isEmpty()){
 			String prokey = "profileid:"+message+":entity";
 			JSONObject json = new JSONObject();
-			json.put("proname", jedis.hget(prokey, "profilename"));		
+			json.put("proname", jedis.hget(prokey, "profilename"));	
+			json.put("authorization", jedis.hget(prokey, "authorization"));
 			json.put("vlanen", jedis.hget(prokey, "vlanen"));
 			//json.put("vlanid", jedis.hget(prokey, "vlanid"));
 			json.put("vlan0id", jedis.hget(prokey, "vlan0id"));
@@ -2076,6 +2114,7 @@ public class ServiceController {
 		//获取传递参数
 		String proid = jsondata.get("proid").toString();
     	String proname = jsondata.get("proname").toString();
+    	String authorization = jsondata.get("authorization").toString();
     	String vlanen = jsondata.get("vlanen").toString();
     	//String vlanid = jsondata.get("vlanid").toString();
     	String vlan0id = jsondata.get("vlan0id").toString();
@@ -2101,6 +2140,7 @@ public class ServiceController {
     	//组合存储字符串
     	Map<String , String >  proentity = new HashMap<String, String>();
     	proentity.put("profilename", proname.toLowerCase());
+    	proentity.put("authorization", authorization);
     	proentity.put("vlanen", vlanen);
     	//proentity.put("vlanid", vlanid);
     	proentity.put("vlan0id", vlan0id);
@@ -2179,6 +2219,7 @@ public class ServiceController {
     		String cid = prokey.substring(index1, index2);
     		projson.put("id", cid);
     		projson.put("proname", jedis.hget(prokey, "profilename"));
+    		projson.put("authorization", jedis.hget(prokey, "authorization"));
     		projson.put("vlanen", jedis.hget(prokey, "vlanen"));
     		projson.put("vlan0id", jedis.hget(prokey, "vlan0id"));
     		projson.put("vlan1id", jedis.hget(prokey, "vlan1id"));
@@ -2427,6 +2468,7 @@ public class ServiceController {
     	String proid = jedis.hget("cnuid:"+id+":entity", "profileid");
     	String prokey = "profileid:"+proid+":entity";
     	cnujson.put("profilename", jedis.hget(prokey,"profilename"));
+    	cnujson.put("authorization", jedis.hget(prokey,"authorization"));
     	cnujson.put("vlanen", jedis.hget(prokey,"vlanen"));
     	//cnujson.put("vlanid", jedis.hget(prokey,"vlanid"));
     	cnujson.put("vlan0id", jedis.hget(prokey,"vlan0id"));
@@ -2840,6 +2882,28 @@ public class ServiceController {
 	private static Boolean sendconfig(int proid,String cbatip, int cnuindex,Jedis jedis ){
 		String prokey = "profileid:"+proid+":entity";
 		try{
+			if(jedis.hget(prokey, "authorization").equalsIgnoreCase("2")){
+				//销户
+				util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+				new Integer32(4)
+				);
+				
+				//reload profile
+				util.setV2PDU(cbatip,
+						"161",
+						new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+						new Integer32(2)
+						);	
+				
+				util.setV2PDU(cbatip,
+						"161",
+						new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+						new Integer32(3)
+						);
+				return true;
+			}
 			//vlansts
 		util.setV2PDU(cbatip,
 			"161",
@@ -2978,16 +3042,7 @@ public class ServiceController {
 				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
 				new Integer32(3)
 				);
-		if(proid == 1)
-		{
-			//销户
-			util.setV2PDU(cbatip,
-			"161",
-			new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-			new Integer32(4)
-			);
-			//return true;
-		}
+		
 			return true;
 		
 		
@@ -3104,6 +3159,7 @@ public class ServiceController {
 			 jsonmap.put("type", 2);
 			 
 			 jsonmap.put("mac", cnumac);
+			 jsonmap.put("authorization", Integer.valueOf(jsondata.get("authorization").toString()));
 			 jsonmap.put("vlanen", Integer.valueOf(jsondata.get("vlanen").toString()));
 			 jsonmap.put("vlan0id", Integer.valueOf(jsondata.get("vlan0id").toString()));
 			 jsonmap.put("vlan1id", Integer.valueOf(jsondata.get("vlan1id").toString()));
@@ -3146,6 +3202,28 @@ public class ServiceController {
 
 	private static Boolean Cnuconfig(JSONObject jsondata,String cbatip, int cnuindex,Jedis jedis ){
 		try{			
+			if(jsondata.get("authorization").toString() == "2"){
+				//销户
+				util.setV2PDU(cbatip,
+				"161",
+				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+				new Integer32(4)
+				);
+				
+				//reload profile
+				util.setV2PDU(cbatip,
+						"161",
+						new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+						new Integer32(2)
+						);	
+				
+				util.setV2PDU(cbatip,
+						"161",
+						new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+						new Integer32(3)
+						);
+				return true;
+			}
 			//vlansts
 		util.setV2PDU(cbatip,
 			"161",

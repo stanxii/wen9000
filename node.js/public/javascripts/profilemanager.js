@@ -12,6 +12,7 @@
 		
 		var flag = getCookie("flag");
 		var proname = $( "#proname" ),
+		authorization = $( "#authorization" ),
 		vlanen = $( "#vlanen" ),
 		vlan0id = $( "#vlan0id" ),
 		vlan1id = $( "#vlan1id" ),
@@ -30,7 +31,7 @@
 		port2rxrate = $( "#port2rxrate" ),
 		port3rxrate = $( "#port3rxrate" );		
 		
-		allFields = $( [] ).add( proname ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
+		allFields = $( [] ).add( proname ).add( authorization ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
 		.add( vlan3id ).add( rxlimitsts ).add( cpuportrxrate ).add( port0txrate ).add( port1txrate ).add( port2txrate )
 		.add( port3txrate ).add( txlimitsts ).add( cpuporttxrate ).add( port0rxrate ).add( port1rxrate ).add( port2rxrate )
 		.add( port3rxrate ),
@@ -106,7 +107,7 @@
 	        	return;
 	        }
 	        var proid = anSelected[0].firstChild.textContent;
-	        if(proid <4){
+	        if(proid <5){
 	        	alert("出厂模板无法删除");
 	        	return;
 	        }
@@ -127,7 +128,7 @@
 	    		  alert("只读用户，权限不足！");
 	    		  return;
 	    	  }
-	    	$( "#dialog:ui-dialog" ).dialog( "destroy" );	
+	    	$( "#dialog:ui-dialog" ).dialog( "destroy" );	    	
 	    	$( "#proname" )[0].value = "";
 			$( "#vlan0id" )[0].value = 0;
 			$( "#vlan1id" )[0].value = 0;
@@ -169,7 +170,7 @@
 						&& checkvalue(vlan2id,"vlan2id",0,4095)&& checkvalue(vlan3id,"vlan3id",0,4095)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);
 						
 						if(bValid){
-							var datastring = '{"proname":"'+proname.val()+'","vlanen":"'+vlanen.val()+
+							var datastring = '{"proname":"'+proname.val()+'","authorization":"'+parseInt(authorization.val(),10)+'","vlanen":"'+vlanen.val()+
 							'","vlan0id":"'+parseInt(vlan0id.val(),10)+'","vlan1id":"'+parseInt(vlan1id.val(),10)+'","vlan2id":"'+parseInt(vlan2id.val())+'","vlan3id":"'+parseInt(vlan3id.val(),10)+
 							'","rxlimitsts":"'+parseInt(rxlimitsts.val(),10)+'","cpuportrxrate":"'+parseInt(cpuportrxrate.val(),10)+'","port0txrate":"'+parseInt(port0txrate.val(),10)+
 							'","port1txrate":"'+parseInt(port1txrate.val(),10)+'","port2txrate":"'+parseInt(port2txrate.val(),10)+'","port3txrate":"'+parseInt(port3txrate.val(),10)+
@@ -204,7 +205,7 @@
 	        	return;
 	        }
 	        var proid = anSelected[0].firstChild.textContent;
-	        if(proid <4){
+	        if(proid <5){
 	        	alert("出厂模板无法修改！");
 	        	return;
 	        }
@@ -281,6 +282,11 @@
 			}else{
 				tmpdata.txlimitsts = "禁止";
 			}
+			if(tmpdata.authorization=="1"){
+				tmpdata.authorization = "启动";
+			}else{
+				tmpdata.authorization = "禁止";
+			}
 			//组装弹出窗口html	
 			$("#dialog-detail").empty();
 			$("#dialog-detail").append('<fieldset>'+
@@ -289,9 +295,11 @@
 						'<table>'+
 							'<tr><td><label for="proname_e" >模板名称：</label></td>'+
 								'<td><label>'+tmpdata.proname+'</label></td>'+
-								'<td><label for="vlanen_e">&nbsp &nbsp &nbsp &nbsp Vlan使能:</label></td>'+
-								'<td><label>'+tmpdata.vlanen+
+								'<td><label for="authorization_e">&nbsp &nbsp &nbsp &nbsp 授权状态:</label></td>'+
+								'<td><label>'+tmpdata.authorization+
 									'</td></tr>'+
+							'<tr><td><label for="vlanen_e">Vlan使能:</label></td>'+
+							'<td><label>'+tmpdata.vlanen+'</td></tr>'+
 							'<tr>'+
 							'<td><label for="vlan0id_e">Vlan0id:</label></td>'+
 							'<td><label>'+tmpdata.vlan0id+ ' </label></td>'+
@@ -380,8 +388,8 @@
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 			
 			var proname = $( "#proname" ),
+			authorization = $( "#authorization" ),
 			vlanen = $( "#vlanen" ),
-			//vlanid = $( "#vlanid" ),
 			vlan0id = $( "#vlan0id" ),
 			vlan1id = $( "#vlan1id" ),
 			vlan2id = $( "#vlan2id" ),
@@ -400,7 +408,7 @@
 			port3rxrate = $( "#port3rxrate" ),
 			
 			
-			allFields = $( [] ).add( proname ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
+			allFields = $( [] ).add( proname ).add( authorization ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
 			.add( vlan3id ).add( rxlimitsts ).add( cpuportrxrate ).add( port0txrate ).add( port1txrate ).add( port2txrate )
 			.add( port3txrate ).add( txlimitsts ).add( cpuporttxrate ).add( port0rxrate ).add( port1rxrate ).add( port2rxrate )
 			.add( port3rxrate ),
@@ -415,11 +423,16 @@
 						'<table>'+
 							'<tr><td><label for="proname_e" >模板名称：</label></td>'+
 								'<td><input type="text" name="proname_e" id="proname_e" value='+tmpdata.proname+' class="text ui-widget-content ui-corner-all" /></td>'+
-								'<td><label for="vlanen_e">Vlan使能:</label></td>'+
-								'<td><select name="vlanen_e" id="vlanen_e">'+
+								'<td><label for="authorization_e">授权状态:</label></td>'+
+								'<td><select name="authorization_e" id="authorization_e">'+
 									'<option value="1">启动</option>'+
 									'<option value="2">禁用</option>'+
 								'</select></td>	</tr>'+
+							'<tr><td><label for="vlanen_e">Vlan使能:</label></td>'+
+								'<td><select name="vlanen_e" id="vlanen_e">'+
+									'<option value="1">启动</option>'+
+									'<option value="2">禁用</option>'+
+								'</select></td></tr>'+
 							'<tr>'+
 							'<td><label for="vlan0id_e">Vlan0id:</label></td>'+
 							'<td><input type="text" name="vlan0id_e" id="vlan0id_e" value='+tmpdata.vlan0id+ ' class="text ui-widget-content ui-corner-all" /></td>'+
@@ -465,12 +478,13 @@
 						'<td><label for="port3txrate_e">ETH4限速:</label></td>'+
 						'<td><input type="text" name="port3rxrate_e" id="port3rxrate_e" value='+tmpdata.port3rxrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
 					'</table></form></fieldset>');
-
+				document.getElementById('authorization_e').value = tmpdata.authorization;
 				document.getElementById('vlanen_e').value = tmpdata.vlanen;
 				document.getElementById('rxlimitsts_e').value = tmpdata.rxlimitsts;
 				document.getElementById('txlimitsts_e').value = tmpdata.txlimitsts;
 				
 				proname = $( "#proname_e" ),
+				authorization = $( "#authorization_e" ),
 				vlanen = $( "#vlanen_e" ),
 				//vlanid = $( "#vlanid_e" ),
 				vlan0id = $( "#vlan0id_e" ),
@@ -517,7 +531,7 @@
 						
 						if(bValid){
 							var anSelected = fnGetSelected( pTable );
-							var datastring = '{"proid":"'+anSelected[0].firstChild.textContent+'","proname":"'+proname.val()+'","vlanen":"'+vlanen.val()+
+							var datastring = '{"proid":"'+anSelected[0].firstChild.textContent+'","proname":"'+proname.val()+'","authorization":"'+parseInt(authorization.val(),10)+'","vlanen":"'+vlanen.val()+
 							'","vlan0id":"'+parseInt(vlan0id.val(),10)+'","vlan1id":"'+parseInt(vlan1id.val(),10)+'","vlan2id":"'+parseInt(vlan2id.val(),10)+'","vlan3id":"'+parseInt(vlan3id.val(),10)+
 							'","rxlimitsts":"'+parseInt(rxlimitsts.val(),10)+'","cpuportrxrate":"'+parseInt(cpuportrxrate.val(),10)+'","port0txrate":"'+parseInt(port0txrate.val(),10)+
 							'","port1txrate":"'+parseInt(port1txrate.val(),10)+'","port2txrate":"'+parseInt(port2txrate.val(),10)+'","port3txrate":"'+parseInt(port3txrate.val(),10)+

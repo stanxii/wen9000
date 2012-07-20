@@ -61,6 +61,11 @@
 		}else{
 			tmpdata.txlimitsts = "禁止";
 		}
+		if(tmpdata.authorization=="1"){
+			tmpdata.authorization = "启动";
+		}else{
+			tmpdata.authorization = "禁止";
+		}
 		$("#profile_info").empty();	
 		$("#profile_info").append('<br/><br/><h3 style="color:green">配置信息</h3><hr/><div id="configinfo"><ul>'+
 			'<li><a href="#tabs-1">基本配置</a></li>'+
@@ -68,7 +73,8 @@
 			'<li><a href="#tabs-3">上行配置</a></li></ul>'+
 			'<div id="tabs-1">'+
 				'<table id="optinfo"><tr><td><lable>模板名称 :&nbsp &nbsp &nbsp'+tmpdata.proname+'</lable></td>'+
-				'<td><lable>VLAN使能 : &nbsp &nbsp &nbsp  '+ tmpdata.vlanen+'</lable></td></tr>'+
+				'<td><lable>授权状态 : &nbsp &nbsp &nbsp  '+ tmpdata.authorization+'</lable></td></tr>'+
+				'<tr><td><lable>VLAN使能 : &nbsp &nbsp &nbsp  '+ tmpdata.vlanen+'</lable></td></tr>'+
 				'<tr>'+
 				'<td><lable>ETH1VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan0id+'</lable></td>'+
 				'<td><lable>ETH2VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan1id+'</lable></td></tr>'+

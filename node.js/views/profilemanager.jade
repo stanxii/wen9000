@@ -18,6 +18,13 @@ block content
             td
               input(type='text',name='proname',id='proname',class='text ui-widget-content ui-corner-all')
             td
+              label(for='authorization')  授权状态:
+            td
+              select(name='authorization',id='authorization')
+                option(value='1')  启动
+                option(value='2')  禁止
+          tr
+            td
               label(for='vlanen')  Vlan使能:
             td
               select(name='vlanen',id='vlanen')

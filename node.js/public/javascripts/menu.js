@@ -152,6 +152,7 @@
 			document.body.style.cursor = 'wait';
 			var proname = document.getElementById('proname').textContent;
 			var mac = document.getElementById('cnu_mac').textContent;
+			var authorization = document.getElementById('authorization_en').value;
 	 		var vlanen = document.getElementById('vlan_en').value;
 	    	var vlan0id = document.getElementById('vlan0id').value;
 	    	var vlan1id = document.getElementById('vlan1id').value;
@@ -202,7 +203,7 @@
 				return;
 			}
 			
-			var datastring = '{"proname":"'+proname+'","mac":"'+mac+'","vlanen":"'+vlanen+
+			var datastring = '{"proname":"'+proname+'","mac":"'+mac+'","authorization":"'+authorization+'","vlanen":"'+vlanen+
 			'","vlan0id":"'+vlan0id+'","vlan1id":"'+vlan1id+'","vlan2id":"'+vlan2id+'","vlan3id":"'+vlan3id+
 			'","rxlimitsts":"'+rxlimitsts+'","cpuportrxrate":"'+cpuportrxrate+'","port0txrate":"'+port0txrate+
 			'","port1txrate":"'+port1txrate+'","port2txrate":"'+port2txrate+'","port3txrate":"'+port3txrate+
@@ -580,6 +581,7 @@
 			});
 			$("#dialog-message-failed").dialog("open");
     	}else{
+    		document.getElementById('authorization_en').value = data.authorization;
     		document.getElementById('vlan_en').value = data.vlanen;
         	document.getElementById('vlan0id').value = data.vlan0id;
         	document.getElementById('vlan1id').value = data.vlan1id;
@@ -904,7 +906,8 @@
 			'</div>'+
 			'<div id="tabs-2">'+
 				'<table id="optinfo"><tr><td><lable>模板名称 :</lable></td><td><lable id="proname">'+jsondata.profilename+'</lable></td>'+
-				'<td><lable>VLAN使能 : </lable></td><td><select id="vlan_en"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
+				'<td><lable>授权状态 : </lable></td><td><select id="authorization_en"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
+				'<tr><td><lable>VLAN使能 : </lable></td><td><select id="vlan_en"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
 				'</tr>'+
 				'<tr><td><lable>ETH1VLAN: </lable></td><td><input type="text" id="vlan0id" value='+jsondata.vlan0id+'></input></td>'+
 				'<td><lable>ETH2VLAN: </lable></td><td><input type="text" id="vlan1id" value='+jsondata.vlan1id+'></input></td>'+
