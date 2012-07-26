@@ -116,7 +116,7 @@ public class TrapReceiverBean {
 			//logger.info("heart receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
 			if (recVBs.size() == 10) {
 				
-				
+				//logger.info("------>>>>>>>alarm receive<<<<<<<<<----------");
 				Map<String, String> alarmhash=new LinkedHashMap();
 			   
 				for (int i = 0; i < recVBs.size(); i++) {
@@ -495,7 +495,7 @@ public class TrapReceiverBean {
 			e.printStackTrace();
 		}
 		
-		
+		//logger.info("------>>>>>>>alarm send<<<<<<<<<----------");
 		doAlarm(alarmhash);
 		
 		

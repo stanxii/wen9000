@@ -36,7 +36,7 @@
 		})
 		
 		$("#ftp_connect").click(function(){
-			
+			$("#refresh").attr("disabled","disabled");
 			var objSelect = $("#combox_files");		
 			if(objSelect[0].options.length>0){
 				var length = document.getElementById('combox_files').options.length;
@@ -161,7 +161,7 @@
 	
 	function fun_Ftpfilelist(data){
 		document.body.style.cursor = 'default';
-		
+		$("#refresh").removeAttr("disabled");
 		$("#ftp_connect").removeAttr("disabled");
 		if(data == ""){
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );

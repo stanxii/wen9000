@@ -130,14 +130,14 @@ public class ServiceAlarmProcessor {
 	
 	public static void servicestart(String message) throws Exception {
 
-//			System.out.println(" [x] ServiceAlarmProcessor Received '" + message
-//					+ "'");
-//			
-//			long start = System.currentTimeMillis();  			
+		//	log.info(" [x] ServiceAlarmProcessor Received '" + message
+		//			+ "'");
+			
+		//	long start = System.currentTimeMillis();  			
 			dowork(message);					
-//			long end = System.currentTimeMillis();  
-//			System.out.println("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
-//			
+		//	long end = System.currentTimeMillis();  
+		//	log.info("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
+			
 		
 	}
 	
@@ -216,7 +216,7 @@ public class ServiceAlarmProcessor {
 		
 		}catch(Exception e){
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
-			
+			log.info("------>>>>>>>savelarm ex1<<<<<<<<<----------");
 		}
 		
 		

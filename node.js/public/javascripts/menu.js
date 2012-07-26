@@ -1031,7 +1031,7 @@
 			if(jsondata.devicetype == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicetype == "WEC-3501I S220"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 C22.jpg";
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 S220.jpg";
 			}else if(jsondata.devicetype == "WEC9720EK_C22"){
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
 			}
