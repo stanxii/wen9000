@@ -47,24 +47,24 @@
 	
 	function fun_Getprofile(tmpdata){
 		if(tmpdata.vlanen=="1"){
-			tmpdata.vlanen = "启动";
+			tmpdata.vlanen = "启用";
 		}else{
-			tmpdata.vlanen = "禁止";
+			tmpdata.vlanen = "禁用";
 		}
 		if(tmpdata.rxlimitsts=="1"){
-			tmpdata.rxlimitsts = "启动";
+			tmpdata.rxlimitsts = "启用";
 		}else{
-			tmpdata.rxlimitsts = "禁止";
+			tmpdata.rxlimitsts = "禁用";
 		}
 		if(tmpdata.txlimitsts=="1"){
-			tmpdata.txlimitsts = "启动";
+			tmpdata.txlimitsts = "启用";
 		}else{
-			tmpdata.txlimitsts = "禁止";
+			tmpdata.txlimitsts = "禁用";
 		}
 		if(tmpdata.authorization=="1"){
-			tmpdata.authorization = "启动";
+			tmpdata.authorization = "启用";
 		}else{
-			tmpdata.authorization = "禁止";
+			tmpdata.authorization = "禁用";
 		}
 		$("#profile_info").empty();	
 		$("#profile_info").append('<br/><br/><h3 style="color:green">配置信息</h3><hr/><div id="configinfo"><ul>'+

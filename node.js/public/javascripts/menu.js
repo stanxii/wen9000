@@ -843,7 +843,7 @@
 				   		'<tr><td><lable>当前AGC偏移量 : </lable></td><td><lable id="hfc_agc"></lable></td>'+
 				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp电视信号频道数量 : </lable></td><td><lable id = "hfc_channelnum"></lable></td></tr>'+
 						'<tr><td><lable>AGC控制使能 : </lable></td><td><select id="agc_e">'+
-							'<option value="1">启动</option>'+
+							'<option value="1">启用</option>'+
 							'<option value="2">禁用</option>'+
 						'</select></td>'+	
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp激光器制冷电流 : </lable></td><td><lable id = "hfc_liu"></lable></td></tr>'+
@@ -906,22 +906,22 @@
 			'</div>'+
 			'<div id="tabs-2">'+
 				'<table id="optinfo"><tr><td><lable>模板名称 :</lable></td><td><lable id="proname">'+jsondata.profilename+'</lable></td>'+
-				'<td><lable>授权状态 : </lable></td><td><select id="authorization_en"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
-				'<tr><td><lable>VLAN使能 : </lable></td><td><select id="vlan_en"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
+				'<td><lable>授权状态 : </lable></td><td><select id="authorization_en"><option value="1">启用</option><option value="2">禁用</option></select></td>'+
+				'<tr><td><lable>VLAN使能 : </lable></td><td><select id="vlan_en"><option value="1">启用</option><option value="2">禁用</option></select></td>'+
 				'</tr>'+
 				'<tr><td><lable>ETH1VLAN: </lable></td><td><input type="text" id="vlan0id" value='+jsondata.vlan0id+'></input></td>'+
 				'<td><lable>ETH2VLAN: </lable></td><td><input type="text" id="vlan1id" value='+jsondata.vlan1id+'></input></td>'+
 				'<td><lable>ETH3VLAN: </lable></td><td><input type="text" id="vlan2id" value= '+jsondata.vlan2id+'></input></td></tr>'+
 				'<tr><td><lable>ETH4VLAN: </lable></td><td><input type="text" id="vlan3id" value='+jsondata.vlan3id+'></input></td></tr>'+
 				
-				'<tr><td><lable>下行限速使能 :</lable></td><td><select id="rxlimitsts"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
+				'<tr><td><lable>下行限速使能 :</lable></td><td><select id="rxlimitsts"><option value="1">启用</option><option value="2">禁用</option></select></td>'+
 				'<td><lable>下行全局限速 :</lable></td><td><input type="text" id="cpuportrxrate" value='+ jsondata.cpuportrxrate+'></input></td>'+
 				'<td><lable>ETH1下行限速:</lable></td><td><input type="text" id="port0txrate" value='+jsondata.port0txrate+'></input></td></tr>'+
 				'<tr><td><lable>ETH2下行限速:</lable></td><td><input type="text" id="port1txrate" value='+jsondata.port1txrate+'></input></td>'+
 				'<td><lable>ETH3下行限速:</lable></td><td><input type="text" id="port2txrate" value='+jsondata.port2txrate+'></input></td>'+
 				'<td><lable>ETH4下行限速:</lable></td><td><input type="text" id="port3txrate" value='+jsondata.port3txrate+'></input></td></tr>'+
 				
-				'<tr><td><lable>上行限速使能 :</lable></td><td><select id="txlimitsts"><option value="1">启动</option><option value="2">禁止</option></select></td>'+
+				'<tr><td><lable>上行限速使能 :</lable></td><td><select id="txlimitsts"><option value="1">启用</option><option value="2">禁用</option></select></td>'+
 				'<td><lable>上行全局限速 :</lable></td><td><input type="text" id="cpuporttxrate" value='+ jsondata.cpuporttxrate+'></input></td>'+
 				'<td><lable>ETH1上行限速:</lable></td><td><input type="text" id="port0rxrate" value='+jsondata.port0rxrate+'></input></td></tr>'+
 				'<tr><td><lable>ETH2上行限速:</lable></td><td><input type="text" id="port1rxrate" value='+jsondata.port1rxrate+'></input></td>'+
@@ -1018,7 +1018,7 @@
 			'<tr><td><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
 			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp端口号 : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
 			'<tr><td><lable>管理VLAN使能 : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
-							'<option value="1">启动</option>'+
+							'<option value="1">启用</option>'+
 							'<option value="2">禁用</option>'+
 						'</select></td>'+
 			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
@@ -1031,7 +1031,7 @@
 			if(jsondata.devicetype == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicetype == "WEC-3501I S220"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 S220.jpg";
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 C22.jpg";
 			}else if(jsondata.devicetype == "WEC9720EK_C22"){
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
 			}

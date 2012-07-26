@@ -268,24 +268,24 @@
 		if(tmpdata != ""){
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 			if(tmpdata.vlanen=="1"){
-				tmpdata.vlanen = "启动";
+				tmpdata.vlanen = "启用";
 			}else{
-				tmpdata.vlanen = "禁止";
+				tmpdata.vlanen = "禁用";
 			}
 			if(tmpdata.rxlimitsts=="1"){
-				tmpdata.rxlimitsts = "启动";
+				tmpdata.rxlimitsts = "启用";
 			}else{
-				tmpdata.rxlimitsts = "禁止";
+				tmpdata.rxlimitsts = "禁用";
 			}
 			if(tmpdata.txlimitsts=="1"){
-				tmpdata.txlimitsts = "启动";
+				tmpdata.txlimitsts = "启用";
 			}else{
-				tmpdata.txlimitsts = "禁止";
+				tmpdata.txlimitsts = "禁用";
 			}
 			if(tmpdata.authorization=="1"){
-				tmpdata.authorization = "启动";
+				tmpdata.authorization = "启用";
 			}else{
-				tmpdata.authorization = "禁止";
+				tmpdata.authorization = "禁用";
 			}
 			//组装弹出窗口html	
 			$("#dialog-detail").empty();
@@ -425,12 +425,12 @@
 								'<td><input type="text" name="proname_e" id="proname_e" value='+tmpdata.proname+' class="text ui-widget-content ui-corner-all" /></td>'+
 								'<td><label for="authorization_e">授权状态:</label></td>'+
 								'<td><select name="authorization_e" id="authorization_e">'+
-									'<option value="1">启动</option>'+
+									'<option value="1">启用</option>'+
 									'<option value="2">禁用</option>'+
 								'</select></td>	</tr>'+
 							'<tr><td><label for="vlanen_e">Vlan使能:</label></td>'+
 								'<td><select name="vlanen_e" id="vlanen_e">'+
-									'<option value="1">启动</option>'+
+									'<option value="1">启用</option>'+
 									'<option value="2">禁用</option>'+
 								'</select></td></tr>'+
 							'<tr>'+
@@ -448,7 +448,7 @@
 					'<form><table>'+
 						'<tr><td><label for="rxlimitsts_e">下行限速使能：</label></td>'+
 						'<td><select name="rxlimitsts_e" id="rxlimitsts_e">'+
-						'<option value="1">启动</option><option value="2">禁用</option>'+
+						'<option value="1">启用</option><option value="2">禁用</option>'+
 						'</select></td>'+
 						'<td><label for="cpuportrxrate_e">全局下行限速:</label></td>'+
 						'<td><input type="text" name="cpuportrxrate_e" id="cpuportrxrate_e" value='+tmpdata.cpuportrxrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
@@ -465,7 +465,7 @@
 					'<form><table>'+
 						'<tr><td><label for="txlimitsts_e">上行限速使能：</label></td>'+
 						'<td><select name="txlimitsts_e" id="txlimitsts_e">'+
-						'<option value="1">启动</option><option value="2">禁用</option>'+
+						'<option value="1">启用</option><option value="2">禁用</option>'+
 						'</select></td>'+
 						'<td><label for="cpuporttxrate_e">全局上行限速:</label></td>'+
 						'<td><input type="text" name="cpuporttxrate_e" id="cpuporttxrate_e" value='+tmpdata.cpuporttxrate+ ' class="text ui-widget-content ui-corner-all" /></td></tr>'+
