@@ -933,9 +933,9 @@
 		'</div>'
 		);
 		
+     	document.getElementById('authorization_en').value=jsondata.authorization;
 		document.getElementById('vlan_en').value=jsondata.vlanen;
-		document.getElementById('rxlimitsts').value=jsondata.rxlimitsts;
-			
+		document.getElementById('rxlimitsts').value=jsondata.rxlimitsts;			
 		document.getElementById('txlimitsts').value=jsondata.txlimitsts;
 		
 		var node = $("#navtree").dynatree("getActiveNode");

@@ -49,21 +49,25 @@
 	
 	function fun_Selprofile(tmpdata){
 		if(tmpdata.vlanen=="1"){
-			tmpdata.vlanen = "启动";
+			tmpdata.vlanen = "启用";
 		}else{
-			tmpdata.vlanen = "禁止";
+			tmpdata.vlanen = "禁用";
 		}
 		if(tmpdata.rxlimitsts=="1"){
-			tmpdata.rxlimitsts = "启动";
+			tmpdata.rxlimitsts = "启用";
 		}else{
-			tmpdata.rxlimitsts = "禁止";
+			tmpdata.rxlimitsts = "禁用";
 		}
 		if(tmpdata.txlimitsts=="1"){
-			tmpdata.txlimitsts = "启动";
+			tmpdata.txlimitsts = "启用";
 		}else{
-			tmpdata.txlimitsts = "禁止";
+			tmpdata.txlimitsts = "禁用";
 		}
-			
+		if(tmpdata.authorization=="1"){
+			tmpdata.authorization = "启用";
+		}else{
+			tmpdata.authorization = "禁用";
+		}	
 		$("#profile_info").empty();	
 		$("#profile_info").append('<h3>配置信息</h3><div id="configinfo"><ul>'+
 				'<li><a href="#tabs-1">基本配置</a></li>'+
@@ -71,8 +75,9 @@
 				'<li><a href="#tabs-3">上行配置</a></li></ul>'+
 				'<div id="tabs-1">'+
 					'<table id="optinfo"><tr><td><lable>模板名称 :&nbsp &nbsp &nbsp'+tmpdata.proname+'</lable></td>'+
-					'<td><lable>VLAN使能 : &nbsp &nbsp &nbsp  '+ tmpdata.vlanen+'</lable></td>'+
-					'</tr>'+
+					'<td><lable>授权状态 : &nbsp &nbsp &nbsp  '+ tmpdata.authorization+'</lable></td></tr>'+
+					'<tr><td><lable>VLAN使能 : &nbsp &nbsp &nbsp  '+ tmpdata.vlanen+'</lable></td></tr>'+
+					'<tr>'+
 					'<tr><td><lable>1端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan0id+'</lable></td>'+
 					'<td><lable>2端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan1id+'</lable></td>'+
 					'<tr><td><lable>3端口VLAN: &nbsp &nbsp &nbsp  '+tmpdata.vlan2id+'</lable></td>'+

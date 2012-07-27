@@ -676,14 +676,14 @@ public class ServiceController {
 	    	proentity.put("vlan3id", "1");
 	    	
 	    	proentity.put("rxlimitsts", "1");
-	    	proentity.put("cpuportrxrate", "32");
+	    	proentity.put("cpuportrxrate", "0");
 	    	proentity.put("port0txrate", "0");
 	    	proentity.put("port1txrate", "0");
 	    	proentity.put("port2txrate", "0");
 	    	proentity.put("port3txrate", "0");
 	    	
 	    	proentity.put("txlimitsts", "1");
-	    	proentity.put("cpuporttxrate", "32");
+	    	proentity.put("cpuporttxrate", "0");
 	    	proentity.put("port0rxrate", "0");
 	    	proentity.put("port1rxrate", "0");
 	    	proentity.put("port2rxrate", "0");
@@ -2775,7 +2775,7 @@ public class ServiceController {
 	private static String newcustomprofile(JSONObject jsondata, Jedis jedis){
 		//获取传递参数
     	String vlanen = jsondata.get("vlanen").toString();
-    	//String vlanid = jsondata.get("vlanid").toString();
+    	String authorization = jsondata.get("authorization").toString();
     	String vlan0id = jsondata.get("vlan0id").toString();
     	String vlan1id = jsondata.get("vlan1id").toString();
     	String vlan2id = jsondata.get("vlan2id").toString();
@@ -2802,7 +2802,7 @@ public class ServiceController {
     	Map<String , String >  proentity = new HashMap<String, String>();
     	proentity.put("profilename", "配置信息");
     	proentity.put("vlanen", vlanen);
-    	//proentity.put("vlanid", vlanid);
+    	proentity.put("authorization", authorization);
     	proentity.put("vlan0id", vlan0id);
     	proentity.put("vlan1id", vlan1id);
     	proentity.put("vlan2id", vlan2id);
@@ -2831,7 +2831,7 @@ public class ServiceController {
 	private static void editcustomprofile(JSONObject jsondata, Jedis jedis,String key){
 		//获取传递参数
     	String vlanen = jsondata.get("vlanen").toString();
-    	//String vlanid = jsondata.get("vlanid").toString();
+    	String authorization = jsondata.get("authorization").toString();
     	String vlan0id = jsondata.get("vlan0id").toString();
     	String vlan1id = jsondata.get("vlan1id").toString();
     	String vlan2id = jsondata.get("vlan2id").toString();
@@ -2855,7 +2855,7 @@ public class ServiceController {
     	Map<String , String >  proentity = new HashMap<String, String>();
     	proentity.put("profilename", "配置信息");
     	proentity.put("vlanen", vlanen);
-    	//proentity.put("vlanid", vlanid);
+    	proentity.put("authorization", authorization);
     	proentity.put("vlan0id", vlan0id);
     	proentity.put("vlan1id", vlan1id);
     	proentity.put("vlan2id", vlan2id);
@@ -2889,19 +2889,6 @@ public class ServiceController {
 				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
 				new Integer32(4)
 				);
-				
-				//reload profile
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-						new Integer32(2)
-						);	
-				
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-						new Integer32(3)
-						);
 				return true;
 			}
 			//vlansts
@@ -3065,6 +3052,7 @@ public class ServiceController {
 			 jsonmap.put("type", 2);
 			 
 			 jsonmap.put("mac", cnumac);
+			 jsonmap.put("authorization", Integer.valueOf(jedis.hget(prokey, "authorization")));
 			 jsonmap.put("vlanen", Integer.valueOf(jedis.hget(prokey, "vlanen")));
 			 jsonmap.put("vlan0id", Integer.valueOf(jedis.hget(prokey, "vlan0id")));
 			 jsonmap.put("vlan1id", Integer.valueOf(jedis.hget(prokey, "vlan1id")));
@@ -3201,27 +3189,14 @@ public class ServiceController {
 	}
 
 	private static Boolean Cnuconfig(JSONObject jsondata,String cbatip, int cnuindex,Jedis jedis ){
-		try{			
-			if(jsondata.get("authorization").toString() == "2"){
+		try{
+			if(jsondata.get("authorization").toString().equalsIgnoreCase("2")){
 				//销户
 				util.setV2PDU(cbatip,
 				"161",
 				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
 				new Integer32(4)
 				);
-				
-				//reload profile
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-						new Integer32(2)
-						);	
-				
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-						new Integer32(3)
-						);
 				return true;
 			}
 			//vlansts
