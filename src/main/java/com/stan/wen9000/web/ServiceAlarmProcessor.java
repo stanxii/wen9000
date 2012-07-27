@@ -128,13 +128,18 @@ public class ServiceAlarmProcessor {
 	}
 
 	
-	public static void servicestart(String message) throws Exception {
+	public static void servicestart(String message)  {
 
 		//	log.info(" [x] ServiceAlarmProcessor Received '" + message
 		//			+ "'");
 			
-		//	long start = System.currentTimeMillis();  			
-			dowork(message);					
+		//	long start = System.currentTimeMillis();
+		try{
+			dowork(message);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+								
 		//	long end = System.currentTimeMillis();  
 		//	log.info("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 			
@@ -144,7 +149,7 @@ public class ServiceAlarmProcessor {
 	
 
 	@SuppressWarnings("unchecked")
-	public static void dowork(String message) throws ParseException {
+	public static void dowork(String message){
 		
 		
 		
@@ -162,7 +167,15 @@ public class ServiceAlarmProcessor {
 		  };
 		                
 		  
-		Map<String, String> alarm = (Map<String, String>)parser.parse(message, containerFactory);
+		Map<String, String> alarm;
+		try {
+			alarm = (Map<String, String>)parser.parse(message, containerFactory);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			log.info("------>>>>>>>savelarm parse exc<<<<<<<<<----------");
+			return;
+		}
 		    
 		
 		
@@ -172,30 +185,7 @@ public class ServiceAlarmProcessor {
 		
 		int code = Integer.parseInt(alarmcode);
 		if (code == 200002) {
-//			HeartBean heart = new HeartBean();
-//			int index1 = 0;
-//			int index2 = 0;
-//			try {
-//				index1 = message.indexOf(";");
-//				heart.setCode(Integer.parseInt(message.substring(0, index1)));
-//
-//				index2 = message.indexOf(";", index1 + 1);
-//				heart.setCbatsys(message.substring(index1 + 1, index2));
-//
-//				index1 = index2;
-//				index2 = message.indexOf(";", index1 + 1);
-//				heart.setCnusys(message.substring(index1 + 1, index2));
-//
-//				index1 = index2;
-//				heart.setInfo(message.substring(index1 + 1));
-//
-//				doheart(heart);
-//				return;
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//				return;
-//			}
-//		
+
 		} else {
 			doalarm(alarm);			
 			savelarm(message, alarm);
@@ -219,23 +209,24 @@ public class ServiceAlarmProcessor {
 			log.info("------>>>>>>>savelarm ex1<<<<<<<<<----------");
 		}
 		
-		
-		//save alarm entity
-		Long alarmid = jedis.incr("global:alarmid");
-		String salarmid = String.valueOf(alarmid);
-		
-		String alarmkey = "alarmid:" + salarmid + ":entity";
-		jedis.hmset(alarmkey, alarm);
-		
-		//history alarm sorted sets score is timestamp
-		Double score = (double) System.currentTimeMillis();
-		jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
-		
+		try{
+			//save alarm entity
+			Long alarmid = jedis.incr("global:alarmid");
+			String salarmid = String.valueOf(alarmid);
+			
+			String alarmkey = "alarmid:" + salarmid + ":entity";
+			jedis.hmset(alarmkey, alarm);
+			
+			//history alarm sorted sets score is timestamp
+			Double score = (double) System.currentTimeMillis();
+			jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
+			
 
-		//publish to notify node.js a new alarm
-		jedis.publish("node.alarm.newalarm", message);
-		
-		
+			//publish to notify node.js a new alarm
+			jedis.publish("node.alarm.newalarm", message);
+		}catch(Exception e){
+			
+		}		
 		redisUtil.getJedisPool().returnResource(jedis);
 		
 	}
