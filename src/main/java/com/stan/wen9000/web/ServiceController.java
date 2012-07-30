@@ -2881,16 +2881,7 @@ public class ServiceController {
 
 	private static Boolean sendconfig(int proid,String cbatip, int cnuindex,Jedis jedis ){
 		String prokey = "profileid:"+proid+":entity";
-		try{
-			if(jedis.hget(prokey, "authorization").equalsIgnoreCase("2")){
-				//销户
-				util.setV2PDU(cbatip,
-				"161",
-				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-				new Integer32(4)
-				);
-				return true;
-			}
+		try{			
 			//vlansts
 		util.setV2PDU(cbatip,
 			"161",
@@ -3022,17 +3013,26 @@ public class ServiceController {
 				"161",
 				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
 				new Integer32(2)
-				);	
-		
-		util.setV2PDU(cbatip,
-				"161",
-				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-				new Integer32(3)
 				);
 		
+		if(jedis.hget(prokey, "authorization").equalsIgnoreCase("2")){
+			//销户
+			util.setV2PDU(cbatip,
+			"161",
+			new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+			new Integer32(4)
+			);
 			return true;
-		
-		
+		}else{
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+					new Integer32(3)
+					);
+			
+				return true;
+			
+		}
 		}catch(Exception e)
 		{
 			System.out.println("=============================>sendconfig error");
@@ -3190,15 +3190,6 @@ public class ServiceController {
 
 	private static Boolean Cnuconfig(JSONObject jsondata,String cbatip, int cnuindex,Jedis jedis ){
 		try{
-			if(jsondata.get("authorization").toString().equalsIgnoreCase("2")){
-				//销户
-				util.setV2PDU(cbatip,
-				"161",
-				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-				new Integer32(4)
-				);
-				return true;
-			}
 			//vlansts
 		util.setV2PDU(cbatip,
 			"161",
@@ -3332,13 +3323,24 @@ public class ServiceController {
 				new Integer32(2)
 				);	
 		
-		util.setV2PDU(cbatip,
-				"161",
-				new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
-				new Integer32(3)
-				);
-		
-		
+		if(jsondata.get("authorization").toString().equalsIgnoreCase("2")){
+			//销户
+			util.setV2PDU(cbatip,
+			"161",
+			new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+			new Integer32(4)
+			);
+			return true;
+		}else{
+			util.setV2PDU(cbatip,
+					"161",
+					new OID(new int[] {1,3,6,1,4,1,36186,8,1,1,13,cnuindex}), 
+					new Integer32(3)
+					);
+			
+				return true;
+			
+		}
 		}catch(Exception e)
 		{
 			System.out.println("=============================>Cnuconfig error");
@@ -3346,7 +3348,6 @@ public class ServiceController {
 			return false;
 		
 		}
-		return true;
 	}
 	
 	private static long mactolong(String macstring)

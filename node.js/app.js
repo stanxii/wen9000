@@ -38,7 +38,7 @@ app.configure(function(){
 //app.get('/', routes.index);
 
 app.get('/login', function (req, res) {
-	console.log("-----------------old user====>>>"+req.session.user);
+	//console.log("-----------------old user====>>>"+req.session.user);
 	
 	res.render('login.jade', { title: 'Wen9000网路管理系统---登录' });
 });
@@ -58,11 +58,6 @@ app.get('/102', function (req, res) {
 app.get('/validate', function (req, res) {
 	if ((req.session.user != null)&&((req.session.user != "undefined"))) {
 		//console.log("---------------------------------------->>>>>"+req.session.user);
-//		jedis.get('global:isupdating',function(error,result){
-//			if(result == "true"){
-//				res.redirect('/103');
-//			}
-//		});
 		jedis.exists('user:'+req.session.user, function(error, result) {
 		    if(result){
 		    	jedis.hget('user:'+req.session.user,"password", function(error, result) {
@@ -83,7 +78,19 @@ app.get('/validate', function (req, res) {
 
 app.get('/', function (req, res) {
 	if ((req.session.user != null)&&((req.session.user != "undefined"))) {
-		res.render('index', { title: 'Wen9000网络管理系统' });	
+		jedis.exists('user:'+req.session.user, function(error, result) {
+		    if(result){
+		    	jedis.hget('user:'+req.session.user,"password", function(error, result) {
+		    	    if(result == req.session.password){
+		    	    	res.render('index', { title: 'Wen9000网络管理系统' });
+		    	    }else{
+		    	    	res.redirect('/102');
+		    	    }
+		    	});
+		    }else{
+		    	res.redirect('/login');
+		    }
+		});
 	} else {
 		res.redirect('/login');
 	}
@@ -96,6 +103,7 @@ app.post('/login', function (req, res) {
 	var password = req.body.password;	
 	req.session.user = name;
 	req.session.password = password;
+	console.log("-----------------password>>>"+password);
 	res.redirect('/validate');
 });
 
