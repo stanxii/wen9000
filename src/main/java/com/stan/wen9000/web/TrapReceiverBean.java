@@ -1,6 +1,9 @@
 package com.stan.wen9000.web;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -14,12 +17,16 @@ import org.apache.log4j.Logger;
 import org.json.simple.JSONValue;
 import org.snmp4j.CommandResponder;
 import org.snmp4j.CommandResponderEvent;
+import org.snmp4j.CommunityTarget;
 import org.snmp4j.Snmp;
 import org.snmp4j.TransportMapping;
+import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.mp.MPv1;
 import org.snmp4j.mp.MPv2c;
+import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.smi.Address;
 import org.snmp4j.smi.GenericAddress;
+import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
@@ -38,7 +45,7 @@ public class TrapReceiverBean {
 
 	private static Snmp snmp = null;
 	private Address listenAddress;
-	
+	private static Snmp snmp_send = null;
 	
 	
 	private static Logger logger = Logger.getLogger(TrapReceiverBean.class);
@@ -53,11 +60,13 @@ public class TrapReceiverBean {
 		TrapReceiverBean.redisUtil = redisUtil;
 	}
 
-	
+	//hfc_client_udp  	    
+	private Address targetAddress = null;
 
 	public void start() {
 		logger.info("trapreceiver.start() action called, start trap receivering..........");
 
+		targetAddress = GenericAddress.parse("udp:127.0.0.1/2250");		
 		doWork();
 		
 	}
@@ -204,9 +213,50 @@ public class TrapReceiverBean {
 				//logger.info("heart receive------>>>"+hearthash.get("cbatsys").toString());
 				//String msgservice = JSONValue.toJSONString(hearthash);
 				parseHeartMsg(hearthash);
-			}else{
+			}else if((recVBs.size() == 3)||(recVBs.size() == 4)){
 				//hfc alarm
-				System.out.println("-------------------------->>>>>>>>len====="+recVBs.size());
+				Jedis jedis=null;
+				try {
+					jedis = redisUtil.getConnection();
+				}catch(Exception e){
+					e.printStackTrace();
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
+					return;
+				}
+				//W9000显示模式判断
+				if((jedis.get("global:displaymode")) != null){
+					if(!jedis.get("global:displaymode").equalsIgnoreCase("1")){
+						//不显示HFC设备
+						redisUtil.getJedisPool().returnResource(jedis);
+						return;
+					}
+				}
+				redisUtil.getJedisPool().returnResource(jedis);
+				// 设置 target    
+		        CommunityTarget target = new CommunityTarget();
+		        target.setCommunity(new OctetString("public"));
+
+		        target.setAddress(targetAddress);    
+		    
+		        // 通信不成功时的重试次数    
+		        target.setRetries(2);    
+		        // 超时时间    
+		        target.setTimeout(500);    
+		        // snmp版本    
+		        target.setVersion(SnmpConstants.version1);  		        
+
+		     // 向Agent发送PDU，并接收Response    
+		        try {
+		        	snmp_send = new Snmp(new DefaultUdpTransportMapping());
+					ResponseEvent respEvnt = snmp_send.send(event.getPDU(), target);
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}    
+				
+				System.out.println("-------------------------->>>>>>>>alrmlen====="+recVBs.size());
+				
 			}
 
 		}

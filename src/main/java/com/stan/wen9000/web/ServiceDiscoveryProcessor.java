@@ -332,7 +332,9 @@ public class ServiceDiscoveryProcessor  {
 		String logicalid =(String) jsonobj.get("logicalid");
 		String modelnumber =(String) jsonobj.get("modelnumber");
 		String serialnumber =(String) jsonobj.get("serialnumber");
-		String trapip =(String) jsonobj.get("trapip");
+		String trapip1 =(String) jsonobj.get("trapip1");
+		String trapip2 =(String) jsonobj.get("trapip2");
+		String trapip3 =(String) jsonobj.get("trapip3");
 		
 		String hfckey = "mac:" +  hfcmac.toLowerCase().trim() + ":deviceid";
 		
@@ -363,13 +365,15 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("ip", ip.toLowerCase().trim());
 		hfcentity.put("gateway", gateway.toLowerCase().trim());
 		hfcentity.put("active", "1");
-		hfcentity.put("lable", hfcmac.toLowerCase().trim());
+		hfcentity.put("lable", ip.toLowerCase().trim());
 		hfcentity.put("hfctype", hfctype.toLowerCase().trim());
 		hfcentity.put("version", version.toLowerCase().trim());
 		hfcentity.put("logicalid", logicalid.toLowerCase().trim());
 		hfcentity.put("modelnumber", modelnumber.toLowerCase().trim());
 		hfcentity.put("serialnumber", serialnumber.toLowerCase().trim());
-		hfcentity.put("trapip", trapip.toLowerCase().trim());
+		hfcentity.put("trapip1", trapip1.toLowerCase().trim());
+		hfcentity.put("trapip2", trapip2.toLowerCase().trim());
+		hfcentity.put("trapip3", trapip3.toLowerCase().trim());
 		
 		jedis.hmset(shfcentitykey, hfcentity);
 
@@ -478,7 +482,7 @@ public class ServiceDiscoveryProcessor  {
 		}else if(type == "hfc"){
 			String hfckey = "hfcid:"+devid+":entity";
 			json.put("mac", jedis.hget(hfckey,"mac"));
-			json.put("lable", jedis.hget(hfckey,"lable"));
+			json.put("lable", jedis.hget(hfckey,"ip"));
 			json.put("online", jedis.hget(hfckey,"active"));
 			json.put("ip", jedis.hget(hfckey,"ip"));
 			json.put("type", "hfc");

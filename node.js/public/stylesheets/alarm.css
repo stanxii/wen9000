@@ -38,7 +38,7 @@
 	list-style: none;  
     margin: 2px 0 0 -45px; 
     white-space:nowrap;
-	
+	clear:both;
 }
 
 .ralarm li {  

@@ -35,7 +35,7 @@
                         $( '<ul class="ralarmHead" style="width:100%">' +
                         		'<li style="width:80px;text-align:center"> 告警等级 </li>' +
                         		'<li style="width:200px;text-align:center"> 告警发生时间 </li>' +
-                                '<li style="width:150px;text-align:center">头端mac地址</li>' +
+                                '<li style="width:150px;text-align:center">MAC地址</li>' +
                                '<li style="width:110px;text-align:center">告警码</li>' +
                                '<li class="alarminfo" style="width:260px;text-align:center">告警详细信息</li>'+
 

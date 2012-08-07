@@ -357,7 +357,11 @@
     	 if(data == ""){
     		 //alert("获取数据失败！");
     	 }else{
-    		 
+    		 if(data.hfctype == "掺铒光纤放大器"){
+    			 $("#hfc_innertemp")[0].textContent = data.temp;
+    			 $("#hfc_ingonglv")[0].value = data.inputpower;
+    			 $("#hfc_gonglv")[0].value = data.outputpower;
+    		 }
     	 }
      }
       
@@ -445,10 +449,10 @@
 				node = $("#navtree").dynatree("getTree").getNodeByKey("hfcroot");
 				var img;
 				if(itemv.online == "1"){
-					img = "online.gif";
+					img = "cbaton.png";
 					node.data.online = "1";
 				}else{
-					img = "offline.png";
+					img = "cbatoff.png";
 					node.data.online = "0";
 				}
 				node.addChild({
@@ -808,7 +812,7 @@
 	   var style;
 	   hfcactive = true;
 	   //hfc实时参数获取定时器
-	   Hfcclock = setInterval(hfcinterval,5000);
+	   //Hfcclock = setInterval(hfcinterval,5000);
 	   
 	   if(jsondata.active == "在线"){
 		   active = "设备连接正常";
@@ -818,7 +822,7 @@
 		   style = "color:red";
 	   }
 	   $("#content").empty();
-	   if(jsondata.hfctype == "1310nm光发射机"){
+	   if(jsondata.hfctype == "掺铒光纤放大器"){
 		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
 				   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
@@ -831,9 +835,8 @@
 					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.hfctype+'</lable></td>'+
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
-							'<tr><td><lable>设备标识 : </lable></td><td><input id = "hfc_lable" value='+jsondata.lable+ '></input></td>'+
+							'<tr><td><lable>设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+
 							'<tr><td><lable>IP : </lable></td><td><input id = "hfc_ip" value='+jsondata.ip+ '></input></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp网关 : </lable></td><td><input id = "hfc_gateway" value='+jsondata.gateway+ '></input></td></tr>'+	
 						'</table>'+
 						'<br/><button id="btn_hbase" style="margin-left:300px">提交</button>'+
 					'</div>'+
@@ -847,7 +850,7 @@
 							'<option value="2">禁用</option>'+
 						'</select></td>'+	
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp激光器制冷电流 : </lable></td><td><lable id = "hfc_liu"></lable></td></tr>'+
-						'<tr><td><lable>激光器温度 : </lable></td><td><lable id = "hfc_jitemp"></lable></td>'+
+						'<tr><td><lable>输入光功率 : </lable></td><td><input id = "hfc_ingonglv" value="0"></input></td>'+
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><input id = "hfc_gonglv" value="0"></input></td></tr>'+
 						'<tr><td><lable>激光器偏置电流 : </lable></td><td><lable id = "hfc_biasliu"></lable></td>'+	
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp当前MGC衰减量 : </lable></td><td><input id = "hfc_mgc" value="0"></input></td></tr>'+
@@ -858,7 +861,9 @@
 				'</table>'+			
 					'</div>'+
 					'<div id="tabs-3">'+
-						'<lable>TrapIP : </lable></td><td><input id = "hfc_trapip" value='+jsondata.trapip+ '></input>'+
+						'<lable>Trap1IP : </lable></td><td><input id = "hfc_trap1ip" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "hfc_trap2ip" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "hfc_trap3ip" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
 	   }
@@ -898,10 +903,10 @@
 			'<div id="tabs-1">'+
 				'<table id="baseinfo"><tr><td><lable>mac :&nbsp &nbsp &nbsp &nbsp</lable><lable id="cnu_mac" style="margin-left:0px">'+ jsondata.mac+'</lable></td>'+		     	
 		     	'<td><lable>设备类型: '+jsondata.devicetype+'</lable></td></tr>'+
-		     	'<tr><td><lable>设备标识: </lable>&nbsp<input type="text" id="c_label" style="width:150px" value='+jsondata.label+'></input></td>'+
-				'<td><lable>地址: </lable><input type="text" id="c_address" style="width:150px" value='+jsondata.address+'></input></td>'+
-				'<td><lable>联系方式 : </lable><input type="text" id="c_contact" style="width:150px" value='+jsondata.contact+'></input></td></tr>'+
-				'<tr><td><lable>电话: &nbsp &nbsp &nbsp &nbsp</lable><input type="text" style="width:150px" id="c_phone" value='+jsondata.phone+'></input></td></tr>'+
+		     	'<tr><td><lable>设备标识: </lable>&nbsp<input type="text" id="c_label" style="width:150px" value="'+jsondata.label+'"></input></td>'+
+				'<td><lable>地址: </lable><input type="text" id="c_address" style="width:150px" value="'+jsondata.address+'"></input></td>'+
+				'<td><lable>联系方式 : </lable><input type="text" id="c_contact" style="width:150px" value="'+jsondata.contact+'"></input></td></tr>'+
+				'<tr><td><lable>电话: &nbsp &nbsp &nbsp &nbsp</lable><input type="text" style="width:150px" id="c_phone" value="'+jsondata.phone+'"></input></td></tr>'+
 				'</table><button id="btn_cbsave" style="margin-left:300px">修改</button>'+
 			'</div>'+
 			'<div id="tabs-2">'+
@@ -1010,8 +1015,8 @@
 	   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
 	   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td>'+
 	   		'<tr><td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
-			'<tr><td><lable>设备标识 : </lable></td><td><input type="text" id="label" value='+jsondata.label+'></input></td>'+
-			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp地址 : </lable></td><td><input type="text" id="address" value='+jsondata.address+'></input></td></tr>'+			
+			'<tr><td><lable>设备标识 : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
+			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp地址 : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
 			'<tr><td><lable>ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
 			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
 			'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						

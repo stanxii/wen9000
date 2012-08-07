@@ -254,9 +254,46 @@ public class ServiceController {
 			doGetFlag(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.PermissionChange")){
 			doPermissionChange(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.Viewmodechange")){
+			doViewmodeChange(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.Viewmodeget")){
+			doViewmodeGet(message);
 		}		
 
 
+	}
+	
+	private static void doViewmodeGet(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		String key = "global:displaymode";
+		String val = jedis.get(key);
+		jedis.publish("node.dis.getviewmode", val);
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doViewmodeChange(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		String key = "global:displaymode";
+		jedis.set(key, message.trim());
+		jedis.save();
+
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doPermissionChange(String message) throws ParseException{
@@ -292,6 +329,10 @@ public class ServiceController {
 		
 		String flag = jedis.hget("user:"+message.trim(),"flag");	
 		//log.info("------------------------->>>>>"+"flag:"+flag);
+		if(flag == ""){
+			redisUtil.getJedisPool().returnResource(jedis);
+			return;
+		}
 		jedis.publish("node.opt.getflag", flag);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
@@ -420,15 +461,31 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
+				
 		String id = jedis.get("mac:"+message+":deviceid");
 		String key = "hfcid:"+id+":entity";
-		String ip = jedis.hget("key", "ip");
-		//获取相关参数并返回
-		//TODO
-		
-		
-		jedis.publish("node.tree.hfcrealtime", "");
-		redisUtil.getJedisPool().returnResource(jedis);
+		String ip = jedis.hget(key, "ip");
+		String hfctype = jedis.hget("hfcid:"+id+":entity", "hfctype");		
+		if(hfctype.equalsIgnoreCase("光平台")){
+			
+		}else if(hfctype.equalsIgnoreCase("万隆8槽WOS2000")){
+			
+		}else if(hfctype.equalsIgnoreCase("万隆增强光开关")){
+			
+		}else if(hfctype.equalsIgnoreCase("掺铒光纤放大器")){
+			EDFA_Param(jedis,ip);
+		}else if(hfctype.equalsIgnoreCase("1310nm光发射机")){
+			
+		}else if(hfctype.equalsIgnoreCase("光工作站")){
+			
+		}else if(hfctype.equalsIgnoreCase("光接收机")){
+			
+		}else if(hfctype.equalsIgnoreCase("1550光发射机")){
+			
+		}else {
+			jedis.publish("node.tree.hfcrealtime", "");
+			redisUtil.getJedisPool().returnResource(jedis);
+		}		
 	}
 	
 	private static void doHfcBase(String message) throws ParseException{
@@ -499,10 +556,12 @@ public class ServiceController {
 		json.put("logicalid", jedis.hget(hfckey, "logicalid"));
 		json.put("modelnumber", jedis.hget(hfckey, "modelnumber"));
 		json.put("serialnumber", jedis.hget(hfckey, "serialnumber"));
-		jedis.publish("node.tree.hfcdetail", json.toJSONString());
+		json.put("trapip1", jedis.hget(hfckey, "trapip1"));
+		json.put("trapip2", jedis.hget(hfckey, "trapip2"));
+		json.put("trapip3", jedis.hget(hfckey, "trapip3"));
 		//发送hfc 电源信息和trap主机地址信息
 		//TODO
-		
+		jedis.publish("node.tree.hfcdetail", json.toJSONString());
 		redisUtil.getJedisPool().returnResource(jedis);
 
 	}
@@ -915,7 +974,10 @@ public class ServiceController {
 			JSONObject json = new JSONObject();
 			key = "alarmid:"+(id - i)+":entity";
 			if(jedis.hget(key, "alarmlevel") == null){
-				continue;
+				key = "hfcalarmid:"+(id - i)+":entity";
+				if(jedis.hget(key, "alarmlevel") == null){
+					continue;
+				}
 			}
 			json.put("alarmlevel", jedis.hget(key, "alarmlevel"));
 			json.put("salarmtime", jedis.hget(key, "salarmtime"));
@@ -2395,6 +2457,7 @@ public class ServiceController {
         		util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0}), gateway);
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), new Integer32(1));
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), new Integer32(1));
+    			jedis.hset(cbatkey, "active", "0");
     		}else{
     			//save
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), new Integer32(1));
@@ -2714,7 +2777,7 @@ public class ServiceController {
 	private static void hfctreeinit(Jedis jedis,JSONArray jsonResponseArray){
 		Set<String> hfclist = jedis.keys("hfcid:*:entity");
 		JSONObject hfchome = new JSONObject();
-    	if(hfclist.size()>0){    		
+    	if((jedis.get("global:displaymode"))!= null ){    		
     		hfchome.put((String)"title", (String)"HFC设备");
     		hfchome.put("key", "hfcroot");
     		hfchome.put("isFolder", "true");
@@ -3548,6 +3611,33 @@ public class ServiceController {
 		}
 		jedis.decr("global:historypage");
 		jedis.publish("node.historyalarm.gethistorynp", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void EDFA_Param(Jedis jedis,String ip){
+		JSONObject json = new JSONObject();
+		json.put("hfctype", "掺铒光纤放大器");
+		try{			
+			String temp = String.valueOf(util.gethfcINT32PDU(ip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,13,0})))+ "℃";
+			log.info("++++++++++++++++++++++++++++++++++++1111111");
+			String inputpower =  String.valueOf(util.gethfcINT32PDU(ip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,11,2,0})) * 0.1) + "dBm";
+			
+			String outputpower = String.valueOf(util.gethfcINT32PDU(ip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,11,3,0})) * 0.1) + "dBm";
+			int powercount = util.gethfcINT32PDU(ip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,11,5,0}));
+			for(int i = 1;i<=powercount; i++){
+				
+			}
+			log.info("++++++++++++++++++++++++++++++++++++22222");
+			
+			json.put("inputpower", inputpower);
+			json.put("outputpower", outputpower);
+			json.put("temprature", temp);
+			
+		}catch(Exception e){
+			log.info("++++++++++++++++++++++++++++++++++++error");
+			e.printStackTrace();
+		}
+		jedis.publish("node.tree.hfcrealtime", json.toJSONString());
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 }

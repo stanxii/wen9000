@@ -63,7 +63,7 @@ public class SnmpUtil {
 		try {					
 			idevicetype = getINT32PDU(host, port, new OID(new int[] {1,3,6,1,4,1,36186,8,4,8,0}));
 			
-			if(idevicetype >=1 && idevicetype <=11){
+			if(idevicetype >=1 && idevicetype <=24){
 				bstatus =  idevicetype;
 //				System.out
 //				.println("Snmping "
@@ -661,6 +661,78 @@ public class SnmpUtil {
 
 		return result;
 
+	}
+	
+	public int gethfcINT32PDU(String host, String port, OID oid)
+		throws IOException {
+		int result = -1;
+		try {
+		
+			Snmp snmp = new Snmp(new DefaultUdpTransportMapping());
+		
+			CommunityTarget target = new CommunityTarget();
+		
+			target.setCommunity(new OctetString("public"));// 
+		
+			target.setVersion(SnmpConstants.version1);// 
+		
+			target.setAddress(new UdpAddress(host + "/" + port));//
+		
+		
+		
+			target.setRetries(1); // 
+		
+			target.setTimeout(3000); //
+		
+			snmp.listen(); // 
+		
+			PDU request = new PDU(); // new request PDU
+		
+			// set pud type and set oid
+		
+			request.setType(PDU.GET); //
+		
+			// device type
+			request.add(new VariableBinding(oid));
+		
+			// System.out.println("request UDP:" + request);
+		
+			PDU response = null;
+		
+			ResponseEvent responseEvent = snmp.send(request, target); //
+											
+		
+		
+		
+			response = responseEvent.getResponse();
+		
+		
+		
+			if (response != null) {
+		
+				if (response.getErrorIndex() == response.noError
+						&& response.getErrorStatus() == response.noError) {
+		
+					VariableBinding recVB = (VariableBinding) response
+							.getVariableBindings().elementAt(0);
+		
+					result = recVB.getVariable().toInt();
+		
+				}
+			}
+		
+			snmp.close();
+		
+		} catch (IOException e) {
+		
+			// TODO Auto-generated catch block
+		
+			e.printStackTrace();
+		
+		}
+		
+		return result;
+	
 	}
 
 }

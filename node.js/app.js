@@ -191,7 +191,9 @@ app.get('/userManager', function( request, response ) {
 		response.redirect('/login');
 	}     
 });
-
+app.get('/viewmode', function( request, response ) {
+    response.render( 'viewmode.jade', { title: 'Wen9000网络管理系统---显示模式' } );
+});
 //app.listen(3000);
 var node = http.createServer(app).listen(3000);
 var sio = io.listen(node);
@@ -456,6 +458,8 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('getflag',data);       
     }else if(ch == 'node.opt.checkallcnusres') {
     	sio.sockets.emit('checkallcnusres',data);       
+    }else if(ch == 'node.dis.getviewmode') {
+    	sio.sockets.emit('Viewmodeshow',data);       
     }
 });
 
@@ -755,7 +759,16 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: PermissionChange==='+data);
 	  publish.publish('servicecontroller.PermissionChange', data);
   });
-  
+//显示模式修改
+  socket.on('Viewmodechange', function (data) {
+	  console.log('nodeserver: Viewmodechange==='+data);
+	  publish.publish('servicecontroller.Viewmodechange', data);
+  });
+//获取显示模式信息
+  socket.on('Viewmodeget', function (data) {
+	  console.log('nodeserver: Viewmodeget==='+data);
+	  publish.publish('servicecontroller.Viewmodeget', data);
+  });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
         socket.join(ch);

@@ -186,6 +186,8 @@ public class ServiceAlarmProcessor {
 		int code = Integer.parseInt(alarmcode);
 		if (code == 200002) {
 
+		} else if(code == 200940){
+			savehfcalarm(message, alarm);
 		} else {
 			doalarm(alarm);			
 			savelarm(message, alarm);
@@ -215,6 +217,40 @@ public class ServiceAlarmProcessor {
 			String salarmid = String.valueOf(alarmid);
 			
 			String alarmkey = "alarmid:" + salarmid + ":entity";
+			jedis.hmset(alarmkey, alarm);
+			
+			//history alarm sorted sets score is timestamp
+			Double score = (double) System.currentTimeMillis();
+			jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
+			
+
+			//publish to notify node.js a new alarm
+			jedis.publish("node.alarm.newalarm", message);
+		}catch(Exception e){
+			
+		}		
+		redisUtil.getJedisPool().returnResource(jedis);
+		
+	}
+	
+	public static void savehfcalarm(String message, Map<String, String> alarm) {
+		//presist alarm		
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();
+		
+		
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			log.info("------>>>>>>>savelarm ex1<<<<<<<<<----------");
+		}
+		
+		try{
+			//save alarm entity
+			Long alarmid = jedis.incr("global:alarmid");
+			String salarmid = String.valueOf(alarmid);
+			
+			String alarmkey = "hfcalarmid:" + salarmid + ":entity";
 			jedis.hmset(alarmkey, alarm);
 			
 			//history alarm sorted sets score is timestamp
@@ -260,7 +296,7 @@ public class ServiceAlarmProcessor {
 			}
 			
 			String result = (String)alarm.get("alarmvalue");			
-			String cbatmac = (String)alarm.get("cbatmac");			
+			String cbatmac = (String)alarm.get("mac");			
 			String cbatid = jedis.get("mac:" +  cbatmac + ":deviceid");						
 			String cbatkey = "cbatid:" + cbatid + ":entity";			
 			jedis.hset(cbatkey, "upgrade", result);	

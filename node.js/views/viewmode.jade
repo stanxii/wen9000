@@ -1,0 +1,15 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/viewmode.js')
+  h1
+    label  显示模式
+  div(style='margin-left:30px')
+    table
+      tr
+        td
+          label  显示模式选择：
+        td        
+          select(name='viewmode',id='viewmode')
+            option(value='1')  HFC+EOC
+            option(value='0')  EOC

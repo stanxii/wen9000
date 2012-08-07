@@ -322,7 +322,9 @@ public class WorkerDiscoveryProcessor{
 			String hfc_ModelNumber = "";
 			String hfc_SerialNumber = "";
 			String hfctype = "";
-			String trapip="";
+			String trapip1="";
+			String trapip2="";
+			String trapip3="";
 			
 			//相关参数
 			//String powername = "";
@@ -354,11 +356,19 @@ public class WorkerDiscoveryProcessor{
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.11"))
 		        {
 		        	hfctype = "掺铒光纤放大器";
+		        	trapip1 = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}));
+		        	trapip2 = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,2}));
+		        	trapip3 = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,3}));
+		        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}) );
+		        	logger.info("------trapip===="+trapip1+"---------->>>>"+trapip2);
+		        	//gateway = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,8888,1,5,0}) );
+		        	//powername = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,4,0}) );
+		        	//powervolate = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,2,0}) );
 		        }
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.6"))
 		        {
 		        	hfctype = "1310nm光发射机";
-		        	trapip = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,0,0}));
+		        	trapip1 = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}));
 		        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}) );
 		        	//gateway = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,8888,1,5,0}) );
 		        	//powername = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,4,0}) );
@@ -399,8 +409,9 @@ public class WorkerDiscoveryProcessor{
 			 paramhash.put("logicalid", hfc_LogicalID);
 			 paramhash.put("modelnumber", hfc_ModelNumber);
 			 paramhash.put("serialnumber", hfc_SerialNumber);
-			 paramhash.put("trapip", trapip);
-			 
+			 paramhash.put("trapip1", trapip1);
+			 paramhash.put("trapip2", trapip2);
+			 paramhash.put("trapip3", trapip3);
 			 msgservice = JSONValue.toJSONString(paramhash);
 			
 			sendToPersist(msgservice,jedis);
