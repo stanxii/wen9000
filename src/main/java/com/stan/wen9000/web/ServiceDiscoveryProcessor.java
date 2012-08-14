@@ -335,7 +335,15 @@ public class ServiceDiscoveryProcessor  {
 		String trapip1 =(String) jsonobj.get("trapip1");
 		String trapip2 =(String) jsonobj.get("trapip2");
 		String trapip3 =(String) jsonobj.get("trapip3");
-		
+		String power =(String) jsonobj.get("power");
+		String power_v =(String) jsonobj.get("power_v");
+		String bias_c1 =(String) jsonobj.get("bias_c1");
+		String bias_c2 =(String) jsonobj.get("bias_c2");
+		String ref_c1 =(String) jsonobj.get("ref_c1");
+		String ref_c2 =(String) jsonobj.get("ref_c2");
+		String pump_t1 =(String) jsonobj.get("pump_t1");
+		String pump_t2 =(String) jsonobj.get("pump_t2");
+
 		String hfckey = "mac:" +  hfcmac.toLowerCase().trim() + ":deviceid";
 		
 		Jedis jedis=null;
@@ -374,7 +382,14 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("trapip1", trapip1.toLowerCase().trim());
 		hfcentity.put("trapip2", trapip2.toLowerCase().trim());
 		hfcentity.put("trapip3", trapip3.toLowerCase().trim());
-		
+		hfcentity.put("power", power.trim());
+		hfcentity.put("power_v", power_v.trim());
+		hfcentity.put("bias_c1", bias_c1.trim());
+		hfcentity.put("bias_c2", bias_c2.trim());
+		hfcentity.put("ref_c1", ref_c1.trim());
+		hfcentity.put("ref_c2", ref_c2.trim());
+		hfcentity.put("pump_t1", pump_t1.trim());
+		hfcentity.put("pump_t2", pump_t2.trim());
 		jedis.hmset(shfcentitykey, hfcentity);
 
 		jedis.save();

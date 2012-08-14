@@ -17,3 +17,31 @@ script(type='text/javascript', src='/javascripts/menu.js')
   ul#myMenu(class='contextMenu')
     li.delete
       a(href='#delete')  删除
+  
+  #dialog-alarmThreshold(title='告警门限设置')
+    table
+      tr
+        td
+          lable  参数的HIHI门限
+        td
+          input(id='hihi',type='text',value='')  
+      tr
+        td
+          lable  参数的HI门限
+        td
+          input(id='hi',type='text',value='')
+      tr
+        td
+          lable  参数LO的门限
+        td
+          input(id='lo',type='text',value='')
+      tr  
+        td
+          lable  参数LOLO的门限
+        td
+          input(id='lolo',type='text',value='')
+      tr  
+        td
+          lable  参数的死区门限
+        td
+          input(id='deadb',type='text',value='')

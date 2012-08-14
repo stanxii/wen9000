@@ -325,7 +325,14 @@ public class WorkerDiscoveryProcessor{
 			String trapip1="";
 			String trapip2="";
 			String trapip3="";
-			
+			String power = "";
+			String power_v = "";
+			String bias_c1 = "";
+			String bias_c2 = "";
+			String ref_c1 = "";
+			String ref_c2 = "";
+			String pump_t1 = "";
+			String pump_t2 = "";
 			//相关参数
 			//String powername = "";
 			//String powervolate = "";
@@ -356,11 +363,20 @@ public class WorkerDiscoveryProcessor{
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.11"))
 		        {
 		        	hfctype = "掺铒光纤放大器";
-		        	trapip1 = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}));
-		        	trapip2 = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,2}));
-		        	trapip3 = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,3}));
+		        	//String temp = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,13,0})))+ "℃";
+		        	trapip1 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}));
+		        	trapip2 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,2}));
+		        	trapip3 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,3}));
 		        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}) );
-		        	logger.info("------trapip===="+trapip1+"---------->>>>"+trapip2);
+		        	power = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,7,1,4,1}) );
+		        	power_v = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,7,1,2,1}) ) * 0.1) + "V";
+		        	bias_c1 = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,2,1}) )*0.1) + "mA";
+		        	bias_c2 = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,2,2}) )*0.1) + "mA";
+		        	ref_c1 = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,3,1}) )*0.1) + "A";
+		        	ref_c2 = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,3,1}) )*0.1) + "A";
+		        	pump_t1 = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,4,1}) )*0.1).substring(0, 5) + "℃";
+		        	pump_t2 = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,4,2}) )*0.1).substring(0, 5) + "℃";
+		        	//logger.info("------trapip===="+trapip1+"---------->>>>"+trapip2);
 		        	//gateway = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,8888,1,5,0}) );
 		        	//powername = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,4,0}) );
 		        	//powervolate = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,2,0}) );
@@ -368,8 +384,8 @@ public class WorkerDiscoveryProcessor{
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.6"))
 		        {
 		        	hfctype = "1310nm光发射机";
-		        	trapip1 = util.gethfcStrPDU(currentip, "162", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}));
-		        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}) );
+		        	//trapip1 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}));
+		        	//hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}) );
 		        	//gateway = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,8888,1,5,0}) );
 		        	//powername = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,4,0}) );
 		        	//powervolate = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,8,1,2,0}) );
@@ -412,6 +428,14 @@ public class WorkerDiscoveryProcessor{
 			 paramhash.put("trapip1", trapip1);
 			 paramhash.put("trapip2", trapip2);
 			 paramhash.put("trapip3", trapip3);
+			 paramhash.put("power", power);
+			 paramhash.put("power_v", power_v);
+			 paramhash.put("bias_c1", bias_c1);
+			 paramhash.put("bias_c2", bias_c2);
+			 paramhash.put("ref_c1", ref_c1);
+			 paramhash.put("ref_c2", ref_c2);
+			 paramhash.put("pump_t1", pump_t1);
+			 paramhash.put("pump_t2", pump_t2);
 			 msgservice = JSONValue.toJSONString(paramhash);
 			
 			sendToPersist(msgservice,jedis);

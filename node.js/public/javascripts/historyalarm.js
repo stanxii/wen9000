@@ -89,8 +89,8 @@
 					{"sTitle" : "告警级别","sWidth":"8%"	},
 					{"sTitle" : "告警时间","sWidth":"12%"	},
 					{"sTitle" : "告警码","sWidth":"10%"		},
-					{"sTitle" : "头端MAC地址","sWidth":"15%"	},
-					{"sTitle" : "头端连续运行时间","sWidth":"15%"	},
+					{"sTitle" : "MAC地址","sWidth":"15%"	},
+					{"sTitle" : "连续运行时间","sWidth":"15%"	},
 					{"sTitle" : "告警信息","sWidth":"*"	}
 					]
 

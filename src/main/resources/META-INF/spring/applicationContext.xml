@@ -131,16 +131,13 @@
 	</bean>	
 	<bean id="serviceProcess" class="com.stan.wen9000.web.ServiceProcess" >
 		<property name="redisUtil" ref="redisUtil" />
-	</bean>
-	
+	</bean>	
 	<bean id="serviceAlarmProcessor" class="com.stan.wen9000.web.ServiceAlarmProcessor" >
 		<property name="redisUtil" ref="redisUtil" />
-	</bean>	
-	
+	</bean>		
 	<bean id="serviceHeartProcessor" class="com.stan.wen9000.web.ServiceHeartProcessor" >
 		<property name="redisUtil" ref="redisUtil" />
-	</bean>	
-	
+	</bean>		
 	<bean id="trapReceiverBean" class="com.stan.wen9000.web.TrapReceiverBean" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
@@ -162,6 +159,16 @@
 	<bean id="workerHfcAlarm" class="com.stan.wen9000.web.WorkerHfcAlarm" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
+	<bean id="serviceHfcRealtime" class="com.stan.wen9000.web.ServiceHfcRealtime" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
+	<bean id="workerHfcStatus" class="com.stan.wen9000.web.WorkerHfcStatus" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
+	<bean id="serviceHfcStatus" class="com.stan.wen9000.web.ServiceHfcStatus" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
+	
 	
 	<!-- 调度业务 -->
 	<bean id="jobDetail1" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -216,6 +223,21 @@
 	</bean>
 	<bean id="workerHfcAlarmjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 	 <property name="targetObject" ref="workerHfcAlarm" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	<bean id="serviceHfcRealtimejob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceHfcRealtime" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	<bean id="workerHfcStatusjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="workerHfcStatus" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	<bean id="serviceHfcStatusjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceHfcStatus" />
 	 <property name="targetMethod"  value="start"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
@@ -287,6 +309,24 @@
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="0" />
 	</bean>
+	<bean id="serviceHfcRealtimeTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceHfcRealtimejob" />
+	 <property name="startDelay" value="2000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />
+	</bean>
+	<bean id="workerHfcStatusTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="workerHfcStatusjob" />
+	 <property name="startDelay" value="10000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />
+	</bean>
+	<bean id="serviceHfcStatusTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceHfcStatusjob" />
+	 <property name="startDelay" value="2000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />
+	</bean>
 	
 	
 	<!-- 设置调度 -->
@@ -306,6 +346,9 @@
 	   <ref bean="serviceUpdateProcessTrigger" />
 	   <ref bean="serviceSendconfigTrigger" />
 	   <ref bean="workerHfcAlarmTrigger" />
+	   <ref bean="serviceHfcRealtimeTrigger" />
+	   <ref bean="workerHfcStatusTrigger" />
+	   <ref bean="serviceHfcStatusTrigger" />
 	  </list>
 	 </property>	 
 	</bean>

@@ -1,6 +1,7 @@
 package com.stan.wen9000.web;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -13,6 +14,7 @@ import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.smi.Address;
 import org.snmp4j.smi.Integer32;
+import org.snmp4j.smi.IpAddress;
 import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
@@ -446,6 +448,56 @@ public class SnmpUtil {
 
 	}
 
+	public boolean sethfcIpPDU(String host, String port, OID oid, InetAddress value) {
+		// /////////////////////////////////////
+
+		boolean bstatus = false;
+		try {
+
+			Snmp snmp = new Snmp(new DefaultUdpTransportMapping());
+
+			CommunityTarget target = new CommunityTarget();
+
+			target.setCommunity(new OctetString("public"));
+
+			target.setVersion(SnmpConstants.version1);
+
+			target.setAddress(new UdpAddress(host + "/" + port));
+
+
+			target.setRetries(1); 
+
+			target.setTimeout(3000); 
+
+			PDU response = null;// 
+
+			PDU request = new PDU();
+			request.add(new VariableBinding(oid, new IpAddress(value)));
+			request.setType(PDU.SET);
+
+			snmp.listen(); 
+
+			ResponseEvent responseEvent = snmp.send(request, target); 
+			if (response != null) {
+				if (response.getErrorIndex() == response.noError
+						&& response.getErrorStatus() == response.noError) {
+					bstatus = true;
+				}
+
+			}
+
+			snmp.close();
+		} catch (IOException e) {
+
+			// TODO Auto-generated catch block
+
+			e.printStackTrace();
+
+		}
+
+		return bstatus;
+
+	}
 
 	// /////////////////
 

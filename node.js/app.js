@@ -437,7 +437,7 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('ftpinfo',data);       
     }else if(ch == 'node.tree.hfcbase') {
     	sio.sockets.emit('hfcbase',data);       
-    }else if(ch == 'node.tree.hfcrealtime') {
+    }else if(ch == 'node.opt.hfcrealtime') {
     	if(data == ""){
     		sio.sockets.emit('hfcrealtime',data);
     	}else{
@@ -460,6 +460,9 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('checkallcnusres',data);       
     }else if(ch == 'node.dis.getviewmode') {
     	sio.sockets.emit('Viewmodeshow',data);       
+    }else if(ch == 'node.opt.hfcsubresponse') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('hfcsubresponse',data);       
     }
 });
 
@@ -768,6 +771,16 @@ sio.sockets.on('connection', function (socket) {
   socket.on('Viewmodeget', function (data) {
 	  console.log('nodeserver: Viewmodeget==='+data);
 	  publish.publish('servicecontroller.Viewmodeget', data);
+  });
+//HFC信息提交
+  socket.on('hfc_sub', function (data) {
+	  console.log('nodeserver: hfc_sub==='+data);
+	  publish.publish('servicecontroller.hfc_sub', data);
+  });
+//HFC信息提交
+  socket.on('hfc_alarmthresholdsub', function (data) {
+	  console.log('nodeserver: hfc_alarmthresholdsub==='+data);
+	  publish.publish('servicecontroller.hfc_alarmthresholdsub', data);
   });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
