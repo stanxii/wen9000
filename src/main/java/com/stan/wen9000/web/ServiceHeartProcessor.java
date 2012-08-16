@@ -180,9 +180,6 @@ public class ServiceHeartProcessor{
 	}
 	
 	private void doheartcbat(String cbatmac, String cbatip, String type) throws IOException {
-		
-		
-
 			Jedis jedis=null;
 			try {
 			 jedis = redisUtil.getConnection();

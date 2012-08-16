@@ -26,9 +26,11 @@
 		  $("#alarm").css("height","130px");
 		  $("#newAlarm").css("height","100x");
    	  }
-      
-      var user = getCookie("userName");
-      var flag = getCookie("flag");
+      //db = openDatabase("Userdb", "1", "Login users", 1000);
+      var user = localStorage.getItem('username');
+      var flag = localStorage.getItem('flag');
+      //var user = getCookie("userName");
+      //var flag = getCookie("flag");
       $("#loginuser")[0].text = user;
 
       
@@ -139,6 +141,23 @@
     		  socket.emit('cbatreset',mac);
     	  }
       });
+      
+      $("#btn_reboot").live('click', function() { 
+    	  if(flag == "3"){
+    		  alert("只读用户，权限不足！");
+    		  return;
+    	  }    	  
+		  if(isbusy != false){
+				return;
+  			} 
+  			isbusy = true;
+  			document.body.style.cursor = 'wait';
+		  var mac = document.getElementById('mac').textContent;
+		  //alert("恢复出厂设置");
+		  socket.emit('cbatreboot',mac);
+    	  
+      });
+      
       
 	 $("#btn_cnusub").live('click', function() { 
 		 if(flag == "3"){
@@ -311,6 +330,10 @@
 	 });
 	 
 	 $(".hfcbasesub").live('click', function(){
+		 if(flag == "3"){
+	   		  alert("只读用户，权限不足！");
+	   		  return;
+  	  		}
 		 if(isbusy != false){
 				return;
 			} 
@@ -533,18 +556,40 @@
 						icon:img
 					});
 				node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.mac);
-				node.addChild({
+				if(itemv.online == "1"){
+					node.addChild({
 						title: itemv.hp,
-						icon:"tp.png"
+						icon:"tp.png",
+						key:"hfctype"
 					});	
-				node.addChild({
-					title: itemv.mn,
-					icon:"tp.png"
-				});	
-				node.addChild({
-						title: itemv.id,
-						icon:"tp.png"
+					node.addChild({
+						title: itemv.mn,
+						icon:"tp.png",
+						key:"modelnumber"
 					});	
+					node.addChild({
+							title: itemv.id,
+							icon:"tp.png",
+							key:"logicalid"
+					});	
+				}else{
+					node.addChild({
+						title: itemv.hp,
+						icon:"disable.png",
+						key:"hfctype"
+					});	
+					node.addChild({
+						title: itemv.mn,
+						icon:"disable.png",
+						key:"modelnumber"
+					});	
+					node.addChild({
+							title: itemv.id,
+							icon:"disable.png",
+							key:"logicalid"
+					});	
+				}
+				
 				return;
 			}			  					
 			if(itemv.online == "1"){
@@ -554,19 +599,35 @@
 					$("#hfcsts_l")[0].textContent = "设备连接正常";
 					$("#hfcsts").css("color","#3ff83d");
 				}
-				
-				
+				node.render();
+				node = $("#navtree").dynatree("getTree").getNodeByKey("hfctype");
+				node.data.icon = "tp.png";
+				node.render();
+				node = $("#navtree").dynatree("getTree").getNodeByKey("modelnumber");
+				node.data.icon = "tp.png";
+				node.render();
+				node = $("#navtree").dynatree("getTree").getNodeByKey("logicalid");
+				node.data.icon = "tp.png";
+				node.render();
 			}else{
 				node.data.icon = "cbatoff.png";
 				node.data.online = "0";
 				if($("#hfcsts_l").length >0){
 					$("#hfcsts_l")[0].textContent = "设备失去连接";
 					$("#hfcsts").css("color","red");
-				}				
+				}	
+				node.render();
+				node = $("#navtree").dynatree("getTree").getNodeByKey("hfctype");
+				node.data.icon = "disable.png";
+				node.render();
+				node = $("#navtree").dynatree("getTree").getNodeByKey("modelnumber");
+				node.data.icon = "disable.png";
+				node.render();
+				node = $("#navtree").dynatree("getTree").getNodeByKey("logicalid");
+				node.data.icon = "disable.png";
+				node.render();
 			}
 		}		  					
-		node.render();
-
      }
      
      function fun_Hfcresponse(data){
@@ -611,6 +672,11 @@
     					width: 400,
     					buttons: {					
     						"确定": function() {
+    							if(flag == "3"){
+    								  $( "#dialog-alarmThreshold" ).dialog("close");
+    						   		  alert("只读用户，权限不足！");
+    						   		  return;
+    					   	  		}
     							var datastring = '{"type":"'+type+'","key":"'+data.key+'","cmd":"2","mac":"' + mac 
     							+'","ip":"'+ ip+'","hihi":"'+ $("#hihi")[0].value+'","hi":"'+ $("#hi")[0].value 
     							+'","lo":"'+ $("#lo")[0].value+'","lolo":"'+ $("#lolo")[0].value
@@ -999,8 +1065,8 @@
 	   $("#content").empty();
 	   if(jsondata.hfctype == "掺铒光纤放大器"){
 		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
-				   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
-				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
+				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 				   	'<br/><div id="configinfo"><ul>'+
 					'<li><a href="#tabs-1">基本信息</a></li>'+
 					'<li><a href="#tabs-2">相关参数</a></li>'+
@@ -1039,17 +1105,8 @@
 						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
-	   }
-	   	
-
-		if(jsondata.hfctype == "WEC-3501I C22"){
-			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
-		}else if(jsondata.hfctype == "WEC-3501I S220"){
-			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 S220.jpg";
-		}else{
-			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/Trans.jpg";
-		}
-	   
+	   }	   
+		document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/EDFA.jpg";	   
    }
 
    
@@ -1201,16 +1258,19 @@
 						'</select></td>'+
 			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
 			'</table></div><br/>'+
-			'<div><hr/><button id="btn_sub" style="margin-left:60px">提交</button><button id="btn_sync" style="margin-left:190px">刷新</button>'+
-			'<button id="btn_reset" style="margin-left:160px">恢复出厂设置</button>'+
+			'<div><hr/><button id="btn_sub" style="margin-left:60px">提交</button><button id="btn_sync" style="margin-left:140px">刷新</button>'+
+			'<button id="btn_reboot" style="margin-left:140px">设备重启</button>'+
+			'<button id="btn_reset" style="margin-left:140px">恢复出厂设置</button>'+
 			'</div>');
 
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
 			if(jsondata.devicetype == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicetype == "WEC-3501I S220"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501 S220.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK_C22"){
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I S220.jpg";
+			}else if(jsondata.devicetype == "WEC9720EK C22"){
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
+			}else if(jsondata.devicetype == "WEC9720EK E31"){
 				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
 			}
    }

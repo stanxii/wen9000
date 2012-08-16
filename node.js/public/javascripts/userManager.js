@@ -5,7 +5,7 @@
 	$(function(){
 		 socket = io.connect('http://localhost:3000');
 		 
-		 username = getCookie("userName");
+		 username = localStorage.getItem('username');//getCookie("userName");
 		 
 		 socket.emit('userinfo',username);
 		 
@@ -215,7 +215,7 @@
 			socket.emit('userlist',"");			
 			
 		}else if(data.flag == "0"){
-			//一般用户
+			//超级管理员
 			$("#usercontent").append('<h3>您好'+username+'!,您是超级管理员！</h3>'+
 					'<p style="margin-left:30px">超级管理员的权限除了能对网管系统的正常使用外，还能对其它所有用户进行管理操作,'+
 					'例如可以删除一般用户，添加新用户等。<br/>如需修改您的登录密码请点击<button id="btn_modify">修改密码</button>.<br/>'+

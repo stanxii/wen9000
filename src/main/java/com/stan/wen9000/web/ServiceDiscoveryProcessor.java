@@ -271,6 +271,30 @@ public class ServiceDiscoveryProcessor  {
 	    	case 6:
 	    		json.put("devicetype", "WEC-3501I S60");
 	    		break;
+	    	case 20:
+	    		json.put("devicetype", "WEC9720EK C22");
+        		break;
+        	case 21:
+        		json.put("devicetype", "WEC9720EK E31");
+        		break;
+        	case 22:
+        		json.put("devicetype", "WEC9720EK Q31");
+        		break;
+        	case 23:
+        		json.put("devicetype", "WEC9720EK S220");
+        		break;
+        	case 24:
+        		json.put("devicetype", "WEC9720EK SD220");
+        		break;
+        	case 36:
+        		json.put("devicetype", "WEC701 M0");
+        		break;
+        	case 40:
+        		json.put("devicetype", "WEC701 C2");
+        		break;
+        	case 41:
+        		json.put("devicetype", "WEC701 C4");
+        		break;
 	    	default:
 	    		json.put("devicetype", "Unknown");
 	    		break;

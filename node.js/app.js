@@ -697,6 +697,11 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: cbatreset==='+data);
 	  publish.publish('servicecontroller.opt.cbatreset', data);
   });
+//头端重启
+  socket.on('cbatreboot', function (data) {
+	  console.log('nodeserver: cbatreboot==='+data);
+	  publish.publish('servicecontroller.opt.cbatreboot', data);
+  });
 //FTP信息
   socket.on('opt.ftpinfo', function (data) {
 	  console.log('nodeserver: opt.ftpinfo==='+data);
