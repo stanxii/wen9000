@@ -359,8 +359,10 @@ public class ServiceDiscoveryProcessor  {
 		String trapip1 =(String) jsonobj.get("trapip1");
 		String trapip2 =(String) jsonobj.get("trapip2");
 		String trapip3 =(String) jsonobj.get("trapip3");
-		String power =(String) jsonobj.get("power");
-		String power_v =(String) jsonobj.get("power_v");
+		String power1 =(String) jsonobj.get("power1");
+		String power_v1 =(String) jsonobj.get("power_v1");
+		String power2 =(String) jsonobj.get("power2");
+		String power_v2 =(String) jsonobj.get("power_v2");
 		String bias_c1 =(String) jsonobj.get("bias_c1");
 		String bias_c2 =(String) jsonobj.get("bias_c2");
 		String ref_c1 =(String) jsonobj.get("ref_c1");
@@ -406,8 +408,10 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("trapip1", trapip1.toLowerCase().trim());
 		hfcentity.put("trapip2", trapip2.toLowerCase().trim());
 		hfcentity.put("trapip3", trapip3.toLowerCase().trim());
-		hfcentity.put("power", power.trim());
-		hfcentity.put("power_v", power_v.trim());
+		hfcentity.put("power1", power1.trim());
+		hfcentity.put("power_v1", power_v1.trim());
+		hfcentity.put("power2", power2.trim());
+		hfcentity.put("power_v2", power_v2.trim());
 		hfcentity.put("bias_c1", bias_c1.trim());
 		hfcentity.put("bias_c2", bias_c2.trim());
 		hfcentity.put("ref_c1", ref_c1.trim());

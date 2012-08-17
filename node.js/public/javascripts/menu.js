@@ -3,6 +3,7 @@
 	var isbusy = false;
 	var hfcactive = false;
 	var Hfcclock;
+	var flag;
   $(function() {
 	//根据屏幕分辨率更改页面布局
 //	  var ht1 = document.body.offsetHeight;
@@ -28,7 +29,7 @@
    	  }
       //db = openDatabase("Userdb", "1", "Login users", 1000);
       var user = localStorage.getItem('username');
-      var flag = localStorage.getItem('flag');
+      flag = localStorage.getItem('flag');
       //var user = getCookie("userName");
       //var flag = getCookie("flag");
       $("#loginuser")[0].text = user;
@@ -62,7 +63,7 @@
 			isbusy = true;
 			document.body.style.cursor = 'wait';
     	  var hfcmac = document.getElementById('hfc_mac').textContent;
-    	  var hfcip = document.getElementById('hfc_ip').value;
+    	  var hfcip = document.getElementById('hfc_ip').textContent;
     	  var hfclable = document.getElementById('hfc_lable').value;
     	  var datastring = '{"hfcip":"'+hfcip+'","hfclable":"'+hfclable+'","hfcmac":"'+hfcmac+'"}';
     	  socket.emit('hfc_baseinfo',datastring);
@@ -355,7 +356,7 @@
 				value = "";
 				name = "hfcreboot";
 			}
-			var ip = document.getElementById('hfc_ip').value;
+			var ip = document.getElementById('hfc_ip').textContent;
 			var mac = document.getElementById('hfc_mac').textContent;
 			
 			var datastring = '{"code":"1","key":"'+name+'","val":"' + value + '","mac":"' + mac +'","ip":"'+ ip +'"}';
@@ -364,6 +365,12 @@
 	 });
 	 
 	 $(".hfcalarmthreshold").live('dblclick', function(){
+		 var mac = document.getElementById('hfc_mac').textContent;
+		 var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
+		 if(node.data.online == "0"){
+			 alert("设备不在线！");
+			 return;
+		 }
 		 if(isbusy != false){
 				return;
 			} 
@@ -371,7 +378,7 @@
 			document.body.style.cursor = 'wait';
 			var key = $(this)[0].id;
 			var type = document.getElementById('hfctype').textContent;
-			var ip = document.getElementById('hfc_ip').value;
+			var ip = document.getElementById('hfc_ip').textContent;
 			var mac = document.getElementById('hfc_mac').textContent;
 			
 			var datastring = '{"type":"'+type+'","key":"'+key+'","cmd":"1","mac":"' + mac +'","ip":"'+ ip +'"}';
@@ -427,7 +434,8 @@
     		 //alert("获取数据失败！");
     	 }else{
     		 if(data.hfctype == "掺铒光纤放大器"){
-    			 $("#hfc_powerv")[0].textContent = data.power_v;
+    			 $("#hfc_powerv1")[0].textContent = data.power_v1;
+    			 $("#hfc_powerv2")[0].textContent = data.power_v2;
     			 $("#hfc_innertemp")[0].textContent = data.temp;
     			 $("#hfc_ingonglv")[0].textContent = data.inpower;
     			 $("#hfc_gonglv")[0].textContent = data.outpower;
@@ -660,7 +668,7 @@
     			 $("#deadb")[0].value = data.DeadBOid;
 
     			 var type = document.getElementById('hfctype').textContent;
-    			 var ip = document.getElementById('hfc_ip').value;
+    			 var ip = document.getElementById('hfc_ip').textContent;
     			 var mac = document.getElementById('hfc_mac').textContent;
     			 $("#dialog-alarmThreshold").dialog({
     					autoOpen: false,
@@ -1076,15 +1084,17 @@
 					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
-							'<tr><td><lable>设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+
-							'<tr><td><lable>IP : </lable></td><td><input id = "hfc_ip" value='+jsondata.ip+ '></input></td>'+
+							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+							
 						'</table>'+
-						'<br/><button id="btn_hbase" style="margin-left:300px">提交</button><button style="margin-left:100px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
 					'</div>'+
 					'<div id="tabs-2">'+
 						'<table>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv" class="hfcalarmthreshold">'+jsondata.power_v+'</lable></td></tr>'+
+				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
+				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power2+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
 						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold"></lable></td>'+
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><lable id = "hfc_gonglv" class="hfcalarmthreshold"></input></td></tr>'+
 						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp"></lable></td></tr>'+

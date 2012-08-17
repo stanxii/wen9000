@@ -71,23 +71,25 @@ public class ServiceHfcRealtime {
 						}
 						if(jedis.hget(key, "hfctype").equalsIgnoreCase("掺铒光纤放大器")){
 							int val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,2,0}) );
-							json.put("inpower",  val/10 + "."+val%10 + "dBm");
+							json.put("inpower",  val/10 + "."+Math.abs(val%10) + "dBm");
 							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,3,0}) );
-							json.put("outpower",  val/10 + "."+val%10 + "dBm");
+							json.put("outpower",  val/10 + "."+Math.abs(val%10) + "dBm");
 							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,7,1,2,1}) );
-							json.put("power_v",  val/10 + "."+val%10 + "V");
+							json.put("power_v1",  val/10 + "."+Math.abs(val%10) + "V");
+							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,7,1,2,2}) );
+							json.put("power_v2",  val/10 + "."+Math.abs(val%10) + "V");
 							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,2,1}) );
-							json.put("bias_c1",  val/10 + "."+val%10 + "mA");
+							json.put("bias_c1",  val/10 + "."+Math.abs(val%10) + "mA");
 							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,2,2}) );
-							json.put("bias_c2",  val/10 + "."+val%10 + "mA");
+							json.put("bias_c2",  val/10 + "."+Math.abs(val%10) + "mA");
 							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,3,1}) );
-							json.put("ref_c1",  val/10 + "."+val%10 + "A");
+							json.put("ref_c1",  val/10 + "."+Math.abs(val%10) + "A");
 							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,3,2}) );
-							json.put("ref_c2",  val/10 + "."+val%10 + "A");
+							json.put("ref_c2",  val/10 + "."+Math.abs(val%10) + "A");
 							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,4,1}) );
-							json.put("pump_t1", val/10 + "."+val%10 + "℃");
+							json.put("pump_t1", val/10 + "."+Math.abs(val%10) + "℃");
 							val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,4,2}) );							
-							json.put("pump_t2", val/10 + "."+val%10 + "℃");
+							json.put("pump_t2", val/10 + "."+Math.abs(val%10) + "℃");
 							json.put("temp", util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,13,0}) ) + "℃");
 						}
 						jedis.publish("node.opt.hfcrealtime", json.toJSONString());

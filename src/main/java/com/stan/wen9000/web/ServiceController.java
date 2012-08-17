@@ -596,23 +596,23 @@ public class ServiceController {
 		//save		
 		jedis.hset(key, "lable", lable);
 		//log.info("----------->>key===="+key+"------------------->>>ip==="+jedis.hget(key, "ip"));
-		if(!jedis.hget(key, "ip").equalsIgnoreCase(ip)){			
-			String oid = null;
-			try {
-				oid = util.gethfcStrPDU(jedis.hget(key, "ip"), "161", new OID(new int[] { 1, 3, 6, 1,
-						2, 1, 1, 2, 0 }));
-				if ((oid != null) && (oid != "")) {
-					jedis.publish("node.tree.hfcbase", "");
-					redisUtil.getJedisPool().returnBrokenResource(jedis);
-					return;
-				}else{
-					util.sethfcIpPDU(jedis.hget(key, "ip"), "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,9,0}), InetAddress.getByName(ip));
-					jedis.hset(key, "ip", ip);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+//		if(!jedis.hget(key, "ip").equalsIgnoreCase(ip)){			
+//			String oid = null;
+//			try {
+//				oid = util.gethfcStrPDU(jedis.hget(key, "ip"), "161", new OID(new int[] { 1, 3, 6, 1,
+//						2, 1, 1, 2, 0 }));
+//				if ((oid != null) && (oid != "")) {
+//					jedis.publish("node.tree.hfcbase", "");
+//					redisUtil.getJedisPool().returnBrokenResource(jedis);
+//					return;
+//				}else{
+//					util.sethfcIpPDU(jedis.hget(key, "ip"), "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,9,0}), InetAddress.getByName(ip));
+//					jedis.hset(key, "ip", ip);
+//				}
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
 		jedis.save();
 		jedis.publish("node.tree.hfcbase", "ok");
 		redisUtil.getJedisPool().returnResource(jedis);
@@ -662,8 +662,10 @@ public class ServiceController {
 		json.put("serialnumber", jedis.hget(hfckey, "serialnumber"));
 		
 		if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("掺铒光纤放大器")){			
-			json.put("power_v", jedis.hget(hfckey, "power_v"));
-			json.put("power", jedis.hget(hfckey, "power"));
+			json.put("power_v1", jedis.hget(hfckey, "power_v1"));
+			json.put("power1", jedis.hget(hfckey, "power1"));
+			json.put("power_v2", jedis.hget(hfckey, "power_v2"));
+			json.put("power2", jedis.hget(hfckey, "power2"));
 			json.put("bias_c1", jedis.hget(hfckey, "bias_c1"));
 			json.put("bias_c2", jedis.hget(hfckey, "bias_c2"));
 			json.put("ref_c1", jedis.hget(hfckey, "ref_c1"));
@@ -3831,10 +3833,12 @@ public class ServiceController {
 		OID LOOid = null;
 		OID HIOid = null;
 		OID LOLOOid = null;
-		if(key.equalsIgnoreCase("hfc_powerv")){
+		if(key.equalsIgnoreCase("hfc_powerv1")){
 			ParamMibOID = ".1.3.6.1.4.1.17409.1.11.7.1.2.1";
-			extraoid = ".13" +	ParamMibOID;
-			DeadBOid = new OID(DeadBOidStr + extraoid);				
+			extraoid = ".13" +	ParamMibOID;			
+		}else if(key.equalsIgnoreCase("hfc_powerv2")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.11.7.1.2.2";
+			extraoid = ".13" +	ParamMibOID;				
 		}else if(key.equalsIgnoreCase("hfc_ingonglv")){
 			ParamMibOID = ".1.3.6.1.4.1.17409.1.11.3.0";
 			extraoid = ".11" +	ParamMibOID;				
@@ -3933,8 +3937,11 @@ public class ServiceController {
 		OID LOOid = null;
 		OID HIOid = null;
 		OID LOLOOid = null;
-		if(key.equalsIgnoreCase("hfc_powerv")){
+		if(key.equalsIgnoreCase("hfc_powerv1")){
 			ParamMibOID = ".1.3.6.1.4.1.17409.1.11.7.1.2.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_powerv2")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.11.7.1.2.2";
 			extraoid = ".13" +	ParamMibOID;				
 		}else if(key.equalsIgnoreCase("hfc_ingonglv")){
 			ParamMibOID = ".1.3.6.1.4.1.17409.1.11.3.0";
@@ -3972,11 +3979,11 @@ public class ServiceController {
 			int vlolo = util.gethfcINT32PDU(ip, "161", LOLOOid);
 			int vlo = util.gethfcINT32PDU(ip, "161", LOOid);
 			int deadb = util.gethfcINT32PDU(ip, "161", DeadBOid);
-			json.put("DeadBOid", deadb/10+"."+deadb%10);
-			json.put("HIHIOid", vhihi/10+"."+vhihi%10);
-			json.put("HIOid", vhi/10+"."+vhi%10);
-			json.put("LOOid", vlo/10+"."+vlo%10);
-			json.put("LOLOOid", vlolo/10+"."+vlolo%10);						
+			json.put("DeadBOid", deadb/10+"."+Math.abs(deadb%10));
+			json.put("HIHIOid", vhihi/10+"."+Math.abs(vhihi%10));
+			json.put("HIOid", vhi/10+"."+Math.abs(vhi%10));
+			json.put("LOOid", vlo/10+"."+Math.abs(vlo%10));
+			json.put("LOLOOid", vlolo/10+"."+Math.abs(vlolo%10));						
 
 		}catch(Exception e){
 			e.printStackTrace();
