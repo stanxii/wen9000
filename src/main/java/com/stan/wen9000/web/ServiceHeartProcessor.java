@@ -320,6 +320,8 @@ public class ServiceHeartProcessor{
 				 hash.put("trapserverip", trapserverip);
 				 hash.put("netmask", netmask);
 				 hash.put("gateway", gateway);
+				 hash.put("dns", "192.168.223.1");
+				 hash.put("telnet", "300");
 			}catch(Exception e){
 				
 			}

@@ -672,6 +672,26 @@ public class ServiceController {
 			json.put("ref_c2", jedis.hget(hfckey, "ref_c2"));
 			json.put("pump_t1", jedis.hget(hfckey, "pump_t1"));
 			json.put("pump_t2", jedis.hget(hfckey, "pump_t2"));
+		}else if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("1310nm光发射机")){
+			json.put("power_v1", jedis.hget(hfckey, "power_v1"));
+			json.put("power1", jedis.hget(hfckey, "power1"));
+			json.put("power_v2", jedis.hget(hfckey, "power_v2"));
+			json.put("power2", jedis.hget(hfckey, "power2"));
+			json.put("power_v3", jedis.hget(hfckey, "power_v3"));
+			json.put("power3", jedis.hget(hfckey, "power3"));
+			json.put("channelnum", jedis.hget(hfckey, "channelnum"));
+			json.put("wavelength", jedis.hget(hfckey, "wavelength"));
+			json.put("rfattrange", jedis.hget(hfckey, "rfattrange"));
+			json.put("lasertype", jedis.hget(hfckey, "lasertype"));
+			json.put("outputpower", jedis.hget(hfckey, "outputpower"));
+			json.put("agccontrol", jedis.hget(hfckey, "agccontrol"));			
+			json.put("lasercurrent", jedis.hget(hfckey, "lasercurrent"));
+			json.put("temp", jedis.hget(hfckey, "temp"));
+			json.put("teccurrent", jedis.hget(hfckey, "teccurrent"));
+			json.put("drivelevel", jedis.hget(hfckey, "drivelevel"));
+			json.put("mgc", jedis.hget(hfckey, "mgc"));
+			json.put("agc", jedis.hget(hfckey, "agc"));
+			json.put("innertemp", jedis.hget(hfckey, "innertemp"));
 		}
 		
 
@@ -2574,6 +2594,8 @@ public class ServiceController {
     	String trap_port = jsondata.get("trap_port").toString();
     	String netmask = jsondata.get("netmask").toString();
     	String gateway = jsondata.get("gateway").toString();
+    	String dns = jsondata.get("dns").toString();
+    	String telnet = jsondata.get("telnet").toString();
     	//log.info("gateway::::::::::"+ gateway);
     	//获取CBAT ID 
 		String cbatid = jedis.get("mac:"+mac+":deviceid");
@@ -2644,6 +2666,8 @@ public class ServiceController {
         	jedis.hset(cbatinfokey, "mvlanid", mvlanid);
         	jedis.hset(cbatinfokey, "trapserverip", trapserver);
         	jedis.hset(cbatinfokey, "agentport", trap_port);
+        	jedis.hset(cbatinfokey, "dns", dns);
+        	jedis.hset(cbatinfokey, "telnet", telnet);
         	jedis.save();
     	}catch(Exception e){
     		//e.printStackTrace();
@@ -2823,6 +2847,8 @@ public class ServiceController {
 		cbatjson.put("appver", jedis.hget(cbatinfokey, "appver"));
 		cbatjson.put("mvlanenable", jedis.hget(cbatinfokey, "mvlanenable"));
 		cbatjson.put("mvlanid", jedis.hget(cbatinfokey, "mvlanid"));
+		cbatjson.put("dns", jedis.hget(cbatinfokey, "dns"));
+		cbatjson.put("telnet", jedis.hget(cbatinfokey, "telnet"));
 		if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1") ){
 			//设备在线，实时获得设备信息
 			cbatjson.put("active", "在线");			

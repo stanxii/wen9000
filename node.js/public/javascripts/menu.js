@@ -253,6 +253,8 @@
 			var trap_port = document.getElementById('trap_port').value;
 			var netmask = document.getElementById('netmask').value;
 			var gateway = document.getElementById('gateway').value;
+			var dns = document.getElementById('dns').value;
+			var telnet = document.getElementById('telnet_timeout').value;
 			var exp=/^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/; 
 			var reg = ip.match(exp); 
 			if(reg==null) 
@@ -289,6 +291,14 @@
 				isbusy = false;
 				return;
 			}
+			reg = dns.match(exp);
+			if(reg==null) 
+			{ 
+				alert("DNS不合法！"); 
+				document.body.style.cursor = 'default';
+				isbusy = false;
+				return;
+			}
 			if(isNaN(trap_port)||(trap_port>65535)||(trap_port<0)){
 				document.body.style.cursor = 'default';
 				isbusy = false;
@@ -309,7 +319,7 @@
 			}
 			var datastring = '{"mac":"'+mac+'","ip":"'+ip+'","label":"'+label+'","address":"'+address+'","mvlanenable":"'+mvlanenable
 			+'","mvlanid":"'+mvlanid+'","trapserver":"'+trapserver+'","trap_port":"'+trap_port+'","netmask":"'+netmask+'","gateway":"'
-			+gateway+'"}';
+			+gateway+'","dns":"'+dns+'","telnet":"'+telnet+"}';
 			
 			var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
 			node.data.title = label;
@@ -445,6 +455,23 @@
     			 $("#hfc_bias_c2")[0].textContent = data.bias_c2;
     			 $("#hfc_ref_c2")[0].textContent = data.ref_c2;
     			 $("#hfc_pump_t2")[0].textContent = data.pump_t2;
+    		 }else if(data.hfctype == "1310nm光发射机"){
+    			 $("#hfc_powerv1")[0].textContent = data.power_v1;
+    			 $("#hfc_powerv2")[0].textContent = data.power_v2;
+    			 $("#hfc_powerv3")[0].textContent = data.power_v3;
+    			 $("#hfc_drivelevel")[0].textContent = data.drivelevel;
+    			 $("#hfc_rfattrange")[0].textContent = data.rfattrange;
+    			 $("#hfc_outputpower")[0].textContent = data.outputpower;
+    			 $("#hfc_lasercurrent")[0].textContent = data.lasercurrent;
+    			 $("#hfc_temp")[0].textContent = data.temp;
+    			 $("#hfc_teccurrent")[0].textContent = data.teccurrent;
+    			 $("#hfc_innertemp")[0].textContent = data.innertemp;
+    			 var xx = $("#hfcagccontrol");
+    			 if(data.agccontrol == "1"){
+    				 $("#hfcagccontrol")[0].textContent = "当前状态:AGC";
+    			 }else{
+    				 $("#hfcagccontrol")[0].textContent = "当前状态:MGC";
+    			 }
     		 }
     	 }
      }
@@ -1115,8 +1142,61 @@
 						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
+	   }else if(jsondata.hfctype == "1310nm光发射机"){
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
+				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+				   	'<br/><div id="configinfo"><ul>'+
+					'<li><a href="#tabs-1">基本信息</a></li>'+
+					'<li><a href="#tabs-2">相关参数</a></li>'+
+					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<div id="tabs-1">'+
+						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+							
+						'</table>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+					'</div>'+
+					'<div id="tabs-2">'+
+						'<table>'+
+				   		'<tr><td><lable>电源名称 : </lable></td><td><lable>'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
+				   		'<tr><td><lable>电源名称 : </lable></td><td><lable>'+jsondata.power2+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
+				   		'<tr><td><lable>电源名称 : </lable></td><td><lable>'+jsondata.power3+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv3" class="hfcalarmthreshold">'+jsondata.power_v3+'</lable></td></tr>'+
+						'<tr><td><lable>电视信号频道数 : </lable></td><td><input id = "hfc_channelnum" value ="'+jsondata.channelnum +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp激光器激励电平 : </lable></td><td><lable id = "hfc_drivelevel" class="hfcalarmthreshold">'+jsondata.drivelevel+'</lable></td></tr>'+
+						'<tr><td><lable>激光器波长(nm) : </lable></td><td><lable id = "hfc_wavelength">'+jsondata.wavelength+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp射频信号衰减量范围 : </lable></td><td><lable id = "hfc_rfattrange" class="hfcalarmthreshold">'+jsondata.rfattrange+'</lable></td></tr>'+
+						'<tr><td><lable>激光器类型 : </lable></td><td><lable id = "hfc_lasertype">'+jsondata.lasertype+'</lable></td>'+	
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><lable id = "hfc_outputpower" class="hfcalarmthreshold">'+jsondata.outputpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp激光器偏置电流 : </lable></td><td><lable id = "hfc_lasercurrent" class="hfcalarmthreshold">'+jsondata.lasercurrent+'</lable></td></tr>'+
+						'<tr><td><lable>AGC控制使能 : </lable></td><td><button id = "hfcagccontrol"></button></td>'+	
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp激光器温度 : </lable></td><td><lable id = "hfc_temp" class="hfcalarmthreshold">'+jsondata.temp+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前MGC衰减量 : </lable></td><td><lable id = "hf_cmgc" class="hfcset">'+jsondata.mgc+'</lable></td></tr>'+	
+						'<tr><lable>激光器制冷电流 : </lable></td><td><lable id = "hfc_teccurrent" class="hfcalarmthreshold">'+jsondata.teccurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前AGC偏移量 : </lable></td><td><lable id = "hfc_agc" class="hfcset">'+jsondata.agc+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+	
+						'</table>'+			
+					'</div>'+
+					'<div id="tabs-3">'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+					'</div>'+
+					'</div>');
 	   }	   
-		document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/EDFA.jpg";	   
+		document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/Trans.jpg";
+		if(jsondata.agccontrol=="1"){
+			document.getElementById('hfcagccontrol').textContent = "当前状态:AGC";
+		}else{
+			document.getElementById('hfcagccontrol').textContent = "当前状态:MGC";
+		}
+		
    }
 
    
@@ -1267,6 +1347,8 @@
 							'<option value="2">禁用</option>'+
 						'</select></td>'+
 			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
+			'<tr><td><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
+			'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspTELNET超时(s) : </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
 			'</table></div><br/>'+
 			'<div><hr/><button id="btn_sub" style="margin-left:60px">提交</button><button id="btn_sync" style="margin-left:140px">刷新</button>'+
 			'<button id="btn_reboot" style="margin-left:140px">设备重启</button>'+
