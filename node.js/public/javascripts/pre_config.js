@@ -2,6 +2,7 @@
 	var modal ;
 	var pTable;
 	$(function(){
+		var user = localStorage.getItem('username');
 		var socket = io.connect('http://localhost:3000');
 		
 		socket.emit('profile_all', 'profile_all' );
@@ -25,7 +26,8 @@
 	    	  }
 			var anRow = $(this);
 	        var mac = anRow[0].parentNode.parentElement.cells[0].textContent;
-	        socket.emit('pre_del',mac);
+	        var datastring = '{"mac":"'+mac+'","user":"'+user+'"}';
+	        socket.emit('pre_del',datastring);
 	        var anSelected = anRow[0].parentNode.parentElement;
 	        pTable.fnDeleteRow( anSelected );
 		});
@@ -44,7 +46,7 @@
             		alert("Mac地址不正确!");
             		return;
             	}
-            	var jsondata = '{"mac":"'+document.getElementById("cnumac").value+'","proid":"'+proid+'"}';
+            	var jsondata = '{"mac":"'+document.getElementById("cnumac").value+'","proid":"'+proid+'","user":"'+user+'"}';
             	socket.emit('opt.preconfig_one',jsondata);
             	
             }else if(modal == "batch"){
@@ -58,7 +60,7 @@
             	}
             	
             	var jsondata = '{"smac":"'+document.getElementById("smac").value+
-            	'","emac":"'+document.getElementById("emac").value+'","proid":"'+proid+'"}';
+            	'","emac":"'+document.getElementById("emac").value+'","proid":"'+proid+'","user":"'+user+'"}';
             	socket.emit('opt.preconfig_batch',jsondata);
             }
 		});

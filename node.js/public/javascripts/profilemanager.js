@@ -1,6 +1,8 @@
 (function($){
 	var pTable;
+	var user;
 	$(function(){
+		user = localStorage.getItem('username');
 		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('profile_all',"profile_all");
@@ -111,7 +113,8 @@
 	        	alert("出厂模板无法删除");
 	        	return;
 	        }
-	        socket.emit('profile_del',proid);
+	        var datastring = '{"proid":"'+proid+'","user":"'+user+'"}';
+	        socket.emit('profile_del',datastring);
 	        
 	    } );    	
 	    
@@ -175,7 +178,7 @@
 							'","rxlimitsts":"'+parseInt(rxlimitsts.val(),10)+'","cpuportrxrate":"'+parseInt(cpuportrxrate.val(),10)+'","port0txrate":"'+parseInt(port0txrate.val(),10)+
 							'","port1txrate":"'+parseInt(port1txrate.val(),10)+'","port2txrate":"'+parseInt(port2txrate.val(),10)+'","port3txrate":"'+parseInt(port3txrate.val(),10)+
 							'","txlimitsts":"'+parseInt(txlimitsts.val(),10)+'","cpuporttxrate":"'+parseInt(cpuporttxrate.val(),10)+'","port0rxrate":"'+parseInt(port0rxrate.val(),10)+
-							'","port1rxrate":"'+parseInt(port1rxrate.val(),10)+'","port2rxrate":"'+parseInt(port2rxrate.val(),10)+'","port3rxrate":"'+parseInt(port3rxrate.val(),10)+'"}';
+							'","port1rxrate":"'+parseInt(port1rxrate.val(),10)+'","port2rxrate":"'+parseInt(port2rxrate.val(),10)+'","port3rxrate":"'+parseInt(port3rxrate.val(),10)+'","user":"'+user+'"}';
 							
 							socket.emit('profile_create',datastring);
 							$("#dialog-form").dialog("close");						
@@ -536,7 +539,7 @@
 							'","rxlimitsts":"'+parseInt(rxlimitsts.val(),10)+'","cpuportrxrate":"'+parseInt(cpuportrxrate.val(),10)+'","port0txrate":"'+parseInt(port0txrate.val(),10)+
 							'","port1txrate":"'+parseInt(port1txrate.val(),10)+'","port2txrate":"'+parseInt(port2txrate.val(),10)+'","port3txrate":"'+parseInt(port3txrate.val(),10)+
 							'","txlimitsts":"'+parseInt(txlimitsts.val(),10)+'","cpuporttxrate":"'+parseInt(cpuporttxrate.val(),10)+'","port0rxrate":"'+parseInt(port0rxrate.val(),10)+
-							'","port1rxrate":"'+parseInt(port1rxrate.val(),10)+'","port2rxrate":"'+parseInt(port2rxrate.val(),10)+'","port3rxrate":"'+parseInt(port3rxrate.val(),10)+'"}';
+							'","port1rxrate":"'+parseInt(port1rxrate.val(),10)+'","port2rxrate":"'+parseInt(port2rxrate.val(),10)+'","port3rxrate":"'+parseInt(port3rxrate.val(),10)+'","user":"'+user+'"}';
 							socket.emit('profile_edit',datastring);
 							$("#dialog-edit").dialog("close");
 							pTable=$('#proTable').dataTable();

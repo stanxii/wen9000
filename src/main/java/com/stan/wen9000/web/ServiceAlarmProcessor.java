@@ -1,5 +1,8 @@
 package com.stan.wen9000.web;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -79,7 +82,7 @@ public class ServiceAlarmProcessor {
   			
   			
   			
-  			servicestart(msg);
+  			servicestart(arg1,msg);
   			
   		}catch(Exception e){
   			e.printStackTrace();			
@@ -112,6 +115,18 @@ public class ServiceAlarmProcessor {
 		 }
 		 log.info("Del alarms which 3 months ago.............................END");
 		 
+		//删除3个月以前的日志信息
+		 log.info("Del logs which 3 months ago.............................START");
+		 Set<String> logs = jedis.zrangeByScore("opt_zcard", 0, (now - lseconds));
+		 //Set<String> alarms = jedis.zrangeByScore(ALARM_HISTORY_QUEUE_NAME, 0, now );
+
+		 for(Iterator it = logs.iterator();it.hasNext(); ){
+			 String alarmid = it.next().toString();
+			 jedis.del("optlogid:"+alarmid+":entity");
+			 jedis.zrem("opt_zcard", alarmid);
+		 }
+		 log.info("Del logs which 3 months ago.............................END");
+		 
 		 jedis.psubscribe(jedissubSub, "servicealarm.*");
 		 
 		redisUtil.getJedisPool().returnResource(jedis);
@@ -128,14 +143,14 @@ public class ServiceAlarmProcessor {
 	}
 
 	
-	public static void servicestart(String message)  {
+	public static void servicestart(String pat,String message)  {
 
 		//	log.info(" [x] ServiceAlarmProcessor Received '" + message
 		//			+ "'");
 			
 		//	long start = System.currentTimeMillis();
 		try{
-			dowork(message);
+			dowork(pat,message);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -149,10 +164,7 @@ public class ServiceAlarmProcessor {
 	
 
 	@SuppressWarnings("unchecked")
-	public static void dowork(String message){
-		
-		
-		
+	public static void dowork(String pat,String message){
 		JSONParser parser = new JSONParser();
 		
 		ContainerFactory containerFactory = new ContainerFactory(){
@@ -165,34 +177,35 @@ public class ServiceAlarmProcessor {
 		    }
 		                        
 		  };
-		                
 		  
-		Map<String, String> alarm;
-		try {
-			alarm = (Map<String, String>)parser.parse(message, containerFactory);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.info("------>>>>>>>savelarm parse exc<<<<<<<<<----------");
-			return;
-		}
-		    
-		
-		
-		String alarmcode =(String) alarm.get("alarmcode");
-		
-		
-		
-		int code = Integer.parseInt(alarmcode);
-		if (code == 200002) {
+		  Map<String, String> alarm;
+			try {
+				alarm = (Map<String, String>)parser.parse(message, containerFactory);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				log.info("------>>>>>>>savelarm parse exc<<<<<<<<<----------");
+				return;
+			}
+			
+		  if(pat.equalsIgnoreCase("servicealarm.optlog")){
+				saveoptlog(alarm);
+		  }else{
+				String alarmcode =(String) alarm.get("alarmcode");
 
-		} else if(code == 200940){
-			savehfcalarm(message, alarm);
-		} else {
-			doalarm(alarm);			
-			savelarm(message, alarm);
-	
-		}
+				int code = Integer.parseInt(alarmcode);
+				if (code == 200002) {
+
+				} else if(code == 200940){
+					savehfcalarm(message, alarm);
+				} else {
+					doalarm(alarm);			
+					savelarm(message, alarm);
+			
+				}
+		  }
+		  
+		
 
 		// System.out.println("save end msg===========================");
 
@@ -233,11 +246,60 @@ public class ServiceAlarmProcessor {
 		
 	}
 	
-	public static void savehfcalarm(String message, Map<String, String> alarm) {
+	public static void saveoptlog(Map<String, String> json) {
 		//presist alarm		
 		Jedis jedis=null;
 		try {
 		 jedis = redisUtil.getConnection();
+		
+		
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			log.info("------>>>>>>>savelog ex1<<<<<<<<<----------");
+		}
+		
+		try{
+			//save alarm entity
+			Long logid = jedis.incr("global:optlogid");
+			String slogid = String.valueOf(logid);
+			
+			String logkey = "optlogid:" + slogid + ":entity";
+			json.put("logid", slogid);
+			if(json.containsKey("flag")){
+				Date date = new Date();
+				DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+				String logtimes = format.format(date);				
+				JSONObject newjson = new JSONObject();
+				newjson.put("time", logtimes);
+				newjson.put("user", json.get("user").toString());
+				String flag = json.get("flag").toString();
+				if(flag.equalsIgnoreCase("1")){
+					newjson.put("desc", "用户["+json.get("user").toString()+"]登入.");
+				}else if(flag.equalsIgnoreCase("2")){
+					newjson.put("desc", "用户["+json.get("user").toString()+"]注销.");
+				}else if(flag.equalsIgnoreCase("3")){
+					newjson.put("desc", "新用户["+json.get("user").toString()+"]注册,权限:只读用户.");
+				}
+				jedis.hmset(logkey, newjson);
+			}else{
+				jedis.hmset(logkey, json);
+			}
+
+			Double score = (double) System.currentTimeMillis();
+			jedis.zadd("opt_zcard", score, slogid);
+
+		}catch(Exception e){
+			e.printStackTrace();
+		}		
+		redisUtil.getJedisPool().returnResource(jedis);
+		
+	}
+	
+	public static void savehfcalarm(String message, Map<String, String> alarm) {
+		//presist alarm		
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
 		
 		
 		}catch(Exception e){
@@ -286,44 +348,40 @@ public class ServiceAlarmProcessor {
 
 
 	public static void doupgrade(Map<String, String> alarm) {
-		try {		
-
-			Jedis jedis=null;
-			try {
-				jedis = redisUtil.getConnection();
-			}catch(Exception e){
-				redisUtil.getJedisPool().returnBrokenResource(jedis);
-			}
-			
-			String result = (String)alarm.get("alarmvalue");			
-			String cbatmac = (String)alarm.get("mac");			
-			String cbatid = jedis.get("mac:" +  cbatmac + ":deviceid");						
-			String cbatkey = "cbatid:" + cbatid + ":entity";			
-			jedis.hset(cbatkey, "upgrade", result);	
-			if(result.equalsIgnoreCase("0")){
-				//升级成功
-				//清空版本信息
-				jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", "");
-				
-			}
-			if(!result.equalsIgnoreCase("1")){
-				//已升级头端加1
-				long num_t =jedis.incr("global:updated");
-				String num = String.valueOf(num_t);
-				//String total = jedis.get("global:updatedtotal");
-				//通知前端此头端完成升级
-				String total = jedis.get("global:updatedtotal");
-				JSONObject json = new JSONObject();
-				json.put("proc", num);
-				json.put("total", total);
-				jedis.publish("node.opt.updateproc", json.toJSONString());
-			}			
-			
-			redisUtil.getJedisPool().returnResource(jedis);
-			
-		} catch (Exception e) {
-			e.printStackTrace();
+		Jedis jedis=null;			
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
 		}
+		
+		String result = (String)alarm.get("alarmvalue");			
+		String cbatmac = (String)alarm.get("mac");			
+		String cbatid = jedis.get("mac:" +  cbatmac + ":deviceid");						
+		String cbatkey = "cbatid:" + cbatid + ":entity";		
+		jedis.hset(cbatkey, "upgrade", result);	
+		
+		if(result.equalsIgnoreCase("0")){
+			//升级成功
+			//清空版本信息
+			jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", "");
+			
+		}
+		if(!result.equalsIgnoreCase("1")){
+			//已升级头端加1
+			long num_t =jedis.incr("global:updated");
+			String num = String.valueOf(num_t);
+			//String total = jedis.get("global:updatedtotal");
+			//通知前端此头端完成升级
+			String total = jedis.get("global:updatedtotal");
+			JSONObject json = new JSONObject();
+			json.put("proc", num);
+			json.put("total", total);
+			jedis.publish("node.opt.updateproc", json.toJSONString());
+		}		
+
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 
 

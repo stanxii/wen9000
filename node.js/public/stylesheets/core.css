@@ -29,13 +29,34 @@ table input {
       position:relative;
 }
 
-/*menu */
-#menu {
+#sidebar {
 	position:absolute;
 	float:left;
 	width:20%;
 	margin-right:15px;
-	top:0;	
+	top:5px;	
+}
+
+#sidebar input{
+	float:left;
+	margin-left:5%;
+	width:60%;
+	position:absolute;
+}
+
+#sidebar button{
+	margin-left:68%;
+	width:30%;
+	position:absolute;
+}
+
+/*menu */
+#menu {
+	position:absolute;
+	float:left;
+	width:100%;
+	margin-right:15px;
+	top:30px;	
 }
 
 #optinfo input{
@@ -197,3 +218,12 @@ table input {
 	cursor:pointer;
 	
 }
+
+#optlog .center{
+	 text-align:center;
+}
+
+
+
+
+

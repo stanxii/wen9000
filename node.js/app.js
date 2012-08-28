@@ -76,6 +76,15 @@ app.get('/validate', function (req, res) {
 	}
 });
 
+//注销
+app.get('/logout', function (req, res) {
+	var name = req.session.user;
+	req.session.user = null;
+	req.session.password = null;
+	publish.publish('servicealarm.optlog', '{"flag":"2","user":"'+name+'"}');
+	res.redirect('/login');
+});
+
 app.get('/', function (req, res) {
 	if ((req.session.user != null)&&((req.session.user != "undefined"))) {
 		jedis.exists('user:'+req.session.user, function(error, result) {
@@ -103,7 +112,7 @@ app.post('/login', function (req, res) {
 	var password = req.body.password;	
 	req.session.user = name;
 	req.session.password = password;
-	console.log("-----------------password>>>"+password);
+	publish.publish('servicealarm.optlog', '{"flag":"1","user":"'+name+'"}');
 	res.redirect('/validate');
 });
 
@@ -113,6 +122,7 @@ app.post('/register', function (req, res) {
 	var password = req.body.password;
     jedis.hset("user:"+name,"password",password);
     jedis.hset("user:"+name,"flag","3");
+    publish.publish('servicealarm.optlog', '{"flag":"3","user":"'+name+'"}');
 	res.redirect('/login');
 });
 
@@ -173,6 +183,13 @@ app.get('/version', function( request, response ) {
 app.get('/historyalarm', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
 		response.render( 'historyalarm.jade', { title: 'Wen9000网络管理系统---历史告警' } );
+	} else {
+		response.redirect('/login');
+	}       
+});
+app.get('/optlog', function( request, response ) {
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'optlog.jade', { title: 'Wen9000网络管理系统---日志管理' } );
 	} else {
 		response.redirect('/login');
 	}       
@@ -265,6 +282,7 @@ function PostCode() {
 
 redis.psubscribe('node.alarm.*');
 redis.psubscribe('node.historyalarm.*');
+redis.psubscribe('node.optlog.*');
 redis.psubscribe('node.tree.*');
 redis.psubscribe('node.pro.*');
 redis.psubscribe('node.opt.*');
@@ -287,7 +305,12 @@ redis.on('pmessage', function(pat,ch,data) {
         sio.sockets.emit('historypage',data);
     }else if(ch == 'node.historyalarm.gethistorynp') {
         sio.sockets.emit('historynp',data);
-     }else if(ch == 'node.tree.init') {
+     }else if(ch == 'node.optlog.getoptlogpage') {
+         data = JSON.parse(data);
+         sio.sockets.emit('getoptlogpage',data);
+     }else if(ch == 'node.optlog.getoptlognp') {
+         sio.sockets.emit('getoptlognp',data);
+      }else if(ch == 'node.tree.init') {
        data = JSON.parse(data);
        sio.sockets.emit('initDynatree',data);
     }else if(ch == 'node.tree.cbatdetail') {
@@ -463,6 +486,11 @@ redis.on('pmessage', function(pat,ch,data) {
     }else if(ch == 'node.opt.hfcsubresponse') {
     	data = JSON.parse(data);
     	sio.sockets.emit('hfcsubresponse',data);       
+    }else if(ch == 'node.opt.devsearch') {
+    	sio.sockets.emit('devsearch',data);       
+    }else if(ch == 'node.optlog.getall') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('optlogall',data);       
     }
 });
 
@@ -786,6 +814,33 @@ sio.sockets.on('connection', function (socket) {
   socket.on('hfc_alarmthresholdsub', function (data) {
 	  console.log('nodeserver: hfc_alarmthresholdsub==='+data);
 	  publish.publish('servicecontroller.hfc_alarmthresholdsub', data);
+  });
+//设备查询
+  socket.on('devsearch', function (data) {
+	  console.log('nodeserver: devsearch==='+data);
+	  publish.publish('servicecontroller.devsearch', data);
+  });
+//操作日志查询
+  socket.on('optlogall', function (data) {
+	  console.log('nodeserver: optlogall==='+data);
+	  publish.publish('servicecontroller.optlogall', data);
+  });
+//操作日志导航
+  socket.on('optlogpage', function (data) {
+	  console.log('nodeserver: optlogpage==='+data);
+	  publish.publish('servicecontroller.optlogpage', data);
+  });
+  
+//操作日志导航下一页
+  socket.on('optlognext', function (data) {
+	  console.log('nodeserver: optlognext==='+data);
+	  publish.publish('servicecontroller.optlognext', data);
+  });
+  
+//操作日志导航上一页
+  socket.on('optlogpre', function (data) {
+	  console.log('nodeserver: optlogpre==='+data);
+	  publish.publish('servicecontroller.optlogpre', data);
   });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);

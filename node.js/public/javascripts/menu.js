@@ -2,7 +2,7 @@
 	var socket;
 	var isbusy = false;
 	var hfcactive = false;
-	var Hfcclock;
+	//var Hfcclock;
 	var flag;
   $(function() {
 	//根据屏幕分辨率更改页面布局
@@ -15,12 +15,12 @@
       if(window.screen.height >768){
     	  var ht = window.screen.availHeight - 348;
     	  $("#wapper").css("height",ht+"px");
-    	  $("#menu").css("height",ht+"px");
-    	  $("#navtree").css("height",ht+"px");    	  
+    	  $("#menu").css("height",ht-30+"px");
+    	  $("#navtree").css("height",ht-40+"px");    	  
       }else if(window.screen.height <= 768){
 		  $("#menu").css("overflow","auto");
-		  $("#menu").css("height","455px");
-		  $("#navtree").css("height","445px");
+		  $("#menu").css("height","425px");
+		  $("#navtree").css("height","415px");
 		  $("#content").css("overflow","auto");
 		  $("#content").css("height","455px");
 		  $("#wapper").css("min-height","460px");
@@ -50,7 +50,8 @@
                   socket.on('cbatreset', fun_Cbatreset );
                   socket.on('hfcbase', fun_HfcBase );
                   socket.on('hfcrealtime', fun_Hfcrealtime );                 
-                  socket.on('hfcsubresponse', fun_Hfcresponse );     
+                  socket.on('hfcsubresponse', fun_Hfcresponse );    
+                  socket.on('devsearch', fun_Devsearch ); 
       
       $("#btn_hbase").live('click', function(){
     	  if(flag == "3"){
@@ -59,13 +60,13 @@
     	  }
     	  if(isbusy != false){
 				return;
-			} 
-			isbusy = true;
-			document.body.style.cursor = 'wait';
+		  } 
+		  isbusy = true;
+		  document.body.style.cursor = 'wait';
     	  var hfcmac = document.getElementById('hfc_mac').textContent;
     	  var hfcip = document.getElementById('hfc_ip').textContent;
     	  var hfclable = document.getElementById('hfc_lable').value;
-    	  var datastring = '{"hfcip":"'+hfcip+'","hfclable":"'+hfclable+'","hfcmac":"'+hfcmac+'"}';
+    	  var datastring = '{"hfcip":"'+hfcip+'","hfclable":"'+hfclable+'","user":"'+user+'","hfcmac":"'+hfcmac+'"}';
     	  socket.emit('hfc_baseinfo',datastring);
     	  
     	  var node = $("#navtree").dynatree("getTree").getNodeByKey(hfcmac);
@@ -94,7 +95,7 @@
 	  		var c_label = document.getElementById('c_label').value;
 	  		var c_mac = document.getElementById('cnu_mac').textContent;
 	  		
-	  		var datastring = '{"address":"'+c_address+'","contact":"'+c_contact+'","phone":"'+c_phone+
+	  		var datastring = '{"address":"'+c_address+'","user":"'+user+'","contact":"'+c_contact+'","phone":"'+c_phone+
 	  			'","mac":"'+c_mac+'","label":"'+c_label+'"}';
 	  		
 	  		socket.emit('cnu_basesub',datastring);
@@ -138,8 +139,8 @@
 	  			isbusy = true;
 	  			document.body.style.cursor = 'wait';
     		  var mac = document.getElementById('mac').textContent;
-    		  //alert("恢复出厂设置");
-    		  socket.emit('cbatreset',mac);
+    		  var datastring = '{"user":"'+user+'","mac":"'+mac+'"}';
+    		  socket.emit('cbatreset',datastring);
     	  }
       });
       
@@ -154,11 +155,45 @@
   			isbusy = true;
   			document.body.style.cursor = 'wait';
 		  var mac = document.getElementById('mac').textContent;
-		  //alert("恢复出厂设置");
-		  socket.emit('cbatreboot',mac);
+		  var datastring = '{"user":"'+user+'","mac":"'+mac+'"}';
+		  socket.emit('cbatreboot',datastring);
     	  
       });
       
+      $("#btn_search").click(function(){
+    	  var search_val = document.getElementById('searchbox').value;
+    	  var exp=/^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/; 
+		  var reg = search_val.match(exp); 
+		  if(reg==null) 
+		  { 
+			  var node = $("#navtree").dynatree("getTree").getNodeByKey(search_val.toLocaleLowerCase());
+			  if(node == null){
+				  alert("无法查询到设备!");
+			  }
+			  node.activate()
+		  }else{
+			  socket.emit('devsearch',search_val);
+		  } 
+    	  
+      });
+      
+      $("#searchbox").keydown(function(event){ 
+    	   if(event.keyCode==13){ 
+    		   var search_val = document.getElementById('searchbox').value;
+    	    	  var exp=/^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/; 
+    			  var reg = search_val.match(exp); 
+    			  if(reg==null) 
+    			  { 
+    				  var node = $("#navtree").dynatree("getTree").getNodeByKey(search_val);
+    				  if(node == null){
+    					  alert("无法查询到设备!");
+    				  }
+    				  node.activate()
+    			  }else{
+    				  socket.emit('devsearch',search_val);
+    			  } 
+    	      } 
+    	   });  
       
 	 $("#btn_cnusub").live('click', function() { 
 		 if(flag == "3"){
@@ -228,7 +263,7 @@
 			'","rxlimitsts":"'+rxlimitsts+'","cpuportrxrate":"'+cpuportrxrate+'","port0txrate":"'+port0txrate+
 			'","port1txrate":"'+port1txrate+'","port2txrate":"'+port2txrate+'","port3txrate":"'+port3txrate+
 			'","txlimitsts":"'+txlimitsts+'","cpuporttxrate":"'+cpuporttxrate+'","port0rxrate":"'+port0rxrate+
-			'","port1rxrate":"'+port1rxrate+'","port2rxrate":"'+port2rxrate+'","port3rxrate":"'+port3rxrate+'"}';
+			'","port1rxrate":"'+port1rxrate+'","port2rxrate":"'+port2rxrate+'","port3rxrate":"'+port3rxrate+'","user":"'+user+'"}';
 			
 			socket.emit('cnu_sub',datastring);
 	 });
@@ -319,7 +354,7 @@
 			}
 			var datastring = '{"mac":"'+mac+'","ip":"'+ip+'","label":"'+label+'","address":"'+address+'","mvlanenable":"'+mvlanenable
 			+'","mvlanid":"'+mvlanid+'","trapserver":"'+trapserver+'","trap_port":"'+trap_port+'","netmask":"'+netmask+'","gateway":"'
-			+gateway+'","dns":"'+dns+'","telnet":"'+telnet+"}';
+			+gateway+'","dns":"'+dns+'","telnet":"'+telnet+'","user":"'+user+'"}';
 			
 			var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
 			node.data.title = label;
@@ -369,7 +404,7 @@
 			var ip = document.getElementById('hfc_ip').textContent;
 			var mac = document.getElementById('hfc_mac').textContent;
 			
-			var datastring = '{"code":"1","key":"'+name+'","val":"' + value + '","mac":"' + mac +'","ip":"'+ ip +'"}';
+			var datastring = '{"code":"1","key":"'+name+'","val":"' + value + '","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
 			socket.emit('hfc_sub',datastring);
 			
 	 });
@@ -436,6 +471,18 @@
     			 socket.emit('hfcrealtime',mac);
     		 }
     		 
+    	 }
+     }
+     
+     function fun_Devsearch(data){
+    	 if(data == ""){
+    		 alert("无法查询到设备!")
+    	 }else{
+    		 var node = $("#navtree").dynatree("getTree").getNodeByKey(data);
+			  if(node == null){
+				  alert("无法查询到设备!");
+			  }
+			  node.activate()
     	 }
      }
      
@@ -662,7 +709,8 @@
 				node.data.icon = "disable.png";
 				node.render();
 			}
-		}		  					
+		}	
+		node.render();
      }
      
      function fun_Hfcresponse(data){
@@ -1219,7 +1267,8 @@
      	'<div id="cnusts" style="height:80px;width:200px;margin:10px 10px 1px 110px;'+style+'"><lable id="cnusts_l" style="font-size:30px;background-color:black;line-height:80px">'+active +'</lable></div>'+						
 		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#tabs-1">基本信息</a></li>'+
-			'<li><a href="#tabs-2">配置信息</a></li></ul>'+
+			'<li><a href="#tabs-2">配置信息</a></li>'+
+			'<li><a href="#tabs-3">状态信息</a></li></ul>'+
 			'<div id="tabs-1">'+
 				'<table id="baseinfo"><tr><td><lable>mac :&nbsp &nbsp &nbsp &nbsp</lable><lable id="cnu_mac" style="margin-left:0px">'+ jsondata.mac+'</lable></td>'+		     	
 		     	'<td><lable>设备类型: '+jsondata.devicetype+'</lable></td></tr>'+
@@ -1251,9 +1300,17 @@
 				'<td><lable>ETH1上行限速:</lable></td><td><input type="text" id="port0rxrate" value='+jsondata.port0rxrate+'></input></td></tr>'+
 				'<tr><td><lable>ETH2上行限速:</lable></td><td><input type="text" id="port1rxrate" value='+jsondata.port1rxrate+'></input></td>'+
 				'<td><lable>ETH3上行限速:</lable></td><td><input type="text" id="port2rxrate" value='+jsondata.port2rxrate+'></input></td>'+
-				'<td><lable>ETH4上行限速:</lable></td><td><input type="text" id="port3rxrate" value='+jsondata.port3rxrate+'></input></td></tr>'+
+				'<td><lable>ETH4上行限速:</lable></td><td><input type="text" id="port3rxrate" value='+jsondata.port3rxrate+'></input></td></tr>'+				
 				'</table><br/>'+
 				'<button id="btn_cnusync" style="margin-left:200px">刷新</button><button id="btn_cnusub" style="margin-left:60px">提交</button>'+			
+			'</div>'+
+			'<div id="tabs-3">'+
+				'<table id="statusinfo"><tr><td><lable>上行链路:</lable></td><td><lable id="txinfo">'+jsondata.txinfo+'</lable></td></tr>'+
+				'<tr><td><lable>下行链路:</lable></td><td><lable id="rxinfo">'+jsondata.rxinfo+'</lable></td></tr>'+
+				'<tr><td><lable>端口1连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p1sts"></img></td></tr>'+
+				'<tr><td><lable>端口2连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p2sts"></img></td></tr>'+
+				'<tr><td><lable>端口3连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p3sts"></img></td></tr>'+
+				'<tr><td><lable>端口4连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p4sts"></img></td></tr>'+
 			'</div>'+
 		'</div>'
 		);

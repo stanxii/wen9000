@@ -132,7 +132,7 @@ public class ServiceHfcRealtime {
 				//未开HFC设备显示模式，延时30s
 				try {
 					Thread.sleep(30000);
-					log.info("------------------>>>>sleep 30s");
+					//log.info("------------------>>>>sleep 30s");
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

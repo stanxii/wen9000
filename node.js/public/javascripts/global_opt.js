@@ -1,5 +1,6 @@
 (function($){
 	$(function(){
+		var user = localStorage.getItem('username');
 		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('opt.global_opt',"globalopt");
@@ -15,7 +16,7 @@
 	    	  }
     		var ip = $("#trap_server")[0].value;
     		var port = $("#trap_serport")[0].value;
-    		var data = '{"ip":"'+ip+'","port":"'+port+'"}';
+    		var data = '{"ip":"'+ip+'","port":"'+port+'","user":"'+user+'"}';
     		socket.emit('opt.save_global',data);
     	});
 		

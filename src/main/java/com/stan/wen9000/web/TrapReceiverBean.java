@@ -401,10 +401,10 @@ public class TrapReceiverBean {
 				
 				String status = (String)alarmhash.get("alarmvalue");
 				int istatus = Integer.parseInt(status);
-				
 				if(istatus >1)
 				{				
 					alarmhash.put("alarmlevel", "1");
+					alarmhash.put("mac", (String)alarmhash.get("cbatmac"));
 					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级失败");
 					alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +" Upgrade Failed!");
 					
@@ -412,6 +412,7 @@ public class TrapReceiverBean {
 				else if(istatus==1)
 				{
 					alarmhash.put("alarmlevel", "7");
+					alarmhash.put("mac", (String)alarmhash.get("cbatmac"));
 					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级告警信息");
 					alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +" Upgrade  Alarm information!");
 									
@@ -419,6 +420,7 @@ public class TrapReceiverBean {
 				else if(istatus == 0)
 				{
 					alarmhash.put("alarmlevel", "6");
+					alarmhash.put("mac", (String)alarmhash.get("cbatmac"));
 					alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端升级成功");
 					alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +" Upgrade Successful!");
 									

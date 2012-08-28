@@ -239,7 +239,7 @@ public class ServiceDiscoveryProcessor  {
 		cbatentity.put("upgradestatus", "20");
 		
 		jedis.hmset(scbatentitykey, cbatentity);
-	    
+		jedis.set("devip:"+cbatip+":mac", cbatmac);
 		//更新头端时间戳
 		Date date = new Date();
 		long time = date.getTime();
@@ -558,7 +558,7 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("agc", agc);
 		hfcentity.put("innertemp", innertemp);
 		jedis.hmset(shfcentitykey, hfcentity);
-
+		jedis.set("devip:"+ip+":mac", hfcmac.toLowerCase());
 		jedis.save();
 		
 		Sendstschange("hfc",String.valueOf(hfcid),jedis);
