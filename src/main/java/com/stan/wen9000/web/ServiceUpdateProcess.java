@@ -1,6 +1,9 @@
 package com.stan.wen9000.web;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
@@ -242,5 +245,20 @@ public class ServiceUpdateProcess{
 				redisUtil.getJedisPool().returnResource(jedis);
 				return;
 			}
+			
+			
+			//更新头端时间戳
+			Date date = new Date();
+			long time = date.getTime();
+					
+			
+			/////////////////////////////save cbatinfo
+		
+			String scbatinfokey = "cbatid:" + cbatid + ":cbatinfo";
+			jedis.hset(scbatinfokey, "upsoftdate", String.valueOf(time));	
+		
+			
+			
+			
 	  }
 }

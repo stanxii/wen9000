@@ -177,6 +177,13 @@ app.get('/historyalarm', function( request, response ) {
 		response.redirect('/login');
 	}       
 });
+app.get('/alarmsetting', function( request, response ) {
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'alarmsetting.jade', { title: 'Wen9000网络管理系统---历史告警' } );
+	} else {
+		response.redirect('/login');
+	}       
+});
 app.get('/opt/pre_config', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
 		response.render( 'opt/pre_config.jade', { title: 'Wen9000网络管理系统---设备预开户' } );

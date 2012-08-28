@@ -2143,6 +2143,7 @@ public class ServiceController {
     	String phone = jsondata.get("phone").toString();
     	String label = jsondata.get("label").toString();
     	String mac = jsondata.get("mac").toString();
+    	String cnuusername = jsondata.get("username").toString();
     	
     	//获取CNU ID 
 		String cnuid = jedis.get("mac:"+mac+":deviceid");
@@ -2151,6 +2152,8 @@ public class ServiceController {
 		jedis.hset(key, "contact", contact);
 		jedis.hset(key, "phone", phone);
 		jedis.hset(key, "label", label);
+		jedis.hset(key, "username", cnuusername);
+		System.out.println("XXXXXXXXXusername=" +cnuusername);
 		jedis.save();
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
@@ -2721,6 +2724,7 @@ public class ServiceController {
 		cnujson.put("address", jedis.hget(cnukey,"address"));
 		cnujson.put("contact", jedis.hget(cnukey,"contact"));	
 		cnujson.put("phone", jedis.hget(cnukey,"phone"));
+		cnujson.put("username", jedis.hget(cnukey,"username"));
     	if(jedis.hget(cnukey, "active").equalsIgnoreCase("1")){
     		//设备在线,获取实时设备信息
     		cnujson.put("active", "在线");
@@ -2849,6 +2853,8 @@ public class ServiceController {
 		cbatjson.put("mvlanid", jedis.hget(cbatinfokey, "mvlanid"));
 		cbatjson.put("dns", jedis.hget(cbatinfokey, "dns"));
 		cbatjson.put("telnet", jedis.hget(cbatinfokey, "telnet"));
+		cbatjson.put("upsoftdate", jedis.hget(cbatinfokey, "upsoftdate"));
+		
 		if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1") ){
 			//设备在线，实时获得设备信息
 			cbatjson.put("active", "在线");			

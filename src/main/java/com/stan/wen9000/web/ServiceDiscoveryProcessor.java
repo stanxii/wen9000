@@ -174,6 +174,7 @@ public class ServiceDiscoveryProcessor  {
 		String mvlanenable =(String) jsonobj.get("cbatinfo:mvlanenable");
 		String netmask =(String) jsonobj.get("cbatinfo:netmask");
 		String gateway =(String) jsonobj.get("cbatinfo:gateway");
+		
 
 		long start = System.currentTimeMillis();  
 
@@ -237,6 +238,7 @@ public class ServiceDiscoveryProcessor  {
 		cbatentity.put("devicetype", cbatdevicetype.toLowerCase().trim());
 		//20 not have upgradestatus
 		cbatentity.put("upgradestatus", "20");
+		
 		
 		jedis.hmset(scbatentitykey, cbatentity);
 	    
@@ -319,6 +321,7 @@ public class ServiceDiscoveryProcessor  {
 		hash.put("gateway", gateway);
 		hash.put("dns", "192.168.223.1");
 		hash.put("telnet", "300");
+		hash.put("upsoftdate", "2012-08-21 15:22:00");
 		jedis.hmset(scbatinfokey, hash);
 		
 		//trapserverip and port

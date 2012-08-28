@@ -1,0 +1,70 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/alarmsetting.js')
+  h1
+    label  告警配置  
+  br
+  div
+    div#alarmsettab
+      ul
+        li
+          a(href="#tabs-1") 告警过滤
+        li
+          a(href="#tabs-2") 定向告警
+      div#tabs-1
+        table
+          tr
+            td(style="width:200px")
+              label 告警等级
+            td(style="width:200px")
+              label 等于
+            td(style="width:200px")
+              select(id="sel_alarmlevel")
+                option(value="1") 1
+                option(value="2") 2
+                option(value="3") 3
+                option(value="4") 4
+                option(value="5") 5
+                option(value="6") 6
+                option(value="7") 7
+            td(style="width:200px")
+              button#btn_addlevelfilter 添加               
+          tr
+            td(style="width:200px")
+              label 告警码
+            td(style="width:200px")
+              label 等于
+            td(style="width:200px")
+              select(id="sel_alarmcode")
+                option(value="200901") 200901
+                option(value="200920") 200920
+                option(value="200921") 200921
+            td(style="width:200px")
+              button#btn_addcodefilter 添加 
+        p 
+          h5 告警过滤条件表                    
+        hr 已添加到条件      
+        div#talarmfilter
+        button#btn_clearallfilter 清除所有过滤条件                   
+      div#tabs-2
+        h5 根据条件指定告警只发送到特定告警服务器
+        table
+          tr
+            td(style="width:200px")
+              label 告警码
+                select(id="sel_directionalalarmcode")
+                  option(value="200901") 200901
+                  option(value="200920") 200920
+                  option(value="200921") 200921                  
+            td(style="width:200px")
+              label 只发往IP地址
+            td(style="width:200px")
+              input(type='text',id='sipaddr',value='192.168.223.251')
+            td(style="width:200px")
+              button#btn_addalarmdirectional 添加    
+        p 
+          h5 告警定向发送表                    
+        hr      
+        div#talarmdirectional                 
+        button#btn_clearalldirectional 清除所有定向告警                

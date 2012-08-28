@@ -304,6 +304,7 @@ public class ServiceHeartProcessor{
 			hash.put("phone", "N/A");
 			hash.put("bootver", "cml-boot-v1.1.0_for_linux_sdk");
 			hash.put("contact", "N/A");
+			hash.put("upsoftdate", "2012-08-21 15:22:00");
 			//获取设备相关信息
 			try{
 				 int agentport = util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					

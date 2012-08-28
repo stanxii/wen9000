@@ -545,11 +545,25 @@ public class TrapReceiverBean {
 			e.printStackTrace();
 		}
 		
+		
+		//add by stan alarm filter
+		alarmFilter(alarmhash);
+		
 		//logger.info("------>>>>>>>alarm send<<<<<<<<<----------");
 		doAlarm(alarmhash);
 		
 		
 	}
+	private boolean alarmFilter(Map alarm) {
+		 
+		 boolean result = false;
+		 
+		 
+		 return result;
+		 
+
+	}
+
 	private void doAlarm(Map alarm) {
 		 String msgservice = JSONValue.toJSONString(alarm);
 		//int i = 0;
