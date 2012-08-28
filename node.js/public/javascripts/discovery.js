@@ -1,5 +1,6 @@
 (function($){
 	$(function(){
+		var user = localStorage.getItem('username');
 		socket = io.connect('http://localhost:3000');
 		
 		socket.on('dis.validate',fun_Validate);
@@ -27,7 +28,7 @@
 				$("#dialog-dis-warn").dialog("open");
 				return;
 			}
-			var datastring = '{"startip":"'+sip+'","stopip":"'+ enip+'"}';
+			var datastring = '{"startip":"'+sip+'","stopip":"'+ enip+'","user":"'+user+'"}';
 			socket.emit('discovery.search',datastring);
 		});
 	});

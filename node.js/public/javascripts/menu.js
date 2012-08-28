@@ -2,7 +2,7 @@
 	var socket;
 	var isbusy = false;
 	var hfcactive = false;
-	var Hfcclock;
+	//var Hfcclock;
 	var flag;
   $(function() {
 	//根据屏幕分辨率更改页面布局
@@ -14,13 +14,13 @@
 //	  var ht6 = document.body.clientHeight;
       if(window.screen.height >768){
     	  var ht = window.screen.availHeight - 348;
-    	  $("#wapper").css("height",ht+"px");    	  
-    	  $("#menu").css("height",ht+"px");    	  
-    	  $("#navtree").css("height",ht+"px");    	  
+    	  $("#wapper").css("height",ht+"px");
+    	  $("#menu").css("height",ht-30+"px");
+    	  $("#navtree").css("height",ht-40+"px");    	  
       }else if(window.screen.height <= 768){
 		  $("#menu").css("overflow","auto");
-		  $("#menu").css("height","455px");
-		  $("#navtree").css("height","445px");
+		  $("#menu").css("height","425px");
+		  $("#navtree").css("height","415px");
 		  $("#content").css("overflow","auto");
 		  $("#content").css("height","455px");
 		  $("#wapper").css("min-height","460px");
@@ -50,7 +50,8 @@
                   socket.on('cbatreset', fun_Cbatreset );
                   socket.on('hfcbase', fun_HfcBase );
                   socket.on('hfcrealtime', fun_Hfcrealtime );                 
-                  socket.on('hfcsubresponse', fun_Hfcresponse );     
+                  socket.on('hfcsubresponse', fun_Hfcresponse );    
+                  socket.on('devsearch', fun_Devsearch ); 
       
       $("#btn_hbase").live('click', function(){
     	  if(flag == "3"){
@@ -59,13 +60,13 @@
     	  }
     	  if(isbusy != false){
 				return;
-			} 
-			isbusy = true;
-			document.body.style.cursor = 'wait';
+		  } 
+		  isbusy = true;
+		  document.body.style.cursor = 'wait';
     	  var hfcmac = document.getElementById('hfc_mac').textContent;
     	  var hfcip = document.getElementById('hfc_ip').textContent;
     	  var hfclable = document.getElementById('hfc_lable').value;
-    	  var datastring = '{"hfcip":"'+hfcip+'","hfclable":"'+hfclable+'","hfcmac":"'+hfcmac+'"}';
+    	  var datastring = '{"hfcip":"'+hfcip+'","hfclable":"'+hfclable+'","user":"'+user+'","hfcmac":"'+hfcmac+'"}';
     	  socket.emit('hfc_baseinfo',datastring);
     	  
     	  var node = $("#navtree").dynatree("getTree").getNodeByKey(hfcmac);
@@ -95,7 +96,8 @@
 	  		var c_mac = document.getElementById('cnu_mac').textContent;
 	  		var c_username = document.getElementById('c_username').value;
 	  		
-	  		var datastring = '{"address":"'+c_address+'","contact":"'+c_contact+'","phone":"'+c_phone+
+
+	  		var datastring = '{"address":"'+c_address+'","user":"'+user+'","contact":"'+c_contact+'","phone":"'+c_phone+
 	  			'","mac":"'+c_mac+'","label":"'+c_label+'","username":"'+c_username+'"}';
 	  		
 	  		socket.emit('cnu_basesub',datastring);
@@ -145,8 +147,8 @@
 	  			isbusy = true;
 	  			document.body.style.cursor = 'wait';
     		  var mac = document.getElementById('mac').textContent;
-    		  //alert("恢复出厂设置");
-    		  socket.emit('cbatreset',mac);
+    		  var datastring = '{"user":"'+user+'","mac":"'+mac+'"}';
+    		  socket.emit('cbatreset',datastring);
     	  }
       });
       
@@ -161,11 +163,45 @@
   			isbusy = true;
   			document.body.style.cursor = 'wait';
 		  var mac = document.getElementById('mac').textContent;
-		  //alert("恢复出厂设置");
-		  socket.emit('cbatreboot',mac);
+		  var datastring = '{"user":"'+user+'","mac":"'+mac+'"}';
+		  socket.emit('cbatreboot',datastring);
     	  
       });
       
+      $("#btn_search").click(function(){
+    	  var search_val = document.getElementById('searchbox').value;
+    	  var exp=/^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/; 
+		  var reg = search_val.match(exp); 
+		  if(reg==null) 
+		  { 
+			  var node = $("#navtree").dynatree("getTree").getNodeByKey(search_val.toLocaleLowerCase());
+			  if(node == null){
+				  alert("无法查询到设备!");
+			  }
+			  node.activate()
+		  }else{
+			  socket.emit('devsearch',search_val);
+		  } 
+    	  
+      });
+      
+      $("#searchbox").keydown(function(event){ 
+    	   if(event.keyCode==13){ 
+    		   var search_val = document.getElementById('searchbox').value;
+    	    	  var exp=/^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/; 
+    			  var reg = search_val.match(exp); 
+    			  if(reg==null) 
+    			  { 
+    				  var node = $("#navtree").dynatree("getTree").getNodeByKey(search_val);
+    				  if(node == null){
+    					  alert("无法查询到设备!");
+    				  }
+    				  node.activate()
+    			  }else{
+    				  socket.emit('devsearch',search_val);
+    			  } 
+    	      } 
+    	   });  
       
 	 $("#btn_cnusub").live('click', function() { 
 		 if(flag == "3"){
@@ -235,7 +271,7 @@
 			'","rxlimitsts":"'+rxlimitsts+'","cpuportrxrate":"'+cpuportrxrate+'","port0txrate":"'+port0txrate+
 			'","port1txrate":"'+port1txrate+'","port2txrate":"'+port2txrate+'","port3txrate":"'+port3txrate+
 			'","txlimitsts":"'+txlimitsts+'","cpuporttxrate":"'+cpuporttxrate+'","port0rxrate":"'+port0rxrate+
-			'","port1rxrate":"'+port1rxrate+'","port2rxrate":"'+port2rxrate+'","port3rxrate":"'+port3rxrate+'"}';
+			'","port1rxrate":"'+port1rxrate+'","port2rxrate":"'+port2rxrate+'","port3rxrate":"'+port3rxrate+'","user":"'+user+'"}';
 			
 			socket.emit('cnu_sub',datastring);
 	 });
@@ -326,7 +362,8 @@
 			}
 			var datastring = '{"mac":"'+mac+'","ip":"'+ip+'","label":"'+label+'","address":"'+address+'","mvlanenable":"'+mvlanenable
 			+'","mvlanid":"'+mvlanid+'","trapserver":"'+trapserver+'","trap_port":"'+trap_port+'","netmask":"'+netmask+'","gateway":"'
-			+gateway+'","dns":"'+dns+'","telnet":"'+telnet+'"}';
+			+gateway+'","dns":"'+dns+'","telnet":"'+telnet+'","user":"'+user+'"}';
+
 			
 			var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
 			node.data.title = label;
@@ -376,7 +413,7 @@
 			var ip = document.getElementById('hfc_ip').textContent;
 			var mac = document.getElementById('hfc_mac').textContent;
 			
-			var datastring = '{"code":"1","key":"'+name+'","val":"' + value + '","mac":"' + mac +'","ip":"'+ ip +'"}';
+			var datastring = '{"code":"1","key":"'+name+'","val":"' + value + '","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
 			socket.emit('hfc_sub',datastring);
 			
 	 });
@@ -443,6 +480,18 @@
     			 socket.emit('hfcrealtime',mac);
     		 }
     		 
+    	 }
+     }
+     
+     function fun_Devsearch(data){
+    	 if(data == ""){
+    		 alert("无法查询到设备!")
+    	 }else{
+    		 var node = $("#navtree").dynatree("getTree").getNodeByKey(data);
+			  if(node == null){
+				  alert("无法查询到设备!");
+			  }
+			  node.activate()
     	 }
      }
      
@@ -669,7 +718,8 @@
 				node.data.icon = "disable.png";
 				node.render();
 			}
-		}		  					
+		}	
+		node.render();
      }
      
      function fun_Hfcresponse(data){
@@ -1227,8 +1277,9 @@
 		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#cnutabs-1">基本信息</a></li>'+
 			'<li><a href="#cnutabs-2">配置信息</a></li>'+
-			'<li><a href="#cnutabs-3">Qos配置信息</a></li></ul>'+
-			'<div id="tabs-1">'+
+			'<li><a href="#cnutabs-3">Qos信息</a></li></ul>'+
+			'<li><a href="#cnutabs-4">状态信息</a></li></ul>'+
+			'<div id="cnutabs-1">'+
 				'<table id="baseinfo"><tr><td><lable>mac :&nbsp &nbsp &nbsp &nbsp</lable><lable id="cnu_mac" style="margin-left:0px">'+ jsondata.mac+'</lable></td>'+		     	
 		     	'<td><lable>设备类型: '+jsondata.devicetype+'</lable></td></tr>'+
 		     	'<tr><td><lable>设备标识: </lable>&nbsp<input type="text" id="c_label" style="width:150px" value="'+jsondata.label+'"></input></td>'+
@@ -1238,7 +1289,7 @@
 				'<td><lable>姓名: </lable><input type="text" style="width:150px" id="c_username" value="'+jsondata.username+'"></input></td></tr>'+
 				'</table><button id="btn_cbsave" style="margin-left:300px">修改</button>'+
 			'</div>'+
-			'<div id="tabs-2">'+
+			'<div id="cnutabs-2">'+
 				'<table id="optinfo"><tr><td><lable>模板名称 :</lable></td><td><lable id="proname">'+jsondata.profilename+'</lable></td>'+
 				'<td><lable>授权状态 : </lable></td><td><select id="authorization_en"><option value="1">启用</option><option value="2">禁用</option></select></td>'+
 				'<tr><td><lable>VLAN使能 : </lable></td><td><select id="vlan_en"><option value="1">启用</option><option value="2">禁用</option></select></td>'+
@@ -1260,12 +1311,12 @@
 				'<td><lable>ETH1上行限速:</lable></td><td><input type="text" id="port0rxrate" value='+jsondata.port0rxrate+'></input></td></tr>'+
 				'<tr><td><lable>ETH2上行限速:</lable></td><td><input type="text" id="port1rxrate" value='+jsondata.port1rxrate+'></input></td>'+
 				'<td><lable>ETH3上行限速:</lable></td><td><input type="text" id="port2rxrate" value='+jsondata.port2rxrate+'></input></td>'+
-				'<td><lable>ETH4上行限速:</lable></td><td><input type="text" id="port3rxrate" value='+jsondata.port3rxrate+'></input></td></tr>'+
+				'<td><lable>ETH4上行限速:</lable></td><td><input type="text" id="port3rxrate" value='+jsondata.port3rxrate+'></input></td></tr>'+				
 				'</table><br/>'+
 				'<button id="btn_cnusync" style="margin-left:200px">刷新</button><button id="btn_cnusub" style="margin-left:60px">提交</button>'+			
 			'</div>'+
 			
-			  '<div id="tabs-3">'+
+			  '<div id="cnutabs-3">'+
 		        '<h3>缺省服务优先级</h3>'+
 		  		'<table id="Qosinfo"><tr><td>IGMP组播:</td><td colspan="2"><select name="igmpPri" size="1">'+
 				  							'<option value="0">CAP0</option>'+
@@ -1345,6 +1396,16 @@
 				  								'<button id="btn_reset" >恢复出厂设置</button>'+
 				  							'</div>'+            			  							
 	          '</div>'+
+
+
+			'<div id="cnutabs-4">'+
+				'<table id="statusinfo"><tr><td><lable>上行链路:</lable></td><td><lable id="txinfo">'+jsondata.txinfo+'</lable></td></tr>'+
+				'<tr><td><lable>下行链路:</lable></td><td><lable id="rxinfo">'+jsondata.rxinfo+'</lable></td></tr>'+
+				'<tr><td><lable>端口1连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p1sts"></img></td></tr>'+
+				'<tr><td><lable>端口2连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p2sts"></img></td></tr>'+
+				'<tr><td><lable>端口3连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p3sts"></img></td></tr>'+
+				'<tr><td><lable>端口4连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p4sts"></img></td></tr>'+
+			'</div>'+
 
 		'</div>'
 		);

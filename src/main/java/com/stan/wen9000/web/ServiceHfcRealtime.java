@@ -47,6 +47,16 @@ public class ServiceHfcRealtime {
 				redisUtil.getJedisPool().returnBrokenResource(jedis);
 				return;
 			}
+			if(!jedis.exists("global:displaymode")){
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				redisUtil.getJedisPool().returnResource(jedis);
+				continue;
+			}
 			if(jedis.get("global:displaymode").equalsIgnoreCase("1")){
 				String key = jedis.get("global:hfcrealtime");
 				if(key != ""){
@@ -130,14 +140,16 @@ public class ServiceHfcRealtime {
 				}
 			}else{
 				//未开HFC设备显示模式，延时30s
-				try {
-					Thread.sleep(30000);
-					log.info("------------------>>>>sleep 30s");
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+//				try {
+//					Thread.sleep(30000);
+//					//log.info("------------------>>>>sleep 30s");
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+				log.info("------------------>>>>ServiceHfcRealtime Done!");
 				redisUtil.getJedisPool().returnResource(jedis);
+				return;
 			}
 		}
 	}

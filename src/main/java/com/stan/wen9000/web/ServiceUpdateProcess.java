@@ -101,10 +101,10 @@ public class ServiceUpdateProcess{
 			System.out.println(" [x] Service Update Received '" + message
 					+ "'");
 			
-			long start = System.currentTimeMillis();  			
+			//long start = System.currentTimeMillis();  			
 			dowork(pat, message);					
-			long end = System.currentTimeMillis();  
-			System.out.println("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
+			//long end = System.currentTimeMillis();  
+			//System.out.println("one ServiceAlarmProcessor dowork spend: " + ((end - start)) + " milliseconds");  
 			
 		
 	}
@@ -122,7 +122,7 @@ public class ServiceUpdateProcess{
 	  private static void doNodeUpdateInfo(String message) throws ParseException{
 		  Jedis jedis=null;
 			try {
-			 jedis = redisUtil.getConnection();	 
+				jedis = redisUtil.getConnection();	 
 			
 			}catch(Exception e){
 				e.printStackTrace();
@@ -134,7 +134,7 @@ public class ServiceUpdateProcess{
 			JSONObject json = new JSONObject();
 			json.put("total", total);
 			json.put("proc", num);
-			log.info("------------------------------------>>>>");
+			
 			jedis.publish("node.opt.updateinfo", json.toJSONString());
 			redisUtil.getJedisPool().returnResource(jedis);
 	  }
@@ -227,8 +227,7 @@ public class ServiceUpdateProcess{
 				
 				redisUtil.getJedisPool().returnResource(jedis);
 				
-			}catch(Exception e)
-			{
+			}catch(Exception e){
 				e.printStackTrace();
 				jedis.hset(cbatkey, "upgrade", "4");
 				//已升级头端加1

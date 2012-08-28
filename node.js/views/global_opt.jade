@@ -25,6 +25,17 @@ block content
   button(id='btn_gsub')  提交
   br
   br
+  h3  SysLog日志管理
+  p  SysLog日志管理的功能是将头端的系统日志发向指定的日志服务器进行备份.
+  table
+    tr
+      td
+        label  SysLog Server Ip:
+      td
+        input(id='syslogip',type='text')
+      td
+        button(id='btn_gsyslog')  发送
+  br
   h3  Redis数据库操作
   p  本网管采用最新的Redis内存数据库优化数据存储效率，为了保证关键数据不丢失，建议关闭网管前点击保存按钮将内存中未存储的数据保存到硬盘。
   br

@@ -1,0 +1,20 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/optlog.js')
+  h1
+    label  操作日志
+  table#optlog(style='width:100%')
+  br
+  br
+  div(style='margin-right:10px;float:right')
+    button#btn_pre(disabled='disable')  上一页
+    label  从第
+    label#from  0
+    label  条到第
+    label#end
+    label  条
+    label  /共
+    label#total
+    label  条告警  
+    button#btn_next(disabled='disable')  下一页

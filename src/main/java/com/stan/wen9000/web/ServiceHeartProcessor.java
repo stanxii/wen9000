@@ -203,6 +203,9 @@ public class ServiceHeartProcessor{
 					jedis.hset("cbatid:"+deviceid+":cbatinfo", "appver", appver);
 				}
 			}
+			//更新头端信息			
+			jedis.hset(cbatkey,"ip", cbatip);
+			jedis.set("devip:"+cbatip+":mac", cbatmac);
 			if(jedis.hget(cbatkey, "active").equalsIgnoreCase("1")==false){				
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
 				jedis.hset(cbatkey,"active", "1");
@@ -234,11 +237,7 @@ public class ServiceHeartProcessor{
 //				}
 				//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
 				Sendstschange("cbat",deviceid,jedis);
-			}
-			
-			//更新头端信息			
-			jedis.hset(cbatkey,"ip", cbatip);
-			
+			}			
 //			cbat.setAppversion(util.getStrPDU(cbatip, "161",
 //					new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8,4, 4, 0 })));
 			//更新头端时间戳
@@ -321,13 +320,13 @@ public class ServiceHeartProcessor{
 				 hash.put("trapserverip", trapserverip);
 				 hash.put("netmask", netmask);
 				 hash.put("gateway", gateway);
-				 hash.put("dns", "192.168.223.1");
+				 hash.put("dns", "202.101.172.35");
 				 hash.put("telnet", "300");
 			}catch(Exception e){
 				
 			}
 			jedis.hmset(scbatinfokey, hash);
-			
+			jedis.set("devip:"+cbatip+":mac", cbatmac);
 			jedis.save();
 			//发现新cbat,发往STSCHANGE_QUEUE_NAME
 			//jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icbatid));
@@ -439,6 +438,13 @@ public class ServiceHeartProcessor{
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
+			//test
+			cnuentity.put("txinfo", "110/120");
+			cnuentity.put("rxinfo", "110/120");
+			cnuentity.put("p1sts", "1");
+			cnuentity.put("p2sts", "1");
+			cnuentity.put("p3sts", "1");
+			cnuentity.put("p4sts", "1");
 			//判断设备是否被预开户
 			if(jedis.exists("preconfig:"+cnumac.toLowerCase()+":entity")){
 				//预开户

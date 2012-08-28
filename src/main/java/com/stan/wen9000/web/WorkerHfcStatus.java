@@ -30,7 +30,6 @@ public class WorkerHfcStatus{
     private Address targetAddress = null;  
 	private static Logger log = Logger.getLogger(WorkerHfcStatus.class);
 	private static RedisUtil redisUtil;
-	private Jedis jedis=null;
 	public static void setRedisUtil(RedisUtil redisUtil) {
 		WorkerHfcStatus.redisUtil = redisUtil;
 	}
@@ -46,9 +45,12 @@ public class WorkerHfcStatus{
 		initComm();
 		while(true){
 			try{
-				servicestart();
+				if(servicestart()){
+					//eoc模式
+					return;
+				}
 				//log.info("--------------sleep start!!");
-				Thread.sleep(10000);
+				Thread.currentThread().sleep(10000);
 				//log.info("--------------sleep end 10s!!");
 			}catch(Exception e){
 				
@@ -58,15 +60,30 @@ public class WorkerHfcStatus{
 		
 	}
 	
-	private void servicestart(){
-		//获取所有hfc设备		
+	private Boolean servicestart(){
+		//获取所有hfc设备
+		Jedis jedis=null;
 		try {
 		 jedis = redisUtil.getConnection();	 
 		
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
-			return;
+			return false;
+		}
+		if(!jedis.exists("global:displaymode")){
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			redisUtil.getJedisPool().returnResource(jedis);
+			return false;
+		}
+		if(!jedis.get("global:displaymode").equalsIgnoreCase("1")){
+			redisUtil.getJedisPool().returnResource(jedis);
+			return true;
 		}
 		//log.info("----------------------------->>>>log testing~~~~");
 		String key;
@@ -75,7 +92,7 @@ public class WorkerHfcStatus{
 			key = it.next().toString();
 			targetAddress = GenericAddress.parse("udp:"+jedis.hget(key, "ip")+"/161");  
 			try {
-				getPDU(jedis.hget(key, "mac"));
+				getPDU(jedis,jedis.hget(key, "mac"));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -85,9 +102,10 @@ public class WorkerHfcStatus{
 			//jedis.lpush(CBATSTS_QUEUE_NAME, key);
 		}
 		redisUtil.getJedisPool().returnResource(jedis);
+		return false;
 	}
 	
-	public void getPDU(String mac) throws IOException {  
+	public void getPDU(Jedis jedis,String mac) throws IOException {  
         // PDU 对象  
         PDU pdu = new PDU();  
         pdu.add(new VariableBinding(new OID("1.3.6.1.4.1.17409.1.3.2.1.1.1.0")));  //mac

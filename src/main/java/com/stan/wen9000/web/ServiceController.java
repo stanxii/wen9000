@@ -2,6 +2,11 @@ package com.stan.wen9000.web;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -259,9 +264,109 @@ public class ServiceController {
 			doHfcsub(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.hfc_alarmthresholdsub")){
 			doHfcThresholdsub(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.devsearch")){
+			doDevSearch(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.optlogall")){
+			doOptlogAll(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.optlogpage")){
+			doGetOptPage(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.optlognext")){
+			doGetOptNext(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.optlogpre")){
+			doGetOptPre(message);
 		}		
 
 
+	}
+	
+	private static void doOptlogAll(String message) {
+		Jedis jedis = null;
+		//System.out.println("now doGet HistoryAlarm Spring get msg=" + message);
+		try {
+			jedis = redisUtil.getConnection();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}		
+		String historypage;
+		//历史告警导航记录
+		if(jedis.exists("global:optlogpage")){
+			historypage = jedis.get("global:optlogpage");
+		}else{
+			jedis.set("global:optlogpage", "1");
+			historypage = "1";
+		}
+		try {
+			JSONArray jsonResponseArray = new JSONArray();
+			String optlogid = jedis.get("global:optlogid");
+			if(optlogid == null){
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
+			}
+			
+			//获取最后几条告警信息，发往前端
+			long id = Long.parseLong(optlogid);
+			String logkey = "";
+			if(id>=1000){
+				for(int i=1000*Integer.parseInt(historypage);i>1000*(Integer.parseInt(historypage)-1);i--){
+					JSONObject alarmjson = new JSONObject();
+					logkey = "optlogid:"+(id - i)+":entity";
+					if(jedis.hget(logkey, "time") == null){
+						logkey = "optlogid:"+(id - i)+":entity";						
+						continue;												
+					}
+					alarmjson.put("logtime", jedis.hget(logkey, "time"));
+					alarmjson.put("user", jedis.hget(logkey, "user"));
+					alarmjson.put("desc", jedis.hget(logkey, "desc"));
+					
+					jsonResponseArray.add(alarmjson);
+
+				}
+			}else{
+				Set<String> alarms = jedis.keys("optlogid:*:entity");
+				for(Iterator it=alarms.iterator();it.hasNext();){
+					logkey = it.next().toString();
+					JSONObject alarmjson = new JSONObject();
+					alarmjson.put("logtime", jedis.hget(logkey, "time"));
+					alarmjson.put("user", jedis.hget(logkey, "user"));
+					alarmjson.put("desc", jedis.hget(logkey, "desc"));
+					jsonResponseArray.add(alarmjson);
+				}
+			}
+						
+			
+			String jsonString = jsonResponseArray.toJSONString();
+			// publish to notify node.js a new alarm
+			jedis.publish("node.optlog.getall", jsonString);
+
+			redisUtil.getJedisPool().returnResource(jedis);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+
+	}
+	
+	private static void doDevSearch(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		if(IsIp(message.trim())){
+			String mac = jedis.get("devip:"+message.trim()+":mac");
+			jedis.publish("node.opt.devsearch", mac);
+		}else{
+			jedis.publish("node.opt.devsearch", "");			
+		}
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doHfcThresholdsub(String message) throws ParseException{
@@ -347,8 +452,15 @@ public class ServiceController {
 			String val = jsondata.get("val").toString();
 			String ip = jsondata.get("ip").toString();
 			String mac = jsondata.get("mac").toString().trim();
+			String user = jsondata.get("user").toString().trim();
 			String id = jedis.get("mac:"+ mac + ":deviceid");
 
+			JSONObject optjson = new JSONObject();
+			Date date = new Date();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String logtimes = format.format(date);
+			optjson.put("time", logtimes);
+			optjson.put("user", user);			
 			try{
 				//判断设备是否在线
 				String oid = util.gethfcStrPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
@@ -363,18 +475,25 @@ public class ServiceController {
 				if(name.equalsIgnoreCase("trapip1")){
 					util.sethfcIpPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}), InetAddress.getByName(val));
 					jedis.hset("hfcid:"+id+":entity", "trapip1", val);
+					optjson.put("desc", "HFC设备["+mac+"]Trapip1修改提交,修改值["+val+"].");
 				}else if(name.equalsIgnoreCase("trapip2")){
 					util.sethfcIpPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,2}), InetAddress.getByName(val));
 					jedis.hset("hfcid:"+id+":entity", "trapip2", val);
+					optjson.put("desc", "HFC设备["+mac+"]Trapip2修改提交,修改值["+val+"].");
 				}else if(name.equalsIgnoreCase("trapip3")){
 					util.sethfcIpPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,3}), InetAddress.getByName(val));
 					jedis.hset("hfcid:"+id+":entity", "trapip3", val);
+					optjson.put("desc", "HFC设备["+mac+"]Trapip3修改提交,修改值["+val+"].");
 				}else if(name.equalsIgnoreCase("hfcreboot")){
 					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,2,0}), new Integer32(1));
+					optjson.put("desc", "HFC设备["+mac+"]设备重启.");
 				}
 				json.put("code", "1");
 				json.put("result", "ok");
 				jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+				
+				
+		    	sendoptlog(jedis,optjson);
 			}catch(Exception e){
 				json.put("code", "1");
 				json.put("result", "");
@@ -412,11 +531,24 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String value = jsondata.get("value").toString();
+		String user = jsondata.get("user").toString();
 		String key = "global:displaymode";
-		jedis.set(key, message.trim());
+		jedis.set(key, value.trim());
 		jedis.save();
-
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		if(value.equalsIgnoreCase("1")){
+			optjson.put("desc", "网管显示模式切换.当前为:EOC+HFC");
+		}else{
+			optjson.put("desc", "网管显示模式切换.当前为:EOC");
+		}		
+		sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -433,11 +565,28 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String name = jsondata.get("username").toString();
 		String flag = jsondata.get("flag").toString();
-		
+		String user = jsondata.get("user").toString();
 		String key = "user:"+name.trim();
 		jedis.hset(key, "flag", flag);
 		jedis.save();
-
+		String userflag = "";
+		if(flag.equalsIgnoreCase("0")){
+			userflag = "超级管理员";
+		}else if(flag.equalsIgnoreCase("1")){
+			userflag = "管理员";
+		}else if(flag.equalsIgnoreCase("2")){
+			userflag = "一般用户";
+		}else if(flag.equalsIgnoreCase("3")){
+			userflag = "只读用户";
+		}
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "用户["+name+"]权限更改,权限:"+userflag);
+		sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -474,6 +623,7 @@ public class ServiceController {
 		String name = jsondata.get("username").toString();
 		String password = jsondata.get("password").toString();
 		String flag = jsondata.get("flag").toString();
+		String user = jsondata.get("user").toString();
 		if(jedis.exists("user:"+name)){
 			jedis.publish("node.opt.userres", "2");
 			redisUtil.getJedisPool().returnResource(jedis);
@@ -483,6 +633,24 @@ public class ServiceController {
 		jedis.hset("user:"+name, "flag", flag);
 		jedis.save();
 		jedis.publish("node.opt.userres", "");
+		String userflag = "";
+		if(flag.equalsIgnoreCase("0")){
+			userflag = "超级管理员";
+		}else if(flag.equalsIgnoreCase("1")){
+			userflag = "管理员";
+		}else if(flag.equalsIgnoreCase("2")){
+			userflag = "一般用户";
+		}else if(flag.equalsIgnoreCase("3")){
+			userflag = "只读用户";
+		}
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "创建用户["+name+"],权限:"+userflag);
+		sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -495,10 +663,20 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		//log.info("------------------------->>>>>"+"user:"+message.trim());
-		jedis.del("user:"+message.trim());			
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String username = jsondata.get("username").toString();
+		String user = jsondata.get("user").toString();
+		jedis.del("user:"+username.trim());			
 		jedis.save();
 		jedis.publish("node.opt.userres", "");
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "用户["+username+"]删除.");
+		sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -514,6 +692,7 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String username = jsondata.get("username").toString();
 		String password = jsondata.get("password").toString();
+		String user = jsondata.get("user").toString();
 		if(!jedis.exists("user:"+username)){
 			jedis.publish("node.opt.pwdmodify", "");
 			redisUtil.getJedisPool().returnResource(jedis);
@@ -522,7 +701,14 @@ public class ServiceController {
 		jedis.hset("user:"+username, "password", password);
 		jedis.save();
 		jedis.publish("node.opt.pwdmodify", "ok");
-		
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "用户["+username+"]密码修改.");
+		sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -784,6 +970,9 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String user = jsondata.get("user").toString();
 		String cbatid = jedis.get("mac:"+message+":deviceid");
 		String cbatip = jedis.hget("cbatid:"+cbatid+":entity", "ip");
 		
@@ -800,6 +989,14 @@ public class ServiceController {
 				new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), 
 				new Integer32(1)
 			);
+			JSONObject optjson = new JSONObject();
+			Date date = new Date();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String logtimes = format.format(date);
+			optjson.put("time", logtimes);
+			optjson.put("user", user);
+			optjson.put("desc", "局端设备["+mac+"]重启.");
+	    	sendoptlog(jedis,optjson);
 			jedis.publish("node.opt.cbatreset", "resetok");
 
 		}catch(Exception e){
@@ -819,7 +1016,10 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		String cbatid = jedis.get("mac:"+message+":deviceid");
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String user = jsondata.get("user").toString();
+		String cbatid = jedis.get("mac:"+mac+":deviceid");
 		String cbatip = jedis.hget("cbatid:"+cbatid+":entity", "ip");
 		
 		try {
@@ -835,6 +1035,16 @@ public class ServiceController {
 				new OID(new int[] {1,3,6,1,4,1,36186,8,6,3,0}), 
 				new Integer32(1)
 			);
+			
+			JSONObject optjson = new JSONObject();
+			Date date = new Date();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String logtimes = format.format(date);
+			optjson.put("time", logtimes);
+			optjson.put("user", user);
+			optjson.put("desc", "局端设备["+mac+"]恢复出厂设置.");
+	    	sendoptlog(jedis,optjson);
+	    	
 			jedis.publish("node.opt.cbatreset", "resetok");
 
 		}catch(Exception e){
@@ -864,6 +1074,8 @@ public class ServiceController {
 		}
 		//全局头端升级判断
 		jedis.set("global:isupdating", "false");
+		//全局显示模式
+		jedis.set("global:displaymode", "0");
 		//初始化超级用户
 		if(!jedis.exists("user:admin")){
 			jedis.hset("user:admin", "password", "admin");
@@ -998,13 +1210,24 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String user = jsondata.get("user").toString();
 		//获取预开户设备模板id
-		String proid = jedis.get("preconfig:"+message+":entity");
+		String proid = jedis.get("preconfig:"+mac+":entity");
 		//删除预开户键
-		jedis.del("preconfig:"+message+":entity");
+		jedis.del("preconfig:"+mac+":entity");
 		//删除集合中的值
-		jedis.srem("profileid:"+proid+":cnus", message);
+		jedis.srem("profileid:"+proid+":cnus", mac);
 		jedis.bgsave();
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "预开户终端["+mac+"]信息删除.");
+		sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -1050,6 +1273,7 @@ public class ServiceController {
 		String smac = jsondata.get("smac").toString();
 		String emac = jsondata.get("emac").toString();
 		String proid = jsondata.get("proid").toString();
+		String user = jsondata.get("user").toString();
 		JSONObject resjson = new JSONObject();
 		Long tmp1 = mactolong(smac.toUpperCase());
 		Long tmp2 = mactolong(emac.toUpperCase());
@@ -1066,6 +1290,14 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnResource(jedis);
 			return;
 		}
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "终端批量预开户,起始MAC:"+longtomac(tmp1)+",终止MAC:"+longtomac(tmp2)+"模板:"+jedis.hget("profileid:"+proid+":entity", "profilename"));
+		sendoptlog(jedis,optjson);
 		JSONArray array = new JSONArray();
 		while(tmp1<=tmp2)
 		{
@@ -1111,6 +1343,7 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String mac = jsondata.get("mac").toString();
 		String proid = jsondata.get("proid").toString();
+		String user = jsondata.get("user").toString();
 		//判断设备是否已被发现和预开户表中是否有此设备
 		if((jedis.exists("mac:"+mac+":deviceid"))||(jedis.exists("preconfig:"+mac+":entity"))){
 			//已存在
@@ -1124,6 +1357,15 @@ public class ServiceController {
 			json.put("profile", jedis.hget("profileid:"+proid+":entity", "profilename"));
 			json.put("html", "<button id=pre_del>删除</button>");
 			jedis.publish("node.opt.preconfig_one", json.toJSONString());
+			
+			JSONObject optjson = new JSONObject();
+			Date date = new Date();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String logtimes = format.format(date);
+			optjson.put("time", logtimes);
+			optjson.put("user", user);
+			optjson.put("desc", "终端["+ mac+"]预开户,模板:"+jedis.hget("profileid:"+proid+":entity", "profilename"));
+			sendoptlog(jedis,optjson);
 		}
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
@@ -1200,6 +1442,7 @@ public class ServiceController {
 		String username = jsondata.get("username").toString();
 		String password = jsondata.get("password").toString();
 		String filename = jsondata.get("filename").toString();
+		String user = jsondata.get("user").toString();
 		//获取所有要升级的头端
 		Set<String> cbats = jedis.smembers("global:updatedcbats");
 		//记录升级头端数，用户前端进度跟踪
@@ -1229,6 +1472,14 @@ public class ServiceController {
 			json.put("cbatid", cbatid);
 			json.put("filename", filename);
 			jedis.publish("ServiceUpdateProcess.update", json.toJSONString());
+			JSONObject optjson = new JSONObject();
+			Date date = new Date();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String logtimes = format.format(date);
+			optjson.put("time", logtimes);
+			optjson.put("user", user);
+			optjson.put("desc", "局端设备["+jedis.hget("cbatid:"+cbatid+":entity", "mac")+"]升级.");
+	    	sendoptlog(jedis,optjson);
 		}
 		
 		redisUtil.getJedisPool().returnResource(jedis);
@@ -1460,33 +1711,18 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String ip = jsondata.get("ip").toString();
 		String port = jsondata.get("port").toString();
+		String user = jsondata.get("user").toString();
 		jedis.set("global:trapserver:ip", ip);
 		jedis.set("global:trapserver:port", port);
 		jedis.publish("node.opt.globalsave", "");
-		//遍历头端,配置trapserverip，port
-//		Set<String> cbats = jedis.keys("cbatid:*:entity");
-//		for(Iterator it = cbats.iterator();it.hasNext();){
-//			String cbatkey = it.next().toString();			
-//			try {
-//				//set trap server ip
-//				util.setV2StrPDU(jedis.hget(cbatkey, "ip"),
-//						"161",
-//						new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}), 
-//						jedis.get("global:trapserver:ip")
-//						);
-//				//save
-//				util.setV2PDU(jedis.hget(cbatkey, "ip"),
-//						"161",
-//						new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
-//						new Integer32(1)
-//						);
-//			}catch(Exception e){
-//				
-//			}
-//			
-//		}
-		
-		
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "全局变量设置：TrapServerip="+ip+",port="+port);
+    	sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -1545,6 +1781,7 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String startip = jsondata.get("startip").toString();
 		String stopip = jsondata.get("stopip").toString();
+		String user = jsondata.get("user").toString();
 		String currentip = "";
 		long longstartIp = IP2Long.ipToLong(startip);		
 		long longstopIp = IP2Long.ipToLong(stopip);
@@ -1572,7 +1809,14 @@ public class ServiceController {
 			longstartIp++;
 
 		}
-		
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "局端设备搜索起始IP:"+startip+",终止IP:"+stopip);
+    	sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 		
 	}
@@ -1678,6 +1922,14 @@ public class ServiceController {
 			String cnumac = jedis.hget(cnukey, "mac");
 			String devicetype = jedis.hget("cbatid:"+cid+":entity", "devicetype");
 			//String devicetype = "20";
+			JSONObject optjson = new JSONObject();
+			Date date = new Date();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String logtimes = format.format(date);
+			optjson.put("time", logtimes);
+			optjson.put("user", message);
+			optjson.put("desc", "配置终端["+cnumac+"],模板:"+jedis.hget("profileid:"+proid.trim()+":entity", "profilename"));
+			sendoptlog(jedis,optjson);
 			//下面是具体节点配置过程或发往其它进程进行异步配置
 			//判断设备是否在线
 			try {
@@ -2144,7 +2396,7 @@ public class ServiceController {
     	String label = jsondata.get("label").toString();
     	String mac = jsondata.get("mac").toString();
     	String cnuusername = jsondata.get("username").toString();
-    	
+    	String user = jsondata.get("user").toString();
     	//获取CNU ID 
 		String cnuid = jedis.get("mac:"+mac+":deviceid");
     	String key = "cnuid:"+cnuid+":entity";
@@ -2155,6 +2407,14 @@ public class ServiceController {
 		jedis.hset(key, "username", cnuusername);
 		System.out.println("XXXXXXXXXusername=" +cnuusername);
 		jedis.save();
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "终端设备基本信息修改提交.");
+    	sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -2192,13 +2452,15 @@ public class ServiceController {
     	String port1rxrate = jsondata.get("port1rxrate").toString();
     	String port2rxrate = jsondata.get("port2rxrate").toString();
     	String port3rxrate = jsondata.get("port3rxrate").toString();
+    	
+    	String user = jsondata.get("user").toString();
 		
     	//获取profileid
     	String proid = String.valueOf(jedis.incr("global:profileid"));
     	String prokey = "profileid:"+proid + ":entity";
     	//组合存储字符串
     	Map<String , String >  proentity = new HashMap<String, String>();
-    	proentity.put("profilename", proname.toLowerCase());
+    	proentity.put("profilename", proname);
     	proentity.put("authorization", authorization);
     	proentity.put("vlanen", vlanen);
     	//proentity.put("vlanid", vlanid);
@@ -2226,6 +2488,15 @@ public class ServiceController {
     	
     	//保存数据到硬盘
     	jedis.save();
+    	
+    	JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "创建新模板，模板名称:"+proname.toLowerCase());
+    	sendoptlog(jedis,optjson);
     	
     	redisUtil.getJedisPool().returnResource(jedis);
 	}
@@ -2390,6 +2661,8 @@ public class ServiceController {
     	String port1rxrate = jsondata.get("port1rxrate").toString();
     	String port2rxrate = jsondata.get("port2rxrate").toString();
     	String port3rxrate = jsondata.get("port3rxrate").toString();
+    	
+    	String user = jsondata.get("user").toString();
 
     	String prokey = "profileid:"+proid + ":entity";
     	//组合存储字符串
@@ -2419,14 +2692,21 @@ public class ServiceController {
     	//save
     	jedis.hmset(prokey, proentity);
     	//logger.info("prokeys::::::proname"+ proname + "---vlanen::::"+vlanen );
-    	
+    	JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "模板信息修改，模板名称:"+proname.toLowerCase());
+    	sendoptlog(jedis,optjson);
     	//保存数据到硬盘
     	jedis.save();
 
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
-	private static void doProfileDel(String message){
+	private static void doProfileDel(String message) throws ParseException{
 		Jedis jedis=null;
 		try {
 			jedis = redisUtil.getConnection();
@@ -2435,7 +2715,11 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		 String prokey = "profileid:"+message+":entity";
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		//获取传递参数
+		String proid = jsondata.get("proid").toString();
+    	String user = jsondata.get("user").toString();
+		 String prokey = "profileid:"+proid+":entity";
 		 //判断profile集合中是否有cnu
 		 if(jedis.smembers("profileid:"+message+":cnus").isEmpty()){
 			 //无CNU
@@ -2443,10 +2727,18 @@ public class ServiceController {
 			 jedis.del(prokey);
 			 
 			 jedis.publish("node.pro.delprofile", "deleteok");
+			 JSONObject optjson = new JSONObject();
+				Date date = new Date();
+				DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+				String logtimes = format.format(date);
+				optjson.put("time", logtimes);
+				optjson.put("user", user);
+				optjson.put("desc", "删除模板:"+jedis.hget(prokey, "profilename"));
+		    	sendoptlog(jedis,optjson);
 			 redisUtil.getJedisPool().returnResource(jedis);
 		 }else{
 			 //集合中有CNU，无法删除此profile
-			 jedis.publish("node.pro.delprofile", "");
+			 jedis.publish("node.pro.delprofile", "profilename");
 			 redisUtil.getJedisPool().returnResource(jedis);
 		 }		 
 	}
@@ -2586,7 +2878,7 @@ public class ServiceController {
 		}
 		//log.info("xxxxxxxxxxxxxxxxxx1:::"+message);
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
-
+		String user = jsondata.get("user").toString();
 		String mac = jsondata.get("mac").toString();
 		String ip = jsondata.get("ip").toString();
     	String label = jsondata.get("label").toString();
@@ -2605,6 +2897,12 @@ public class ServiceController {
 		String cbatkey = "cbatid:"+cbatid+":entity";
 		String cbatinfokey = "cbatid:"+cbatid+":cbatinfo";
 		
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
 		//发往设备修改设备相关参数(ip/mvlanenable/mvlanid)
     	try{    		
     		String oldip = jedis.hget(cbatkey, "ip");
@@ -2613,11 +2911,13 @@ public class ServiceController {
     				&&(trapserver.equalsIgnoreCase(jedis.hget(cbatinfokey, "trapserverip")))&&(trap_port.equalsIgnoreCase(jedis.hget(cbatinfokey, "agentport")))
     				&&(netmask.equalsIgnoreCase(jedis.hget(cbatinfokey, "netmask")))&&(gateway.equalsIgnoreCase(jedis.hget(cbatinfokey, "gateway")))){
     			//保存
-            	jedis.hset(cbatkey, "label", label);
-            	
+            	jedis.hset(cbatkey, "label", label);            	
             	jedis.hset(cbatinfokey, "address", address);
+            	jedis.hset(cbatinfokey, "dns", dns);
+            	jedis.hset(cbatinfokey, "telnet", telnet);
             	jedis.save();
-            	
+            	optjson.put("desc", "局端设备基本信息修改提交.");
+            	sendoptlog(jedis,optjson);
             	redisUtil.getJedisPool().returnResource(jedis);
             	
             	jedis.publish("node.tree.cbatmodify", "modifyok");
@@ -2652,6 +2952,7 @@ public class ServiceController {
         		util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0}), gateway);
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), new Integer32(1));
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), new Integer32(1));
+    			jedis.set("devip:"+ip+":mac", mac);
     			jedis.hset(cbatkey, "active", "0");
     		}else{
     			//save
@@ -2678,6 +2979,8 @@ public class ServiceController {
     		jedis.publish("node.tree.cbatmodify", "");
     		return;
     	}
+    	optjson.put("desc", "局端设备基本信息修改提交.");
+    	sendoptlog(jedis,optjson);
     	redisUtil.getJedisPool().returnResource(jedis);
     	jedis.publish("node.tree.cbatmodify", "modifyok");
 	}
@@ -2725,6 +3028,14 @@ public class ServiceController {
 		cnujson.put("contact", jedis.hget(cnukey,"contact"));	
 		cnujson.put("phone", jedis.hget(cnukey,"phone"));
 		cnujson.put("username", jedis.hget(cnukey,"username"));
+		
+		cnujson.put("txinfo", jedis.hget(cnukey,"txinfo"));
+		cnujson.put("rxinfo", jedis.hget(cnukey,"rxinfo"));	
+		cnujson.put("p1sts", jedis.hget(cnukey,"p1sts"));
+		cnujson.put("p2sts", jedis.hget(cnukey,"p2sts"));
+		cnujson.put("p3sts", jedis.hget(cnukey,"p3sts"));
+		cnujson.put("p4sts", jedis.hget(cnukey,"p4sts"));
+		
     	if(jedis.hget(cnukey, "active").equalsIgnoreCase("1")){
     		//设备在线,获取实时设备信息
     		cnujson.put("active", "在线");
@@ -3844,6 +4155,80 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
+	private static void doGetOptPage(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		int optlogpage = Integer.parseInt(jedis.get("global:optlogpage"));
+
+		long count = jedis.zcard("opt_zcard");
+		JSONObject json = new JSONObject();
+		if((count/(optlogpage*1000) != 0)&&(count!=(optlogpage*1000))){
+			//有下一页
+			json.put("from", (optlogpage-1)*1000);
+			json.put("end", optlogpage*1000);
+			json.put("hasnext", "1");
+			json.put("total", count);
+			if(optlogpage>1){
+				json.put("haspre", "1");
+			}else{
+				json.put("haspre", "0");
+			}
+		}else{
+			//已到最后一页
+			json.put("from", (optlogpage-1)*1000);
+			json.put("end", count);
+			json.put("hasnext", "0");
+			
+			json.put("total", count);
+			if(optlogpage>1){
+				json.put("haspre", "1");
+			}else{
+				json.put("haspre", "0");
+			}
+		}
+		
+		jedis.publish("node.optlog.getoptlogpage", json.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+
+	private static void doGetOptNext(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		jedis.incr("global:optlogpage");
+		jedis.publish("node.optlog.getoptlognp", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doGetOptPre(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		jedis.decr("global:optlogpage");
+		jedis.publish("node.optlog.getoptlognp", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
 	private static void ThresholdSet_EDFA(Jedis jedis, String ParamMibOID, JSONObject json,JSONObject jsondata){
 		String key = jsondata.get("key").toString();
 		String ip = jsondata.get("ip").toString();
@@ -4025,5 +4410,24 @@ public class ServiceController {
 		json.put("result", "ok");
 		jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
 	}
+	
+	private static boolean IsIp(String ipStr) {
+	      try {
+	         URL testUrl=new URL("http://"+ipStr);
+	         return true;
+	      }catch(MalformedURLException e) {
+	         System.out.println("testIp() error:"+e.toString());
+	         return false;
+	      }catch(Exception e) {
+	         System.out.println("testIp() unknow error:"+e.toString());
+	         return false;
+	      }
+	}
+	
+	private static void sendoptlog(Jedis jedis,JSONObject json) {
+		jedis.publish("servicealarm.optlog", json.toJSONString());
+	}
+
 
 }
+

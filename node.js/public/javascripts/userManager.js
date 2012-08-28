@@ -2,7 +2,9 @@
 	 var username;
 	 var password;
 	 var flag;
+	 var user;
 	$(function(){
+		 user = localStorage.getItem('username');
 		 socket = io.connect('http://localhost:3000');
 		 
 		 username = localStorage.getItem('username');//getCookie("userName");
@@ -15,10 +17,9 @@
 		 socket.on('userres',fun_userres);
 		 
 		 $("#s_select").live('change',function(){
-			 var xx = $(this);
 			 var value = $(this)[0].value;
 			 var cname = $(this)[0].parentNode.parentElement.firstChild.textContent;
-			 var datastring = '{"username":"'+cname+'","flag":"'+value+'"}';
+			 var datastring = '{"username":"'+cname+'","flag":"'+value+'","user":"'+user+'"}';
 			 var ccccc = $(this)[0].parentNode.nextSibling.firstChild;
 			 if(parseInt(flag)< parseInt(value)){
 				 var attr = $(this)[0].parentNode.nextSibling.firstChild.attributes.getNamedItem("disabled");
@@ -49,7 +50,7 @@
 							var name = $("#name")[0].value;
 							var password = $("#password")[0].value;
 							var flag = $("#flag")[0].options[$("#flag")[0].options.selectedIndex].value;
-							var datastring = '{"username":"'+name+'","password":"'+password+'","flag":"'+flag+'"}';
+							var datastring = '{"username":"'+name+'","password":"'+password+'","flag":"'+flag+'","user":"'+user+'"}';
 							socket.emit('usercreate',datastring);
 							$( this ).dialog("close");
 						},
@@ -64,7 +65,8 @@
 		 
 		 $("#btn_del").live('click',function(){
 			 var name = $(this)[0].parentNode.parentElement.firstChild.textContent;
-			 socket.emit('userdel',name);			 
+			 var datastring = '{"username":"'+name+'","user":"'+user+'"}';
+			 socket.emit('userdel',datastring);			 
 			 
 		 });
 		 
@@ -99,7 +101,7 @@
 							document.cookie ="password="+password;
 							$("#new_pwd").css("");
 							$("#rep_pwd").css("");
-							var datastring = '{"username":"'+username+'","password":"'+newpwd+'"}';
+							var datastring = '{"username":"'+username+'","password":"'+newpwd+'","user":"'+user+'"}';
 							socket.emit('pwd_modify',datastring);
 							$( this ).dialog( "close" );
 						}

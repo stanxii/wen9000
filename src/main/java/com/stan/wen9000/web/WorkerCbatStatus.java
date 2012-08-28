@@ -17,7 +17,7 @@ public class WorkerCbatStatus{
 	private static Logger log = Logger.getLogger(WorkerCbatStatus.class);
 	private static RedisUtil redisUtil;
 	private static final String CBATSTS_QUEUE_NAME = "cbatsts_queue";
-	private Jedis jedis=null;
+	
 	public static void setRedisUtil(RedisUtil redisUtil) {
 		WorkerCbatStatus.redisUtil = redisUtil;
 	}
@@ -117,7 +117,7 @@ public class WorkerCbatStatus{
 		while(true){
 			try{
 				servicestart();
-				Thread.sleep(20000);
+				Thread.currentThread().sleep(20000);
 			}catch(Exception e){
 				
 			}
@@ -128,7 +128,7 @@ public class WorkerCbatStatus{
 	
 	private void servicestart(){
 		//获取所有cbat设备
-		
+		Jedis jedis=null;
 		try {
 		 jedis = redisUtil.getConnection();	 
 		

@@ -1,7 +1,9 @@
 (function($){
 	var proc = 0;
 	var total = 0;
+	var user;
 	$(function(){
+		user = localStorage.getItem('username');
 		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('opt.updateproc',"updateproc");
@@ -93,7 +95,7 @@
 			var ftppassword = document.getElementById("password").value;
 			var filename = objSelect[0].options[objSelect[0].options.selectedIndex].value;
 			var data = '{"ftpip":"'+ftpip+'","ftpport":"'+ftpport+'","username":"'+ftpuser+'","password":"'+ftppassword+ 
-			'","filename":"' + filename + '"}';
+			'","filename":"' + filename +'","user":"'+user + '"}';
 			if(filename == ""){
 				alert("没有选择升级文件!!!");
 				return;

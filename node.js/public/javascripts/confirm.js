@@ -1,6 +1,7 @@
 (function($){
 	var count;
 	$(function(){
+		var user = localStorage.getItem('username');
 		socket = io.connect('http://localhost:3000');
 		
 		socket.emit('opt.allcheckedcnus', "allcheckedcnus" );
@@ -34,7 +35,7 @@
 			});
 			$("#dialog-confirm-warm").dialog("open");
 			
-			socket.emit('opt.send_config',"send_config");
+			socket.emit('opt.send_config',user);
  			
  		});
 	});
