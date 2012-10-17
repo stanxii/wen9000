@@ -321,14 +321,17 @@ public class WorkerDiscoveryProcessor{
 				if (oid.toString().equals("1.3.6.1.4.1.2000.1.3000"))
 		        {
 					//hfctype = "光平台";
+					disOpticalPlatform(currentip, jedis);
 		        }
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.8888.1"))
 		        {
 		        	//hfctype = "万隆8槽WOS2000";
+		        	disWOS2000(currentip, jedis);
 		        }
 		        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.8686"))
 		        {
 		        	//hfctype = "万隆增强光开关";
+		        	disSwitch(currentip, jedis);
 		        }
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.11"))
 		        {
@@ -341,14 +344,17 @@ public class WorkerDiscoveryProcessor{
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.10"))
 		        {
 		        	//hfctype = "光工作站";
+		        	disWorkStation(currentip, jedis);
 		        }
 		        else if (oid.toString().equals( "1.3.6.1.4.1.17409.1.9"))
 		        {
 		        	//hfctype = "光接收机";
+		        	disReceiver(currentip, jedis);
 		        }
 		        else if (oid.toString().equals("1.3.6.1.4.1.17409.1.7"))
 		        {
 		        	//hfctype = "1550光发射机";
+		        	dis1550mn(currentip, jedis);
 		        }
 		        else
 		        {
@@ -436,6 +442,173 @@ public class WorkerDiscoveryProcessor{
 	
 	}
 	
+	public static void disWorkStation(String currentip, Jedis jedis){
+		String deviceid = new String();
+		String devicetype = new String();
+		int val = 0;
+		String hfc_mac = "";
+		String hfc_version = "";
+		String hfc_LogicalID = "";
+		String hfc_ModelNumber = "";
+		String hfc_SerialNumber = "";
+		String hfctype = "";
+		String trapip1="";
+		String trapip2="";
+		String trapip3="";
+		String innertemp = "";
+		String inputpower = "";
+		String power1 = "";
+		String power_v1 = "";
+		String power2 = "";
+		String power_v2 = "";
+		try{
+			hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}) );
+
+			hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}) );
+			if(hfc_LogicalID == ""){
+				return;
+			}
+			hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}) );
+			hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}) );
+			trapip1 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}));
+        	trapip2 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,2}));
+        	trapip3 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,3}));
+        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}) );
+        	//logger.info("======mac====="+hfc_mac);
+        	innertemp = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,13,0}) ) + "℃";
+			deviceid = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
+					4, 1, 17409, 1, 3 , 3,2,2,1,2,1 }));
+			devicetype = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
+					4, 1, 17409, 1, 3 , 3,2,2,1,4,1 }));
+			if (deviceid.equalsIgnoreCase("ScanID                         ") || deviceid.equalsIgnoreCase("WL00OR220000"))
+            {
+                if (devicetype.equalsIgnoreCase("WR8602JL") || devicetype.equalsIgnoreCase("WR8604JL") || devicetype.equalsIgnoreCase("WR8602RJ") || devicetype.equalsIgnoreCase("WR8602RJL") ||
+                 devicetype.equalsIgnoreCase("WR8604RJL") || devicetype.equalsIgnoreCase("WR8604DJ") || devicetype.equalsIgnoreCase("WR8602JL-CM") || devicetype.equalsIgnoreCase("WR8600")
+                   || devicetype.equalsIgnoreCase("WR1004DJ") || devicetype.equalsIgnoreCase("WR1002RJ") || devicetype.equalsIgnoreCase("SCN-1000-2") || devicetype.equalsIgnoreCase("SCN-870-2") || devicetype.equalsIgnoreCase("WR8602ML") || devicetype.equalsIgnoreCase("WR8602JLE")
+              || devicetype.equalsIgnoreCase("WR8602ME") || devicetype.equalsIgnoreCase("FMAU1121") || devicetype.equalsIgnoreCase("WR8602MF-B") || devicetype.equalsIgnoreCase("WR8602M-B") || devicetype.equalsIgnoreCase("WR8604DJ-1G") || devicetype.equalsIgnoreCase("OPS2600")
+                || devicetype.equalsIgnoreCase("WR8602MFH-B")){
+                	//return "光接收机";
+                }else if (devicetype.equalsIgnoreCase("WR8602JDS")){
+                	//return "带切换开关光接收机";
+                }
+                else if (devicetype.equalsIgnoreCase("WR8604HA") || devicetype.equalsIgnoreCase("WR8604G-S") || devicetype.equalsIgnoreCase("WR8602G-S") || devicetype.equalsIgnoreCase("WR8604HC") || deviceid.equalsIgnoreCase("HC-860")){
+                	//return "光工作站";
+                }                    
+                else if (devicetype == "WR8604HJ" || devicetype.equalsIgnoreCase("SCN-1000-4") || devicetype.equalsIgnoreCase("SCN-870-4") || devicetype.equalsIgnoreCase("WR8604HJ-1G")
+                || devicetype.equalsIgnoreCase("OPS2500") || devicetype.equalsIgnoreCase("WR8604HJ-1G-2P") || devicetype.equalsIgnoreCase("OPS2500-D2R") || devicetype.equalsIgnoreCase("WR8604")){
+                	//return "光AGC工作站";
+                }                    
+                else{
+                	// return "光接收机";
+                }
+                   
+            }
+
+            else if (deviceid.equalsIgnoreCase("JLE-86-2") || deviceid.equalsIgnoreCase("CEAM-1G-2") || deviceid.equalsIgnoreCase("JL-86-2") || deviceid.equalsIgnoreCase("DJ-1G-4") || deviceid.equalsIgnoreCase("DJ-1G-4-R")
+                || deviceid.equalsIgnoreCase("DJ-86-4") || deviceid.equalsIgnoreCase("JL-86-4") || deviceid.equalsIgnoreCase("RJL-86-4") || deviceid.equalsIgnoreCase("RJL-86-2") || deviceid.equalsIgnoreCase("RJ-86-2") 
+                || deviceid.equalsIgnoreCase("JDS-86-2") || deviceid.equalsIgnoreCase("RJ-1G-2") || deviceid.equalsIgnoreCase("JDS-86-2") 
+               || deviceid.equalsIgnoreCase("DM-86-2") || deviceid.equalsIgnoreCase("ME-86-2") || deviceid.equalsIgnoreCase("JL-CM-2") || deviceid.equalsIgnoreCase("J-1G-2") || deviceid.equalsIgnoreCase("JL-1G-2")
+               || deviceid.equalsIgnoreCase("JL-1G-4") || deviceid.equalsIgnoreCase("J-B-1G-2") || deviceid.equalsIgnoreCase("M-B-86-2") || deviceid.equalsIgnoreCase("CEAM-1G-2")){
+            	int channelnum = 0;
+            	String r_transpower = new String();
+            	String r_biascurrent = new String();
+            	String out_port = new String();
+            	String att = new String();
+            	String eqv = new String();
+            	String out_level = new String();
+            	String agc = new String();
+            	hfctype = "光接收机";
+            	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,2,2,1,10,1}) );
+            	power1 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,4,1}) );
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,2,1}) );
+            	power_v1 = val/10 + "."+Math.abs(val%10) + "V";
+            	power2 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,4,2}) );
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,2,2}) );
+            	power_v2 = val/10 + "."+Math.abs(val%10) + "V";
+            	channelnum = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,20,0}) );
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,5,1,2,1}) );
+            	inputpower = val/10 + "."+Math.abs(val%10) + "dBm";
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,3,1,7,1}) );
+            	r_transpower = val/10 + "."+Math.abs(val%10) + "dBm";
+            	out_port = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,6,1}) );
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,9,1}) );
+            	att = val/10 + "."+Math.abs(val%10) + "dB";
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,10,1}) );
+            	eqv = val/10 + "."+Math.abs(val%10) + "dB";
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,4,1}) );
+            	out_level = val/10 + "."+Math.abs(val%10) + "dBuV";
+            	//反向偏置电流不确定oid
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,3,1,2,1}) );
+            	r_biascurrent = val/10 + "."+Math.abs(val%10) + "mA";
+            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,28,0}) );
+            	agc = val/10 + "."+Math.abs(val%10) + "dBm";
+            	
+            	String msgservice="";
+            	Map paramhash=new LinkedHashMap();				 
+    	   		 paramhash.put("msgcode", "003");
+    	   		 paramhash.put("ip", currentip);
+    	   		 paramhash.put("hfcmac", hfc_mac);
+    	   		 paramhash.put("hfctype", hfctype);	
+    	   		 paramhash.put("version", hfc_version);	
+    	   		 paramhash.put("logicalid", hfc_LogicalID);
+    	   		 paramhash.put("modelnumber", hfc_ModelNumber);
+    	   		 paramhash.put("serialnumber", hfc_SerialNumber);
+    	   		 paramhash.put("trapip1", trapip1);
+    	   		 paramhash.put("trapip2", trapip2);
+    	   		 paramhash.put("trapip3", trapip3);
+    	   		 paramhash.put("power1", power1);
+    	   		 paramhash.put("power_v1", power_v1);
+    	   		 paramhash.put("power2", power2);
+    	   		 paramhash.put("power_v2", power_v2);    	   		 
+    	   		 paramhash.put("channelnum", channelnum);
+    	   		 paramhash.put("innertemp", innertemp);    	   		 
+    	   		paramhash.put("r_transpower", r_transpower);
+   	   		 	paramhash.put("r_biascurrent", r_biascurrent);   	   		 	
+   	   		 	paramhash.put("out_port", out_port);
+	   		 	paramhash.put("att", att);
+	   		 	paramhash.put("eqv", eqv);
+	   		 	paramhash.put("out_level", out_level);
+	   		 	paramhash.put("inputpower", inputpower);
+	   		 	paramhash.put("agc", agc);
+    	   		 msgservice = JSONValue.toJSONString(paramhash);
+    	   		 sendToPersist(msgservice,jedis);
+            }                
+            else if (deviceid.equalsIgnoreCase("HJ-1G")|| deviceid.equalsIgnoreCase("HJ-860")){
+            	//return "光AGC工作站";
+            }                
+             else if (deviceid.equalsIgnoreCase("JS-1G-2") || deviceid.equalsIgnoreCase("SJL-1G-4") || deviceid.equalsIgnoreCase("JS-1G-2S")){
+            	 //return "带切换开关光接收机";
+             }                
+            else{
+            	//return "光工作站";
+            }
+                
+		}catch(Exception e){
+			
+		}
+		
+	}
+	
+	public static void disReceiver(String currentip, Jedis jedis){
+		
+	}
+	
+	public static void dis1550mn(String currentip, Jedis jedis){
+		
+	}
+	
+	public static void disSwitch(String currentip, Jedis jedis){
+		
+	}
+	
+	public static void disWOS2000(String currentip, Jedis jedis){
+		
+	}
+	
+	public static void disOpticalPlatform(String currentip, Jedis jedis){
+		
+	}
+	
 	public static void dis1310mn(String currentip, Jedis jedis){
 		int val = 0;
 		String hfc_mac = "";
@@ -502,7 +675,7 @@ public class WorkerDiscoveryProcessor{
         	temp = val/10 + "."+Math.abs(val%10) + "℃";
         	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,3,1,11,1}) );
         	teccurrent = val * 0.01 + "A";//val/100 + "."+Math.abs(val%100)+ Math.abs(val%10) + "A";
-        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,3,1,4,1}) );
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,3,1,5,1}) );
         	drivelevel = val + "dBuV/ch";
         	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,3,1,14,1}) );
         	mgc = val/10 + "."+Math.abs(val%10) + "db";
@@ -557,6 +730,8 @@ public class WorkerDiscoveryProcessor{
 		String hfc_ModelNumber = "";
 		String hfc_SerialNumber = "";
 		String hfctype = "掺铒光纤放大器";
+		String inpower="";
+		String outpower="";
 		String trapip1="";
 		String trapip2="";
 		String trapip3="";
@@ -570,6 +745,7 @@ public class WorkerDiscoveryProcessor{
 		String ref_c2 = "";
 		String pump_t1 = "";
 		String pump_t2 = "";
+		String innertemp="";
 		String msgservice="";
     	//String temp = String.valueOf(util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,13,0})))+ "℃";
 		try{
@@ -604,6 +780,12 @@ public class WorkerDiscoveryProcessor{
 	    	pump_t1 = val/10 + "."+Math.abs(val%10) + "℃";
 	    	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,4,1,4,2}) );
 	    	pump_t2 = val/10 + "."+Math.abs(val%10) + "℃";	
+	    	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,2,0}) );
+	    	inpower = val/10 + "."+Math.abs(val%10) + "dBm";
+	    	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,11,3,0}) );
+	    	outpower = val/10 + "."+Math.abs(val%10) + "dBm";
+	    	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,13,0}) );
+	    	innertemp = val + "℃";
 		}catch(Exception e){
 			e.printStackTrace();
 		}    		     
@@ -630,6 +812,9 @@ public class WorkerDiscoveryProcessor{
 		 paramhash.put("ref_c2", ref_c2);
 		 paramhash.put("pump_t1", pump_t1);
 		 paramhash.put("pump_t2", pump_t2);
+		 paramhash.put("inpower", inpower);
+		 paramhash.put("outpower", outpower);
+		 paramhash.put("innertemp", innertemp);
 		 msgservice = JSONValue.toJSONString(paramhash);
 		 
 		 sendToPersist(msgservice,jedis);

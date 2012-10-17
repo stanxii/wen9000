@@ -255,7 +255,7 @@ public class TrapReceiverBean {
 					e.printStackTrace();
 				}    
 				
-				System.out.println("-------------------------->>>>>>>>alrmlen====="+recVBs.size());
+				//System.out.println("-------------------------->>>>>>>>alrmlen====="+recVBs.size());
 				
 			}
 

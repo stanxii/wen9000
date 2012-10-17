@@ -355,9 +355,19 @@ public class ServiceDiscoveryProcessor  {
 			saveEDFA(hfctype,jsonobj);			
 		}else if(hfctype.equalsIgnoreCase("1310nm光发射机")){
 			save1310(hfctype,jsonobj);			
-		}
-		
-		
+		}else if(hfctype.equalsIgnoreCase("光平台")){
+			saveOpticalPlatform(hfctype,jsonobj);			
+		}else if(hfctype.equalsIgnoreCase("万隆8槽WOS2000")){
+			saveWOS2000(hfctype,jsonobj);			
+		}else if(hfctype.equalsIgnoreCase("万隆增强光开关")){
+			saveSwitch(hfctype,jsonobj);			
+		}else if(hfctype.equalsIgnoreCase("光工作站")){
+			saveWorkStation(hfctype,jsonobj);			
+		}else if(hfctype.equalsIgnoreCase("光接收机")){
+			saveReceiver(hfctype,jsonobj);			
+		}else if(hfctype.equalsIgnoreCase("1550光发射机")){
+			save1550(hfctype,jsonobj);			
+		}	
 		
 	}
 	
@@ -472,6 +482,118 @@ public class ServiceDiscoveryProcessor  {
 	    jedis.publish("node.tree.statuschange", jsonString);
 	}
 	
+	private static void save1550(String hfctype,Map jsonobj){
+			
+	}
+	
+	private static void saveReceiver(String hfctype,Map jsonobj){
+		String ip =(String) jsonobj.get("ip");
+		String hfcmac =(String) jsonobj.get("hfcmac");			
+		String version =(String) jsonobj.get("version");
+		String logicalid =(String) jsonobj.get("logicalid");
+		String modelnumber =(String) jsonobj.get("modelnumber");
+		String serialnumber =(String) jsonobj.get("serialnumber");
+		String trapip1 =(String) jsonobj.get("trapip1");
+		String trapip2 =(String) jsonobj.get("trapip2");
+		String trapip3 =(String) jsonobj.get("trapip3");
+		String power1 =(String) jsonobj.get("power1");
+		String power_v1 =(String) jsonobj.get("power_v1");
+		String power2 =(String) jsonobj.get("power2");
+		String power_v2 =(String) jsonobj.get("power_v2");
+		String channelnum = String.valueOf(jsonobj.get("channelnum"));
+		String r_transpower = (String) jsonobj.get("r_transpower");
+		String r_biascurrent = (String) jsonobj.get("r_biascurrent");
+		String out_port = (String) jsonobj.get("out_port");
+		String att = (String) jsonobj.get("att");
+		String eqv = (String) jsonobj.get("eqv");
+		String out_level = (String) jsonobj.get("out_level");
+		String inputpower = (String) jsonobj.get("inputpower");
+		String innertemp = (String) jsonobj.get("innertemp");
+		String agc = (String) jsonobj.get("agc");
+		String hfckey = "mac:" +  hfcmac.toLowerCase().trim() + ":deviceid";
+		
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);			
+		}
+		
+		//get hfcmac if exist in redis server
+		String shfcid = jedis.get(hfckey);
+		
+		long hfcid ;
+		
+		if(shfcid == null) {
+			hfcid = jedis.incr("global:deviceid");
+			jedis.set(hfckey, Long.toString(hfcid));
+		}else {
+			hfcid = Long.parseLong(shfcid);			
+		}		
+		
+		String shfcentitykey = "hfcid:" + hfcid + ":entity";
+		Map<String , String >  hfcentity = new HashMap<String, String>();
+		 
+		hfcentity.put("mac", hfcmac.toLowerCase().trim());
+		//hfcentity.put("oid", oid);
+		hfcentity.put("ip", ip.toLowerCase().trim());
+		//hfcentity.put("gateway", gateway.toLowerCase().trim());
+		hfcentity.put("active", "1");
+		hfcentity.put("lable", ip.toLowerCase().trim());
+		hfcentity.put("hfctype", hfctype.toLowerCase().trim());
+		hfcentity.put("version", version.toLowerCase().trim());
+		hfcentity.put("logicalid", logicalid.toLowerCase().trim());
+		hfcentity.put("modelnumber", modelnumber.toLowerCase().trim());
+		hfcentity.put("serialnumber", serialnumber.toLowerCase().trim());
+		hfcentity.put("trapip1", trapip1.toLowerCase().trim());
+		hfcentity.put("trapip2", trapip2.toLowerCase().trim());
+		hfcentity.put("trapip3", trapip3.toLowerCase().trim());
+		hfcentity.put("power1", power1.trim());
+		hfcentity.put("power_v1", power_v1.trim());
+		hfcentity.put("power2", power2.trim());
+		hfcentity.put("power_v2", power_v2.trim());
+		hfcentity.put("r_transpower", r_transpower.trim());
+		hfcentity.put("r_biascurrent", r_biascurrent.trim());
+		hfcentity.put("channelnum", channelnum);
+		hfcentity.put("out_port", out_port);
+		hfcentity.put("att", att);
+		hfcentity.put("eqv", eqv);
+		hfcentity.put("out_level", out_level);
+		hfcentity.put("inputpower", inputpower);	   		 
+		hfcentity.put("agc", agc);
+		hfcentity.put("innertemp", innertemp);
+		jedis.hmset(shfcentitykey, hfcentity);
+		jedis.set("devip:"+ip+":mac", hfcmac.toLowerCase());
+		jedis.save();
+		
+		Sendstschange("hfc",String.valueOf(hfcid),jedis);
+		
+		//发现新设备头端，通知前端		
+		JSONObject json = new JSONObject();
+		json.put("mac", hfcmac.toLowerCase().trim());
+		json.put("active", "1");
+		json.put("ip", ip.toLowerCase().trim());
+		json.put("devicetype", hfctype.toLowerCase().trim());
+		jedis.publish("node.dis.findcbat", json.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void saveWorkStation(String hfctype,Map jsonobj){
+		
+	}
+	
+	private static void saveSwitch(String hfctype,Map jsonobj){
+		
+	}
+	
+	private static void saveWOS2000(String hfctype,Map jsonobj){
+		
+	}
+	
+	private static void saveOpticalPlatform(String hfctype,Map jsonobj){
+		
+	}
+	
 	private static void save1310(String hfctype,Map jsonobj){
 		String ip =(String) jsonobj.get("ip");
 		//String gateway =(String) jsonobj.get("gateway");
@@ -565,6 +687,14 @@ public class ServiceDiscoveryProcessor  {
 		jedis.save();
 		
 		Sendstschange("hfc",String.valueOf(hfcid),jedis);
+		
+		//发现新设备头端，通知前端		
+		JSONObject json = new JSONObject();
+		json.put("mac", hfcmac.toLowerCase().trim());
+		json.put("active", "1");
+		json.put("ip", ip.toLowerCase().trim());
+		json.put("devicetype", hfctype.toLowerCase().trim());
+		jedis.publish("node.dis.findcbat", json.toJSONString());
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -591,7 +721,9 @@ public class ServiceDiscoveryProcessor  {
 		String ref_c2 =(String) jsonobj.get("ref_c2");
 		String pump_t1 =(String) jsonobj.get("pump_t1");
 		String pump_t2 =(String) jsonobj.get("pump_t2");
-
+		String inpower =(String) jsonobj.get("inpower");
+		String outpower =(String) jsonobj.get("outpower");
+		String innertemp =(String) jsonobj.get("innertemp");
 		String hfckey = "mac:" +  hfcmac.toLowerCase().trim() + ":deviceid";
 		
 		Jedis jedis=null;
@@ -640,11 +772,22 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("ref_c2", ref_c2.trim());
 		hfcentity.put("pump_t1", pump_t1.trim());
 		hfcentity.put("pump_t2", pump_t2.trim());
+		hfcentity.put("inpower", inpower.trim());
+		hfcentity.put("outpower", outpower.trim());
+		hfcentity.put("innertemp", innertemp.trim());
 		jedis.hmset(shfcentitykey, hfcentity);
 
 		jedis.save();
 		
 		Sendstschange("hfc",String.valueOf(hfcid),jedis);
+		
+		//发现新设备，通知前端		
+		JSONObject json = new JSONObject();
+		json.put("mac", hfcmac.toLowerCase().trim());
+		json.put("active", "1");
+		json.put("ip", ip.toLowerCase().trim());
+		json.put("devicetype", hfctype.toLowerCase().trim());
+		jedis.publish("node.dis.findcbat", json.toJSONString());
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 

@@ -815,15 +815,20 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: Viewmodeget==='+data);
 	  publish.publish('servicecontroller.Viewmodeget', data);
   });
-//HFC信息提交
+//HFC基本信息提交
   socket.on('hfc_sub', function (data) {
 	  console.log('nodeserver: hfc_sub==='+data);
 	  publish.publish('servicecontroller.hfc_sub', data);
   });
-//HFC信息提交
+//HFC门限信息提交
   socket.on('hfc_alarmthresholdsub', function (data) {
 	  console.log('nodeserver: hfc_alarmthresholdsub==='+data);
 	  publish.publish('servicecontroller.hfc_alarmthresholdsub', data);
+  });
+//HFC参数信息提交
+  socket.on('hfc_set', function (data) {
+	  console.log('nodeserver: hfc_set==='+data);
+	  publish.publish('servicecontroller.hfc_set', data);
   });
 //设备查询
   socket.on('devsearch', function (data) {

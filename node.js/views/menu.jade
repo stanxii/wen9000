@@ -17,7 +17,7 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
       p  提示.
     p.
       操作失败.
-      \请确认与设备通信是否正常!
+      \请确认参数值和通信是否正常!
 
   ul#myMenu(class='contextMenu')
     li.delete
@@ -50,3 +50,6 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
           lable  参数的死区门限
         td
           input(id='deadb',type='text',value='')
+  div(id='dialog_setvalue',title='设置参数值',style='display:none')
+    lable  参数值:
+    input(id='hfc_setval',type='text')

@@ -262,6 +262,8 @@ public class ServiceController {
 			doViewmodeGet(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.hfc_sub")){
 			doHfcsub(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.hfc_set")){
+			doHfcset(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.hfc_alarmthresholdsub")){
 			doHfcThresholdsub(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.devsearch")){
@@ -420,6 +422,10 @@ public class ServiceController {
 		String type = jsondata.get("type").toString();
 		if(type.equalsIgnoreCase("掺铒光纤放大器")){
 			ThresholdSet_EDFA(jedis,ParamMibOID,json,jsondata);
+		}else if(type.equalsIgnoreCase("1310nm光发射机")){
+			ThresholdSet_1310(jedis,ParamMibOID,json,jsondata);
+		}else if(type.equalsIgnoreCase("光接收机")){
+			ThresholdSet_Receiver(jedis,ParamMibOID,json,jsondata);
 		}
 
 	}	
@@ -430,8 +436,153 @@ public class ServiceController {
 		
 		if(type.equalsIgnoreCase("掺铒光纤放大器")){
 			ThresholdGet_EDFA(jedis,ParamMibOID,json,jsondata);
+		}else if(type.equalsIgnoreCase("1310nm光发射机")){
+			ThresholdGet_1310(jedis,ParamMibOID,json,jsondata);
+		}else if(type.equalsIgnoreCase("光接收机")){
+			ThresholdGet_Receiver(jedis,ParamMibOID,json,jsondata);
 		}
 		
+	}
+	
+	private static void doHfcset(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		int index = 0;
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String name = jsondata.get("key").toString();
+		String val = jsondata.get("val").toString();
+		String ip = jsondata.get("ip").toString();
+		String mac = jsondata.get("mac").toString().trim();
+		String user = jsondata.get("user").toString().trim();
+		String type = jsondata.get("type").toString().trim();
+		String id = jedis.get("mac:"+ mac + ":deviceid");
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		JSONObject json = new JSONObject();
+		try{
+			//判断设备是否在线
+			String oid = util.gethfcStrPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
+					2, 1, 1, 2, 0 }));
+			if ((oid == null) || (oid == "")) {
+				json.put("code", "1");
+				json.put("result", "");
+				jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+				redisUtil.getJedisPool().returnResource(jedis);
+				return ;
+			}						
+			if(type.equalsIgnoreCase("1310nm光发射机")){
+				if(name.equalsIgnoreCase("hfcagccontrol")){
+					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,3,1,12,1}), new Integer32(Integer.parseInt(val)));
+					optjson.put("desc", "HFC设备["+mac+"]AGC控制使能状态变迁.");
+					
+					json.put("code", "3");
+					json.put("result", val);
+					jedis.publish("node.opt.hfcsubresponse", json.toJSONString());		
+					
+			    	sendoptlog(jedis,optjson);
+			    	redisUtil.getJedisPool().returnResource(jedis);
+			    	return;
+				}else if(name.equalsIgnoreCase("hfc_channelnum")){
+					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,3,1,15,1}), new Integer32(Integer.parseInt(val)));
+					optjson.put("desc", "HFC设备["+mac+"]电视信号频道数修改,当前值:"+val);
+				}else if(name.equalsIgnoreCase("hfc_mgc")){
+					try{
+						index = val.indexOf(".");
+						if(index >0){
+							val = val.substring(0, index) + val.substring(index + 1, index +2);
+						}else{
+							val = val + "0";
+						}
+					}catch(Exception e){
+						
+					}					
+					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,3,1,14,1}), new Integer32(Integer.parseInt(val)));
+					optjson.put("desc", "HFC设备["+mac+"]MGC衰减量修改,当前值:"+val);
+				}else if(name.equalsIgnoreCase("hfc_agc")){
+					try{
+						index = val.indexOf(".");
+						if(index >0){
+							val = val.substring(0, index) + val.substring(index + 1, index +2);
+						}else{
+							val = val + "0";
+						}
+					}catch(Exception e){
+						
+					}
+					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,6,3,1,13,1}), new Integer32(Integer.parseInt(val)));
+					optjson.put("desc", "HFC设备["+mac+"]AGC偏移量修改,当前值:"+val);
+				}
+			}else if(type.equalsIgnoreCase("光接收机")){
+				if(name.equalsIgnoreCase("hfc_rechannelnum")){
+					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,20,0}), new Integer32(Integer.parseInt(val)));
+					optjson.put("desc", "HFC设备["+mac+"]频道数修改,当前值:"+val);
+				}else if(name.equalsIgnoreCase("hfc_agc")){
+					try{
+						index = val.indexOf(".");
+						if(index >0){
+							val = val.substring(0, index) + val.substring(index + 1, index +2);
+						}else{
+							val = val + "0";
+						}
+					}catch(Exception e){
+						
+					}
+					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,28,0}), new Integer32(Integer.parseInt(val)));
+					optjson.put("desc", "HFC设备["+mac+"]AGC启控光功率修改,当前值:"+val);
+				}else if(name.equalsIgnoreCase("hfc_att")){
+					try{
+						index = val.indexOf(".");
+						if(index >0){
+							val = val.substring(0, index) + val.substring(index + 1, index +2);
+						}else{
+							val = val + "0";
+						}
+					}catch(Exception e){
+						
+					}
+					log.info("----val----"+val+"--------parsedval-----"+Integer.parseInt(val));
+					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,9,1}), new Integer32(Integer.parseInt(val)));
+					optjson.put("desc", "HFC设备["+mac+"]衰减值 修改,当前值:"+val);
+				}else if(name.equalsIgnoreCase("hfc_eqv")){
+					try{
+						index = val.indexOf(".");
+						if(index >0){
+							val = val.substring(0, index) + val.substring(index + 1, index +2);
+						}else{
+							val = val + "0";
+						}
+					}catch(Exception e){
+						
+					}
+					util.sethfcPDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,10,1}), new Integer32(Integer.parseInt(val)));
+					optjson.put("desc", "HFC设备["+mac+"]均衡值 修改,当前值:"+val);
+				}
+			}
+		}catch(Exception e){
+			json.put("code", "1");
+			json.put("result", "");
+			jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+			redisUtil.getJedisPool().returnResource(jedis);
+			e.printStackTrace();
+			return ;	
+		}		
+		
+		json.put("code", "1");
+		json.put("result", "ok");
+		jedis.publish("node.opt.hfcsubresponse", json.toJSONString());		
+		
+    	sendoptlog(jedis,optjson);
+    	redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
 	private static void doHfcsub(String message) throws ParseException{
@@ -453,6 +604,7 @@ public class ServiceController {
 			String ip = jsondata.get("ip").toString();
 			String mac = jsondata.get("mac").toString().trim();
 			String user = jsondata.get("user").toString().trim();
+			String type = jsondata.get("type").toString().trim();
 			String id = jedis.get("mac:"+ mac + ":deviceid");
 
 			JSONObject optjson = new JSONObject();
@@ -775,32 +927,24 @@ public class ServiceController {
 		}
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String mac = jsondata.get("hfcmac").toString();
-		String ip = jsondata.get("hfcip").toString();
+		//String ip = jsondata.get("hfcip").toString();
 		String lable = jsondata.get("hfclable").toString();
+		String user = jsondata.get("user").toString();
 		String id = jedis.get("mac:"+mac+":deviceid");
 		String key = "hfcid:"+id+":entity";
 		//save		
 		jedis.hset(key, "lable", lable);
-		//log.info("----------->>key===="+key+"------------------->>>ip==="+jedis.hget(key, "ip"));
-//		if(!jedis.hget(key, "ip").equalsIgnoreCase(ip)){			
-//			String oid = null;
-//			try {
-//				oid = util.gethfcStrPDU(jedis.hget(key, "ip"), "161", new OID(new int[] { 1, 3, 6, 1,
-//						2, 1, 1, 2, 0 }));
-//				if ((oid != null) && (oid != "")) {
-//					jedis.publish("node.tree.hfcbase", "");
-//					redisUtil.getJedisPool().returnBrokenResource(jedis);
-//					return;
-//				}else{
-//					util.sethfcIpPDU(jedis.hget(key, "ip"), "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,9,0}), InetAddress.getByName(ip));
-//					jedis.hset(key, "ip", ip);
-//				}
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
 		jedis.save();
 		jedis.publish("node.tree.hfcbase", "ok");
+		
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "局端设备["+mac+"]标识更改为:"+lable);
+    	sendoptlog(jedis,optjson);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -858,6 +1002,9 @@ public class ServiceController {
 			json.put("ref_c2", jedis.hget(hfckey, "ref_c2"));
 			json.put("pump_t1", jedis.hget(hfckey, "pump_t1"));
 			json.put("pump_t2", jedis.hget(hfckey, "pump_t2"));
+			json.put("outpower", jedis.hget(hfckey, "outpower"));
+			json.put("inpower", jedis.hget(hfckey, "inpower"));
+			json.put("innertemp", jedis.hget(hfckey, "innertemp"));
 		}else if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("1310nm光发射机")){
 			json.put("power_v1", jedis.hget(hfckey, "power_v1"));
 			json.put("power1", jedis.hget(hfckey, "power1"));
@@ -878,6 +1025,31 @@ public class ServiceController {
 			json.put("mgc", jedis.hget(hfckey, "mgc"));
 			json.put("agc", jedis.hget(hfckey, "agc"));
 			json.put("innertemp", jedis.hget(hfckey, "innertemp"));
+		}else if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("光平台")){
+			
+		}else if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("万隆8槽WOS2000")){
+			
+		}else if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("万隆增强光开关")){
+			
+		}else if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("光工作站")){
+			
+		}else if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("光接收机")){
+			json.put("power_v1", jedis.hget(hfckey, "power_v1"));
+			json.put("power1", jedis.hget(hfckey, "power1"));
+			json.put("power_v2", jedis.hget(hfckey, "power_v2"));
+			json.put("power2", jedis.hget(hfckey, "power2"));
+			json.put("channelnum", jedis.hget(hfckey, "channelnum"));
+			json.put("r_transpower", jedis.hget(hfckey, "r_transpower"));
+			json.put("r_biascurrent", jedis.hget(hfckey, "r_biascurrent"));
+			json.put("out_port", jedis.hget(hfckey, "out_port"));
+			json.put("att", jedis.hget(hfckey, "att"));
+			json.put("eqv", jedis.hget(hfckey, "eqv"));			
+			json.put("out_level", jedis.hget(hfckey, "out_level"));
+			json.put("inputpower", jedis.hget(hfckey, "inputpower"));
+			json.put("agc", jedis.hget(hfckey, "agc"));
+			json.put("innertemp", jedis.hget(hfckey, "innertemp"));
+		}else if(jedis.hget(hfckey, "hfctype").equalsIgnoreCase("1550光发射机")){
+			
 		}
 		
 
@@ -1075,7 +1247,10 @@ public class ServiceController {
 		//全局头端升级判断
 		jedis.set("global:isupdating", "false");
 		//全局显示模式
-		jedis.set("global:displaymode", "0");
+		if(!jedis.exists("global:displaymode")){
+			jedis.set("global:displaymode", "0");
+		}
+		
 		//初始化超级用户
 		if(!jedis.exists("user:admin")){
 			jedis.hset("user:admin", "password", "admin");
@@ -3334,7 +3509,7 @@ public class ServiceController {
     		
     		//hfcinfo
     		JSONObject hfcinfo = new JSONObject();
-    		hfcinfo.put("key", "hfctype");
+    		hfcinfo.put("key", "hfctype_"+jedis.hget(key, "mac"));
     		hfcinfo.put("title", jedis.hget(key, "hfctype"));
     		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
     			hfcinfo.put("icon",  "tp.png");        			
@@ -3345,7 +3520,7 @@ public class ServiceController {
     		hfcinfos.add(hfcinfo);
     		
     		hfcinfo = new JSONObject();
-    		hfcinfo.put("key", "modelnumber");
+    		hfcinfo.put("key", "modelnumber_"+jedis.hget(key, "mac"));
     		hfcinfo.put("title", jedis.hget(key, "modelnumber"));
     		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
     			hfcinfo.put("icon",  "tp.png");        			
@@ -3356,7 +3531,7 @@ public class ServiceController {
     		hfcinfos.add(hfcinfo);
     		
     		hfcinfo = new JSONObject();
-    		hfcinfo.put("key", "logicalid");
+    		hfcinfo.put("key", "logicalid_"+jedis.hget(key, "mac"));
     		hfcinfo.put("title", jedis.hget(key, "logicalid"));
     		if(jedis.hget(key, "active").equalsIgnoreCase("1")){
     			hfcinfo.put("icon",  "tp.png");        			
@@ -3999,7 +4174,7 @@ public class ServiceController {
 				mac += ":";
 			}
 		}
-		System.out.println("======>>>mac = "+ mac);
+		//System.out.println("======>>>mac = "+ mac);
 		return mac;
 	}
 
@@ -4288,44 +4463,53 @@ public class ServiceController {
 		LOLOOid = new OID(LOLOOidStr + extraoid);
 		int index = 0;
 		try{
-			index = hihi.indexOf(".");
-			if(index >0){
-				hihi = hihi.substring(0, index) + hihi.substring(index + 1, index +2);
+			if(key.equalsIgnoreCase("hfc_bias_c1")||(key.equalsIgnoreCase("hfc_bias_c2"))){
 				util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi)));
-			}else{
-				util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi)));
-			}			
-			index = hi.indexOf(".");
-			if(index >0){
-				hi = hi.substring(0, index) + hi.substring(index + 1, index +2);
 				util.sethfcPDU(ip, "161",HIOid , new Integer32(Integer.parseInt(hi)));
+				util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo)));
+				util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo)));
+				util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb)));
 			}else{
-				util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi)));
+				index = hihi.indexOf(".");
+				if(index >0){
+					hihi = hihi.substring(0, index) + hihi.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi)));
+				}else{
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi + "0")));
+				}			
+				index = hi.indexOf(".");
+				if(index >0){
+					hi = hi.substring(0, index) + hi.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",HIOid , new Integer32(Integer.parseInt(hi)));
+				}else{
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi + "0")));
+				}
+				
+				index = lo.indexOf(".");
+				if(index >0){
+					lo = lo.substring(0, index) + lo.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo)));
+				}else{
+					util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo + "0")));
+				}		
+				
+				index = lolo.indexOf(".");
+				if(index >0){
+					lolo = lolo.substring(0, index) + lolo.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo)));
+				}else{
+					util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo + "0")));
+				}		
+				
+				index = deadb.indexOf(".");
+				if(index >0){
+					deadb = deadb.substring(0, index) + deadb.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb)));
+				}else{
+					util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb + "0")));
+				}			
 			}
 			
-			index = lo.indexOf(".");
-			if(index >0){
-				lo = lo.substring(0, index) + lo.substring(index + 1, index +2);
-				util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo)));
-			}else{
-				util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo)));
-			}		
-			
-			index = lolo.indexOf(".");
-			if(index >0){
-				lolo = lolo.substring(0, index) + lolo.substring(index + 1, index +2);
-				util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo)));
-			}else{
-				util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo)));
-			}		
-			
-			index = deadb.indexOf(".");
-			if(index >0){
-				deadb = deadb.substring(0, index) + deadb.substring(index + 1, index +2);
-				util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb)));
-			}else{
-				util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb)));
-			}			
 		}catch(Exception e){					
 			e.printStackTrace();
 			json.put("code", "1");
@@ -4396,17 +4580,391 @@ public class ServiceController {
 			int vlolo = util.gethfcINT32PDU(ip, "161", LOLOOid);
 			int vlo = util.gethfcINT32PDU(ip, "161", LOOid);
 			int deadb = util.gethfcINT32PDU(ip, "161", DeadBOid);
-			json.put("DeadBOid", deadb/10+"."+Math.abs(deadb%10));
-			json.put("HIHIOid", vhihi/10+"."+Math.abs(vhihi%10));
-			json.put("HIOid", vhi/10+"."+Math.abs(vhi%10));
-			json.put("LOOid", vlo/10+"."+Math.abs(vlo%10));
-			json.put("LOLOOid", vlolo/10+"."+Math.abs(vlolo%10));						
+			if(key.equalsIgnoreCase("hfc_bias_c1")||(key.equalsIgnoreCase("hfc_bias_c2"))){
+				json.put("DeadBOid", deadb);
+				json.put("HIHIOid", vhihi);
+				json.put("HIOid", vhi);
+				json.put("LOOid", vlo);
+				json.put("LOLOOid", vlolo);
+			}else{
+				json.put("DeadBOid", deadb/10+"."+Math.abs(deadb%10));
+				json.put("HIHIOid", vhihi/10+"."+Math.abs(vhihi%10));
+				json.put("HIOid", vhi/10+"."+Math.abs(vhi%10));
+				json.put("LOOid", vlo/10+"."+Math.abs(vlo%10));
+				json.put("LOLOOid", vlolo/10+"."+Math.abs(vlolo%10));
+			}						
 
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 		json.put("key", key);
 		json.put("code", "2");
+		json.put("result", "ok");
+		jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+	}
+	
+	
+	private static void ThresholdGet_1310(Jedis jedis, String ParamMibOID, JSONObject json,JSONObject jsondata){
+		String key = jsondata.get("key").toString();
+		String ip = jsondata.get("ip").toString();
+		String extraoid = "";
+		String AlarmSatOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.3";
+		String AlarmEnOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.2";
+		String DeadBOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.8";
+		String HIHIOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.4";
+		String HIOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.5";
+		String LOOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.6";
+		String LOLOOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.7";
+		OID DeadBOid = null;
+		OID HIHIOid = null;
+		OID LOOid = null;
+		OID HIOid = null;
+		OID LOLOOid = null;
+		if(key.equalsIgnoreCase("hfc_powerv1")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.8.1.2.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_powerv2")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.8.1.2.2";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_powerv3")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.8.1.2.3";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_drivelevel")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.5.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_rfattrange")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.6.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_outputpower")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.10.1";
+			extraoid = ".13" +	ParamMibOID;
+		}else if(key.equalsIgnoreCase("hfc_lasercurrent")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.9.1";
+			extraoid = ".13" +	ParamMibOID;
+		}else if(key.equalsIgnoreCase("hfc_temp")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.8.1";
+			extraoid = ".13" +	ParamMibOID;
+		}else if(key.equalsIgnoreCase("hfc_teccurrent")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.11.1";
+			extraoid = ".13" +	ParamMibOID;
+		}
+		HIHIOid = new OID(HIHIOidStr + extraoid);
+		LOOid = new OID(LOOidStr + extraoid);
+		HIOid = new OID(HIOidStr + extraoid);
+		LOLOOid = new OID(LOLOOidStr + extraoid);
+		DeadBOid = new OID(DeadBOidStr + extraoid);				
+		try{
+			int vhihi = util.gethfcINT32PDU(ip, "161", HIHIOid);
+			int vhi = util.gethfcINT32PDU(ip, "161", HIOid);
+			int vlolo = util.gethfcINT32PDU(ip, "161", LOLOOid);
+			int vlo = util.gethfcINT32PDU(ip, "161", LOOid);
+			int deadb = util.gethfcINT32PDU(ip, "161", DeadBOid);
+			if(key.equalsIgnoreCase("hfc_drivelevel")){
+				json.put("DeadBOid", deadb);
+				json.put("HIHIOid", vhihi);
+				json.put("HIOid", vhi);
+				json.put("LOOid", vlo);
+				json.put("LOLOOid", vlolo);
+			}else{
+				json.put("DeadBOid", deadb/10+"."+Math.abs(deadb%10));
+				json.put("HIHIOid", vhihi/10+"."+Math.abs(vhihi%10));
+				json.put("HIOid", vhi/10+"."+Math.abs(vhi%10));
+				json.put("LOOid", vlo/10+"."+Math.abs(vlo%10));
+				json.put("LOLOOid", vlolo/10+"."+Math.abs(vlolo%10));
+			}		
+
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		json.put("key", key);
+		json.put("code", "2");
+		json.put("result", "ok");
+		jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+	}
+	
+	private static void ThresholdSet_1310(Jedis jedis, String ParamMibOID, JSONObject json,JSONObject jsondata){
+		String key = jsondata.get("key").toString();
+		String ip = jsondata.get("ip").toString();
+		String hihi = jsondata.get("hihi").toString();
+		String hi = jsondata.get("hi").toString();
+		String lo = jsondata.get("lo").toString();
+		String lolo = jsondata.get("lolo").toString();
+		String deadb = jsondata.get("deadb").toString();
+		String extraoid = "";
+		String AlarmSatOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.3";
+		String AlarmEnOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.2";
+		String DeadBOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.8";
+		String HIHIOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.4";
+		String HIOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.5";
+		String LOOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.6";
+		String LOLOOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.7";
+		OID DeadBOid = null;
+		OID HIHIOid = null;
+		OID LOOid = null;
+		OID HIOid = null;
+		OID LOLOOid = null;
+		if(key.equalsIgnoreCase("hfc_powerv1")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.8.1.2.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_powerv2")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.8.1.2.2";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_powerv3")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.8.1.2.3";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_drivelevel")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.5.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_rfattrange")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.6.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_outputpower")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.10.1";
+			extraoid = ".13" +	ParamMibOID;
+		}else if(key.equalsIgnoreCase("hfc_lasercurrent")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.9.1";
+			extraoid = ".13" +	ParamMibOID;
+		}else if(key.equalsIgnoreCase("hfc_temp")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.8.1";
+			extraoid = ".13" +	ParamMibOID;
+		}else if(key.equalsIgnoreCase("hfc_teccurrent")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.6.3.1.11.1";
+			extraoid = ".13" +	ParamMibOID;
+		}
+		DeadBOid = new OID(DeadBOidStr + extraoid);
+		HIHIOid = new OID(HIHIOidStr + extraoid);
+		LOOid = new OID(LOOidStr + extraoid);
+		HIOid = new OID(HIOidStr + extraoid);
+		LOLOOid = new OID(LOLOOidStr + extraoid);
+		int index = 0;
+		try{
+			if(key.equalsIgnoreCase("hfc_drivelevel")){
+				util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi)));
+				util.sethfcPDU(ip, "161",HIOid , new Integer32(Integer.parseInt(hi)));
+				util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo)));
+				util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo)));
+				util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb)));
+			}else{
+				index = hihi.indexOf(".");
+				if(index >0){
+					hihi = hihi.substring(0, index) + hihi.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi)));
+				}else{
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi + "0")));
+				}			
+				index = hi.indexOf(".");
+				if(index >0){
+					hi = hi.substring(0, index) + hi.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",HIOid , new Integer32(Integer.parseInt(hi)));
+				}else{
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi + "0")));
+				}				
+				index = lo.indexOf(".");
+				if(index >0){
+					lo = lo.substring(0, index) + lo.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo)));
+				}else{
+					util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo + "0")));
+				}		
+				
+				index = lolo.indexOf(".");
+				if(index >0){
+					lolo = lolo.substring(0, index) + lolo.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo)));
+				}else{
+					util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo + "0")));
+				}		
+				
+				index = deadb.indexOf(".");
+				if(index >0){
+					deadb = deadb.substring(0, index) + deadb.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb)));
+				}else{
+					util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb + "0")));
+				}
+			}
+		}catch(Exception e){					
+			e.printStackTrace();
+			json.put("code", "1");
+			json.put("result", "");
+			jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+			return;
+		}
+		json.put("code", "1");
+		json.put("result", "ok");
+		jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+	}
+	
+	private static void ThresholdGet_Receiver(Jedis jedis, String ParamMibOID, JSONObject json,JSONObject jsondata){
+		String key = jsondata.get("key").toString();
+		String ip = jsondata.get("ip").toString();
+		String extraoid = "";
+		String AlarmSatOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.3";
+		String AlarmEnOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.2";
+		String DeadBOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.8";
+		String HIHIOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.4";
+		String HIOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.5";
+		String LOOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.6";
+		String LOLOOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.7";
+		OID DeadBOid = null;
+		OID HIHIOid = null;
+		OID LOOid = null;
+		OID HIOid = null;
+		OID LOLOOid = null;
+		if(key.equalsIgnoreCase("hfc_powerv1")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.19.1.2.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_powerv2")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.19.1.2.2";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_ingonglv")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.5.1.2.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_r_transpower")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.3.1.7.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_r_biascurrent")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.3.1.2.1";
+			extraoid = ".13" +	ParamMibOID;
+		}else if(key.equalsIgnoreCase("hfc_out_level")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.11.1.4.1";
+			extraoid = ".13" +	ParamMibOID;
+		}
+		HIHIOid = new OID(HIHIOidStr + extraoid);
+		LOOid = new OID(LOOidStr + extraoid);
+		HIOid = new OID(HIOidStr + extraoid);
+		LOLOOid = new OID(LOLOOidStr + extraoid);
+		DeadBOid = new OID(DeadBOidStr + extraoid);				
+		try{
+			int vhihi = util.gethfcINT32PDU(ip, "161", HIHIOid);
+			int vhi = util.gethfcINT32PDU(ip, "161", HIOid);
+			int vlolo = util.gethfcINT32PDU(ip, "161", LOLOOid);
+			int vlo = util.gethfcINT32PDU(ip, "161", LOOid);
+			int deadb = util.gethfcINT32PDU(ip, "161", DeadBOid);
+			if(key.equalsIgnoreCase("hfc_r_biascurrent")||(key.equalsIgnoreCase("hfc_out_level"))){
+				json.put("DeadBOid", deadb);
+				json.put("HIHIOid", vhihi);
+				json.put("HIOid", vhi);
+				json.put("LOOid", vlo);
+				json.put("LOLOOid", vlolo);
+			}else{
+				json.put("DeadBOid", deadb/10+"."+Math.abs(deadb%10));
+				json.put("HIHIOid", vhihi/10+"."+Math.abs(vhihi%10));
+				json.put("HIOid", vhi/10+"."+Math.abs(vhi%10));
+				json.put("LOOid", vlo/10+"."+Math.abs(vlo%10));
+				json.put("LOLOOid", vlolo/10+"."+Math.abs(vlolo%10));
+			}			
+
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		json.put("key", key);
+		json.put("code", "2");
+		json.put("result", "ok");
+		jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+	}
+	
+	private static void ThresholdSet_Receiver(Jedis jedis, String ParamMibOID, JSONObject json,JSONObject jsondata){
+		String key = jsondata.get("key").toString();
+		String ip = jsondata.get("ip").toString();
+		String hihi = jsondata.get("hihi").toString();
+		String hi = jsondata.get("hi").toString();
+		String lo = jsondata.get("lo").toString();
+		String lolo = jsondata.get("lolo").toString();
+		String deadb = jsondata.get("deadb").toString();
+		String extraoid = "";
+		String AlarmSatOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.3";
+		String AlarmEnOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.2";
+		String DeadBOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.8";
+		String HIHIOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.4";
+		String HIOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.5";
+		String LOOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.6";
+		String LOLOOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.7";
+		OID DeadBOid = null;
+		OID HIHIOid = null;
+		OID LOOid = null;
+		OID HIOid = null;
+		OID LOLOOid = null;
+		if(key.equalsIgnoreCase("hfc_powerv1")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.19.1.2.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_powerv2")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.19.1.2.2";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_ingonglv")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.5.1.2.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_r_transpower")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.3.1.7.1";
+			extraoid = ".13" +	ParamMibOID;				
+		}else if(key.equalsIgnoreCase("hfc_r_biascurrent")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.3.1.2.1";
+			extraoid = ".13" +	ParamMibOID;
+		}else if(key.equalsIgnoreCase("hfc_out_level")){
+			ParamMibOID = ".1.3.6.1.4.1.17409.1.10.11.1.4.1";
+			extraoid = ".13" +	ParamMibOID;
+		}
+		DeadBOid = new OID(DeadBOidStr + extraoid);
+		HIHIOid = new OID(HIHIOidStr + extraoid);
+		LOOid = new OID(LOOidStr + extraoid);
+		HIOid = new OID(HIOidStr + extraoid);
+		LOLOOid = new OID(LOLOOidStr + extraoid);
+		int index = 0;		
+		try{
+			if(key.equalsIgnoreCase("hfc_r_biascurrent")||(key.equalsIgnoreCase("hfc_out_level"))){
+				util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi)));
+				util.sethfcPDU(ip, "161",HIOid , new Integer32(Integer.parseInt(hi)));
+				util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo)));
+				util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo)));
+				util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb)));
+			}else{
+				index = hihi.indexOf(".");
+				if(index >0){
+					hihi = hihi.substring(0, index) + hihi.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi)));
+				}else{
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi + "0")));
+				}			
+				index = hi.indexOf(".");
+				if(index >0){
+					hi = hi.substring(0, index) + hi.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",HIOid , new Integer32(Integer.parseInt(hi)));
+				}else{
+					util.sethfcPDU(ip, "161",HIHIOid , new Integer32(Integer.parseInt(hihi + "0")));
+				}				
+				index = lo.indexOf(".");
+				if(index >0){
+					lo = lo.substring(0, index) + lo.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo)));
+				}else{
+					util.sethfcPDU(ip, "161",LOOid , new Integer32(Integer.parseInt(lo + "0")));
+				}		
+				
+				index = lolo.indexOf(".");
+				if(index >0){
+					lolo = lolo.substring(0, index) + lolo.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo)));
+				}else{
+					util.sethfcPDU(ip, "161",LOLOOid , new Integer32(Integer.parseInt(lolo + "0")));
+				}		
+				
+				index = deadb.indexOf(".");
+				if(index >0){
+					deadb = deadb.substring(0, index) + deadb.substring(index + 1, index +2);
+					util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb)));
+				}else{
+					util.sethfcPDU(ip, "161",DeadBOid , new Integer32(Integer.parseInt(deadb + "0")));
+				}
+			}
+						
+		}catch(Exception e){					
+			e.printStackTrace();
+			json.put("code", "1");
+			json.put("result", "");
+			jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
+			return;
+		}
+		json.put("code", "1");
 		json.put("result", "ok");
 		jedis.publish("node.opt.hfcsubresponse", json.toJSONString());
 	}

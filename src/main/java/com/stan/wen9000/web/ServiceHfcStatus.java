@@ -161,10 +161,15 @@ public class ServiceHfcStatus{
 			}
 			
 			JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+			//log.info("---------------json------"+jsondata);
 			String mac = jsondata.get("mac").toString();
 			String flag = jsondata.get("flag").toString();
-			String devid = jedis.get("mac:"+mac+":deviceid");
-			String key = "hfcid:"+ devid + ":entity";
+			String devid = jedis.get("mac:"+mac.trim()+":deviceid");
+			String key = "hfcid:"+ devid + ":entity";			
+			if(jedis.hget(key, "active").equalsIgnoreCase(flag)){
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				return;
+			}
 			jedis.hset(key, "active", flag);
 			
 			Sendstschange("hfc", devid, jedis);

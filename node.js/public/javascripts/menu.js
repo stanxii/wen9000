@@ -30,9 +30,8 @@
       //db = openDatabase("Userdb", "1", "Login users", 1000);
       var user = localStorage.getItem('username');
       flag = localStorage.getItem('flag');
-      //var user = getCookie("userName");
-      //var flag = getCookie("flag");
-      $("#loginuser")[0].text = user;
+      var xxx = $("#loginuser");
+      $("#loginuser")[0].textContent = user;
 
       
 	  socket = io.connect('http://localhost:3000');
@@ -397,6 +396,7 @@
 			var key = $(this)[0].id;
 			var value;
 			var name;
+			var type = document.getElementById('hfctype').textContent;
 			if(key == "trap1sub"){
 				value = document.getElementById('trapip1').value;
 				name = "trapip1";
@@ -413,9 +413,135 @@
 			var ip = document.getElementById('hfc_ip').textContent;
 			var mac = document.getElementById('hfc_mac').textContent;
 			
-			var datastring = '{"code":"1","key":"'+name+'","val":"' + value + '","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
+			var datastring = '{"code":"1","key":"'+name+'","type":"'+type+'","val":"' + value + '","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
 			socket.emit('hfc_sub',datastring);
 			
+	 });
+	 
+	 $(".hfcset").live('dblclick', function(){
+		 if(flag == "3"){
+	   		  alert("只读用户，权限不足！");
+	   		  return;
+  	  		}
+		 var mac = document.getElementById('hfc_mac').textContent;
+		 var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
+		 if(node.data.online == "0"){
+			 alert("设备不在线！");
+			 return;
+		 }		 
+		var type = document.getElementById('hfctype').textContent;
+		var ip = document.getElementById('hfc_ip').textContent;
+		var mac = document.getElementById('hfc_mac').textContent;
+		var datastring;
+		var val = $(this)[0].value;
+		var id = $(this)[0].id;
+		$("#hfc_setval")[0].value = val;
+		$("#dialog_setvalue").dialog({
+			autoOpen: false,
+			resizable: false,
+			show: "blind",
+			hide: "explode",
+			modal: true,
+			height: 150,
+			width: 300,
+			buttons: {
+				"提交": function() {
+					if(isbusy != false){
+						return;
+					} 
+					isbusy = true;
+					document.body.style.cursor = 'wait';
+					val = $("#hfc_setval")[0].value;
+					if(id=="hfcagccontrol"){
+						if(document.getElementById('hfcagccontrol').textContent == "当前状态:AGC"){
+							//document.getElementById('hfcagccontrol').textContent = "当前状态:MGC"
+							val = "1";
+						}else{
+							//document.getElementById('hfcagccontrol').textContent = "当前状态:AGC"
+							val = "2";
+						}
+						datastring = '{"type":"'+type+'","key":"'+id+'","val":"'+val+'","cmd":"1","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
+						socket.emit('hfc_set',datastring);
+					}else{
+						if(id == "hfc_channelnum"){
+							if(isNaN(val)||(val>84)||(val<0)){
+								document.body.style.cursor = 'default';
+								isbusy = false;
+								return;
+								alert("频道数超出范围!必须是0~84之间的值!");
+							}
+						}else if(id == "hfc_mgc"){
+							if(val.substr(val.length-2,2).toLowerCase() == "db"){
+								val = val.substr(0,val.length-2);
+							}				
+							if(isNaN(val)||(val>10)||(val<0)){
+								document.body.style.cursor = 'default';
+								isbusy = false;
+								return;
+								alert("MGC衰减量超出范围!必须是0~10之间的值!");
+							}
+						}else if(id == "hfc_agc"){
+							if(val.substr(val.length-2,2).toLowerCase() == "db"){
+								val = val.substr(0,val.length-2);
+							}	
+							if(isNaN(val)||(val>5)||(val<-5)){
+								document.body.style.cursor = 'default';
+								isbusy = false;
+								return;
+								alert("AGC偏移量超出范围!必须是-5~5之间的值!");
+							}
+						}else if(id == "hfc_rechannelnum"){
+							if(isNaN(val)||(val<0)||(val>200)){
+								document.body.style.cursor = 'default';
+								isbusy = false;
+								return;
+								alert("频道数不正确!");
+							}
+						}else if(id == "hfc_att"){
+							if(val.substr(val.length-2,2).toLowerCase() == "db"){
+								val = val.substr(0,val.length-2);
+							}	
+							if(isNaN(val)||(val<0)||(val>20)){
+								document.body.style.cursor = 'default';
+								isbusy = false;
+								return;
+								alert("衰减值超出范围!(0~20)");
+							}
+						}else if(id == "hfc_eqv"){
+							if(val.substr(val.length-2,2).toLowerCase() == "db"){
+								val = val.substr(0,val.length-2);
+							}	
+							if(isNaN(val)||(val<0)||(val>10)){
+								document.body.style.cursor = 'default';
+								isbusy = false;
+								return;
+								alert("均衡值超出范围!(0~10)");
+							}
+						}else if(id == "hfc_agc"){
+							if(val.substr(val.length-3,3).toLowerCase() == "dbm"){
+								val = val.substr(0,val.length-3);
+							}	
+							if(isNaN(val)||(val<(-3))||(val>(-10))){
+								document.body.style.cursor = 'default';
+								isbusy = false;
+								return;
+								alert("AGC启控光功率超出范围!(-4~-9)");
+							}
+						}
+						datastring = '{"type":"'+type+'","key":"'+id+'","val":"'+val+'","cmd":"1","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
+						socket.emit('hfc_set',datastring);
+						$("#dialog_setvalue").dialog("close");						
+				}},
+				"取消": function() {
+					$( this ).dialog("close");
+				}
+			},
+			close: function() {
+				
+			}
+		});	
+
+		$("#dialog_setvalue").dialog("open");		
 	 });
 	 
 	 $(".hfcalarmthreshold").live('dblclick', function(){
@@ -427,16 +553,16 @@
 		 }
 		 if(isbusy != false){
 				return;
-			} 
-			isbusy = true;
-			document.body.style.cursor = 'wait';
-			var key = $(this)[0].id;
-			var type = document.getElementById('hfctype').textContent;
-			var ip = document.getElementById('hfc_ip').textContent;
-			var mac = document.getElementById('hfc_mac').textContent;
-			
-			var datastring = '{"type":"'+type+'","key":"'+key+'","cmd":"1","mac":"' + mac +'","ip":"'+ ip +'"}';
-			socket.emit('hfc_alarmthresholdsub',datastring);
+		} 
+		isbusy = true;
+		document.body.style.cursor = 'wait';
+		var key = $(this)[0].id;
+		var type = document.getElementById('hfctype').textContent;
+		var ip = document.getElementById('hfc_ip').textContent;
+		var mac = document.getElementById('hfc_mac').textContent;
+		
+		var datastring = '{"type":"'+type+'","key":"'+key+'","cmd":"1","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
+		socket.emit('hfc_alarmthresholdsub',datastring);
 			
 	 });
 	 
@@ -500,34 +626,11 @@
     		 //alert("获取数据失败！");
     	 }else{
     		 if(data.hfctype == "掺铒光纤放大器"){
-    			 $("#hfc_powerv1")[0].textContent = data.power_v1;
-    			 $("#hfc_powerv2")[0].textContent = data.power_v2;
-    			 $("#hfc_innertemp")[0].textContent = data.temp;
-    			 $("#hfc_ingonglv")[0].textContent = data.inpower;
-    			 $("#hfc_gonglv")[0].textContent = data.outpower;
-    			 $("#hfc_bias_c1")[0].textContent = data.bias_c1;
-    			 $("#hfc_ref_c1")[0].textContent = data.ref_c1;
-    			 $("#hfc_pump_t1")[0].textContent = data.pump_t1;
-    			 $("#hfc_bias_c2")[0].textContent = data.bias_c2;
-    			 $("#hfc_ref_c2")[0].textContent = data.ref_c2;
-    			 $("#hfc_pump_t2")[0].textContent = data.pump_t2;
+    			 HfcRealtime_EDFA(data);
     		 }else if(data.hfctype == "1310nm光发射机"){
-    			 $("#hfc_powerv1")[0].textContent = data.power_v1;
-    			 $("#hfc_powerv2")[0].textContent = data.power_v2;
-    			 $("#hfc_powerv3")[0].textContent = data.power_v3;
-    			 $("#hfc_drivelevel")[0].textContent = data.drivelevel;
-    			 $("#hfc_rfattrange")[0].textContent = data.rfattrange;
-    			 $("#hfc_outputpower")[0].textContent = data.outputpower;
-    			 $("#hfc_lasercurrent")[0].textContent = data.lasercurrent;
-    			 $("#hfc_temp")[0].textContent = data.temp;
-    			 $("#hfc_teccurrent")[0].textContent = data.teccurrent;
-    			 $("#hfc_innertemp")[0].textContent = data.innertemp;
-    			 var xx = $("#hfcagccontrol");
-    			 if(data.agccontrol == "1"){
-    				 $("#hfcagccontrol")[0].textContent = "当前状态:AGC";
-    			 }else{
-    				 $("#hfcagccontrol")[0].textContent = "当前状态:MGC";
-    			 }
+    			 HfcRealtime_1310(data);
+    		 }else if(data.hfctype == "光接收机"){
+    			 HfcRealtime_Receiver(data);   			 
     		 }
     	 }
      }
@@ -559,14 +662,14 @@
 			if(itemv.online == "1"){
 				node.data.icon = "cbaton.png";
 				node.data.online = "1";
-				if($("#cbatsts_l").length >0){
+				if(($("#cbatsts_l").length >0)&&(itemv.mac == $("#mac")[0].textContent)){
 					$("#cbatsts_l")[0].textContent = "设备连接正常";
 					$("#cbatsts").css("color","#3ff83d");
 				}				
 			}else{
 				node.data.icon = "cbatoff.png";
 				node.data.online = "0";
-				if($("#cbatsts_l").length >0){
+				if(($("#cbatsts_l").length >0)&&(itemv.mac == $("#mac")[0].textContent)){
 					$("#cbatsts_l")[0].textContent = "设备失去连接";
 					$("#cbatsts").css("color","red");
 				}				
@@ -615,14 +718,14 @@
 			if(itemv.online == "1"){
 				node.data.icon = "online.gif";
 				node.data.online = "1";
-				if($("#cnusts_l").length >0){
+				if(($("#cnusts_l").length >0)&&(itemv.mac == $("#cnu_mac")[0].textContent)){
 					$("#cnusts_l")[0].textContent = "设备连接正常";
 					$("#cnusts").css("color","#3ff83d");
 				}				
 			}else{
 				node.data.icon = "offline.png";
 				node.data.online = "0";
-				if($("#cnusts_l").length >0){
+				if(($("#cnusts_l").length >0)&&(itemv.mac == $("#cnu_mac")[0].textContent)){
 					$("#cnusts_l")[0].textContent = "设备失去连接";
 					$("#cnusts").css("color","red");
 				}				
@@ -686,35 +789,35 @@
 			if(itemv.online == "1"){
 				node.data.icon = "cbaton.png";
 				node.data.online = "1";
-				if($("#hfcsts_l").length >0){
+				if(($("#hfcsts_l").length >0)&&(itemv.mac == $("#hfc_mac")[0].textContent)){
 					$("#hfcsts_l")[0].textContent = "设备连接正常";
 					$("#hfcsts").css("color","#3ff83d");
 				}
 				node.render();
-				node = $("#navtree").dynatree("getTree").getNodeByKey("hfctype");
+				node = $("#navtree").dynatree("getTree").getNodeByKey("hfctype_"+itemv.mac);
 				node.data.icon = "tp.png";
 				node.render();
-				node = $("#navtree").dynatree("getTree").getNodeByKey("modelnumber");
+				node = $("#navtree").dynatree("getTree").getNodeByKey("modelnumber_"+itemv.mac);
 				node.data.icon = "tp.png";
 				node.render();
-				node = $("#navtree").dynatree("getTree").getNodeByKey("logicalid");
+				node = $("#navtree").dynatree("getTree").getNodeByKey("logicalid_"+itemv.mac);
 				node.data.icon = "tp.png";
 				node.render();
 			}else{
 				node.data.icon = "cbatoff.png";
 				node.data.online = "0";
-				if($("#hfcsts_l").length >0){
+				if(($("#hfcsts_l").length >0)&&(itemv.mac == $("#hfc_mac")[0].textContent)){
 					$("#hfcsts_l")[0].textContent = "设备失去连接";
 					$("#hfcsts").css("color","red");
 				}	
 				node.render();
-				node = $("#navtree").dynatree("getTree").getNodeByKey("hfctype");
+				node = $("#navtree").dynatree("getTree").getNodeByKey("hfctype_"+itemv.mac);
 				node.data.icon = "disable.png";
 				node.render();
-				node = $("#navtree").dynatree("getTree").getNodeByKey("modelnumber");
+				node = $("#navtree").dynatree("getTree").getNodeByKey("modelnumber_"+itemv.mac);
 				node.data.icon = "disable.png";
 				node.render();
-				node = $("#navtree").dynatree("getTree").getNodeByKey("logicalid");
+				node = $("#navtree").dynatree("getTree").getNodeByKey("logicalid_"+itemv.mac);
 				node.data.icon = "disable.png";
 				node.render();
 			}
@@ -725,7 +828,7 @@
      function fun_Hfcresponse(data){
     	 document.body.style.cursor = 'default';
  		 isbusy = false;
-    	 if(data.result == "ok"){
+    	 if(data.result != ""){
     		 if(data.code == "1"){
     			//成功提示对话框
     	 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
@@ -786,6 +889,13 @@
     				});	
     			
     				$("#dialog-alarmThreshold").dialog("open");
+    		 }else if(data.code == "3"){
+    			 //hfc mgc/agc change
+    			 if(data.result == "2"){
+    				 $("#hfcagccontrol")[0].textContent = "当前状态:AGC";
+    			 }else{
+    				 $("#hfcagccontrol")[0].textContent = "当前状态:MGC";
+    			 }
     		 }else{
     			//成功提示对话框
  	 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
@@ -1179,9 +1289,9 @@
 				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
 				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power2+'</lable></td>'+
 				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
-						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold"></lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><lable id = "hfc_gonglv" class="hfcalarmthreshold"></input></td></tr>'+
-						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp"></lable></td></tr>'+
+						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><lable id = "hfc_gonglv" class="hfcalarmthreshold">'+jsondata.outpower+'</lable></td></tr>'+
+						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
 						'</table>'+
 						'<label style="color:green">泵浦参数</label><br/><hr/>'+
 						'<table>'+
@@ -1199,6 +1309,7 @@
 						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
+		   document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/edfa.gif";
 	   }else if(jsondata.hfctype == "1310nm光发射机"){
 		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
@@ -1225,19 +1336,21 @@
 				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
 				   		'<tr><td><lable>电源名称 : </lable></td><td><lable>'+jsondata.power3+'</lable></td>'+
 				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv3" class="hfcalarmthreshold">'+jsondata.power_v3+'</lable></td></tr>'+
-						'<tr><td><lable>电视信号频道数 : </lable></td><td><input id = "hfc_channelnum" value ="'+jsondata.channelnum +'"></input></td>'+
+				   		'</table>'+
+				   		'<table>'+
+						'<tr><td><lable>电视信号频道数 : </lable></td><td><input id = "hfc_channelnum" class="hfcset" value ="'+jsondata.channelnum +'"></input></td>'+
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp激光器激励电平 : </lable></td><td><lable id = "hfc_drivelevel" class="hfcalarmthreshold">'+jsondata.drivelevel+'</lable></td></tr>'+
 						'<tr><td><lable>激光器波长(nm) : </lable></td><td><lable id = "hfc_wavelength">'+jsondata.wavelength+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp射频信号衰减量范围 : </lable></td><td><lable id = "hfc_rfattrange" class="hfcalarmthreshold">'+jsondata.rfattrange+'</lable></td></tr>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp射频信号衰减量范围 : </lable></td><td><lable id = "hfc_rfattrange">'+jsondata.rfattrange+'</lable></td></tr>'+
 						'<tr><td><lable>激光器类型 : </lable></td><td><lable id = "hfc_lasertype">'+jsondata.lasertype+'</lable></td>'+	
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><lable id = "hfc_outputpower" class="hfcalarmthreshold">'+jsondata.outputpower+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp激光器偏置电流 : </lable></td><td><lable id = "hfc_lasercurrent" class="hfcalarmthreshold">'+jsondata.lasercurrent+'</lable></td></tr>'+
-						'<tr><td><lable>AGC控制使能 : </lable></td><td><button id = "hfcagccontrol"></button></td>'+	
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp激光器温度 : </lable></td><td><lable id = "hfc_temp" class="hfcalarmthreshold">'+jsondata.temp+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前MGC衰减量 : </lable></td><td><lable id = "hf_cmgc" class="hfcset">'+jsondata.mgc+'</lable></td></tr>'+	
-						'<tr><lable>激光器制冷电流 : </lable></td><td><lable id = "hfc_teccurrent" class="hfcalarmthreshold">'+jsondata.teccurrent+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前AGC偏移量 : </lable></td><td><lable id = "hfc_agc" class="hfcset">'+jsondata.agc+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+	
+						'<tr><td><lable>激光器偏置电流 : </lable></td><td><lable id = "hfc_lasercurrent" class="hfcalarmthreshold">'+jsondata.lasercurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspAGC控制使能 : </lable></td><td><button id = "hfcagccontrol" class="hfcset"></button></td></tr>'+	
+						'<tr><td><lable>激光器温度 : </lable></td><td><lable id = "hfc_temp" class="hfcalarmthreshold">'+jsondata.temp+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前MGC衰减量 : </lable></td><td><input id = "hfc_mgc" class="hfcset" value ="'+jsondata.mgc+'"></input></td></tr>'+	
+						'<tr><td><lable>激光器制冷电流 : </lable></td><td><lable id = "hfc_teccurrent" class="hfcalarmthreshold">'+jsondata.teccurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前AGC偏移量 : </lable></td><td><input id = "hfc_agc" class="hfcset" value ="'+jsondata.agc+'"></input></td></tr>'+
+						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+	
 						'</table>'+			
 					'</div>'+
 					'<div id="tabs-3">'+
@@ -1246,13 +1359,27 @@
 						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
+		   if(jsondata.agccontrol=="1"){
+				document.getElementById('hfcagccontrol').textContent = "当前状态:AGC";
+			}else{
+				document.getElementById('hfcagccontrol').textContent = "当前状态:MGC";
+			}
+		   document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/trans.gif";
+	   }else if(jsondata.hfctype == "光平台"){
+		   
+	   }else if(jsondata.hfctype == "万隆8槽WOS2000"){
+		   
+	   }else if(jsondata.hfctype == "万隆增强光开关"){
+		   
+	   }else if(jsondata.hfctype == "光工作站"){
+		   
+	   }else if(jsondata.hfctype == "光接收机"){
+		   OpticalReceiver(style,jsondata,active );		   
+	   }else if(jsondata.hfctype == "1550光发射机"){
+		   
 	   }	   
-		document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/Trans.jpg";
-		if(jsondata.agccontrol=="1"){
-			document.getElementById('hfcagccontrol').textContent = "当前状态:AGC";
-		}else{
-			document.getElementById('hfcagccontrol').textContent = "当前状态:MGC";
-		}
+		
+		
 		
    }
 
@@ -1277,7 +1404,7 @@
 		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#cnutabs-1">基本信息</a></li>'+
 			'<li><a href="#cnutabs-2">配置信息</a></li>'+
-			'<li><a href="#cnutabs-3">Qos信息</a></li></ul>'+
+			'<li><a href="#cnutabs-3">Qos信息</a></li>'+
 			'<li><a href="#cnutabs-4">状态信息</a></li></ul>'+
 			'<div id="cnutabs-1">'+
 				'<table id="baseinfo"><tr><td><lable>mac :&nbsp &nbsp &nbsp &nbsp</lable><lable id="cnu_mac" style="margin-left:0px">'+ jsondata.mac+'</lable></td>'+		     	
@@ -1323,7 +1450,7 @@
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
 				  							'<option value="3">CAP3</option></select></td>'+
-				  				         '<td>单播:</td><td colspan="2"><select name="unicastPri" size="1">'+
+				  				         '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp单播:</td><td colspan="2"><select name="unicastPri" size="1">'+
 				  							'<option value="0">CAP0</option>'+
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
@@ -1333,7 +1460,7 @@
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
 				  							'<option value="3">CAP3</option></select></td>'+
-				  					     '<td>多播/广播:</td><td colspan="2"><select name="unicastPri" size="1">'+
+				  					     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp多播/广播:</td><td colspan="2"><select name="unicastPri" size="1">'+
 				  							'<option value="0">CAP0</option>'+
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
@@ -1345,7 +1472,7 @@
 				  							'<option value="0">Disable</option>'+
 				  							'<option value="1">Enable</option>'+			  							
 				  							'</select></td>'+
-				  				        '<td>Qos方式:</td><td colspan="2"><select name="asPriType" size="1">'+
+				  				        '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspQos方式:</td><td colspan="2"><select name="asPriType" size="1">'+
 				  							'<option value="0">COS</option>'+
 				  							'<option value="1">TOS</option>'+			  							
 				  							'</select></td></tr>'+
@@ -1354,7 +1481,7 @@
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
 				  							'<option value="3">CAP3</option></select></td>'+
-		  							     '<td>COS1/TOS1:</td><td colspan="2"><select name="pri1QueueMap" size="1">'+
+		  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS1/TOS1:</td><td colspan="2"><select name="pri1QueueMap" size="1">'+
 				  							'<option value="0">CAP0</option>'+
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
@@ -1364,7 +1491,7 @@
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
 				  							'<option value="3">CAP3</option></select></td>'+
-		  							     '<td>COS3/TOS3:</td><td colspan="2"><select name="pri3QueueMap" size="1">'+
+		  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS3/TOS3:</td><td colspan="2"><select name="pri3QueueMap" size="1">'+
 				  							'<option value="0">CAP0</option>'+
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
@@ -1374,7 +1501,7 @@
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
 				  							'<option value="3">CAP3</option></select></td>'+
-		  							     '<td>COS5/TOS5:</td><td colspan="2"><select name="pri5QueueMap" size="1">'+
+		  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS5/TOS5:</td><td colspan="2"><select name="pri5QueueMap" size="1">'+
 				  							'<option value="0">CAP0</option>'+
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
@@ -1384,16 +1511,14 @@
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
 				  							'<option value="3">CAP3</option></select></td>'+
-		  							    '<td>COS7/TOS7:</td><td colspan="2"><select name="pri7QueueMap" size="1">'+
+		  							    '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS7/TOS7:</td><td colspan="2"><select name="pri7QueueMap" size="1">'+
 				  							'<option value="0">CAP0</option>'+
 				  							'<option value="1">CAP1</option>'+
 				  							'<option value="2">CAP2</option>'+
 				  							'<option value="3">CAP3</option></select></td></tr></table>'+
 
-				  							
-				  							'<div><button id="btn_sub">提交</button><button id="btn_sync" >刷新</button>'+
-				  								'<button id="btn_reboot" >设备重启</button>'+
-				  								'<button id="btn_reset" >恢复出厂设置</button>'+
+				  							'<br/>'+
+				  							'<div><button id="btn_sub" style="margin-left:140px">提交</button><button id="btn_sync" style="margin-left:140px">刷新</button>'+
 				  							'</div>'+            			  							
 	          '</div>'+
 
@@ -1509,9 +1634,9 @@
 				'<tr><td><lable>生产厂家 : </lable></td><td><lable>杭州万隆光电设备股份有限公司</lable></td>'+
 				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp软件更新时间 : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
 				'</table><br/>'+
-				'<div><button id="btn_sub">提交</button><button id="btn_sync" >刷新</button>'+
-				      '<button id="btn_reboot" >设备重启</button>'+
-				      '<button id="btn_reset" >恢复出厂设置</button>'+
+				'<div><button id="btn_sub" style="margin-left:40px">提交</button><button id="btn_sync" style="margin-left:100px">刷新</button>'+
+				      '<button id="btn_reboot" style="margin-left:100px">设备重启</button>'+
+				      '<button id="btn_reset" style="margin-left:100px">恢复出厂设置</button>'+
 				'</div>'+
 		'</div>'+
 	  '<div id="tabs-2">'+
@@ -1521,7 +1646,7 @@
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
 			  							'<option value="3">CAP3</option></select></td>'+
-			  				         '<td>单播:</td><td colspan="2"><select name="unicastPri" size="1">'+
+			  				         '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp单播:</td><td colspan="2"><select name="unicastPri" size="1">'+
 			  							'<option value="0">CAP0</option>'+
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
@@ -1531,7 +1656,7 @@
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
 			  							'<option value="3">CAP3</option></select></td>'+
-			  					     '<td>多播/广播:</td><td colspan="2"><select name="unicastPri" size="1">'+
+			  					     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp多播/广播:</td><td colspan="2"><select name="unicastPri" size="1">'+
 			  							'<option value="0">CAP0</option>'+
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
@@ -1543,7 +1668,7 @@
 			  							'<option value="0">Disable</option>'+
 			  							'<option value="1">Enable</option>'+			  							
 			  							'</select></td>'+
-			  				        '<td>Qos方式:</td><td colspan="2"><select name="asPriType" size="1">'+
+			  				        '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspQos方式:</td><td colspan="2"><select name="asPriType" size="1">'+
 			  							'<option value="0">COS</option>'+
 			  							'<option value="1">TOS</option>'+			  							
 			  							'</select></td></tr>'+
@@ -1552,7 +1677,7 @@
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
 			  							'<option value="3">CAP3</option></select></td>'+
-	  							     '<td>COS1/TOS1:</td><td colspan="2"><select name="pri1QueueMap" size="1">'+
+	  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS1/TOS1:</td><td colspan="2"><select name="pri1QueueMap" size="1">'+
 			  							'<option value="0">CAP0</option>'+
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
@@ -1562,7 +1687,7 @@
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
 			  							'<option value="3">CAP3</option></select></td>'+
-	  							     '<td>COS3/TOS3:</td><td colspan="2"><select name="pri3QueueMap" size="1">'+
+	  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS3/TOS3:</td><td colspan="2"><select name="pri3QueueMap" size="1">'+
 			  							'<option value="0">CAP0</option>'+
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
@@ -1572,7 +1697,7 @@
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
 			  							'<option value="3">CAP3</option></select></td>'+
-	  							     '<td>COS5/TOS5:</td><td colspan="2"><select name="pri5QueueMap" size="1">'+
+	  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS5/TOS5:</td><td colspan="2"><select name="pri5QueueMap" size="1">'+
 			  							'<option value="0">CAP0</option>'+
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
@@ -1582,16 +1707,13 @@
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
 			  							'<option value="3">CAP3</option></select></td>'+
-	  							    '<td>COS7/TOS7:</td><td colspan="2"><select name="pri7QueueMap" size="1">'+
+	  							    '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS7/TOS7:</td><td colspan="2"><select name="pri7QueueMap" size="1">'+
 			  							'<option value="0">CAP0</option>'+
 			  							'<option value="1">CAP1</option>'+
 			  							'<option value="2">CAP2</option>'+
 			  							'<option value="3">CAP3</option></select></td></tr></table>'+
 
-			  							
-			  							'<div><button id="btn_sub">提交</button><button id="btn_sync" >刷新</button>'+
-			  								'<button id="btn_reboot" >设备重启</button>'+
-			  								'<button id="btn_reset" >恢复出厂设置</button>'+
+			  							'<div><button id="btn_sub" style="margin-left:140px">提交</button><button id="btn_sync" style="margin-left:140px">刷新</button>'+
 			  							'</div>'+            			  							
           '</div>'+
      '<div id="tabs-3">'+
@@ -1632,10 +1754,482 @@
 	        for(var i = 0;i < arrStr.length;i++)
 	            {
 	                var temp = arrStr[i].split("=");
-	                if(objName.trim()==temp[0].trim()) //此处如果没有去掉字符串空格就不行,偶在这里折腾了半死,主要是这种错误不好跟踪啊
+	                if(objName.trim()==temp[0].trim()) //此处如果没有去掉字符串空格就不行
 	                {                
 	                	return temp[1];
 	                }                            
 	            }
 	}
+   
+   function OpticalReceiver(style,jsondata,active ){
+	   if(jsondata.modelnumber.toUpperCase() == "WR8602RJ"){
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
+				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+				   	'<br/><div id="configinfo"><ul>'+
+					'<li><a href="#tabs-1">基本信息</a></li>'+
+					'<li><a href="#tabs-2">相关参数</a></li>'+
+					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<div id="tabs-1">'+
+						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+							
+						'</table>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+					'</div>'+
+					'<div id="tabs-2">'+
+						'<table>'+
+				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
+				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power2+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
+						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inputpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp反向发射光功率 : </lable></td><td><lable id = "hfc_r_transpower" class="hfcalarmthreshold">'+jsondata.r_transpower+'</lable></td></tr>'+
+						'<tr><td><lable>反向偏置电流 : </lable></td><td><lable id = "hfc_r_biascurrent" class="hfcalarmthreshold">'+jsondata.r_biascurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" value ="'+jsondata.channelnum +'"></input></td></tr>'+
+						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
+						'</table>'+
+						'<table>'+
+						'<tr><td><lable>输出端口 : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
+						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" value ="'+jsondata.att +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" value ="'+jsondata.eqv +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp输出电平 : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
+						'</table>'+			
+					'</div>'+
+					'<div id="tabs-3">'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+					'</div>'+
+					'</div>');
+		   document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/wr8602rj.gif";
+	   }else if(jsondata.modelnumber.toUpperCase() == "WR1001J"){
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
+				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+				   	'<br/><div id="configinfo"><ul>'+
+					'<li><a href="#tabs-1">基本信息</a></li>'+
+					'<li><a href="#tabs-2">相关参数</a></li>'+
+					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<div id="tabs-1">'+
+						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+							
+						'</table>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+					'</div>'+
+					'<div id="tabs-2">'+
+						'<table>'+
+				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+				   		
+						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inputpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp反向发射光功率 : </lable></td><td><lable id = "hfc_r_transpower" class="hfcalarmthreshold">'+jsondata.r_transpower+'</lable></td></tr>'+
+						'<tr><td><lable>反向偏置电流 : </lable></td><td><lable id = "hfc_r_biascurrent" class="hfcalarmthreshold">'+jsondata.r_biascurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" value ="'+jsondata.channelnum +'"></input></td></tr>'+
+						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td>'+
+						'<td><lable>&nbsp &nbspAGC启控光功率 : </lable></td><td><input id = "hfc_agc" class="hfcset" value ="'+jsondata.agc +'"></input></td></tr>'+
+						'</table><br/>'+
+						'<table>'+
+						'<tr><td><lable>输出端口 : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
+						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" value ="'+jsondata.att +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" value ="'+jsondata.eqv +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp输出电平 : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
+						'</table>'+			
+					'</div>'+
+					'<div id="tabs-3">'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+					'</div>'+
+					'</div>');
+		   document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/oprv-1001j.gif";
+	   }
+	   
+   }
+   
+   function HfcRealtime_EDFA(data){
+	   $("#hfc_powerv1")[0].textContent = data.power_v1;
+	   switch(data.hfc_powerv1_sat){
+		 case 1://normal
+			 $("#hfc_powerv1").css("background-color","#3ff83d");
+			 break;
+	     case 2://hihi
+	     case 5://lolo
+	    	 $("#hfc_powerv1").css("background-color","red");
+	         break;
+	     case 3://hi
+	     case 4://lo
+	    	 $("#hfc_powerv1").css("background-color","yellow");
+	         break;
+	  }
+	     $("#hfc_powerv2")[0].textContent = data.power_v2;
+	     switch(data.hfc_powerv2_sat){
+			 case 1://normal
+				 $("#hfc_powerv2").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_powerv2").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_powerv2").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_innertemp")[0].textContent = data.innertemp;		 
+		 $("#hfc_ingonglv")[0].textContent = data.inpower;
+		 switch(data.hfc_ingonglv_sat){
+			 case 1://normal
+				 $("#hfc_ingonglv").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_ingonglv").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_ingonglv").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_gonglv")[0].textContent = data.outpower;
+		 switch(data.hfc_gonglv_sat){
+			 case 1://normal
+				 $("#hfc_gonglv").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_gonglv").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_gonglv").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_bias_c1")[0].textContent = data.bias_c1;
+		 switch(data.hfc_bias_c1_sat){
+			 case 1://normal
+				 $("#hfc_bias_c1").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_bias_c1").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_bias_c1").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_ref_c1")[0].textContent = data.ref_c1;
+		 switch(data.hfc_ref_c1_sat){
+			 case 1://normal
+				 $("#hfc_ref_c1").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_ref_c1").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_ref_c1").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_pump_t1")[0].textContent = data.pump_t1;
+		 switch(data.hfc_pump_t1_sat){
+			 case 1://normal
+				 $("#hfc_pump_t1").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_pump_t1").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_pump_t1").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_bias_c2")[0].textContent = data.bias_c2;
+		 switch(data.hfc_bias_c2_sat){
+			 case 1://normal
+				 $("#hfc_bias_c2").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_bias_c2").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_bias_c2").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_ref_c2")[0].textContent = data.ref_c2;
+		 switch(data.hfc_ref_c2_sat){
+			 case 1://normal
+				 $("#hfc_ref_c2").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_ref_c2").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_ref_c2").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_pump_t2")[0].textContent = data.pump_t2;
+		 switch(data.hfc_pump_t2_sat){
+			 case 1://normal
+				 $("#hfc_pump_t2").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_pump_t2").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_pump_t2").css("background-color","yellow");
+		         break;
+		  }
+   }
+   
+   function HfcRealtime_1310(data){
+	   $("#hfc_powerv1")[0].textContent = data.power_v1;
+	   switch(data.power_v1_sat){
+		 case 1://normal
+			 $("#hfc_powerv1").css("background-color","#3ff83d");
+        	break;
+	     case 2://hihi
+	     case 5://lolo
+	    	 $("#hfc_powerv1").css("background-color","red");
+	         break;
+	     case 3://hi
+	     case 4://lo
+	    	 $("#hfc_powerv1").css("background-color","yellow");
+	         break;
+	  }
+		 $("#hfc_powerv2")[0].textContent = data.power_v2;
+		 switch(data.power_v2_sat){
+			 case 1://normal
+				 $("#hfc_powerv2").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_powerv2").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_powerv2").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_powerv3")[0].textContent = data.power_v3;
+		 switch(data.power_v3_sat){
+			 case 1://normal
+				 $("#hfc_powerv3").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_powerv3").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_powerv3").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_drivelevel")[0].textContent = data.drivelevel;
+		 switch(data.hfc_drivelevel_sat){
+			 case 1://normal
+				 $("#hfc_drivelevel").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_drivelevel").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_drivelevel").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_rfattrange")[0].textContent = data.rfattrange;
+		 switch(data.hfc_rfattrange_sat){
+			 case 1://normal
+				 $("#hfc_rfattrange").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_rfattrange").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_rfattrange").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_outputpower")[0].textContent = data.outputpower;
+		 switch(data.hfc_outputpower_sat){
+			 case 1://normal
+				 $("#hfc_outputpower").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_outputpower").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_outputpower").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_lasercurrent")[0].textContent = data.lasercurrent;
+		 switch(data.hfc_lasercurrent_sat){
+			 case 1://normal
+				 $("#hfc_lasercurrent").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_lasercurrent").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_lasercurrent").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_temp")[0].textContent = data.temp;
+		 switch(data.hfc_temp_sat){
+			 case 1://normal
+				 $("#hfc_temp").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_temp").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_temp").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_teccurrent")[0].textContent = data.teccurrent;
+		 switch(data.hfc_teccurrent_sat){
+			 case 1://normal
+				 $("#hfc_teccurrent").css("background-color","#3ff83d");
+	        	break;
+		     case 2://hihi
+		     case 5://lolo
+		    	 $("#hfc_teccurrent").css("background-color","red");
+		         break;
+		     case 3://hi
+		     case 4://lo
+		    	 $("#hfc_teccurrent").css("background-color","yellow");
+		         break;
+		  }
+		 $("#hfc_innertemp")[0].textContent = data.innertemp;
+		 $("#hfc_channelnum")[0].value = data.channelnum;
+		 $("#hfc_mgc")[0].value = data.mgc;
+		 $("#hfc_agc")[0].value = data.agc;
+
+		 if(data.agccontrol == "2"){
+			 $("#hfcagccontrol")[0].textContent = "当前状态:AGC";
+		 }else{
+			 $("#hfcagccontrol")[0].textContent = "当前状态:MGC";
+		 }
+   }
+   
+   function HfcRealtime_Receiver(data){
+	   $("#hfc_powerv1")[0].textContent = data.power_v1; 
+		 switch(data.power_v1_sat){
+			 case 1://normal
+				 $("#hfc_powerv1").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_powerv1").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_powerv1").css("background-color","yellow");
+               break;
+		 }
+		 $("#hfc_ingonglv")[0].textContent = data.inputpower;
+		 switch(data.hfc_ingonglv_sat){
+			 case 1://normal
+				 $("#hfc_ingonglv").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_ingonglv").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_ingonglv").css("background-color","yellow");
+               break;
+		 }
+		 $("#hfc_r_transpower")[0].textContent = data.r_transpower;
+		 switch(data.hfc_r_transpower_sat){
+			 case 1://normal
+				 $("#hfc_r_transpower").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_r_transpower").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_r_transpower").css("background-color","yellow");
+               break;
+		 }
+		 $("#hfc_att")[0].value = data.att;
+		 $("#hfc_eqv")[0].value = data.eqv;
+		 $("#hfc_out_level")[0].textContent = data.out_level;
+		 switch(data.hfc_out_level_sat){
+			 case 1://normal
+				 $("#hfc_out_level").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_out_level").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_out_level").css("background-color","yellow");
+               break;
+		 }
+		 $("#hfc_r_biascurrent")[0].textContent = data.r_biascurrent;
+		 switch(data.hfc_r_biascurrent_sat){
+			 case 1://normal
+				 $("#hfc_r_biascurrent").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_r_biascurrent").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_r_biascurrent").css("background-color","yellow");
+               break;
+		 }
+		 $("#hfc_innertemp")[0].textContent = data.innertemp;
+		 $("#hfc_rechannelnum")[0].value = data.channelnum;
+		 if($("#hfc_agc")[0] != undefined){
+			 $("#hfc_agc")[0].value = data.agc;
+		 }
+		 if($("#hfc_powerv2")[0] != undefined){
+			 $("#hfc_powerv2")[0].textContent = data.power_v2;
+			 switch(data.power_v2_sat){
+  			 case 1://normal
+  				 $("#hfc_powerv2").css("background-color","#3ff83d");
+                   //textBoxVariable.BackColor = Color.LightGreen;
+                   break;
+               case 2://hihi
+               case 5://lolo
+              	 $("#hfc_powerv2").css("background-color","red");
+                   break;
+               case 3://hi
+               case 4://lo
+              	 $("#hfc_powerv2").css("background-color","yellow");
+                   break;
+			 }
+		 }
+   }
 })(jQuery);

@@ -120,6 +120,8 @@
 	}
 	
 	function fun_userlist(data){
+		$('#userheads').empty();
+		$('#userlists').empty();
 		$( '<ul class="userHeads" style="width:400px;list-style:none">' +
         		'<li style="width:100px;float:left;text-align:center;background-color:#ccc"> 用户名 </li>' +
         		'<li style="width:80px;float:left;text-align:center;background-color:#ccc"> 用户等级 </li>' +

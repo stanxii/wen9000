@@ -438,6 +438,10 @@ public class ServiceHeartProcessor{
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
+			cnuentity.put("address", "");
+			cnuentity.put("contact", "");	
+			cnuentity.put("phone", "");
+			cnuentity.put("username", "");
 			//test
 			cnuentity.put("txinfo", "110/120");
 			cnuentity.put("rxinfo", "110/120");
