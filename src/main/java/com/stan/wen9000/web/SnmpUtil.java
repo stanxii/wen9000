@@ -293,7 +293,7 @@ public class SnmpUtil {
 
 	}
 	
-	public boolean sethfcPDU(String host, String port, OID oid, Integer32 value) {
+	public boolean sethfcPDU(String host, String port, OID oid, Integer32 value,String community) {
 		// /////////////////////////////////////
 
 		boolean bstatus = false;
@@ -303,7 +303,7 @@ public class SnmpUtil {
 
 			CommunityTarget target = new CommunityTarget();
 
-			target.setCommunity(new OctetString("public"));
+			target.setCommunity(new OctetString(community));
 
 			target.setVersion(SnmpConstants.version1);
 
@@ -397,7 +397,7 @@ public class SnmpUtil {
 
 	}
 	
-	public boolean sethfcStrPDU(String host, String port, OID oid, String value) {
+	public boolean sethfcStrPDU(String host, String port, OID oid, String value,String community) {
 		// /////////////////////////////////////
 
 		boolean bstatus = false;
@@ -407,7 +407,7 @@ public class SnmpUtil {
 
 			CommunityTarget target = new CommunityTarget();
 
-			target.setCommunity(new OctetString("public"));
+			target.setCommunity(new OctetString(community));
 
 			target.setVersion(SnmpConstants.version1);
 
@@ -448,7 +448,7 @@ public class SnmpUtil {
 
 	}
 
-	public boolean sethfcIpPDU(String host, String port, OID oid, InetAddress value) {
+	public boolean sethfcIpPDU(String host, String port, OID oid, InetAddress value,String community) {
 		// /////////////////////////////////////
 
 		boolean bstatus = false;
@@ -458,7 +458,7 @@ public class SnmpUtil {
 
 			CommunityTarget target = new CommunityTarget();
 
-			target.setCommunity(new OctetString("public"));
+			target.setCommunity(new OctetString(community));
 
 			target.setVersion(SnmpConstants.version1);
 
@@ -572,7 +572,7 @@ public class SnmpUtil {
 
 	}
 
-	public String gethfcStrPDU(String host, String port, OID oid)
+	public String gethfcStrPDU(String host, String port, OID oid,String community)
 	throws IOException {
 	String result = "";
 	try {
@@ -581,7 +581,7 @@ public class SnmpUtil {
 	
 		CommunityTarget target = new CommunityTarget();
 	
-		target.setCommunity(new OctetString("public"));
+		target.setCommunity(new OctetString(community));
 	
 		target.setVersion(SnmpConstants.version1);
 	
@@ -715,7 +715,7 @@ public class SnmpUtil {
 
 	}
 	
-	public int gethfcINT32PDU(String host, String port, OID oid)
+	public int gethfcINT32PDU(String host, String port, OID oid,String community)
 		throws IOException {
 		int result = -1;
 		try {
@@ -723,8 +723,8 @@ public class SnmpUtil {
 			Snmp snmp = new Snmp(new DefaultUdpTransportMapping());
 		
 			CommunityTarget target = new CommunityTarget();
-		
-			target.setCommunity(new OctetString("public"));// 
+			
+			target.setCommunity(new OctetString(community));// 
 		
 			target.setVersion(SnmpConstants.version1);// 
 		

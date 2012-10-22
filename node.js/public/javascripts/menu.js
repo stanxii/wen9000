@@ -65,7 +65,9 @@
     	  var hfcmac = document.getElementById('hfc_mac').textContent;
     	  var hfcip = document.getElementById('hfc_ip').textContent;
     	  var hfclable = document.getElementById('hfc_lable').value;
-    	  var datastring = '{"hfcip":"'+hfcip+'","hfclable":"'+hfclable+'","user":"'+user+'","hfcmac":"'+hfcmac+'"}';
+    	  var rcommunity = document.getElementById('hfc_rcommunity').value;
+    	  var wcommunity = document.getElementById('hfc_wcommunity').value;
+    	  var datastring = '{"hfcip":"'+hfcip+'","hfclable":"'+hfclable+'","user":"'+user+'","hfcmac":"'+hfcmac+'","rcommunity":"'+rcommunity+'","wcommunity":"'+wcommunity+'"}';
     	  socket.emit('hfc_baseinfo',datastring);
     	  
     	  var node = $("#navtree").dynatree("getTree").getNodeByKey(hfcmac);
@@ -467,8 +469,8 @@
 							if(isNaN(val)||(val>84)||(val<0)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								return;
 								alert("频道数超出范围!必须是0~84之间的值!");
+								return;								
 							}
 						}else if(id == "hfc_mgc"){
 							if(val.substr(val.length-2,2).toLowerCase() == "db"){
@@ -477,8 +479,8 @@
 							if(isNaN(val)||(val>10)||(val<0)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								return;
 								alert("MGC衰减量超出范围!必须是0~10之间的值!");
+								return;								
 							}
 						}else if(id == "hfc_agc"){
 							if(val.substr(val.length-2,2).toLowerCase() == "db"){
@@ -487,15 +489,15 @@
 							if(isNaN(val)||(val>5)||(val<-5)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								return;
 								alert("AGC偏移量超出范围!必须是-5~5之间的值!");
+								return;								
 							}
 						}else if(id == "hfc_rechannelnum"){
 							if(isNaN(val)||(val<0)||(val>200)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								return;
-								alert("频道数不正确!");
+								alert("频道数不正确!(0~200)");
+								return;								
 							}
 						}else if(id == "hfc_att"){
 							if(val.substr(val.length-2,2).toLowerCase() == "db"){
@@ -504,8 +506,8 @@
 							if(isNaN(val)||(val<0)||(val>20)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								return;
 								alert("衰减值超出范围!(0~20)");
+								return;								
 							}
 						}else if(id == "hfc_eqv"){
 							if(val.substr(val.length-2,2).toLowerCase() == "db"){
@@ -514,18 +516,28 @@
 							if(isNaN(val)||(val<0)||(val>10)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								return;
 								alert("均衡值超出范围!(0~10)");
+								return;								
 							}
-						}else if(id == "hfc_agc"){
+						}else if(id == "hfc_reagc"){
 							if(val.substr(val.length-3,3).toLowerCase() == "dbm"){
 								val = val.substr(0,val.length-3);
 							}	
-							if(isNaN(val)||(val<(-3))||(val>(-10))){
+							if(isNaN(val)||(val<(-10))||(val>(-4))){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								return;
 								alert("AGC启控光功率超出范围!(-4~-9)");
+								return;								
+							}
+						}else if(id == "hfc_switchval"){
+							if(val.substr(val.length-3,3).toLowerCase() == "dbm"){
+								val = val.substr(0,val.length-3);
+							}	
+							if(isNaN(val)||(val<(-12))||(val>(1))){
+								document.body.style.cursor = 'default';
+								isbusy = false;
+								alert("切换阀值超出范围!(-12~1)");
+								return;								
 							}
 						}
 						datastring = '{"type":"'+type+'","key":"'+id+'","val":"'+val+'","cmd":"1","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
@@ -543,6 +555,23 @@
 
 		$("#dialog_setvalue").dialog("open");		
 	 });
+	 
+	 $("#hfc_smode").live('change',function(){
+		 if(flag == "3"){
+	   		  alert("只读用户，权限不足！");
+	   		  return;
+ 	  		}
+		 	var mac = document.getElementById('hfc_mac').textContent;
+			var type = document.getElementById('hfctype').textContent;
+			var ip = document.getElementById('hfc_ip').textContent;
+			var datastring;
+			var val = $(this)[0].options[$(this)[0].options.selectedIndex].value;
+			if(val == 0){
+				return;
+			}
+			datastring = '{"type":"'+type+'","key":"hfc_smode","val":"'+val+'","cmd":"1","mac":"' + mac +'","ip":"'+ ip +'","user":"'+user+'"}';
+			socket.emit('hfc_set',datastring);
+		});
 	 
 	 $(".hfcalarmthreshold").live('dblclick', function(){
 		 var mac = document.getElementById('hfc_mac').textContent;
@@ -631,6 +660,8 @@
     			 HfcRealtime_1310(data);
     		 }else if(data.hfctype == "光接收机"){
     			 HfcRealtime_Receiver(data);   			 
+    		 }else if(data.hfctype == "带切换开关光接收机"){
+    			 HfcRealtime_SwitchReceiver(data);   			 
     		 }
     	 }
      }
@@ -1279,7 +1310,9 @@
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+							
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
 						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
 					'</div>'+
@@ -1324,7 +1357,9 @@
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+							
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
 						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
 					'</div>'+
@@ -1338,7 +1373,7 @@
 				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv3" class="hfcalarmthreshold">'+jsondata.power_v3+'</lable></td></tr>'+
 				   		'</table>'+
 				   		'<table>'+
-						'<tr><td><lable>电视信号频道数 : </lable></td><td><input id = "hfc_channelnum" class="hfcset" value ="'+jsondata.channelnum +'"></input></td>'+
+						'<tr><td><lable>电视信号频道数 : </lable></td><td><input id = "hfc_channelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td>'+
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp激光器激励电平 : </lable></td><td><lable id = "hfc_drivelevel" class="hfcalarmthreshold">'+jsondata.drivelevel+'</lable></td></tr>'+
 						'<tr><td><lable>激光器波长(nm) : </lable></td><td><lable id = "hfc_wavelength">'+jsondata.wavelength+'</lable></td>'+
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp射频信号衰减量范围 : </lable></td><td><lable id = "hfc_rfattrange">'+jsondata.rfattrange+'</lable></td></tr>'+
@@ -1347,9 +1382,9 @@
 						'<tr><td><lable>激光器偏置电流 : </lable></td><td><lable id = "hfc_lasercurrent" class="hfcalarmthreshold">'+jsondata.lasercurrent+'</lable></td>'+
 						'<td><lable>&nbsp &nbsp &nbsp &nbspAGC控制使能 : </lable></td><td><button id = "hfcagccontrol" class="hfcset"></button></td></tr>'+	
 						'<tr><td><lable>激光器温度 : </lable></td><td><lable id = "hfc_temp" class="hfcalarmthreshold">'+jsondata.temp+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前MGC衰减量 : </lable></td><td><input id = "hfc_mgc" class="hfcset" value ="'+jsondata.mgc+'"></input></td></tr>'+	
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前MGC衰减量 : </lable></td><td><input id = "hfc_mgc" class="hfcset" readonly="readonly" value ="'+jsondata.mgc+'"></input></td></tr>'+	
 						'<tr><td><lable>激光器制冷电流 : </lable></td><td><lable id = "hfc_teccurrent" class="hfcalarmthreshold">'+jsondata.teccurrent+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前AGC偏移量 : </lable></td><td><input id = "hfc_agc" class="hfcset" value ="'+jsondata.agc+'"></input></td></tr>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前AGC偏移量 : </lable></td><td><input id = "hfc_agc" class="hfcset" readonly="readonly" value ="'+jsondata.agc+'"></input></td></tr>'+
 						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+	
 						'</table>'+			
 					'</div>'+
@@ -1377,6 +1412,8 @@
 		   OpticalReceiver(style,jsondata,active );		   
 	   }else if(jsondata.hfctype == "1550光发射机"){
 		   
+	   }else if(jsondata.hfctype == "带切换开关光接收机"){
+		   SwitchReceiver(style,jsondata,active );
 	   }	   
 		
 		
@@ -1761,8 +1798,8 @@
 	            }
 	}
    
-   function OpticalReceiver(style,jsondata,active ){
-	   if(jsondata.modelnumber.toUpperCase() == "WR8602RJ"){
+   function SwitchReceiver(style,jsondata,active ){
+	   if((jsondata.modelnumber.toUpperCase() == "WR1001JS")||(jsondata.modelnumber.toUpperCase() == "WR1002JS")){
 		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
 				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
@@ -1776,7 +1813,73 @@
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+							
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
+						'</table>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+					'</div>'+
+					'<div id="tabs-2">'+
+						'<table>'+
+				   		'<tr><td><lable>A电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspA电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+	
+				   		'<tr><td><lable>B电源名称 : </lable></td><td><lable id="hfc_dcpowerb">'+jsondata.power2+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspB电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+	
+						'<tr><td><lable>A路输入光功率 : </lable></td><td><lable id = "hfc_Ainputpower" class="hfcalarmthreshold">'+jsondata.Ainputpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspB路输入光功率 : </lable></td><td><lable id = "hfc_Binputpower" class="hfcalarmthreshold">'+jsondata.Binputpower+'</lable></td></tr>'+
+						'<tr><td><lable>切换阀值 : </lable></td><td><input id = "hfc_switchval" class="hfcset" readonly="readonly" value ="'+jsondata.switchval +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前工作通道 : </lable></td><td><lable id = "hfc_workchannel">'+jsondata.workchannel+'</lable></td></tr>'+
+						'<tr><td><lable>当前控制模式 : </lable></td><td><lable id = "hfc_workmode">'+jsondata.workmode+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp控制模式选择 : </lable></td><td><select name="hfc_smode" id="hfc_smode">'+
+							'<option value="0">请选择</option>'+
+							'<option value="1">强制切换到A通道</option>'+
+							'<option value="2">强制切换到B通道</option>'+
+							'<option value="3">A通道优先</option>'+
+							'<option value="4">B通道优先</option>'+
+							'</select></td></tr>'+
+						'<tr><td><lable>AGC启控光功率 : </lable></td><td><input id = "hfc_reagc" class="hfcset" readonly="readonly" value ="'+jsondata.agc +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
+						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
+						'</table>'+
+						'<table>'+						
+						'<tr><td><lable>输出端口 : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
+						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp输出电平 : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
+						'</table>'+			
+					'</div>'+
+					'<div id="tabs-3">'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+					'</div>'+
+					'</div>');
+			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/oprv-1001j.gif";
+			if(jsondata.power2 == null){
+				$("#hfc_dcpowerb").remove();
+				$("#hfc_powerv2").remove();
+			}
+	   }
+   }
+   
+   function OpticalReceiver(style,jsondata,active ){
+	   if((jsondata.modelnumber.toUpperCase() == "WR8602RJ")||(jsondata.modelnumber.toUpperCase() == "WR8602JL")){
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
+				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+				   	'<br/><div id="configinfo"><ul>'+
+					'<li><a href="#tabs-1">基本信息</a></li>'+
+					'<li><a href="#tabs-2">相关参数</a></li>'+
+					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<div id="tabs-1">'+
+						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
 						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
 					'</div>'+
@@ -1789,13 +1892,13 @@
 						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inputpower+'</lable></td>'+
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp反向发射光功率 : </lable></td><td><lable id = "hfc_r_transpower" class="hfcalarmthreshold">'+jsondata.r_transpower+'</lable></td></tr>'+
 						'<tr><td><lable>反向偏置电流 : </lable></td><td><lable id = "hfc_r_biascurrent" class="hfcalarmthreshold">'+jsondata.r_biascurrent+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" value ="'+jsondata.channelnum +'"></input></td></tr>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
 						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
 						'</table>'+
 						'<table>'+
 						'<tr><td><lable>输出端口 : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
-						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" value ="'+jsondata.att +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" value ="'+jsondata.eqv +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
 						'<td><lable>&nbsp &nbsp输出电平 : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
 						'</table>'+			
 					'</div>'+
@@ -1805,7 +1908,12 @@
 						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
-		   document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/wr8602rj.gif";
+		   if(jsondata.modelnumber.toUpperCase() == "WR8602RJ"){
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/wr8602rj.gif";
+			}else if(jsondata.modelnumber.toUpperCase() == "WR8602JL"){
+				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/oprv8602jl.jpg";
+			}
+		   
 	   }else if(jsondata.modelnumber.toUpperCase() == "WR1001J"){
 		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
@@ -1820,7 +1928,9 @@
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+							
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
 						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
 					'</div>'+
@@ -1831,14 +1941,14 @@
 						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inputpower+'</lable></td>'+
 						'<td><lable>&nbsp &nbsp &nbsp &nbsp反向发射光功率 : </lable></td><td><lable id = "hfc_r_transpower" class="hfcalarmthreshold">'+jsondata.r_transpower+'</lable></td></tr>'+
 						'<tr><td><lable>反向偏置电流 : </lable></td><td><lable id = "hfc_r_biascurrent" class="hfcalarmthreshold">'+jsondata.r_biascurrent+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" value ="'+jsondata.channelnum +'"></input></td></tr>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
 						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td>'+
-						'<td><lable>&nbsp &nbspAGC启控光功率 : </lable></td><td><input id = "hfc_agc" class="hfcset" value ="'+jsondata.agc +'"></input></td></tr>'+
+						'<td><lable>&nbsp &nbspAGC启控光功率 : </lable></td><td><input id = "hfc_reagc" class="hfcset" value ="'+jsondata.agc +'"></input></td></tr>'+
 						'</table><br/>'+
 						'<table>'+
 						'<tr><td><lable>输出端口 : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
-						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" value ="'+jsondata.att +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" value ="'+jsondata.eqv +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
 						'<td><lable>&nbsp &nbsp输出电平 : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
 						'</table>'+			
 					'</div>'+
@@ -2211,8 +2321,8 @@
 		 }
 		 $("#hfc_innertemp")[0].textContent = data.innertemp;
 		 $("#hfc_rechannelnum")[0].value = data.channelnum;
-		 if($("#hfc_agc")[0] != undefined){
-			 $("#hfc_agc")[0].value = data.agc;
+		 if($("#hfc_reagc")[0] != undefined){
+			 $("#hfc_reagc")[0].value = data.agc;
 		 }
 		 if($("#hfc_powerv2")[0] != undefined){
 			 $("#hfc_powerv2")[0].textContent = data.power_v2;
@@ -2230,6 +2340,91 @@
               	 $("#hfc_powerv2").css("background-color","yellow");
                    break;
 			 }
+		 }
+   }
+   
+   function HfcRealtime_SwitchReceiver(data){
+	   $("#hfc_powerv1")[0].textContent = data.power_v1; 
+		 switch(data.power_v1_sat){
+			 case 1://normal
+				 $("#hfc_powerv1").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_powerv1").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_powerv1").css("background-color","yellow");
+               break;
+		 }
+		 $("#hfc_Ainputpower")[0].textContent = data.Ainputpower;
+		 switch(data.hfc_Ainputpower_sat){
+			 case 1://normal
+				 $("#hfc_Ainputpower").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_Ainputpower").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_Ainputpower").css("background-color","yellow");
+               break;
+		 }
+		 $("#hfc_Binputpower")[0].textContent = data.Binputpower;
+		 switch(data.hfc_Binputpower_sat){
+			 case 1://normal
+				 $("#hfc_Binputpower").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_Binputpower").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_Binputpower").css("background-color","yellow");
+               break;
+		 }
+		 $("#hfc_att")[0].value = data.att;
+		 $("#hfc_eqv")[0].value = data.eqv;
+		 $("#hfc_out_level")[0].textContent = data.out_level;
+		 switch(data.hfc_out_level_sat){
+			 case 1://normal
+				 $("#hfc_out_level").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_out_level").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_out_level").css("background-color","yellow");
+               break;
+		 }		 
+		 $("#hfc_innertemp")[0].textContent = data.innertemp;
+		 $("#hfc_rechannelnum")[0].value = data.channelnum;
+		 $("#hfc_workchannel")[0].textContent = data.workchannel;
+		 $("#hfc_workmode")[0].textContent = data.workmode;
+		 $("#hfc_switchval")[0].value = data.switchval;
+		 if($("#hfc_reagc")[0] != undefined){
+			 $("#hfc_reagc")[0].value = data.agc;
+		 }
+		 if($("#hfc_powerv2")[0] != undefined){
+			 $("#hfc_powerv2")[0].value = data.power_v2;
+			 switch(data.power_v2_sat){
+			 case 1://normal
+				 $("#hfc_powerv2").css("background-color","#3ff83d");
+               break;
+           case 2://hihi
+           case 5://lolo
+          	 $("#hfc_powerv2").css("background-color","red");
+               break;
+           case 3://hi
+           case 4://lo
+          	 $("#hfc_powerv2").css("background-color","yellow");
+               break;
+		 }
 		 }
    }
 })(jQuery);
