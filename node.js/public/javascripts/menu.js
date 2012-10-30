@@ -1213,7 +1213,7 @@
 		        }, 
 		      	fx: { height: "toggle", duration: 200 },
                 children: treedata,
-		        imagePath: "http://localhost:8080/wen9000/css/images/",
+		        imagePath: "http://localhost:3000/images/",
 		        minExpandLevel: 1,
 				onDblClick: function(node, event) {
 					var jsondata;
@@ -1342,7 +1342,7 @@
 						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
-		   document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/edfa.gif";
+		   document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/edfa.gif";
 	   }else if(jsondata.hfctype == "1310nm光发射机"){
 		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
@@ -1399,7 +1399,7 @@
 			}else{
 				document.getElementById('hfcagccontrol').textContent = "当前状态:MGC";
 			}
-		   document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/trans.gif";
+		   document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/trans.gif";
 	   }else if(jsondata.hfctype == "光平台"){
 		   
 	   }else if(jsondata.hfctype == "万隆8槽WOS2000"){
@@ -1436,7 +1436,7 @@
 	   
 		$("#content").empty();			          				          		
      	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">终端设备信息</h3>'+
-     	'<div style="float:left"><img src="http://localhost:8080/wen9000/css/images/WEC-3702I C4.jpg" style="width:100px;height:80px"/></div>'+
+     	'<div style="float:left"><img src="http://localhost:3000/images/WEC-3702I C4.jpg" style="width:100px;height:80px"/></div>'+
      	'<div id="cnusts" style="height:80px;width:200px;margin:10px 10px 1px 110px;'+style+'"><lable id="cnusts_l" style="font-size:30px;background-color:black;line-height:80px">'+active +'</lable></div>'+						
 		'<br/><div id="configinfo"><ul>'+
 			'<li><a href="#cnutabs-1">基本信息</a></li>'+
@@ -1563,10 +1563,10 @@
 			'<div id="cnutabs-4">'+
 				'<table id="statusinfo"><tr><td><lable>上行链路:</lable></td><td><lable id="txinfo">'+jsondata.txinfo+'</lable></td></tr>'+
 				'<tr><td><lable>下行链路:</lable></td><td><lable id="rxinfo">'+jsondata.rxinfo+'</lable></td></tr>'+
-				'<tr><td><lable>端口1连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p1sts"></img></td></tr>'+
-				'<tr><td><lable>端口2连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p2sts"></img></td></tr>'+
-				'<tr><td><lable>端口3连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p3sts"></img></td></tr>'+
-				'<tr><td><lable>端口4连接状态:</lable></td><td><img src="http://localhost:8080/wen9000/css/images/offline.png" id="p4sts"></img></td></tr>'+
+				'<tr><td><lable>端口1连接状态:</lable></td><td><img src="http://localhost:3000/images/offline.png" id="p1sts"></img></td></tr>'+
+				'<tr><td><lable>端口2连接状态:</lable></td><td><img src="http://localhost:3000/images/offline.png" id="p2sts"></img></td></tr>'+
+				'<tr><td><lable>端口3连接状态:</lable></td><td><img src="http://localhost:3000/images/offline.png" id="p3sts"></img></td></tr>'+
+				'<tr><td><lable>端口4连接状态:</lable></td><td><img src="http://localhost:3000/images/offline.png" id="p4sts"></img></td></tr>'+
 			'</div>'+
 
 		'</div>'
@@ -1767,13 +1767,13 @@
 //		
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
 			if(jsondata.devicetype == "WEC-3501I C22"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicetype == "WEC-3501I S220"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I S220.jpg";
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I S220.jpg";
 			}else if(jsondata.devicetype == "WEC9720EK C22"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicetype == "WEC9720EK E31"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/WEC-3501I C22.jpg";
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 			}
    }
    
@@ -1854,7 +1854,7 @@
 						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
-			document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/oprv-1001j.gif";
+			document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/oprv-1001j.gif";
 			if(jsondata.power2 == null){
 				$("#hfc_dcpowerb").remove();
 				$("#hfc_powerv2").remove();
@@ -1863,7 +1863,7 @@
    }
    
    function OpticalReceiver(style,jsondata,active ){
-	   if((jsondata.modelnumber.toUpperCase() == "WR8602RJ")||(jsondata.modelnumber.toUpperCase() == "WR8602JL")){
+	   if((jsondata.modelnumber.toUpperCase() == "WR8602RJ")||(jsondata.modelnumber.toUpperCase() == "WR8602JL")||(jsondata.modelnumber.toUpperCase() == "WR8600")){
 		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
 				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
@@ -1909,9 +1909,11 @@
 					'</div>'+
 					'</div>');
 		   if(jsondata.modelnumber.toUpperCase() == "WR8602RJ"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/wr8602rj.gif";
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/wr8602rj.gif";
 			}else if(jsondata.modelnumber.toUpperCase() == "WR8602JL"){
-				document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/oprv8602jl.jpg";
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/oprv8602jl.jpg";
+			}else if(jsondata.modelnumber.toUpperCase() == "WR8600"){
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/oprv8601.jpg";
 			}
 		   
 	   }else if(jsondata.modelnumber.toUpperCase() == "WR1001J"){
@@ -1958,7 +1960,7 @@
 						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
 					'</div>'+
 					'</div>');
-		   document.getElementById('pg_dev').src = "http://localhost:8080/wen9000/css/images/devpics/oprv-1001j.gif";
+		   document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/oprv-1001j.gif";
 	   }
 	   
    }

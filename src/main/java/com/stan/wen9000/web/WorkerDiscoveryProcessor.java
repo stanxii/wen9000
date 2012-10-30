@@ -445,42 +445,13 @@ public class WorkerDiscoveryProcessor{
 	public static void disWorkStation(String currentip, Jedis jedis){
 		String deviceid = new String();
 		String devicetype = new String();
-		int val = 0;
-		String hfc_mac = "";
-		String hfc_version = "";
-		String hfc_LogicalID = "";
-		String hfc_ModelNumber = "";
-		String hfc_SerialNumber = "";
-		String hfctype = "";
-		String trapip1="";
-		String trapip2="";
-		String trapip3="";
-		String innertemp = "";
-		String inputpower = "";
-		String power1 = "";
-		String power_v1 = "";
-		String power2 = "";
-		String power_v2 = "";
-		String community = "public";
+		
 		try{
-			hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}),community );
-
-			hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}),community );
-			if(hfc_LogicalID == ""){
-				return;
-			}
-			hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}),community );
-			hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}),community );
-			trapip1 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}),community);
-        	trapip2 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,2}),community);
-        	trapip3 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,3}),community);
-        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}),community );
-        	//logger.info("======mac====="+hfc_mac);
-        	innertemp = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,13,0}),community ) + "℃";
+			
 			deviceid = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
-					4, 1, 17409, 1, 3 , 3,2,2,1,2,1 }),community);
+					4, 1, 17409, 1, 3 , 3,2,2,1,2,1 }),"public");
 			devicetype = util.gethfcStrPDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1,
-					4, 1, 17409, 1, 3 , 3,2,2,1,4,1 }),community);
+					4, 1, 17409, 1, 3 , 3,2,2,1,4,1 }),"public");
 			if (deviceid.equalsIgnoreCase("ScanID                         ") || deviceid.equalsIgnoreCase("WL00OR220000"))
             {
                 if (devicetype.equalsIgnoreCase("WR8602JL") || devicetype.equalsIgnoreCase("WR8604JL") || devicetype.equalsIgnoreCase("WR8602RJ") || devicetype.equalsIgnoreCase("WR8602RJL") ||
@@ -488,8 +459,9 @@ public class WorkerDiscoveryProcessor{
                    || devicetype.equalsIgnoreCase("WR1004DJ") || devicetype.equalsIgnoreCase("WR1002RJ") || devicetype.equalsIgnoreCase("SCN-1000-2") || devicetype.equalsIgnoreCase("SCN-870-2") || devicetype.equalsIgnoreCase("WR8602ML") || devicetype.equalsIgnoreCase("WR8602JLE")
               || devicetype.equalsIgnoreCase("WR8602ME") || devicetype.equalsIgnoreCase("FMAU1121") || devicetype.equalsIgnoreCase("WR8602MF-B") || devicetype.equalsIgnoreCase("WR8602M-B") || devicetype.equalsIgnoreCase("WR8604DJ-1G") || devicetype.equalsIgnoreCase("OPS2600")
                 || devicetype.equalsIgnoreCase("WR8602MFH-B")){
-                	//return "光接收机";
+                	disReceiver(currentip,jedis);
                 }else if (devicetype.equalsIgnoreCase("WR8602JDS")){
+                	disSwitch_Receiver(currentip,jedis);
                 	//return "带切换开关光接收机";
                 }
                 else if (devicetype.equalsIgnoreCase("WR8604HA") || devicetype.equalsIgnoreCase("WR8604G-S") || devicetype.equalsIgnoreCase("WR8602G-S") || devicetype.equalsIgnoreCase("WR8604HC") || deviceid.equalsIgnoreCase("HC-860")){
@@ -510,69 +482,7 @@ public class WorkerDiscoveryProcessor{
                 || deviceid.equalsIgnoreCase("JDS-86-2") || deviceid.equalsIgnoreCase("RJ-1G-2") || deviceid.equalsIgnoreCase("JDS-86-2") 
                || deviceid.equalsIgnoreCase("DM-86-2") || deviceid.equalsIgnoreCase("ME-86-2") || deviceid.equalsIgnoreCase("JL-CM-2") || deviceid.equalsIgnoreCase("J-1G-2") || deviceid.equalsIgnoreCase("JL-1G-2")
                || deviceid.equalsIgnoreCase("JL-1G-4") || deviceid.equalsIgnoreCase("J-B-1G-2") || deviceid.equalsIgnoreCase("M-B-86-2") || deviceid.equalsIgnoreCase("CEAM-1G-2")){
-            	int channelnum = 0;
-            	String r_transpower = new String();
-            	String r_biascurrent = new String();
-            	String out_port = new String();
-            	String att = new String();
-            	String eqv = new String();
-            	String out_level = new String();
-            	String agc = new String();
-            	hfctype = "光接收机";
-            	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,2,2,1,10,1}),community );
-            	power1 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,4,1}),community );
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,2,1}),community );
-            	power_v1 = val/10 + "."+Math.abs(val%10) + "V";
-            	power2 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,4,2}),community );
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,2,2}),community );
-            	power_v2 = val/10 + "."+Math.abs(val%10) + "V";
-            	channelnum = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,20,0}),community );
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,5,1,2,1}),community );
-            	inputpower = val/10 + "."+Math.abs(val%10) + "dBm";
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,3,1,7,1}),community );
-            	r_transpower = val/10 + "."+Math.abs(val%10) + "dBm";
-            	out_port = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,6,1}),community );
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,9,1}),community );
-            	att = val/10 + "."+Math.abs(val%10) + "dB";
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,10,1}),community );
-            	eqv = val/10 + "."+Math.abs(val%10) + "dB";
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,4,1}),community );
-            	out_level = val/10 + "."+Math.abs(val%10) + "dBuV";
-            	//反向偏置电流不确定oid
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,3,1,2,1}),community );
-            	r_biascurrent = val/10 + "."+Math.abs(val%10) + "mA";
-            	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,28,0}),community );
-            	agc = val/10 + "."+Math.abs(val%10) + "dBm";
-            	
-            	String msgservice="";
-            	Map paramhash=new LinkedHashMap();				 
-    	   		 paramhash.put("msgcode", "003");
-    	   		 paramhash.put("ip", currentip);
-    	   		 paramhash.put("hfcmac", hfc_mac);
-    	   		 paramhash.put("hfctype", hfctype);	
-    	   		 paramhash.put("version", hfc_version);	
-    	   		 paramhash.put("logicalid", hfc_LogicalID);
-    	   		 paramhash.put("modelnumber", hfc_ModelNumber);
-    	   		 paramhash.put("serialnumber", hfc_SerialNumber);
-    	   		 paramhash.put("trapip1", trapip1);
-    	   		 paramhash.put("trapip2", trapip2);
-    	   		 paramhash.put("trapip3", trapip3);
-    	   		 paramhash.put("power1", power1);
-    	   		 paramhash.put("power_v1", power_v1);
-    	   		 paramhash.put("power2", power2);
-    	   		 paramhash.put("power_v2", power_v2);    	   		 
-    	   		 paramhash.put("channelnum", channelnum);
-    	   		 paramhash.put("innertemp", innertemp);    	   		 
-    	   		paramhash.put("r_transpower", r_transpower);
-   	   		 	paramhash.put("r_biascurrent", r_biascurrent);   	   		 	
-   	   		 	paramhash.put("out_port", out_port);
-	   		 	paramhash.put("att", att);
-	   		 	paramhash.put("eqv", eqv);
-	   		 	paramhash.put("out_level", out_level);
-	   		 	paramhash.put("inputpower", inputpower);
-	   		 	paramhash.put("agc", agc);
-    	   		 msgservice = JSONValue.toJSONString(paramhash);
-    	   		 sendToPersist(msgservice,jedis);
+            	disReceiver(currentip,jedis);
             }                
             else if (deviceid.equalsIgnoreCase("HJ-1G")|| deviceid.equalsIgnoreCase("HJ-860")){
             	//return "光AGC工作站";
@@ -592,7 +502,105 @@ public class WorkerDiscoveryProcessor{
 	}
 	
 	public static void disReceiver(String currentip, Jedis jedis){
-		
+		int val = 0;
+		String hfc_mac = "";
+		String hfc_version = "";
+		String hfc_LogicalID = "";
+		String hfc_ModelNumber = "";
+		String hfc_SerialNumber = "";
+		String hfctype = "";
+		String trapip1="";
+		String trapip2="";
+		String trapip3="";
+		String innertemp = "";
+		String inputpower = "";
+		String power1 = "";
+		String power_v1 = "";
+		String power2 = "";
+		String power_v2 = "";
+		String community = "public";
+		int channelnum = 0;
+    	String r_transpower = new String();
+    	String r_biascurrent = new String();
+    	String out_port = new String();
+    	String att = new String();
+    	String eqv = new String();
+    	String out_level = new String();
+    	String agc = new String();
+    	hfctype = "光接收机";
+    	try{
+    		hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}),community );
+
+    		hfc_LogicalID = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,1,0}),community );
+    		if(hfc_LogicalID == ""){
+    			return;
+    		}
+    		hfc_ModelNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,3,0}),community );
+    		hfc_SerialNumber = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,4,0}),community );
+    		trapip1 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,1}),community);
+        	trapip2 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,2}),community);
+        	trapip3 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,1,7,1,2,3}),community);
+        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,2,1,1,1,0}),community );
+        	//logger.info("======mac====="+hfc_mac);
+        	innertemp = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,13,0}),community ) + "℃";
+        	hfc_mac = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,3,2,2,1,10,1}),community );
+        	power1 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,4,1}),community );
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,2,1}),community );
+        	power_v1 = val/10 + "."+Math.abs(val%10) + "V";
+        	power2 = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,4,2}),community );
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,19,1,2,2}),community );
+        	power_v2 = val/10 + "."+Math.abs(val%10) + "V";
+        	channelnum = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,20,0}),community );
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,5,1,2,1}),community );
+        	inputpower = val/10 + "."+Math.abs(val%10) + "dBm";
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,3,1,7,1}),community );
+        	r_transpower = val/10 + "."+Math.abs(val%10) + "dBm";
+        	out_port = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,6,1}),community );
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,9,1}),community );
+        	att = val/10 + "."+Math.abs(val%10) + "dB";
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,10,1}),community );
+        	eqv = val/10 + "."+Math.abs(val%10) + "dB";
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,11,1,4,1}),community );
+        	out_level = val/10 + "."+Math.abs(val%10) + "dBuV";
+        	//反向偏置电流不确定oid
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,3,1,2,1}),community );
+        	r_biascurrent = val + "mA";
+        	val = util.gethfcINT32PDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,28,0}),community );
+        	agc = val/10 + "."+Math.abs(val%10) + "dBm";
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	
+    	
+    	String msgservice="";
+    	Map paramhash=new LinkedHashMap();				 
+   		 paramhash.put("msgcode", "003");
+   		 paramhash.put("ip", currentip);
+   		 paramhash.put("hfcmac", hfc_mac);
+   		 paramhash.put("hfctype", hfctype);	
+   		 paramhash.put("version", hfc_version);	
+   		 paramhash.put("logicalid", hfc_LogicalID);
+   		 paramhash.put("modelnumber", hfc_ModelNumber);
+   		 paramhash.put("serialnumber", hfc_SerialNumber);
+   		 paramhash.put("trapip1", trapip1);
+   		 paramhash.put("trapip2", trapip2);
+   		 paramhash.put("trapip3", trapip3);
+   		 paramhash.put("power1", power1);
+   		 paramhash.put("power_v1", power_v1);
+   		 paramhash.put("power2", power2);
+   		 paramhash.put("power_v2", power_v2);    	   		 
+   		 paramhash.put("channelnum", channelnum);
+   		 paramhash.put("innertemp", innertemp);    	   		 
+   		paramhash.put("r_transpower", r_transpower);
+  		 	paramhash.put("r_biascurrent", r_biascurrent);   	   		 	
+  		 	paramhash.put("out_port", out_port);
+		 	paramhash.put("att", att);
+		 	paramhash.put("eqv", eqv);
+		 	paramhash.put("out_level", out_level);
+		 	paramhash.put("inputpower", inputpower);
+		 	paramhash.put("agc", agc);
+   		 msgservice = JSONValue.toJSONString(paramhash);
+   		 sendToPersist(msgservice,jedis);
 	}
 	
 	public static void disSwitch_Receiver(String currentip, Jedis jedis){

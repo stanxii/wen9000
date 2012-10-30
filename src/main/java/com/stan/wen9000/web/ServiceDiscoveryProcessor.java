@@ -576,7 +576,7 @@ public class ServiceDiscoveryProcessor  {
 		
 		Sendstschange("hfc",String.valueOf(hfcid),jedis);
 		
-		//发现新设备头端，通知前端		
+		//发现新设备，通知前端		
 		JSONObject json = new JSONObject();
 		json.put("mac", hfcmac.toLowerCase().trim());
 		json.put("active", "1");
@@ -670,7 +670,7 @@ public class ServiceDiscoveryProcessor  {
 		
 		Sendstschange("hfc",String.valueOf(hfcid),jedis);
 		
-		//发现新设备头端，通知前端		
+		//发现新设备，通知前端		
 		JSONObject json = new JSONObject();
 		json.put("mac", hfcmac.toLowerCase().trim());
 		json.put("active", "1");
@@ -792,7 +792,7 @@ public class ServiceDiscoveryProcessor  {
 		
 		Sendstschange("hfc",String.valueOf(hfcid),jedis);
 		
-		//发现新设备头端，通知前端		
+		//发现新设备，通知前端		
 		JSONObject json = new JSONObject();
 		json.put("mac", hfcmac.toLowerCase().trim());
 		json.put("active", "1");

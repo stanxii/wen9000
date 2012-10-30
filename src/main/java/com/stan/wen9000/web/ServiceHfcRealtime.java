@@ -377,8 +377,8 @@ public class ServiceHfcRealtime {
 			json.put("out_level",  val/10 + "."+Math.abs(val%10) + "dBuV");
 			jedis.hset(key, "out_level", val/10 + "."+Math.abs(val%10) + "dBuV");
 			val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,3,1,2,1}),community );
-			json.put("r_biascurrent",  val/10 + "."+Math.abs(val%10) + "mA");
-			jedis.hset(key, "r_biascurrent", val/10 + "."+Math.abs(val%10) + "mA");
+			json.put("r_biascurrent",  val + "mA");
+			jedis.hset(key, "r_biascurrent", val + "mA");
 			val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,28,0}),community );
 			json.put("agc",  val/10 + "."+Math.abs(val%10) + "dBm");
 			jedis.hset(key, "agc", val/10 + "."+Math.abs(val%10) + "dBm");

@@ -426,6 +426,8 @@ public class ServiceController {
 			ThresholdSet_1310(jedis,ParamMibOID,json,jsondata);
 		}else if(type.equalsIgnoreCase("光接收机")){
 			ThresholdSet_Receiver(jedis,ParamMibOID,json,jsondata);
+		}else if(type.equalsIgnoreCase("带切换开关光接收机")){
+			ThresholdSet_SwitchReceiver(jedis,ParamMibOID,json,jsondata);
 		}
 
 	}	
