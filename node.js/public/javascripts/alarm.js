@@ -46,14 +46,14 @@
 	        function addNewOne(data) {
                         var background= "";
                         
-                         if(data.alarmlevel == 1 ) background = "http://localhost:8080/wen9000/images/ball_red.png";
-                         else if(data.alarmlevel == 2 ) background = "http://localhost:8080/wen9000/images/ball_orange.png";
-                         else if(data.alarmlevel == 3 ) background = "http://localhost:8080/wen9000/images/ball_yellow.png";
-                         else if(data.alarmlevel == 4 ) background = "http://localhost:8080/wen9000/images/ball_hese.png";
-                         else if(data.alarmlevel == 5 ) background = "http://localhost:8080/wen9000/images/ball_blue.png";
-                         else if(data.alarmlevel == 6 ) background = "http://localhost:8080/wen9000/images/ball_green.png";
-                         else if(data.alarmlevel == 7 ) background = "http://localhost:8080/wen9000/images/ball_white.png";
-                         else background = "http://localhost:8080/wen9000/images/ball_black.png";
+                         if(data.alarmlevel == 1 ) background = "http://localhost:3000/images/ball_red.png";
+                         else if(data.alarmlevel == 2 ) background = "http://localhost:3000/images/ball_orange.png";
+                         else if(data.alarmlevel == 3 ) background = "http://localhost:3000/images/ball_yellow.png";
+                         else if(data.alarmlevel == 4 ) background = "http://localhost:3000/images/ball_hese.png";
+                         else if(data.alarmlevel == 5 ) background = "http://localhost:3000/images/ball_blue.png";
+                         else if(data.alarmlevel == 6 ) background = "http://localhost:3000/images/ball_green.png";
+                         else if(data.alarmlevel == 7 ) background = "http://localhost:3000/images/ball_white.png";
+                         else background = "http://localhost:3000/images/ball_black.png";
 
 
                           $( '<ul class="ralarm" style="height:24px"><li style="width:80px;text-align:center;"><img src='+  background +  ' /></li><li style="width:200px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:150px;text-align:center;">' +

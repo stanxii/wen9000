@@ -1235,9 +1235,8 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String mac = jsondata.get("mac").toString();
 		String user = jsondata.get("user").toString();
-		String cbatid = jedis.get("mac:"+message+":deviceid");
+		String cbatid = jedis.get("mac:"+mac+":deviceid");
 		String cbatip = jedis.hget("cbatid:"+cbatid+":entity", "ip");
-		
 		try {
 			String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
 			if(tmp == ""){

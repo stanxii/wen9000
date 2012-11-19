@@ -1,6 +1,8 @@
 package com.stan.wen9000.web;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -248,13 +250,14 @@ public class ServiceUpdateProcess{
 			
 			//更新头端时间戳
 			Date date = new Date();
-			long time = date.getTime();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String logtimes = format.format(date);
 					
 			
 			/////////////////////////////save cbatinfo
 		
 			String scbatinfokey = "cbatid:" + cbatid + ":cbatinfo";
-			jedis.hset(scbatinfokey, "upsoftdate", String.valueOf(time));	
+			jedis.hset(scbatinfokey, "upsoftdate", String.valueOf(logtimes));	
 		
 			
 			

@@ -197,7 +197,7 @@
     				  if(node == null){
     					  alert("无法查询到设备!");
     				  }
-    				  node.activate()
+    				  node.activate();
     			  }else{
     				  socket.emit('devsearch',search_val);
     			  } 
@@ -1750,7 +1750,7 @@
 			  							'<option value="2">CAP2</option>'+
 			  							'<option value="3">CAP3</option></select></td></tr></table>'+
 
-			  							'<div><button id="btn_sub" style="margin-left:140px">提交</button><button id="btn_sync" style="margin-left:140px">刷新</button>'+
+			  							'<div><button id="btn_qossub" style="margin-left:140px">提交</button><button id="btn_qossync" style="margin-left:140px">刷新</button>'+
 			  							'</div>'+            			  							
           '</div>'+
      '<div id="tabs-3">'+

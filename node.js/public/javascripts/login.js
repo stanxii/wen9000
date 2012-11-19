@@ -18,8 +18,8 @@
 		$("#remember").click(function(){
 			if(localStorage.getItem('check')){
 				localStorage.setItem('check','');
-				localStorage.setItem('password','');
-				$("#password")[0].value = "";
+				//localStorage.setItem('password','');
+				//$("#password")[0].value = "";
 			}else{
 				localStorage.setItem('check','true');
 			}

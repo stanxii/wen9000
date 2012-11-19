@@ -91,6 +91,16 @@
    			socket.emit('opt.allcheckedcnus', "allcheckedcnus" );	
 
    		});
+
+//   		$("#cnuTable_filter input").change(function(){
+//   			var cc = $(this);
+//   			if($(this)[0].text == ""){
+//   				$("#checkall").removeAttr("disabled");
+//   			}else{
+//   				$("#checkall").attr("disabled","disabled");
+//   			}
+//   		});
+
 	});
 	
 	function fun_Checkallcnus(data){
