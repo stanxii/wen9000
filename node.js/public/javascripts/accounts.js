@@ -92,7 +92,7 @@
 
    		});
 
-//   		$("#cnuTable_filter input").change(function(){
+//   		$("#cnuTable_filter input").bind('change',function(){
 //   			var cc = $(this);
 //   			if($(this)[0].text == ""){
 //   				$("#checkall").removeAttr("disabled");

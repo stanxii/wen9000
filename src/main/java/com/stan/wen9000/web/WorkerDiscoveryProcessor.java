@@ -132,7 +132,6 @@ public class WorkerDiscoveryProcessor{
         	System.out.println(">pMessage>>>>>>>>>>>>>>>>>>>>>>>>Descovery Subscribing................now receive on msgarge1 [" + arg1 + "] arg2=["+arg2 +"]");
         	try {
     			//arg2 is mssage now is currenti p
-
     			servicestart(arg2);
     			
     		}catch(Exception e){
@@ -217,8 +216,7 @@ public class WorkerDiscoveryProcessor{
 		int agetnport;
 		String netmask;
 		String gateway;
-		
-		
+
 		currentip.trim().toUpperCase();
 		
 		
@@ -233,26 +231,13 @@ public class WorkerDiscoveryProcessor{
 			jedis.incr("global:searched");
 			redisUtil.getJedisPool().returnResource(jedis);
 			return;
-		}
-		
-		//W9000显示模式判断
-		if((dismode = jedis.get("global:displaymode")) != null){
-			if(dismode.equalsIgnoreCase("1")){
-				//显示HFC设备
-				//logger.info("------------------------------>>>>>>dismode==1");
-				if(hfcdis(currentip,jedis)){
-					return;
-				}
-			}
 		}		
-		
+			
 		//eoc	
 		devicetype = eocping(currentip, "161");	
-		
 		// ///////////////////////////////////////////////////
 		if (devicetype != -1) {
 			String cbatmac = "";
-			
 			try {
 				cbatmac = util.getStrPDU(currentip, "161", new OID(
 						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 6, 0 }));
@@ -292,7 +277,6 @@ public class WorkerDiscoveryProcessor{
 			 cbathash.put("cbatinfo:netmask", netmask);
 			 cbathash.put("cbatinfo:gateway", gateway);
 			 msgservice = JSONValue.toJSONString(cbathash);
-			
 			sendToPersist(msgservice,jedis);
 			msgservice = "";
 
@@ -301,7 +285,16 @@ public class WorkerDiscoveryProcessor{
 			// log.info(
 			// "#0 ping ping. ip #1........Bu Bu Tong ,Bu tong, Bu tong !",
 			// currentip);
-
+			//W9000显示模式判断
+			if((dismode = jedis.get("global:displaymode")) != null){
+				if(dismode.equalsIgnoreCase("1")){
+					//显示HFC设备
+					//logger.info("------------------------------>>>>>>dismode==1");
+					if(hfcdis(currentip,jedis)){
+						return;
+					}
+				}
+			}
 			jedis.publish("node.dis.proc", "");
 			jedis.incr("global:searched");
 			redisUtil.getJedisPool().returnResource(jedis);
@@ -420,7 +413,6 @@ public class WorkerDiscoveryProcessor{
 			oid = util.gethfcStrPDU(host, port, new OID(new int[] { 1, 3, 6, 1,
 					2, 1, 1, 2, 0 }),"public");
 			if ((oid != null) && (oid != "")) {
-
 				return true;
 			}
 		} catch (Exception e) {

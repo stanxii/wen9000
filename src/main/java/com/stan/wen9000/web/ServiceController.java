@@ -658,14 +658,14 @@ public class ServiceController {
 			String user = jsondata.get("user").toString().trim();
 			String type = jsondata.get("type").toString().trim();
 			String id = jedis.get("mac:"+ mac + ":deviceid");
-			String community = jedis.hget("hfcid:"+ id + ":entity", "community");
+			String community = jedis.hget("hfcid:"+ id + ":entity", "wcommunity");
 			JSONObject optjson = new JSONObject();
 			Date date = new Date();
 			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
 			String logtimes = format.format(date);
 			optjson.put("time", logtimes);
 			optjson.put("user", user);			
-			try{
+			try{				
 				//判断设备是否在线
 				String oid = util.gethfcStrPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 						2, 1, 1, 2, 0 }),community);
@@ -3205,15 +3205,17 @@ public class ServiceController {
         			return;
     			}
     		}
-    		util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,4,0}), new Integer32(Integer.valueOf(mvlanenable)));
-    		util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,5,0}), new Integer32(Integer.valueOf(mvlanid)));    		
+    		    		
     		util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}), trapserver);
     		util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}), new Integer32(Integer.valueOf(trap_port)));
     		
-    		if((!oldip.equalsIgnoreCase(ip))||(!netmask.equalsIgnoreCase(jedis.hget(cbatinfokey, "netmask")))||(!gateway.equalsIgnoreCase(jedis.hget(cbatinfokey, "gateway")))){
+    		if((!oldip.equalsIgnoreCase(ip))||(!netmask.equalsIgnoreCase(jedis.hget(cbatinfokey, "netmask")))||(!gateway.equalsIgnoreCase(jedis.hget(cbatinfokey, "gateway")))
+    				||(!mvlanenable.equalsIgnoreCase(jedis.hget(cbatinfokey, "mvlanenable"))) ||(!mvlanid.equalsIgnoreCase(jedis.hget(cbatinfokey, "mvlanid")))){
     			util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,1,0}), ip);
     			util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,4,0}), netmask);
         		util.setV2StrPDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0}), gateway);
+        		util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,4,0}), new Integer32(Integer.valueOf(mvlanenable)));
+        		util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,5,0}), new Integer32(Integer.valueOf(mvlanid)));
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), new Integer32(1));
     			util.setV2PDU(oldip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), new Integer32(1));
     			jedis.set("devip:"+ip+":mac", mac);

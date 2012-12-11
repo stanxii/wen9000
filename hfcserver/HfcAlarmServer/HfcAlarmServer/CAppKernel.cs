@@ -144,7 +144,7 @@ namespace HfcAlarmServer
             this.TestOnlineClientID = base.AddSnmpClientWithID(this.myTestOnlineClient);
             //打开SNMP引擎的事务处理。
             this.Open();
-            Console.WriteLine("Listenint Trap ...........");
+            Console.WriteLine("Listening Trap ...........");
             #endregion
     
         }
