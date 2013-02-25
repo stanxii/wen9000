@@ -472,7 +472,7 @@ public class TrapReceiverBean {
 			case 200914:
 				if(Integer.parseInt((String)alarmhash.get("alarmvalue"))==1)
 				{
-					alarmhash.put("alarmlevel", "6");
+					alarmhash.put("alarmlevel", "5");
 					alarmhash.put("cnalarminfo", "阻止 CNU注册 成功");
 					alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));					
 				}
@@ -499,7 +499,7 @@ public class TrapReceiverBean {
 			case 200918:
 				if( Integer.parseInt((String)alarmhash.get("alarmvalue"))==1)
 				{
-					alarmhash.put("alarmlevel", "6");
+					alarmhash.put("alarmlevel", "5");
 					alarmhash.put("cnalarminfo", "KICK OFF CNU 成功");
 					alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));					
 				}
@@ -511,13 +511,13 @@ public class TrapReceiverBean {
 				}
 				break;
 			case 200919:
-				alarmhash.put("alarmlevel", "6");
+				alarmhash.put("alarmlevel", "5");
 				alarmhash.put("cnalarminfo", "CNU强制重新注册");
 				alarmhash.put("enalarminfo", alarmhash.get("trapinfo"));				
 				break;
 			case 200920:			
 				// 告警				
-				alarmhash.put("alarmlevel", "6");
+				alarmhash.put("alarmlevel", "5");
 				alarmhash.put("cnalarminfo", "Mac为"+ (String)alarmhash.get("cbatmac") +"的头端上线");
 				alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +"  Master online!");
 				break;
@@ -527,12 +527,12 @@ public class TrapReceiverBean {
 				alarmhash.put("enalarminfo", "Mac:"+ (String)alarmhash.get("cbatmac") +"  Master offline!");
 				break;
 			case 200912:				
-				alarmhash.put("alarmlevel", "5");
+				alarmhash.put("alarmlevel", "4");
 				alarmhash.put("cnalarminfo", "非法用户试图注册");
 				alarmhash.put("enalarminfo", "llegal users trying to register");				
 				break;
 			case 200922:
-				alarmhash.put("alarmlevel", "5");
+				alarmhash.put("alarmlevel", "3");
 				alarmhash.put("cnalarminfo", "线卡丢失");
 				alarmhash.put("enalarminfo", "Lose CLT");
 			default:

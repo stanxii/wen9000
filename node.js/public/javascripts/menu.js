@@ -51,7 +51,8 @@
                   socket.on('hfcrealtime', fun_Hfcrealtime );                 
                   socket.on('hfcsubresponse', fun_Hfcresponse );    
                   socket.on('devsearch', fun_Devsearch ); 
-      
+                  socket.on('Getcltmac', fun_Getcltmac );
+                  socket.on('optresult', fun_Optresult );
       $("#btn_hbase").live('click', function(){
     	  if(flag == "3"){
     		  alert("只读用户，权限不足！");
@@ -595,6 +596,47 @@
 			
 	 });
 	 
+	 $('#s_clt').live('change',function(){
+		 var value = $(this)[0].value;
+		 var cbatmac = $('#mac')[0].textContent;
+		 var datastring = '{"value":"'+value+'","cbatmac":"'+cbatmac+'","user":"'+user+'"}';
+		 socket.emit('Scltchange',datastring);
+	 });
+	 
+	 $('#btn_cltdel').live('click',function(){
+		 if((confirm( "确定要删除吗？ ")!=true))
+	   	  {
+		    	  return;
+	   	  }
+		 var cltindex = $('#s_clt')[0].value;
+		 var cbatmac = $('#mac')[0].textContent;
+		 var datastring = '{"cltindex":"'+cltindex+'","cbatmac":"'+cbatmac+'","user":"'+user+'"}';
+		 socket.emit('Cltdel',datastring);
+	 });
+	 
+	 $('#btn_cltregister').live('click',function(){
+		 var cltindex = $('#s_clt')[0].value;
+		 var optstring = "#clt"+cltindex+"mac";
+		 var cltmac = $(optstring)[0].textContent;
+		 var reg_name=/^\w{2}(:\w{2}){5}$/; 
+		 var newcltmac = $('#clt_mac')[0].value;
+		 if(!reg_name.test(newcltmac)){
+     		alert("Mac地址不正确!");
+     		return;
+     	}
+		 if(cltmac != ""){
+			 if((confirm( "该槽位检测到线卡，要重新注册线卡么？ ")!=true))
+		   	  {
+			    	  return;
+		   	  }
+			 var cbatmac = $('#mac')[0].textContent;
+			 
+			 var datastring = '{"cltindex":"'+cltindex+'","cltmac":"'+newcltmac+'","cbatmac":"'+cbatmac+'","user":"'+user+'"}';
+			 socket.emit('Cltregister',datastring);
+		 }	 
+	 });
+	 
+	 
 	//table
 		$('#power').dataTable( {	  			 		
 			"bFilter": false,						//不使用过滤功能
@@ -647,6 +689,50 @@
 				  alert("无法查询到设备!");
 			  }
 			  node.activate()
+    	 }
+     }
+     
+     function fun_Getcltmac(data){
+    	 if(data == ""){
+    		 
+    	 }else{
+    		 $('#clt_mac')[0].value = data;
+    	 }
+     }
+     
+     function fun_Optresult(data){
+    	 if(data == ""){
+    		//失败提示对话框					
+  			$( "#dialog-message-failed" ).dialog({
+  				autoOpen: false,
+  				show: "blind",
+  				modal: true,
+  				resizable: false,
+  				hide: "explode",
+  				buttons: {
+  					Ok: function() {
+  						$( this ).dialog( "close" );
+  					}
+  				}
+  			});
+  			$("#dialog-message-failed").dialog("open");
+    	 }else{
+    		//成功提示对话框
+	 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
+
+	 			$( "#dialog-message" ).dialog({
+	 				autoOpen: false,
+	 				show: "blind",
+	 				modal: true,
+	 				resizable: false,
+	 				hide: "explode",
+	 				buttons: {
+	 					Ok: function() {
+	 						$( this ).dialog( "close" );
+	 					}
+	 				}
+	 			});
+	 			$("#dialog-message").dialog("open");
     	 }
      }
      
@@ -1642,129 +1728,258 @@
 		   style = "color:red";
 	   }
 	   $("#content").empty();
-	   	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">头端设备信息</h3>'+
-	   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
-	   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
-	   	
-	   	'<br/><div id="cbatconfiginfo"><ul>'+
-		'<li><a href="#tabs-1">基本信息</a></li>'+
-		'<li><a href="#tabs-2">Qos配置信息</a></li>'+
-		'<li><a href="#tabs-3">性能管理</a></li></ul>'+
-		'<div id="tabs-1">'+		   	 
-		   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
-		   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td></tr>'+
-		   		'<tr><td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
-				'<tr><td><lable>设备标识 : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
-				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp地址 : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
-				'<tr><td><lable>ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
-				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
-				'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
-				'<tr><td><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
-				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp端口号 : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
-				'<tr><td><lable>管理VLAN使能 : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
-								'<option value="1">启用</option>'+
-								'<option value="2">禁用</option>'+
-							'</select></td>'+
-				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
-				'<tr><td><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
-				'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspTELNET超时(s) : </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
-				//'<tr><td><lable>生产厂家 : </lable></td><td><lable>杭州万隆光电设备股份有限公司</lable></td>'+
-				'<tr><td><lable>软件更新时间 : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
-				'</table><br/>'+
-				'<div><button id="btn_sub" style="margin-left:40px">提交</button><button id="btn_sync" style="margin-left:100px">刷新</button>'+
-				      '<button id="btn_reboot" style="margin-left:100px">设备重启</button>'+
-				      '<button id="btn_reset" style="margin-left:100px">恢复出厂设置</button>'+
-				'</div>'+
-		'</div>'+
-	  '<div id="tabs-2">'+
-	        '<h3>缺省服务优先级</h3>'+
-	  		'<table id="Qosinfo"><tr><td>IGMP组播:</td><td colspan="2"><select name="igmpPri" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td>'+
-			  				         '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp单播:</td><td colspan="2"><select name="unicastPri" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td></tr>'+
-			  					'<tr><td>IGMP管理的多播流:</td><td colspan="2"><select name="avsPri" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td>'+
-			  					     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp多播/广播:</td><td colspan="2"><select name="unicastPri" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td></tr></table>'+
-			  							
-			  							
-			'<h3>Qos设置</h3>'+
-	  		'<table id="Qosinfo"><tr><td>使能状态:</td><td colspan="2"><select name="tbaPriSts" size="1">'+
-			  							'<option value="0">Disable</option>'+
-			  							'<option value="1">Enable</option>'+			  							
-			  							'</select></td>'+
-			  				        '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspQos方式:</td><td colspan="2"><select name="asPriType" size="1">'+
-			  							'<option value="0">COS</option>'+
-			  							'<option value="1">TOS</option>'+			  							
-			  							'</select></td></tr>'+
-			  					'<tr><td>COS0/TOS0:</td><td colspan="2"><select name="pri0QueueMap" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td>'+
-	  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS1/TOS1:</td><td colspan="2"><select name="pri1QueueMap" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td></tr>'+
-					  		    '<tr><td>COS2/TOS2:</td><td colspan="2"><select name="pri2QueueMap" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td>'+
-	  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS3/TOS3:</td><td colspan="2"><select name="pri3QueueMap" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td></tr>'+
-					  			'<tr><td>COS4/TOS4:</td><td colspan="2"><select name="pri4QueueMap" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td>'+
-	  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS5/TOS5:</td><td colspan="2"><select name="pri5QueueMap" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td></tr>'+
-					  		   '<tr><td>COS6/TOS6:</td><td colspan="2"><select name="pri6QueueMap" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td>'+
-	  							    '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS7/TOS7:</td><td colspan="2"><select name="pri7QueueMap" size="1">'+
-			  							'<option value="0">CAP0</option>'+
-			  							'<option value="1">CAP1</option>'+
-			  							'<option value="2">CAP2</option>'+
-			  							'<option value="3">CAP3</option></select></td></tr></table>'+
+	   //多线卡设备和单线卡设备划分
+	   if(jsondata.devicetype == "WR1004JL" || jsondata.devicetype == "WR1004SJL"){
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">头端设备信息</h3>'+
+				   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
+				   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+				   	
+				   	'<br/><div id="cbatconfiginfo"><ul>'+
+					'<li><a href="#tabs-1">基本信息</a></li>'+
+					'<li><a href="#tabs-2">Qos配置信息</a></li>'+
+					'<li><a href="#tabs-3">性能管理</a></li>'+
+					'<li><a href="#tabs-4">线卡管理</a></li></ul>'+
+					'<div id="tabs-1">'+		   	 
+					   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td></tr>'+
+					   		'<tr><td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
+							'<tr><td><lable>设备标识 : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp地址 : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
+							'<tr><td><lable>ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
+							'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
+							'<tr><td><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp端口号 : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
+							'<tr><td><lable>管理VLAN使能 : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
+											'<option value="1">启用</option>'+
+											'<option value="2">禁用</option>'+
+										'</select></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
+							'<tr><td><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspTELNET超时(s) : </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
+							//'<tr><td><lable>生产厂家 : </lable></td><td><lable>杭州万隆光电设备股份有限公司</lable></td>'+
+							'<tr><td><lable>软件更新时间 : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
+							'</table><br/>'+
+							'<div><button id="btn_sub" style="margin-left:40px">提交</button><button id="btn_sync" style="margin-left:100px">刷新</button>'+
+							      '<button id="btn_reboot" style="margin-left:100px">设备重启</button>'+
+							      '<button id="btn_reset" style="margin-left:100px">恢复出厂设置</button>'+
+							'</div>'+
+					'</div>'+
+				  '<div id="tabs-2">'+
+				        '<h3>缺省服务优先级</h3>'+
+				  		'<table id="Qosinfo"><tr><td>IGMP组播:</td><td colspan="2"><select name="igmpPri" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td>'+
+						  				         '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp单播:</td><td colspan="2"><select name="unicastPri" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td></tr>'+
+						  					'<tr><td>IGMP管理的多播流:</td><td colspan="2"><select name="avsPri" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td>'+
+						  					     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp多播/广播:</td><td colspan="2"><select name="unicastPri" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td></tr></table>'+
+						  							
+						  							
+						'<h3>Qos设置</h3>'+
+				  		'<table id="Qosinfo"><tr><td>使能状态:</td><td colspan="2"><select name="tbaPriSts" size="1">'+
+						  							'<option value="0">Disable</option>'+
+						  							'<option value="1">Enable</option>'+			  							
+						  							'</select></td>'+
+						  				        '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspQos方式:</td><td colspan="2"><select name="asPriType" size="1">'+
+						  							'<option value="0">COS</option>'+
+						  							'<option value="1">TOS</option>'+			  							
+						  							'</select></td></tr>'+
+						  					'<tr><td>COS0/TOS0:</td><td colspan="2"><select name="pri0QueueMap" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td>'+
+				  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS1/TOS1:</td><td colspan="2"><select name="pri1QueueMap" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td></tr>'+
+								  		    '<tr><td>COS2/TOS2:</td><td colspan="2"><select name="pri2QueueMap" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td>'+
+				  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS3/TOS3:</td><td colspan="2"><select name="pri3QueueMap" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td></tr>'+
+								  			'<tr><td>COS4/TOS4:</td><td colspan="2"><select name="pri4QueueMap" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td>'+
+				  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS5/TOS5:</td><td colspan="2"><select name="pri5QueueMap" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td></tr>'+
+								  		   '<tr><td>COS6/TOS6:</td><td colspan="2"><select name="pri6QueueMap" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td>'+
+				  							    '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS7/TOS7:</td><td colspan="2"><select name="pri7QueueMap" size="1">'+
+						  							'<option value="0">CAP0</option>'+
+						  							'<option value="1">CAP1</option>'+
+						  							'<option value="2">CAP2</option>'+
+						  							'<option value="3">CAP3</option></select></td></tr></table>'+
 
-			  							'<div><button id="btn_qossub" style="margin-left:140px">提交</button><button id="btn_qossync" style="margin-left:140px">刷新</button>'+
-			  							'</div>'+            			  							
-          '</div>'+
-     '<div id="tabs-3">'+
-                '<div id="performencechart"></div>'+
-            '</div>'
-		
-			);	  
-	   	
-	   	
-	   	    //tab select performence
-//			$("#cbatconfiginfo").bind( "tabsselect", function(event, ui) {
-//				alert("select :" + ui.tab);
-//			});
-//		
+						  							'<div><button id="btn_qossub" style="margin-left:140px">提交</button><button id="btn_qossync" style="margin-left:140px">刷新</button>'+
+						  							'</div>'+            			  							
+			          '</div>'+
+			     '<div id="tabs-3">'+
+			                '<div id="performencechart"></div>'+
+			            '</div>'+			     
+			     '<div id="tabs-4">'+	
+			     	'<h3>线卡信息</h3>'+
+			     	'<table id="cltinfo"><tr><td>1号槽位MAC:</td><td><lable id="clt1mac">'+jsondata.clt1+'</lable></td></tr>'+
+			     		'<tr><td>2号槽位MAC:</td><td><lable id="clt2mac">'+jsondata.clt2+'</lable></td></tr>'+
+			     		'<tr><td>3号槽位MAC:</td><td><lable id="clt3mac">'+jsondata.clt3+'</lable></td></tr>'+
+			     		'<tr><td>4号槽位MAC:</td><td><lable id="clt4mac">'+jsondata.clt4+'</lable></td></tr>'+
+			     	'</table><br/>'+
+			     	'<table id="cltopt"><tr><td>槽位号</td><td>线卡MAC</td><td></td></tr>'+
+		     			'<tr><td><select id="s_clt"><option value="1">1</option><option value="2">2</option>'+
+		     			'<option value="3">3</option><option value="4">4</option></select>'+
+		     			'</td><td><input type="text" id="clt_mac" value="'+jsondata.clt1+'"></input></td><td>'+
+		     			'<button id="btn_cltregister" style="margin-left:30px">注册</button><button id="btn_cltdel" style="margin-left:20px">删除</td></tr>'+		     			
+		     		'</table>'+
+			     '</div>'
+			);	
+	   }else{
+		   //单线卡设备		   
+		   	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">头端设备信息</h3>'+
+		   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
+		   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+		   	
+		   	'<br/><div id="cbatconfiginfo"><ul>'+
+			'<li><a href="#tabs-1">基本信息</a></li>'+
+			'<li><a href="#tabs-2">Qos配置信息</a></li>'+
+			'<li><a href="#tabs-3">性能管理</a></li></ul>'+
+			'<div id="tabs-1">'+		   	 
+			   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
+			   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td></tr>'+
+			   		'<tr><td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
+					'<tr><td><lable>设备标识 : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
+					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp地址 : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
+					'<tr><td><lable>ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
+					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
+					'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
+					'<tr><td><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
+					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp端口号 : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
+					'<tr><td><lable>管理VLAN使能 : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
+									'<option value="1">启用</option>'+
+									'<option value="2">禁用</option>'+
+								'</select></td>'+
+					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
+					'<tr><td><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
+					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspTELNET超时(s) : </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
+					//'<tr><td><lable>生产厂家 : </lable></td><td><lable>杭州万隆光电设备股份有限公司</lable></td>'+
+					'<tr><td><lable>软件更新时间 : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
+					'</table><br/>'+
+					'<div><button id="btn_sub" style="margin-left:40px">提交</button><button id="btn_sync" style="margin-left:100px">刷新</button>'+
+					      '<button id="btn_reboot" style="margin-left:100px">设备重启</button>'+
+					      '<button id="btn_reset" style="margin-left:100px">恢复出厂设置</button>'+
+					'</div>'+
+			'</div>'+
+		  '<div id="tabs-2">'+
+		        '<h3>缺省服务优先级</h3>'+
+		  		'<table id="Qosinfo"><tr><td>IGMP组播:</td><td colspan="2"><select name="igmpPri" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td>'+
+				  				         '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp单播:</td><td colspan="2"><select name="unicastPri" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td></tr>'+
+				  					'<tr><td>IGMP管理的多播流:</td><td colspan="2"><select name="avsPri" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td>'+
+				  					     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp多播/广播:</td><td colspan="2"><select name="unicastPri" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td></tr></table>'+
+				  							
+				  							
+				'<h3>Qos设置</h3>'+
+		  		'<table id="Qosinfo"><tr><td>使能状态:</td><td colspan="2"><select name="tbaPriSts" size="1">'+
+				  							'<option value="0">Disable</option>'+
+				  							'<option value="1">Enable</option>'+			  							
+				  							'</select></td>'+
+				  				        '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspQos方式:</td><td colspan="2"><select name="asPriType" size="1">'+
+				  							'<option value="0">COS</option>'+
+				  							'<option value="1">TOS</option>'+			  							
+				  							'</select></td></tr>'+
+				  					'<tr><td>COS0/TOS0:</td><td colspan="2"><select name="pri0QueueMap" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td>'+
+		  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS1/TOS1:</td><td colspan="2"><select name="pri1QueueMap" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td></tr>'+
+						  		    '<tr><td>COS2/TOS2:</td><td colspan="2"><select name="pri2QueueMap" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td>'+
+		  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS3/TOS3:</td><td colspan="2"><select name="pri3QueueMap" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td></tr>'+
+						  			'<tr><td>COS4/TOS4:</td><td colspan="2"><select name="pri4QueueMap" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td>'+
+		  							     '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS5/TOS5:</td><td colspan="2"><select name="pri5QueueMap" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td></tr>'+
+						  		   '<tr><td>COS6/TOS6:</td><td colspan="2"><select name="pri6QueueMap" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td>'+
+		  							    '<td>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspCOS7/TOS7:</td><td colspan="2"><select name="pri7QueueMap" size="1">'+
+				  							'<option value="0">CAP0</option>'+
+				  							'<option value="1">CAP1</option>'+
+				  							'<option value="2">CAP2</option>'+
+				  							'<option value="3">CAP3</option></select></td></tr></table>'+
+
+				  							'<div><button id="btn_qossub" style="margin-left:140px">提交</button><button id="btn_qossync" style="margin-left:140px">刷新</button>'+
+				  							'</div>'+            			  							
+	          '</div>'+
+	     '<div id="tabs-3">'+
+	                '<div id="performencechart"></div>'+
+	            '</div>'
+			
+				);	  
+	   }
+
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
 			if(jsondata.devicetype == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";

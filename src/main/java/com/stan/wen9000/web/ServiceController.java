@@ -282,6 +282,12 @@ public class ServiceController {
 			doGetOptNext(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.optlogpre")){
 			doGetOptPre(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.Scltget")){
+			doGetCltMac(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.Cltdel")){
+			doCltDel(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.Cltregister")){
+			doCltRegister(message);
 		}		
 
 
@@ -3582,6 +3588,20 @@ public class ServiceController {
         	case 24:
         		result =jedis.get("global:WEC9720EK-SD220");//"WEC9720EK SD220";
         		break;
+        	case 26:
+        		result = "WR1004JL";
+        		cbatjson.put("clt1", jedis.hget(cbatkey,"clt1"));
+        		cbatjson.put("clt2", jedis.hget(cbatkey,"clt2"));
+        		cbatjson.put("clt3", jedis.hget(cbatkey,"clt3"));
+        		cbatjson.put("clt4", jedis.hget(cbatkey,"clt4"));
+        		break;
+        	case 27:
+        		result = "WR1004SJL";
+        		cbatjson.put("clt1", jedis.hget(cbatkey,"clt1"));
+        		cbatjson.put("clt2", jedis.hget(cbatkey,"clt2"));
+        		cbatjson.put("clt3", jedis.hget(cbatkey,"clt3"));
+        		cbatjson.put("clt4", jedis.hget(cbatkey,"clt4"));
+        		break;
         	case 36:
         		result ="WEC701 M0";
         		break;
@@ -4156,7 +4176,7 @@ public class ServiceController {
 //        		new UsernamePasswordCredentials("support", "support"));
 
         HttpPost post = new HttpPost(url);  
-        JSONObject response = null;  
+        JSONObject response = new JSONObject();  
         try {  
             StringEntity s = new StringEntity(json.toString());  
     
@@ -4179,7 +4199,8 @@ public class ServiceController {
             }  
         } catch (Exception e) {  
         	e.printStackTrace();
-            throw new RuntimeException(e);  
+        	response.put("status","1");
+            //throw new RuntimeException(e);  
         } finally {
         	client.getConnectionManager().shutdown();
         }
@@ -4673,6 +4694,125 @@ public class ServiceController {
 		}
 		jedis.decr("global:optlogpage");
 		jedis.publish("node.optlog.getoptlognp", "");
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doGetCltMac(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String index = jsondata.get("value").toString();
+		String user = jsondata.get("user").toString();
+		String cbatmac = jsondata.get("cbatmac").toString();
+		String cltmac = "";
+		//向设备获取CLTMAC
+		JSONObject resultjson = new JSONObject();
+		String devid = jedis.get("mac:"+cbatmac+":deviceid");
+		String cbatip = jedis.hget("cbatid:"+devid+":entity","cbatip");
+		if(jedis.hget("cbatid:"+devid+":entity","active") == "0"){
+			//设备不在线
+			cltmac = jedis.hget("cbatid:"+devid+":entity","clt"+index);
+		}else{
+			resultjson = post("http://"+cbatip+"/getclt.json", jsondata, cbatip);
+			if(resultjson.get("status").toString()!="0"){
+				//获取失败,从数据库获取			
+				cltmac = jedis.hget("cbatid:"+devid+":entity","clt"+index);
+			}else{
+				cltmac = resultjson.get("cltmac").toString();
+			}
+		}		
+		
+		jedis.publish("node.optlog.getcltmac", cltmac);
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doCltDel(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String cltindex = jsondata.get("cltindex").toString();
+		String user = jsondata.get("user").toString();
+		String cbatmac = jsondata.get("cbatmac").toString();
+		String cltmac = "";
+		//删除设备侧CLT
+		JSONObject resultjson = new JSONObject();
+		String devid = jedis.get("mac:"+cbatmac+":deviceid");
+		String cbatip = jedis.hget("cbatid:"+devid+":entity","cbatip");
+		resultjson = post("http://"+cbatip+"/delclt.json", jsondata, cbatip);
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		if(resultjson.get("status").toString()!="0"){
+			//删除失败		
+			jedis.publish("node.optlog.optresult", "");
+			optjson.put("desc", "删除clt失败!");
+		}else{
+			jedis.hdel("cbatid:"+devid+":entity","clt"+cltindex);
+			jedis.save();
+			jedis.publish("node.optlog.optresult", "ok");
+			optjson.put("desc", "删除clt[index:"+cltindex+"]成功!");
+		}
+		sendoptlog(jedis,optjson);
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doCltRegister(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String cltindex = jsondata.get("cltindex").toString();
+		String user = jsondata.get("user").toString();
+		String cbatmac = jsondata.get("cbatmac").toString();
+		String cltmac = jsondata.get("cltmac").toString();
+		//注册CLT
+		JSONObject resultjson = new JSONObject();
+		String devid = jedis.get("mac:"+cbatmac+":deviceid");
+		String cbatip = jedis.hget("cbatid:"+devid+":entity","cbatip");
+		resultjson = post("http://"+cbatip+"/registerclt.json", jsondata, cbatip);
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);	
+    	
+		if(resultjson.get("status").toString()!="0"){
+			//注册失败		
+			jedis.publish("node.optlog.optresult", "");
+			optjson.put("desc", "注册新clt失败!");
+		}else{
+			jedis.hset("cbatid:"+devid+":entity","clt"+cltindex,cltmac);
+			jedis.save();
+			jedis.publish("node.optlog.optresult", "ok");
+			optjson.put("desc", "注册新clt["+cltmac+"]成功!");
+		}
+		sendoptlog(jedis,optjson);
+		
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	

@@ -503,6 +503,10 @@ redis.on('pmessage', function(pat,ch,data) {
     }else if(ch == 'node.optlog.getall') {
     	data = JSON.parse(data);
     	sio.sockets.emit('optlogall',data);       
+    }else if(ch == 'node.optlog.getcltmac') {
+    	sio.sockets.emit('Getcltmac',data);       
+    }else if(ch == 'node.optlog.optresult') {
+    	sio.sockets.emit('optresult',data);       
     }
 });
 
@@ -874,7 +878,21 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: optlogpre==='+data);
 	  publish.publish('servicecontroller.optlogpre', data);
   });
-
+//clt线卡选择变迁
+  socket.on('Scltchange', function (data) {
+	  console.log('nodeserver: Scltchange==='+data);
+	  publish.publish('servicecontroller.Scltget', data);
+  });
+//clt删除
+  socket.on('Cltdel', function (data) {
+	  console.log('nodeserver: Cltdel==='+data);
+	  publish.publish('servicecontroller.cltdel', data);
+  });
+//clt注册
+  socket.on('Cltregister', function (data) {
+	  console.log('nodeserver: Cltregister==='+data);
+	  publish.publish('servicecontroller.Cltregister', data);
+  });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
         socket.join(ch);

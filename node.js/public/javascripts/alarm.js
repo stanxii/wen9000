@@ -44,8 +44,11 @@
 
 
 	        function addNewOne(data) {
-                        var background= "";
-                        
+	        			//告警等级大于4的告警不予显示
+	        			if(data.alarmlevel > 5){
+	        				return;
+	        			}
+                         var background= "";                        
                          if(data.alarmlevel == 1 ) background = "http://localhost:3000/images/ball_red.png";
                          else if(data.alarmlevel == 2 ) background = "http://localhost:3000/images/ball_orange.png";
                          else if(data.alarmlevel == 3 ) background = "http://localhost:3000/images/ball_yellow.png";
