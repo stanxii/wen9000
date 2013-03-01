@@ -260,6 +260,12 @@ public class ServiceController {
 			doViewmodeChange(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.Viewmodeget")){
 			doViewmodeGet(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.Devmodeget")){
+			doDevmodeGet(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.Devmodeset")){
+			doDevmodeSet(message);
+		}else if(pat.equalsIgnoreCase("servicecontroller.Devmodechange")){
+			doDevmodeChange(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.hfc_sub")){
 			doHfcsub(message);
 		}else if(pat.equalsIgnoreCase("servicecontroller.hfc_set")){
@@ -723,6 +729,167 @@ public class ServiceController {
 		String key = "global:displaymode";
 		String val = jedis.get(key);
 		jedis.publish("node.dis.getviewmode", val);
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doDevmodeGet(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String value = jsondata.get("value").toString();
+		String user = jsondata.get("user").toString();
+		String key = "";
+		switch(Integer.parseInt(value)){
+			case 0:
+				key = "global:WEC-3501I-C22";
+				break;
+			case 1:
+				key = "global:WEC-3501I-S220";
+				break;
+			case 2:
+				key = "global:WEC9720EK-C22";
+				break;
+			case 3:
+				key = "global:WEC9720EK-S220";
+				break;
+			case 4:
+				key = "global:WEC9720EK-SD220";
+				break;
+			case 5:
+				key = "global:WEC701-C2";
+				break;
+			case 6:
+				key = "global:WEC701-C4";
+				break;
+			case 7:
+				key = "global:3702I-C2";
+				break;
+			case 8:
+				key = "global:3702I-C4";
+				break;
+		}
+		
+		String val = jedis.get(key);
+		jedis.publish("node.dis.getdevmode", val);
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doDevmodeSet(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String devmode = jsondata.get("devmode").toString();
+		String value = jsondata.get("value").toString();
+		String user = jsondata.get("user").toString();
+		String key = "";
+		JSONObject optjson = new JSONObject();
+		switch(Integer.parseInt(value)){
+			case 0:
+				key = "global:WEC-3501I-C22";
+				optjson.put("desc", "设备类型WEC-3501I C22将显示为"+value);
+				break;
+			case 1:
+				key = "global:WEC-3501I-S220";
+				optjson.put("desc", "设备类型WEC-3501I S220将显示为"+value);
+				break;
+			case 2:
+				key = "global:WEC9720EK-C22";
+				optjson.put("desc", "设备类型WEC-3501I S220将显示为"+value);
+				break;
+			case 3:
+				key = "global:WEC9720EK-S220";
+				optjson.put("desc", "设备类型WEC9720EK S220将显示为"+value);
+				break;
+			case 4:
+				key = "global:WEC9720EK-SD220";
+				optjson.put("desc", "设备类型WEC9720EK SD220将显示为"+value);
+				break;
+			case 5:
+				key = "global:WEC701-C2";
+				optjson.put("desc", "设备类型WEC701 C2将显示为"+value);
+				break;
+			case 6:
+				key = "global:WEC701-C4";
+				optjson.put("desc", "设备类型WEC701 C4将显示为"+value);
+				break;
+			case 7:
+				key = "global:3702I-C2";
+				optjson.put("desc", "设备类型3702I C2将显示为"+value);
+				break;
+			case 8:
+				key = "global:3702I-C4";
+				optjson.put("desc", "设备类型3702I C4将显示为"+value);
+				break;
+		}
+		
+		String val = jedis.set(key,value);
+		jedis.save();
+		
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);	
+		sendoptlog(jedis,optjson);
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doDevmodeChange(String message) throws ParseException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String value = jsondata.get("value").toString();
+		String user = jsondata.get("user").toString();
+		String key = "global:displaymode";
+		switch(Integer.parseInt(value)){
+			case 0:
+				key = "global:WEC-3501I-C22";
+				break;
+			case 1:
+				key = "global:WEC-3501I-S220";
+				break;
+			case 2:
+				key = "global:WEC9720EK-C22";
+				break;
+			case 3:
+				key = "global:WEC9720EK-S220";
+				break;
+			case 4:
+				key = "global:WEC9720EK-SD220";
+				break;
+			case 5:
+				key = "global:WEC701-C2";
+				break;
+			case 6:
+				key = "global:WEC701-C4";
+				break;
+			case 7:
+				key = "global:3702I-C2";
+				break;
+			case 8:
+				key = "global:3702I-C4";
+				break;
+		}
+		String val = jedis.get(key);
+		jedis.publish("node.dis.getdevmode", val);
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -1345,6 +1512,20 @@ public class ServiceController {
 			jedis.hset("user:admin", "password", "admin");
 			jedis.hset("user:admin", "flag", "0");
 		}
+		
+		//初始化设备类型显示
+		if(!jedis.exists("global:WEC-3501I-C22")){
+			jedis.set("global:WEC-3501I-C22", "WEC-3501I C22");
+			jedis.set("global:WEC-3501I-S220", "WEC-3501I S220");
+			jedis.set("global:WEC9720EK-C22", "WEC9720EK C22");
+			jedis.set("global:WEC9720EK-S220", "WEC9720EK S220");
+			jedis.set("global:WEC9720EK-SD220", "WEC9720EK SD220");
+			jedis.set("global:WEC701-C2", "WEC701 C2");
+			jedis.set("global:WEC701-C4", "WEC701 C4");
+			jedis.set("global:3702I-C4", "3702I C4");
+			jedis.set("global:3702I-C2", "3702I C2");
+		}
+				
 		if(!jedis.exists("profileid:1:entity")){
 			//插入默认模板
 			//获取profileid
@@ -3268,22 +3449,22 @@ public class ServiceController {
     	switch(Integer.parseInt(jedis.hget(cnukey, "devicetype")))
 		{
     		case 10:
-    			cnujson.put("devicetype", "3702I-C4");         		
+    			cnujson.put("devicetype", jedis.get("global:3702I-C4"));         		
         		break;
         	case 7:
         		cnujson.put("devicetype", "3702I-L2");           		
         		break;
         	case 9:
-        		cnujson.put("devicetype", "3702I-C2");
+        		cnujson.put("devicetype", jedis.get("global:3702I-C2"));
         		break;
         	case 36:
         		cnujson.put("devicetype", "WEC701 M0");
         		break;
         	case 40:
-        		cnujson.put("devicetype", "WEC701 C2");
+        		cnujson.put("devicetype", jedis.get("global:WEC701-C2"));
         		break;
         	case 41:
-        		cnujson.put("devicetype", "WEC701 C4");
+        		cnujson.put("devicetype", jedis.get("global:WEC701-C4"));
         		break;
         	default:
         		cnujson.put("devicetype", "Unknown");
@@ -3372,10 +3553,10 @@ public class ServiceController {
         		result ="WEC-3501I Q31";
         		break;
         	case 4:
-        		result ="WEC-3501I C22";
+        		result =jedis.get("global:WEC-3501I-C22");//"WEC-3501I C22";
         		break;
         	case 5:
-        		result ="WEC-3501I S220";
+        		result =jedis.get("global:WEC-3501I-S220");//"WEC-3501I S220";
         		break;
         	case 6:
         		result ="WEC-3501I S60";
@@ -3387,7 +3568,7 @@ public class ServiceController {
         		result = "中文测试";
         		break;
         	case 20:
-        		result ="WEC9720EK C22";
+        		result =jedis.get("global:WEC9720EK-C22");//"WEC9720EK C22";
         		break;
         	case 21:
         		result ="WEC9720EK E31";
@@ -3396,20 +3577,20 @@ public class ServiceController {
         		result ="WEC9720EK Q31";
         		break;
         	case 23:
-        		result ="WEC9720EK S220";
+        		result =jedis.get("global:WEC9720EK-S220");//"WEC9720EK S220";
         		break;
         	case 24:
-        		result ="WEC9720EK SD220";
+        		result =jedis.get("global:WEC9720EK-SD220");//"WEC9720EK SD220";
         		break;
         	case 36:
         		result ="WEC701 M0";
         		break;
-        	case 40:
-        		result ="WEC701 C2";
-        		break;
-        	case 41:
-        		result ="WEC701 C4";
-        		break;
+//        	case 40:
+//        		result =jedis.get("global:WEC701-C2");//"WEC701 C2";
+//        		break;
+//        	case 41:
+//        		result =jedis.get("global:WEC701-C4");//"WEC701 C4";
+//        		break;
         	default:
         		result = "Unknown";
         		break;

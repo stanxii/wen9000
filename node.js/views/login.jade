@@ -9,20 +9,23 @@ html
     script(type='text/javascript', src='/javascripts/login.js')
 
   body
-    .wrap
-      form(action='/login', method='post')
-        section(class='loginForm')
-          header
-            h1  用户登录
-          .loginForm_content
-            fieldset
-              .inputWrap
-                input(type='text',id='userName',name='userName',placeholder='请输入用户名')
-              .inputWrap
-                input(type='password',id='password',name='password',placeholder='请输入密码')
-            fieldset
-              input(type='checkbox',id='remember')
-              span  记住密码
-            fieldset
-              input(id='btn_sub',type='submit', value='登录')
-              a(href='/register', style='margin-left:50px')  注册新用户
+    .m_core
+      .img_logo
+        img(src='http://localhost:3000/images/logo.png')
+      .wrap
+        form(action='/login', method='post')
+          section(class='loginForm')
+            header
+              h1  用户登录
+            .loginForm_content
+              fieldset
+                .inputWrap
+                  input(type='text',id='userName',name='userName',placeholder='请输入用户名')
+                .inputWrap
+                  input(type='password',id='password',name='password',placeholder='请输入密码')
+              fieldset
+                input(type='checkbox',id='remember')
+                span  记住密码
+              fieldset
+                input(id='btn_sub',type='submit', value='登录')
+                a(href='/register', style='margin-left:50px')  注册新用户

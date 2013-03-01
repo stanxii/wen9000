@@ -493,6 +493,8 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('checkallcnusres',data);       
     }else if(ch == 'node.dis.getviewmode') {
     	sio.sockets.emit('Viewmodeshow',data);       
+    }else if(ch == 'node.dis.getdevmode') {
+    	sio.sockets.emit('Devmodeshow',data);       
     }else if(ch == 'node.opt.hfcsubresponse') {
     	data = JSON.parse(data);
     	sio.sockets.emit('hfcsubresponse',data);       
@@ -810,6 +812,21 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: Viewmodechange==='+data);
 	  publish.publish('servicecontroller.Viewmodechange', data);
   });
+//设备类型显示
+  socket.on('Devmodechange', function (data) {
+	  console.log('nodeserver: Devmodechange==='+data);
+	  publish.publish('servicecontroller.Devmodechange', data);
+  });
+//设备型号显示获取
+  socket.on('Devmodeget', function (data) {
+	  console.log('nodeserver: Devmodeget==='+data);
+	  publish.publish('servicecontroller.Devmodeget', data);
+  });
+//设备型号显示修改
+  socket.on('Devmodeset', function (data) {
+	  console.log('nodeserver: Devmodeset==='+data);
+	  publish.publish('servicecontroller.Devmodeset', data);
+  });
 //获取显示模式信息
   socket.on('Viewmodeget', function (data) {
 	  console.log('nodeserver: Viewmodeget==='+data);
@@ -857,6 +874,7 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: optlogpre==='+data);
 	  publish.publish('servicecontroller.optlogpre', data);
   });
+
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
         socket.join(ch);

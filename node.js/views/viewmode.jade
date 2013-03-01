@@ -13,3 +13,26 @@ block content
           select(name='viewmode',id='viewmode')
             option(value='1')  HFC+EOC
             option(value='0')  EOC
+
+    table
+      tr
+        td
+          label  设备型号:
+        td
+          select(name='devmode',id='devmode')
+            option(value='0')  WEC-3501I C22
+            option(value='1')  WEC-3501I S220
+            option(value='2')  WEC9720EK C22
+            option(value='3')  WEC9720EK S220
+            option(value='4')  WEC9720EK SD220
+            option(value='5')  WEC701 C2
+            option(value='6')  WEC701 C4
+            option(value='7')  3702I C2
+            option(value='8')  3702I C4
+        td
+          label  显示为:
+        td
+          input(type='text',id='dev_view')
+      br
+      br
+    button(id='btn_submit',style='margin-left:360px;margin-top:10px')  修改

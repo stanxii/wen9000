@@ -3,11 +3,29 @@ body {
     padding:0; 
     background-color:#E4E8EC; 
 } 
+.m_core {
+	margin:150px auto;
+	height:250px; 
+    width:600px;
+}
+	
 .wrap { 
-    margin:150px auto; 
+	float:left;
     width:380px; 
     overflow:hidden; 
-} 
+}
+
+.img_logo {
+	float:left;
+	height:250px; 
+    width:200px;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.2), 0 3px 0 #fff, 0 4px 0 rgba(0, 0, 0, 0.2), 0 6px 0 #fff, 0 7px 0 rgba(0, 0, 0, 0.2); 
+    background-color:#FFF; 
+    border-radius:4px;
+    background: -webkit-gradient(linear, left top, left 24, from(#EEE), color-stop(4%, #FFF), to(#EEE)); 
+    background: -moz-linear-gradient(top, #EEE, #FFF 1px, #EEE 24px); 
+    background: -o-linear-gradient(top, #EEEEEE, #FFFFFF 1px, #EEEEEE 24px); 
+}
 .loginForm { 
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.2), 0 3px 0 #fff, 0 4px 0 rgba(0, 0, 0, 0.2), 0 6px 0 #fff, 0 7px 0 rgba(0, 0, 0, 0.2); 
     position:absolute; 
