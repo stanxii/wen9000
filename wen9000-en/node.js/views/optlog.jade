@@ -1,0 +1,20 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/optlog.js')
+  h1
+    label  OptLog
+  table#optlog(style='width:100%')
+  br
+  br
+  div(style='margin-right:10px;float:right')
+    button#btn_pre(disabled='disable')  Pre
+    label  From
+    label#from  0
+    label  To
+    label#end
+    label  
+    label  /
+    label#total
+    label    
+    button#btn_next(disabled='disable')  Next

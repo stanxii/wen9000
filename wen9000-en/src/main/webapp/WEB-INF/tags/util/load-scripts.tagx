@@ -1,0 +1,40 @@
+<jsp:root xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:fn="http://java.sun.com/jsp/jstl/functions" xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:spring="http://www.springframework.org/tags" version="2.0">
+
+  <jsp:output omit-xml-declaration="yes" />
+
+  <spring:url value="/${roo_css}" var="roo_css_url" />
+  <spring:url value="/resources/js/jquery-1.6.2.js" var="jquery_url" />
+  <spring:url value="/resources/js/jquery.cookie.js" var="jquerycookie_url" />
+  <spring:url value="/resources/js/jquery-ui-1.8.16.custom.min.js" var="jqueryui_url" />
+  <spring:url value="/resources/js/jquery.dataTables.js" var="datatable_url" />
+  <spring:url value="/resources/js/jquery.dynatree.js" var="dynatree_url" />
+  <spring:url value="/resources/js/jquery.vticker.js" var="jquery_vticker_url" />
+  <spring:url value="/resources/js/jquery.progressbar.js" var="jquery_progressbar_url" />
+  <spring:url value="/resources/js/jquery.livequery.js" var="livequery_url" />
+  <spring:url value="/resources/js/jquery.validate.js" var="validate_url" />
+  
+  <spring:url value="/resources/css/flick/jquery-ui-1.8.17.custom.css" var="flcik_url" />
+  <spring:url value="/resources/css/jquery.dataTables.css" var="datatablescss_url" />
+  <spring:url value="/resources/css/ui.dynatree.css" var="dynatreecss_url" />
+  <spring:url value="/resources/css/custom.css" var="custom_url" />
+
+  <spring:url value="/resources/css/core.css" var="core_url" />
+  <spring:url value="/resources/images/favicon.ico" var="favicon" />
+  <link rel="stylesheet" type="text/css" href="${flcik_url}" />
+  <link rel="stylesheet" type="text/css" href="${core_url}" />
+  <link rel="stylesheet" type="text/css" href="${datatablescss_url}" />
+  <link rel="stylesheet" type="text/css" href="${dynatreecss_url}" />
+  <link rel="stylesheet" type="text/css" href="${custom_url}" />
+
+  <link rel="SHORTCUT ICON" href="${favicon}" />
+
+  <script src="${jquery_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${jquerycookie_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${jqueryui_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${datatable_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${dynatree_url}" type="text/javascript"><!-- required for FF3 and Opera --></script>
+  <script src="${jquery_progressbar_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
+  <script src="${jquery_vticker_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
+  <script src="${livequery_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
+  <script src="${validate_url}" type="text/javascript"><!-- /required for FF3 and Opera --></script>
+</jsp:root>

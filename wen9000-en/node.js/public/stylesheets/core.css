@@ -1,0 +1,239 @@
+body {
+  height:100%;
+  overflow:scroll;
+  margin:0 auto;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+h1 {
+	border-bottom-style:solid;
+	border-color:#BEBEBE;
+	border-width:3px;
+}
+
+h1 label{
+	background-color:#ccc;
+}
+
+table input {
+	width:150px;
+}
+
+#wapper {
+      min-height:500px;
+      min-width:1024px;
+      position:relative;
+}
+
+#sidebar {
+	position:absolute;
+	float:left;
+	width:20%;
+	margin-right:15px;
+	top:5px;	
+}
+
+#sidebar input{
+	float:left;
+	margin-left:5%;
+	width:60%;
+	position:absolute;
+}
+
+#sidebar button{
+	margin-left:68%;
+	width:30%;
+	position:absolute;
+}
+
+/*menu */
+#menu {
+	position:absolute;
+	float:left;
+	width:100%;
+	margin-right:15px;
+	top:30px;	
+}
+
+#optinfo input{
+	width:60px;
+}
+
+#optinfo lable{
+	width:90px;
+	margin-left:10px;
+}
+
+#baseinfo {
+	margin-left:20px;	
+	font-family: Verdana,Arial,sans-serif;
+    font-size: 1.0em;
+}
+
+#Qosinfo {
+	margin-left:20px;	
+	font-family: Verdana,Arial,sans-serif;
+    font-size: 1.0em;
+}
+
+#devinfo {
+	width:800px;
+}
+
+#navtree { 	
+	height:490px;
+}
+
+#dialog-message {
+    display: none	
+}
+
+#dialog-message span {
+    float:left;
+    margin:0 7px 50px 0;	
+}
+
+#dialog-message-failed {
+    display: none	
+}
+
+#dialog-message-failed span {
+    float:left; 
+    margin:0 7px 50px 0;	
+}
+/*==========================*/
+
+#content {
+	position:absolute;
+	top:0;
+	left:21%;
+	width:79%;
+}
+
+#pre_content {
+
+}
+
+#proTable_wrapper {
+	width:98%;
+}
+
+#proTable_wrapper td{
+	text-align:center;
+}
+
+#proTable_wrapper .row_selected {
+	background-color:#cccccc;
+}
+
+#cnuTable {
+	width:100%;
+	padding:30px 0 0 0;
+}
+
+#cnuTable td {
+	text-align:center;
+}
+
+#conTable {
+	width:98%;
+}
+
+#conTable td {
+	text-align:center;
+}
+
+#upcbat_table {
+	width:100%;
+}
+
+#upcbat_table td {
+	text-align:center;
+}
+
+#f_Table {
+	width:100%;
+}
+
+#f_Table td {
+	text-align:center;
+}
+
+#s_Table {
+	width:100%;
+}
+
+#s_Table {
+	text-align:center;
+}
+
+#list {
+	width:100%;
+}
+
+#list {
+	text-align:center;
+}
+
+#configinfo {
+	
+	width:98%;
+}
+
+#precnus_wrapper {
+	width:700px;
+}
+
+#precnus td{
+    text-align:center;	
+}
+
+#menuclear {
+	clear:both;
+}
+
+#footer {
+	margin-top:5px;
+	min-width:1024px;
+}
+/*history alarm*/
+#historyAlarm {	
+	padding:30px 0 0 0;
+}
+
+#historyAlarm td{
+	text-align:center;
+}
+
+#historyAlarm_filter {
+	margin-right:30px;	
+}
+
+.hfcalarmthreshold {
+	border-style:solid;
+	border-color:blue;
+	border-width:1px;
+	
+}
+
+.hfcalarmthreshold:hover{
+	cursor:pointer;
+	
+}
+
+#talarmfilter{
+    
+}
+
+#optlog .center{
+	 text-align:center;
+}
+
+
+
+
+

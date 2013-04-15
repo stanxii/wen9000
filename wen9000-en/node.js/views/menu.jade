@@ -1,0 +1,55 @@
+script(type='text/javascript', src='/javascripts/menu.js')
+script(type='text/javascript', src='/javascripts/flotr2.min.js')
+#sidebar
+  #searchbar
+    input(id='searchbox',type='text',placeholder='Please Input Mac/Ip')
+    button(id='btn_search')  Search
+  #menu
+    #navtree
+  #dialog-message(title='Tips')
+    p
+      span.ui-icon.ui-icon-circle-check
+      \Tips
+    p  OK
+  #dialog-message-failed(title='Tips')
+    p
+      span.ui-icon.ui-icon-alert
+      p  Tips.
+    p.
+      Operate Failed.
+      \Please make sure the connection is all right!
+
+  ul#myMenu(class='contextMenu')
+    li.delete
+      a(href='#delete')  Delete
+  
+  #dialog-alarmThreshold(title='Alarm Threshold',style='display:none')
+    table
+      tr
+        td
+          lable  HIHI
+        td
+          input(id='hihi',type='text',value='')  
+      tr
+        td
+          lable  HI
+        td
+          input(id='hi',type='text',value='')
+      tr
+        td
+          lable  LO
+        td
+          input(id='lo',type='text',value='')
+      tr  
+        td
+          lable  LOLO
+        td
+          input(id='lolo',type='text',value='')
+      tr  
+        td
+          lable  DEAD
+        td
+          input(id='deadb',type='text',value='')
+  div(id='dialog_setvalue',title='Setting Value',style='display:none')
+    lable  Value:
+    input(id='hfc_setval',type='text')

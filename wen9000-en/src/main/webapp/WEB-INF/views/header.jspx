@@ -1,0 +1,66 @@
+<div id="header" xmlns:jsp="http://java.sun.com/JSP/Page"
+	xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:spring="http://www.springframework.org/tags" version="2.0">
+	<jsp:directive.page contentType="text/html;charset=UTF-8" />
+	<jsp:output omit-xml-declaration="yes" />
+
+	<script>
+      		<![CDATA[
+  		    $(document).ready(function(){  
+ 				$("#main").append('<div id="dialog_about" style="display:none" title="关于..."><p>本产品是杭州万隆光电设备有限公司开发的管理eoc设备和hfc设备的新型网络管理系统！<br/><br/>CopyRight:杭州万隆光电设备有限公司</p></div>');
+		        $("ul.subnav").parent().append("<span></span>");
+		      
+		        $("ul.topnav li span").click(function() {
+		            $(this).parent().find("ul.subnav").slideDown('fast').show();		      
+		            $(this).parent().hover(function() {  
+		            }, function(){  
+		                $(this).parent().find("ul.subnav").slideUp('slow'); //When the mouse hovers out of the subnav, move it back up  
+		            }); 
+		            }).hover(function() {  
+		                $(this).addClass("subhover");
+		            }, function(){
+		                $(this).removeClass("subhover");
+		        });  
+		      
+		      $("#about").live('click', function() { 	  			
+					$("#dialog_about").dialog({
+						resizable: false,
+						autoOpen: false,
+						show: "blind",
+						modal: true,
+						hide: "explode"
+					});	
+					$("#dialog_about").dialog("open");
+				 });
+		    });  
+		]]>
+		
+		</script>
+	<div class="top-bar">
+		<ul class="topnav">
+			<li><a href="/wen9000/">首页</a></li>
+			<li><a href="#">设备管理</a>
+				<ul class="subnav">
+					<li><a href="/wen9000/nav/search">设备发现</a></li>
+					<li><a href="/wen9000/nav/acounts">批量配置</a></li>
+					<li><a href="#">设备预开户</a></li>
+				</ul></li>
+			<li><a href="#">Wen9000管理</a>
+				<ul class="subnav">
+					<li><a href="/wen9000/nav/global_opt">全局配置</a></li>
+					<li><a href="/wen9000/nav/queue_opt">消息队列管理</a></li>
+				</ul></li>
+			<li><a href="/wen9000/nav/profilemanager">模板管理</a></li>
+			<li><a href="#">用户管理</a></li>
+			<li><a href="#">告警信息</a></li>
+			<li><a id="about" href="#">关于我们</a></li>
+		</ul>
+		<div id="userinfo">
+			<p>
+				用户名：管理员[<a href="#">注销</a>]
+			</p>
+		</div>
+
+	</div>
+</div>

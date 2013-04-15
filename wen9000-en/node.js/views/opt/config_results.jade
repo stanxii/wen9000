@@ -1,0 +1,15 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/config_results.js')
+  div  
+    h1
+      label  Query result
+  h3(style='color:green')  Succeeded-config device
+  #success_cnus
+    table#s_Table
+  br
+  h3(style='color:green')  Failed-config device
+  #failed_cnus
+    table#f_Table
+

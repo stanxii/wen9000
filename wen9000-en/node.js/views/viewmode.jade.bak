@@ -1,0 +1,15 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/viewmode.js')
+  h1
+    label  View Mode
+  div(style='margin-left:30px')
+    table
+      tr
+        td
+          label  Choose Mode：
+        td        
+          select(name='viewmode',id='viewmode')
+            option(value='1')  HFC+EOC
+            option(value='0')  EOC

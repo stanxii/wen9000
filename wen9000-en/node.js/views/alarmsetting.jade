@@ -1,0 +1,71 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/alarmsetting.js')
+  h1
+    label  Alarm Setting  
+  br
+  div
+    div#alarmsettab
+      ul
+        li
+          a(href="#tabs-1") Alarm Filter
+        li
+          a(href="#tabs-2") Directional Alarm
+
+      div#tabs-1
+        table
+          tr
+            td(style="width:200px")
+              label Level
+            td(style="width:200px")
+              label =
+            td(style="width:200px")
+              select(id="sel_alarmlevel")
+                option(value="1") 1
+                option(value="2") 2
+                option(value="3") 3
+                option(value="4") 4
+                option(value="5") 5
+                option(value="6") 6
+                option(value="7") 7
+            td(style="width:200px")
+              button#btn_addlevelfilter Add               
+          tr
+            td(style="width:200px")
+              label Code
+            td(style="width:200px")
+              label =
+            td(style="width:200px")
+              select(id="sel_alarmcode")
+                option(value="200901") 200901
+                option(value="200920") 200920
+                option(value="200921") 200921
+            td(style="width:200px")
+              button#btn_addcodefilter Add 
+        p 
+          h5 Alarm Filter Table                    
+        hr Added Conditions      
+        div#talarmfilter
+        button#btn_clearallfilter Clear                   
+      div#tabs-2
+        h5 According to the condition specified alarm only sent to the specific alarm server
+        table
+          tr
+            td(style="width:200px")
+              label Code
+                select(id="sel_directionalalarmcode")
+                  option(value="200901") 200901
+                  option(value="200920") 200920
+                  option(value="200921") 200921                  
+            td(style="width:200px")
+              label Ip Send To
+            td(style="width:200px")
+              input(type='text',id='sipaddr',value='192.168.223.251')
+            td(style="width:200px")
+              button#btn_addalarmdirectional Add    
+        p 
+          h5 Directional Table                    
+        hr      
+        div#talarmdirectional                 
+        button#btn_clearalldirectional Clear                

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:spring="http://www.springframework.org/tags" xmlns:util="urn:jsptagdir:/WEB-INF/tags/util" version="2.0">
+  <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+  <jsp:output omit-xml-declaration="yes"/>
+  
+  <div id="search_tip">
+  	<h6>设备搜索</h6>
+  	<form action="/wen9000/discovery/search" method="post">
+  		<p>起始Ip: <input type="text" name="startip" value="192.168.1.244" /></p>
+	    <p>结束Ip: <input type="text" name="stopip" value="192.168.1.247" /></p>
+	    <input type="submit" value="提交" />  		
+  	</form>
+  </div>
+  
+</div>

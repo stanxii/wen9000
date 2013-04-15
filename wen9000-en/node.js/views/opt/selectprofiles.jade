@@ -1,0 +1,12 @@
+extends ../main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/selectprofiles.js')
+  h1
+    label  Select template
+  br
+  label  Please choose one template:
+  select#combox_profiles
+  #profile_info
+  div
+    button(id='btn_pre',style='float:left')  Back

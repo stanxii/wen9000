@@ -22,6 +22,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -2394,7 +2395,8 @@ public class ServiceController {
 					//发送配置
 					if(devicetype.equalsIgnoreCase("20") ||devicetype.equalsIgnoreCase("21") 
 							||	devicetype.equalsIgnoreCase("22") ||devicetype.equalsIgnoreCase("23")||devicetype.equalsIgnoreCase("24")
-							||	devicetype.equalsIgnoreCase("36") ||devicetype.equalsIgnoreCase("40")||devicetype.equalsIgnoreCase("41")){
+							||	devicetype.equalsIgnoreCase("36") ||devicetype.equalsIgnoreCase("40")||devicetype.equalsIgnoreCase("41")
+							||	devicetype.equalsIgnoreCase("26") ||devicetype.equalsIgnoreCase("27")){
 						sendjsonconfig(Integer.valueOf(proid),cip, cnumac,jedis);
 					}else {
 							if(!sendconfig(Integer.valueOf(proid),cip,Integer.valueOf(cnuindex),jedis)){
@@ -2697,7 +2699,8 @@ public class ServiceController {
 		if(devtype.equalsIgnoreCase("20")||devtype.equalsIgnoreCase("21")
 				||devtype.equalsIgnoreCase("22")||devtype.equalsIgnoreCase("23")
 				||devtype.equalsIgnoreCase("24")||devtype.equalsIgnoreCase("36")
-				||devtype.equalsIgnoreCase("40")||devtype.equalsIgnoreCase("41")){
+				||devtype.equalsIgnoreCase("40")||devtype.equalsIgnoreCase("41")
+				||devtype.equalsIgnoreCase("26") ||devtype.equalsIgnoreCase("27")){
 			cnujsonconfig(jsondata,cbatip, jsondata.get("mac").toString(),jedis);
 		}else{
 			//配置6400 CNU
@@ -2767,12 +2770,18 @@ public class ServiceController {
 		String cbattype = jedis.hget("cbatid:"+cbatid+":entity", "devicetype");
 		if(cbattype.equalsIgnoreCase("20") ||cbattype.equalsIgnoreCase("21") 
 				||	cbattype.equalsIgnoreCase("22") ||cbattype.equalsIgnoreCase("23")||cbattype.equalsIgnoreCase("24")
-				||	cbattype.equalsIgnoreCase("36") ||cbattype.equalsIgnoreCase("40")||cbattype.equalsIgnoreCase("41")){
+				||	cbattype.equalsIgnoreCase("36") ||cbattype.equalsIgnoreCase("40")||cbattype.equalsIgnoreCase("41")
+				||	cbattype.equalsIgnoreCase("26") ||cbattype.equalsIgnoreCase("27")){
 			 JSONObject sjson = new JSONObject();
 			 sjson.put("mac", message);
 			 JSONObject resultjson = new JSONObject();
 			 resultjson = post("http://"+cbatip+"/getcnu.json", sjson,cbatip);
-			 log.info("------------------jsonget result====>>>"+resultjson.toJSONString());
+			 //log.info("------------------jsonget result====>>>"+resultjson.toJSONString());
+			 resultjson.put("active", jedis.hget(key, "active"));
+			 String proid = jedis.hget(key, "profileid");
+			 resultjson.put("profilename", jedis.hget("profileid:"+proid+":entity", "profilename"));
+			 jedis.publish("node.tree.cnusync", resultjson.toJSONString());
+			 
 		}else {
 			//获取终端信息
 			try{
@@ -4114,6 +4123,7 @@ public class ServiceController {
 	
 	private static Boolean sendjsonconfig(int proid,String cbatip, String cnumac,Jedis jedis ){
 		String prokey = "profileid:"+proid+":entity";
+		JSONObject resultjson = new JSONObject();
 		try{
 			String sjson="";
 			Map jsonmap=new LinkedHashMap();
@@ -4149,7 +4159,7 @@ public class ServiceController {
 			
 			 sjson = JSONValue.toJSONString(jsonmap);
 			 
-			 JSONObject resultjson = new JSONObject();
+			 
 			 resultjson = post("http://"+cbatip+"/setcnu.json", (JSONObject)JSONValue.parse(sjson),cbatip);
 			 
 			 log.info("status====:" + resultjson.get("status").toString());
@@ -4160,7 +4170,7 @@ public class ServiceController {
 			 
 			
 			 
-		return true;
+		return (resultjson.get("status").toString()=="0"?true:false);
 			
 			
 	}
@@ -4189,12 +4199,12 @@ public class ServiceController {
             
             if(res.getStatusLine().getStatusCode() == HttpStatus.SC_OK){  
                 HttpEntity entity =   res.getEntity();  
-                
+
                 //String charset = EntityUtils.getContentCharSet(entity);  
                 
                 //EntityUtils.consume(entity);                
-                System.out.println("----------------------------------Content->>>>>" +entity.getContent());
-                response = (JSONObject) JSONValue.parse(entity.getContent().toString());
+                //System.out.println("----------------------------------Content->>>>>" +EntityUtils.toString(res.getEntity()));
+                response = (JSONObject) JSONValue.parse(EntityUtils.toString(res.getEntity()));
                 System.out.println("----------------------------------response->>>>>" +response.toJSONString());
             }  
         } catch (Exception e) {  
@@ -4209,10 +4219,11 @@ public class ServiceController {
     }  
 	
 	private static Boolean cnujsonconfig(JSONObject jsondata,String cbatip, String cnumac,Jedis jedis ){
+		JSONObject resultjson = new JSONObject();
 		try{			
 			String sjson="";
 			Map jsonmap=new LinkedHashMap();
-
+			
 			 jsonmap.put("type", 2);
 			 
 			 jsonmap.put("mac", cnumac);
@@ -4244,7 +4255,7 @@ public class ServiceController {
 			
 			 sjson = JSONValue.toJSONString(jsonmap);
 			 
-			 post("http://"+cbatip+"/setcnu.json", (JSONObject)JSONValue.parse(sjson),cbatip);
+			 resultjson = post("http://"+cbatip+"/setcnu.json", (JSONObject)JSONValue.parse(sjson),cbatip);
 		
 		
 		}catch(Exception e)
@@ -4254,7 +4265,7 @@ public class ServiceController {
 			return false;
 		
 		}
-		return true;
+		return (resultjson.get("status").toString()=="0"?true:false);
 	}
 
 	private static Boolean Cnuconfig(JSONObject jsondata,String cbatip, int cnuindex,Jedis jedis ){

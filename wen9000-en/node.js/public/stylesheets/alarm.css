@@ -1,0 +1,48 @@
+#alarm {
+	min-width:1024px;
+	border-bottom-style:solid;
+	border-color:#BEBEBE;
+	border-width:3px;	
+	overflow:hidden;
+	clear:both;
+}
+
+#alarmHead {
+
+}
+
+.ralarmHead {
+	height:24px;
+	list-style:none; 
+    margin: 0 0 0 -45px;  
+    float: left;
+    font-size: 1.2em; 
+    background: #ccc; 
+}
+
+.ralarmHead li {  
+    float: left;  
+    margin: 2px;  
+    position: relative; /*--Declare X and Y axis base for sub navigation--*/  
+     
+}
+
+#newAlarm {
+	height:110px;
+	overflow:auto;
+	clear:both;
+	width:100%;
+}
+
+.ralarm{
+	list-style: none;  
+    margin: 2px 0 0 -45px; 
+    white-space:nowrap;
+	clear:both;
+}
+
+.ralarm li {  
+    float: left;  
+    margin: 2px;
+    position: relative; /*--Declare X and Y axis base for sub navigation--*/  
+}

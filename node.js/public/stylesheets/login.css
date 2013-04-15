@@ -82,6 +82,8 @@ fieldset input[type=text], fieldset input[type=password] {
     width:300px; 
 } 
 fieldset input[type=submit] { 
+	float:right;
+	margin-right:10px;
     text-align:center; 
     padding:2px 20px; 
     line-height:2em; 
