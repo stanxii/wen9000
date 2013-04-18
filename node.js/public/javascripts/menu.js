@@ -1989,6 +1989,8 @@
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicetype == "WEC9720EK E31"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
+			}else if(jsondata.devicetype == "WEC9720EK XD25"){
+				
 			}
    }
    

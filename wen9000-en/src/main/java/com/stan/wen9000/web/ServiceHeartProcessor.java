@@ -151,13 +151,22 @@ public class ServiceHeartProcessor{
 		String cbatip = "";
 		String cbatmac = "";
 		String cbattype = "";
+		Map<String,String> clt = new HashMap<String,String>();
+
 		//解析cbat 心跳信息
 		cbatip = heart.get("cbatip");
 		cbatmac = heart.get("cbatmac");
 
 		cbattype = heart.get("cbattype");
+		if(cbattype.toLowerCase().trim() == "26" || cbattype.toLowerCase().trim() == "27"){
+			//多线卡设备
+			clt.put("clt1", heart.get("clt1"));
+			clt.put("clt2", heart.get("clt2"));
+			clt.put("clt3", heart.get("clt3"));
+			clt.put("clt4", heart.get("clt4"));
+		}
 		//处理cbat 心跳信息
-		doheartcbat(cbatmac, cbatip, cbattype);
+		doheartcbat(cbatmac, cbatip, cbattype,clt);
 		
 		//解析cnu 心跳信息
 		String cnumac = "";
@@ -179,7 +188,7 @@ public class ServiceHeartProcessor{
 		}
 	}
 	
-	private void doheartcbat(String cbatmac, String cbatip, String type) throws IOException {
+	private void doheartcbat(String cbatmac, String cbatip, String type, Map<String,String> clt) throws IOException {
 			Jedis jedis=null;
 			try {
 			 jedis = redisUtil.getConnection();
@@ -285,6 +294,13 @@ public class ServiceHeartProcessor{
 			cbatentity.put("ip", cbatip.toLowerCase().trim());
 			cbatentity.put("label", cbatmac.toLowerCase().trim());
 			cbatentity.put("devicetype", type.toLowerCase().trim());
+			if(type.toLowerCase().trim() == "26" || type.toLowerCase().trim() == "27"){
+				//多线卡设备
+				cbatentity.put("clt1", clt.get("clt1"));
+				cbatentity.put("clt2", clt.get("clt2"));
+				cbatentity.put("clt3", clt.get("clt3"));
+				cbatentity.put("clt4", clt.get("clt4"));
+			}
 			//20 not have upgradestatus
 			cbatentity.put("upgrade", "20");
 			//保存头端信息

@@ -152,10 +152,7 @@ public class ServiceHeartProcessor{
 		String cbatmac = "";
 		String cbattype = "";
 		Map<String,String> clt = new HashMap<String,String>();
-		String clt1 = "";
-		String clt2 = "";
-		String clt3 = "";
-		String clt4 = "";
+
 		//解析cbat 心跳信息
 		cbatip = heart.get("cbatip");
 		cbatmac = heart.get("cbatmac");

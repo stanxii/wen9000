@@ -45,7 +45,7 @@
 
 	        function addNewOne(data) {
 	        							//告警等级大于4的告警不予显示
-					        			if(data.alarmlevel > 4){
+					        			if(data.alarmlevel > 5){
 					        				return;
 					        			}
                         var background= "";                        
@@ -62,7 +62,7 @@
                           $( '<ul class="ralarm" style="height:24px"><li style="width:80px;text-align:center;"><img src='+  background +  ' /></li><li style="width:200px;text-align:center;">'+  data.salarmtime +  '</li><li style="width:150px;text-align:center;">' +
                                                        data.cbatmac +  '</li><li style="width:110px;text-align:center">' +
                                                        data.alarmcode+ '</li><li class="alarminfo" style="width:260px;text-align:center">' +
-                                                       data.enalarminfo +
+                                                       data.cnalarminfo +
 
                                  '</li></ul>').prependTo('#newAlarm');
                           

@@ -1642,7 +1642,140 @@
 		   style = "color:red";
 	   }
 	   $("#content").empty();
-	   	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">Cbat information</h3>'+
+	   //多线卡设备和单线卡设备划分
+	   if(jsondata.devicetype == "WR1004JL" || jsondata.devicetype == "WR1004SJL"){
+	   		 $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">Cbat information</h3>'+
+	   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
+	   	'<div id="cbatsts" style="height:100px;width:300px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
+				   	
+				   	'<br/><div id="cbatconfiginfo"><ul>'+
+					'<li><a href="#tabs-1">Basic information</a></li>'+
+					'<li><a href="#tabs-2">Qos Config</a></li>'+
+					'<li><a href="#tabs-3">Performance</a></li>'+
+					'<li><a href="#tabs-4">Clt Manager</a></li></ul>'+
+					'<div id="tabs-1">'+		   	 
+		   	'<table id="baseinfo"><tr><td style="width:150px"><lable>mac : </lable></td><td><lable style="width:160px;margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
+		   		'<td><lable style="width:150px">&nbsp &nbsp &nbspDevice type: </lable></td><td><lable>'+jsondata.devicetype+'</lable></td></tr>'+
+		   		'<tr><td style="width:160px"><lable>Software version : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
+				'<tr><td style="width:160px"><lable>Lable : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
+				'<td style="width:160px"><lable>&nbsp &nbsp &nbspAddress : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
+				'<tr><td style="width:160px"><lable">ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
+				'<td style="width:160px"><lable>&nbsp &nbsp &nbspSubnet mask : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
+				'<tr><td style="width:160px"><lable>Gateway : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
+				'<tr><td style="width:160px"><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
+				'<td style="width:160px"><lable>&nbsp &nbsp &nbspPort ID : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
+				'<tr><td style="width:160px"><lable>MGT-VLAN En : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
+								'<option value="1">enable</option>'+
+								'<option value="2">disable</option>'+
+							'</select></td>'+
+				'<td style="width:160px"><lable>&nbsp &nbsp &nbspMGT-VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
+				'<tr><td style="width:160px"><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
+				'<td style="width:160px"><lable>&nbsp &nbsp &nbspTelnet-Timeout: </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
+				'<tr><td style="width:160px"><lable>update time : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
+				'</table><br/>'+
+				'<div><button style="margin-left:60px" id="btn_sub">Submit</button><button style="margin-left:60px" id="btn_sync" >Refresh</button>'+
+				      '<button style="margin-left:60px" id="btn_reboot" >Reboot</button>'+
+				      '<button style="margin-left:60px" id="btn_reset" >RESET</button>'+
+				'</div>'+
+		'</div>'+
+	  '<div id="tabs-2">'+
+	        '<h3>Default service priority</h3>'+
+	  		'<table id="Qosinfo"><tr><td>IGMP Multicast:</td><td colspan="2"><select name="igmpPri" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td>'+
+			  				         '<td>Unicast:</td><td colspan="2"><select name="unicastPri" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td></tr>'+
+			  					'<tr><td>IGMP multicast stream:</td><td colspan="2"><select name="avsPri" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td>'+
+			  					     '<td>Multicast/Brodcast:</td><td colspan="2"><select name="unicastPri" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td></tr></table>'+
+			  							
+			  							
+			'<h3>Qos Setting</h3>'+
+	  		'<table id="Qosinfo"><tr><td>Enable:</td><td colspan="2"><select name="tbaPriSts" size="1">'+
+			  							'<option value="0">Disable</option>'+
+			  							'<option value="1">Enable</option>'+			  							
+			  							'</select></td>'+
+			  				        '<td>Qos Pattern:</td><td colspan="2"><select name="asPriType" size="1">'+
+			  							'<option value="0">COS</option>'+
+			  							'<option value="1">TOS</option>'+			  							
+			  							'</select></td></tr>'+
+			  					'<tr><td>COS0/TOS0:</td><td colspan="2"><select name="pri0QueueMap" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td>'+
+	  							     '<td>COS1/TOS1:</td><td colspan="2"><select name="pri1QueueMap" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td></tr>'+
+					  		    '<tr><td>COS2/TOS2:</td><td colspan="2"><select name="pri2QueueMap" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td>'+
+	  							     '<td>COS3/TOS3:</td><td colspan="2"><select name="pri3QueueMap" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td></tr>'+
+					  			'<tr><td>COS4/TOS4:</td><td colspan="2"><select name="pri4QueueMap" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td>'+
+	  							     '<td>COS5/TOS5:</td><td colspan="2"><select name="pri5QueueMap" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td></tr>'+
+					  		   '<tr><td>COS6/TOS6:</td><td colspan="2"><select name="pri6QueueMap" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td>'+
+	  							    '<td>COS7/TOS7:</td><td colspan="2"><select name="pri7QueueMap" size="1">'+
+			  							'<option value="0">CAP0</option>'+
+			  							'<option value="1">CAP1</option>'+
+			  							'<option value="2">CAP2</option>'+
+			  							'<option value="3">CAP3</option></select></td></tr></table>'+
+
+			  							
+			  							'<div><button style="margin-left:140px" id="btn_sub">Submit</button><button style="margin-left:140px" id="btn_sync" >Refresh</button>'+
+			  							'</div>'+            			  							
+          '</div>'+
+     '<div id="tabs-3">'+
+                '<div id="performencechart"></div>'+
+            '</div>'+			     
+			     '<div id="tabs-4">'+	
+			     	'<h3>CLT</h3>'+
+			     	'<table id="cltinfo"><tr><td>Slot-1 MAC:</td><td><lable id="clt1mac">'+jsondata.clt1+'</lable></td></tr>'+
+			     		'<tr><td>Slot-2 MAC:</td><td><lable id="clt2mac">'+jsondata.clt2+'</lable></td></tr>'+
+			     		'<tr><td>Slot-3 MAC:</td><td><lable id="clt3mac">'+jsondata.clt3+'</lable></td></tr>'+
+			     		'<tr><td>Slot-4 MAC:</td><td><lable id="clt4mac">'+jsondata.clt4+'</lable></td></tr>'+
+			     	'</table><br/>'+
+			     	'<table id="cltopt"><tr><td>Slot</td><td>Clt MAC</td><td></td></tr>'+
+		     			'<tr><td><select id="s_clt"><option value="1">1</option><option value="2">2</option>'+
+		     			'<option value="3">3</option><option value="4">4</option></select>'+
+		     			'</td><td><input type="text" id="clt_mac" value="'+jsondata.clt1+'"></input></td><td>'+
+		     			'<button id="btn_cltregister" style="margin-left:30px">Register</button><button id="btn_cltdel" style="margin-left:20px">Delete</td></tr>'+		     			
+		     		'</table>'+
+			     '</div>'
+			);	
+	   }else{
+	  		$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">Cbat information</h3>'+
 	   	'<div style="float:left"><img id="pg_dev" src="" style="width:200px;height:100px"/></div>'+
 	   	'<div id="cbatsts" style="height:100px;width:300px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 	   	
@@ -1758,6 +1891,9 @@
             '</div>'
 		
 			);
+	  	
+	   }
+	   	
 	   	
 	   	
 	   	    //tab select performence

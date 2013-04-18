@@ -796,7 +796,7 @@ public class ServiceController {
 		String user = jsondata.get("user").toString();
 		String key = "";
 		JSONObject optjson = new JSONObject();
-		switch(Integer.parseInt(value)){
+		switch(Integer.parseInt(devmode)){
 			case 0:
 				key = "global:WEC-3501I-C22";
 				optjson.put("desc", "DeviceType WEC-3501I C22 Displayed as "+value);
@@ -832,6 +832,10 @@ public class ServiceController {
 			case 8:
 				key = "global:3702I-C4";
 				optjson.put("desc", "DeviceType 3702I C4 Displayed as "+value);
+				break;
+			case 9:
+				key = "global:WEC9720EK-XD25";
+				optjson.put("desc", "设备类型WEC9720EK XD25将显示为"+value);
 				break;
 		}
 		
@@ -887,6 +891,9 @@ public class ServiceController {
 				break;
 			case 8:
 				key = "global:3702I-C4";
+				break;
+			case 9:
+				key = "global:WEC9720EK-XD25";
 				break;
 		}
 		String val = jedis.get(key);
@@ -1525,6 +1532,9 @@ public class ServiceController {
 			jedis.set("global:WEC701-C4", "WEC701 C4");
 			jedis.set("global:3702I-C4", "3702I C4");
 			jedis.set("global:3702I-C2", "3702I C2");
+			jedis.set("global:WEC9720EK-XD25", "WEC9720EK XD25");
+			jedis.set("global:WR1004JL", "WR1004JL");
+			jedis.set("global:WR1004SJL", "WR1004SJL");
 		}
 				
 		if(!jedis.exists("profileid:1:entity")){
@@ -1848,7 +1858,7 @@ public class ServiceController {
 			json.put("salarmtime", jedis.hget(key, "salarmtime"));
 			json.put("cbatmac", jedis.hget(key, "cbatmac"));
 			json.put("alarmcode", jedis.hget(key, "alarmcode"));
-			json.put("cnalarminfo", jedis.hget(key, "enalarminfo"));
+			json.put("enalarminfo", jedis.hget(key, "enalarminfo"));
 			jedis.publish("node.alarm.newalarm", json.toJSONString());
 
 		}
@@ -2773,6 +2783,16 @@ public class ServiceController {
 			 resultjson.put("active", jedis.hget(key, "active"));
 			 String proid = jedis.hget(key, "profileid");
 			 resultjson.put("profilename", jedis.hget("profileid:"+proid+":entity", "profilename"));
+			 resultjson.put("cpuporttxrate", String.valueOf(Integer.valueOf(resultjson.get("cpuporttxrate").toString())*32));
+			 resultjson.put("cpuportrxrate", String.valueOf(Integer.valueOf(resultjson.get("cpuportrxrate").toString())*32));
+			 resultjson.put("port0txrate", String.valueOf(Integer.valueOf(resultjson.get("port0txrate").toString())*32));
+			 resultjson.put("port1txrate", String.valueOf(Integer.valueOf(resultjson.get("port1txrate").toString())*32));
+			 resultjson.put("port2txrate", String.valueOf(Integer.valueOf(resultjson.get("port2txrate").toString())*32));
+			 resultjson.put("port3txrate", String.valueOf(Integer.valueOf(resultjson.get("port3txrate").toString())*32));
+			 resultjson.put("port0rxrate", String.valueOf(Integer.valueOf(resultjson.get("port0rxrate").toString())*32));
+			 resultjson.put("port1rxrate", String.valueOf(Integer.valueOf(resultjson.get("port1rxrate").toString())*32));
+			 resultjson.put("port2rxrate", String.valueOf(Integer.valueOf(resultjson.get("port2rxrate").toString())*32));
+			 resultjson.put("port3rxrate", String.valueOf(Integer.valueOf(resultjson.get("port3rxrate").toString())*32));
 			 jedis.publish("node.tree.cnusync", resultjson.toJSONString());
 			 //log.info("------------------jsonget result====>>>"+resultjson.toJSONString());
 		}else {
@@ -3589,6 +3609,23 @@ public class ServiceController {
         		break;
         	case 24:
         		result =jedis.get("global:WEC9720EK-SD220");//"WEC9720EK SD220";
+        		break;
+        	case 25:
+        		result =jedis.get("global:WEC9720EK-XD25");//"WEC9720EK XD25";
+        		break;
+        	case 26:
+        		result =jedis.get("global:WR1004JL");//"WR1004JL";
+        		cbatjson.put("clt1", jedis.hget(cbatkey,"clt1"));
+        		cbatjson.put("clt2", jedis.hget(cbatkey,"clt2"));
+        		cbatjson.put("clt3", jedis.hget(cbatkey,"clt3"));
+        		cbatjson.put("clt4", jedis.hget(cbatkey,"clt4"));
+        		break;
+        	case 27:
+        		result =jedis.get("global:WR1004SJL");//"WR1004SJL";
+        		cbatjson.put("clt1", jedis.hget(cbatkey,"clt1"));
+        		cbatjson.put("clt2", jedis.hget(cbatkey,"clt2"));
+        		cbatjson.put("clt3", jedis.hget(cbatkey,"clt3"));
+        		cbatjson.put("clt4", jedis.hget(cbatkey,"clt4"));
         		break;
         	case 36:
         		result ="WEC701 M0";
@@ -4500,7 +4537,7 @@ public class ServiceController {
 					}
 					alarmjson.put("salarmtime", jedis.hget(alarmkey, "salarmtime"));
 					alarmjson.put("alarmcode", jedis.hget(alarmkey, "alarmcode"));
-					alarmjson.put("cnalarminfo", jedis.hget(alarmkey, "enalarminfo"));
+					alarmjson.put("enalarminfo", jedis.hget(alarmkey, "enalarminfo"));
 					alarmjson.put("alarmlevel", jedis.hget(alarmkey, "alarmlevel"));
 					alarmjson.put("runingtime", jedis.hget(alarmkey, "runingtime"));
 					alarmjson.put("cbatmac", jedis.hget(alarmkey, "cbatmac"));
@@ -4514,7 +4551,7 @@ public class ServiceController {
 					JSONObject alarmjson = new JSONObject();
 					alarmjson.put("salarmtime", jedis.hget(alarmkey, "salarmtime"));
 					alarmjson.put("alarmcode", jedis.hget(alarmkey, "alarmcode"));
-					alarmjson.put("cnalarminfo", jedis.hget(alarmkey, "cnalarminfo"));
+					alarmjson.put("enalarminfo", jedis.hget(alarmkey, "enalarminfo"));
 					alarmjson.put("alarmlevel", jedis.hget(alarmkey, "alarmlevel"));
 					alarmjson.put("runingtime", jedis.hget(alarmkey, "runingtime"));
 					alarmjson.put("cbatmac", jedis.hget(alarmkey, "cbatmac"));
