@@ -3718,8 +3718,21 @@ public class ServiceController {
 
     	Set<String> list = jedis.keys("cbatid:*:entity");
 
+    	//root node
     	
+	    JSONObject rootjson = new JSONObject();
+		
+	    rootjson.put((String)"title", (String)"网络中心");
+	    rootjson.put("key", "allroot");
+	    rootjson.put("isFolder", "true");
+	    rootjson.put("expand", "true");
+	    rootjson.put("icon", "home.png");
+
     	
+    	//2 level node array
+	    
+	    JSONArray level2array = new JSONArray();
+	    
     	JSONObject eocjson = new JSONObject();
 		
     	eocjson.put((String)"title", (String)"EOC设备");
@@ -3727,8 +3740,11 @@ public class ServiceController {
     	eocjson.put("isFolder", "true");
     	eocjson.put("expand", "true");
     	eocjson.put("icon", "home.png");
-
-    	//"children"
+    	
+    	
+    	
+    	
+    	  	//"children"
 		
 		JSONArray cbatarray = new JSONArray();
     	for(Iterator it = list.iterator(); it.hasNext(); ) 
@@ -3794,8 +3810,68 @@ public class ServiceController {
     	
    
     	eocjson.put("children", cbatarray);
+    	//default node
+   		JSONObject cusdefaultjson = new JSONObject();	
+   		cusdefaultjson.put((String)"title", (String)"默认节点");
+   		cusdefaultjson.put("key", "defaultnode");
+   		cusdefaultjson.put("isFolder", "true");
+   		cusdefaultjson.put("expand", "true");		
+		cusdefaultjson.put("children", eocjson);    		
+		
     	
-    	jsonResponseArray.add(eocjson);
+    	
+    	////////custom node
+    	     //default province node
+    		JSONObject cusprovincejson = new JSONObject();		
+    		cusprovincejson.put((String)"title", (String)"我的省份");
+    		cusprovincejson.put("key", "province");
+    		cusprovincejson.put("isFolder", "true");
+    		cusprovincejson.put("expand", "true");
+    		
+    		//default province node
+    		JSONObject cuscityjson = new JSONObject();		
+    		cuscityjson.put((String)"title", (String)"我的城市");
+    		cuscityjson.put("key", "city");
+    		cuscityjson.put("isFolder", "true");
+    		cuscityjson.put("expand", "true");
+    		
+    		
+    		
+   	       //default province node
+	   		JSONObject cusregionjson = new JSONObject();		
+	   		cusregionjson.put((String)"title", (String)"我的区域");
+	   		cusregionjson.put("key", "region");
+	   		cusregionjson.put("isFolder", "true");
+	   		cusregionjson.put("expand", "true");
+
+	   		JSONArray cusregionarray = new JSONArray();
+	   		cusregionarray.add(cusregionjson);
+	   		cuscityjson.put("children", cusregionarray);
+	   		
+	   		JSONArray cuscityarray = new JSONArray();
+	   		cuscityarray.add(cuscityjson);
+	   		cusprovincejson.put("children", cuscityarray);
+	   		
+
+	   	
+    		
+
+    		
+    		
+	   	//level2 array node
+	    level2array.add(cusdefaultjson);
+    	level2array.add(cusprovincejson);
+    	
+    	
+    	
+    	//root node
+    	rootjson.put("children", level2array);
+    	
+    	
+    	
+    	
+    	/////////////////////
+    	jsonResponseArray.add(rootjson);
     	//hfc
     	//W9000显示模式判断
 		if((jedis.get("global:displaymode")) != null){
