@@ -27,6 +27,15 @@
 	    	  }
     		socket.emit('opt.saveredis',"save_redis");
     	});
+		
+		$("#btn_import").click( function(){
+			if(flag == "3"){
+	    		  alert("只读用户，权限不足！");
+	    		  return;
+	    	  }
+			var data = '{"user":"'+user+'"}';
+			socket.emit('opt.importhfcredis',data);
+    	});
 	});
 	
 	function fun_GlobalSave(data){

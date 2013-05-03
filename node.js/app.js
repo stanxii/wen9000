@@ -893,6 +893,11 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: Cltregister==='+data);
 	  publish.publish('servicecontroller.Cltregister', data);
   });
+//hfc数据库导入
+  socket.on('opt.importhfcredis', function (data) {
+	  console.log('nodeserver: importhfcredis==='+data);
+	  publish.publish('servicecontroller.importhfcredis', data);
+  });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
         socket.join(ch);

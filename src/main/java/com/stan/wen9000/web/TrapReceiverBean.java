@@ -122,7 +122,7 @@ public class TrapReceiverBean {
 					.getVariableBindings();
 
 			// size=9 is cbat alarm
-			//logger.info("alarm receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
+			logger.info("alarm receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
 			if (recVBs.size() == 10) {
 				
 				//logger.info("------>>>>>>>alarm receive<<<<<<<<<----------");
@@ -213,7 +213,7 @@ public class TrapReceiverBean {
 				//logger.info("heart receive------>>>"+hearthash.get("cbatsys").toString());
 				//String msgservice = JSONValue.toJSONString(hearthash);
 				parseHeartMsg(hearthash);
-			}else if((recVBs.size() == 3)||(recVBs.size() == 4)){
+			}else if((recVBs.size() == 3)||(recVBs.size() == 2)){
 				//hfc alarm
 				Jedis jedis=null;
 				try {
@@ -232,31 +232,63 @@ public class TrapReceiverBean {
 					}
 				}
 				redisUtil.getJedisPool().returnResource(jedis);
-				// 设置 target    
-		        CommunityTarget target = new CommunityTarget();
-		        target.setCommunity(new OctetString("public"));
+				int status = event.getPDU().getErrorIndex();
+				Map<String, String> hfcalarmhash=new LinkedHashMap();
+				hfcalarmhash.put("status", String.valueOf(status));
+				for (int i = 0; i < recVBs.size(); i++) {
+					VariableBinding recVB = recVBs.elementAt(i);
+					String content = recVB.getVariable().toString();
+					 //System.out.println("SNMP4j traper: content=" + content);
 
-		        target.setAddress(targetAddress);    
-		    
-		        // 通信不成功时的重试次数    
-		        target.setRetries(2);    
-		        // 超时时间    
-		        target.setTimeout(500);    
-		        // snmp版本    
-		        target.setVersion(SnmpConstants.version1);  		        
-
-		     // 向Agent发送PDU，并接收Response    
-		        try {
-		        	snmp_send = new Snmp(new DefaultUdpTransportMapping());
-					ResponseEvent respEvnt = snmp_send.send(event.getPDU(), target);
-					
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}    
+					// populate the alarm
+					switch (i) {
+					case 0:						
+						hfcalarmhash.put("mac", content);
+						break;
+					case 1:						
+						hfcalarmhash.put("logicalid", content);
+						break;
+					case 2:						
+						hfcalarmhash.put("alarminfo", content);
+						break;				
+					default:
+						System.out.println("not correct");
+						break;
+					}
+				}
 				
-				//System.out.println("-------------------------->>>>>>>>alrmlen====="+recVBs.size());
 				
+				
+				String msgservice = JSONValue.toJSONString(hfcalarmhash);
+				
+				
+				 parseAlarmMsg(hfcalarmhash );
+				return;
+//				// 设置 target    
+//		        CommunityTarget target = new CommunityTarget();
+//		        target.setCommunity(new OctetString("public"));
+//
+//		        target.setAddress(targetAddress);    
+//		    
+//		        // 通信不成功时的重试次数    
+//		        target.setRetries(2);    
+//		        // 超时时间    
+//		        target.setTimeout(500);    
+//		        // snmp版本    
+//		        target.setVersion(SnmpConstants.version1);  		        
+//
+//		     // 向Agent发送PDU，并接收Response    
+//		        try {
+//		        	snmp_send = new Snmp(new DefaultUdpTransportMapping());
+//					ResponseEvent respEvnt = snmp_send.send(event.getPDU(), target);
+//					
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}    
+//				
+//				//System.out.println("-------------------------->>>>>>>>alrmlen====="+recVBs.size());
+//				
 			}
 
 		}
@@ -582,7 +614,15 @@ public class TrapReceiverBean {
 		sendToHeartQueue(msgservice);
 	}
 	
-	
+	private void doHfcAlarm(Map alarm) {
+		 String msgservice = JSONValue.toJSONString(alarm);
+		//int i = 0;
+		//while(i<150000){
+		//	i++;
+			sendToHfcAlarmQueue(msgservice);
+		//}
+
+	}
 
 	private void sendToAlarmQueue(String msg) {
 		try {
@@ -603,6 +643,20 @@ public class TrapReceiverBean {
 		try {			
 			Jedis jedis = redisUtil.getConnection();
 			jedis.publish("servicehearbert.new",  msg);
+			redisUtil.closeConnection(jedis);
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			//System.out.println("TrapReceiverBean:sendToQueue error");
+
+		}
+	}
+	
+	private void sendToHfcAlarmQueue(String msg) {
+		try {
+			Jedis jedis = redisUtil.getConnection();
+			jedis.publish("servicehfcalarm.new", msg);
 			redisUtil.closeConnection(jedis);
 
 		} catch (Exception e) {
