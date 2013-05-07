@@ -758,7 +758,8 @@
 		if(itemv.type == "cbat"){
 			//	如果是新设备
 			if(node == null){
-				node = $("#navtree").dynatree("getTree").getNodeByKey("eocroot");
+				//cbat tree parent key
+				node = $("#navtree").dynatree("getTree").getNodeByKey(itemv.mac);
 				var img;
 				if(itemv.online == "1"){
 					img = "cbaton.png";
@@ -1345,10 +1346,7 @@
 	      // The event was bound to the <span> tag, but the node object
 	      // is stored in the parent <li> tag
 	      var node = $.ui.dynatree.getNode(el);
-	      if((confirm( "确定要删除吗？ ")!=true))
-    	  {
-	    	  return;
-    	  }
+	      
 	      switch( action ) {
 	      case "cut":
 	      case "copy":
@@ -1357,12 +1355,46 @@
 	        break;
 	      case "quit":		        
 		      break;
-	      default:
+	      case "delete":
+	    	  if((confirm( "确定要删除吗？ ")!=true))
+	    	  {
+		    	  return;
+	    	  }
 	        //删除节点	    	  
 	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
 	    	  socket.emit('delnode',datastring);
 	    	  node.remove();
 	    	  window.location.reload();
+	    	  break;
+	      case "movenode":
+	    	  //移动节点
+	    	  $('#dialog_movenode').dialog({
+					autoOpen: false,
+					resizable: false,
+					show: "blind",
+					hide: "explode",
+					modal: true,
+					height: 550,
+					width: 600
+	    	  });
+	    	  
+	    	  $("#dialog_movenode").dialog("open");
+	    	  
+	        //删除节点
+	    	  /*
+	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
+	    	  socket.emit('movenode',datastring);
+	    	  node.remove();
+	    	  window.location.reload();
+				*/
+	    	  
+	    	  break;
+	      case "createnode":
+	    	  break;
+	      case "editnode":
+	    	  break;
+	      default:
+	    	  
 	      }
 	    });
    }
