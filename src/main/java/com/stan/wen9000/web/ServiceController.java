@@ -236,7 +236,11 @@ public class ServiceController {
 			doFtpInfo(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.delnode")) {
 			doDelNode(message);
-		} else if (pat.equalsIgnoreCase("servicecontroller.opt.updatereset")) {
+		}
+	    else if (pat.equalsIgnoreCase("servicecontroller.editnode")) {
+				doEditNode(message);
+		}
+		else if (pat.equalsIgnoreCase("servicecontroller.opt.updatereset")) {
 			doUpdateReset(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.hfcdetail")) {
 			doHfcDetail(message);
@@ -1458,6 +1462,34 @@ public class ServiceController {
 
 		jedis.save();
 		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doEditNode(String message)  {
+		Jedis jedis = null;
+		try {
+			jedis = redisUtil.getConnection();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		
+		try {
+			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+			String key = jsondata.get("key").toString();
+			String title = jsondata.get("title").toString();
+			String treeid = "tree:"+ key;
+			// 获取设备id
+		
+			jedis.hset(treeid, "title", title);
+			jedis.bgsave();
+			
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	private static void doFtpInfo(String message) throws ParseException {

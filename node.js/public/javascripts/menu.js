@@ -278,6 +278,8 @@
 			socket.emit('cnu_sub',datastring);
 	 });
 	 
+	 
+	
 	 $("#btn_sub").live('click', function() { 	
 		    if(flag == "3"){
 	   		  alert("只读用户，权限不足！");
@@ -1392,6 +1394,44 @@
 	      case "createnode":
 	    	  break;
 	      case "editnode":
+	    	  //移动节点
+	    	  if( (node.data.key == "root") || (node.data.key == "1") ||  (node.data.key == "11")   ){
+	    		  alert("不能编辑修改！");
+	    	  }
+	    	  else{
+		    	  $('#dialog_editnode').dialog({
+						autoOpen: false,
+						resizable: false,
+						show: "blind",
+						hide: "explode",
+						modal: true,
+						buttons:{
+							"确定":function(){
+						    	  
+						    	  
+						    	 
+						    		  //编辑节点
+						    		  var editstring = $("input#dg_editnode").val();
+						    		  var datastring = '{"key":"'+node.data.key+'","title":"'+ editstring+'"}';
+						    		  socket.emit('editnode',datastring);  					    		  
+						    		  node.data.title = editstring;
+						    		  node.render();
+						    		  $("#dialog_editnode").dialog("close");
+						    	  
+						    	  
+						    	 
+						    	  
+							}
+						},
+						height: 150,
+						width: 300
+		    	  });
+		    	  
+		    	  $("#dialog_editnode").dialog("open");
+	    	  
+	    	  }
+	    	  
+	    	  
 	    	  break;
 	      default:
 	    	  

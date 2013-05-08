@@ -175,8 +175,7 @@ public class ServiceHeartProcessor{
 			clt.put("clt3", heart.get("clt3"));
 			clt.put("clt4", heart.get("clt4"));
 		}
-		//处理cbat 心跳信息
-		System.out.println("cbatmac="+cbatmac);
+		//处理cbat 心跳信息		
 		doheartcbat(cbatmac, cbatip, cbattype,clt);
 		
 		//解析cnu 心跳信息

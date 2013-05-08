@@ -756,6 +756,11 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: delnode==='+data);
 	  publish.publish('servicecontroller.delnode', data);
   });
+//编辑节点
+  socket.on('editnode', function (data) {
+	  console.log('nodeserver: editnode==='+data);
+	  publish.publish('servicecontroller.editnode', data);
+  });  
 //初始化升级信息
   socket.on('opt.updatereset', function (data) {
 	  console.log('nodeserver: updatereset==='+data);
