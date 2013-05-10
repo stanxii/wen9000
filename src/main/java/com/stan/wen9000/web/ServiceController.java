@@ -140,9 +140,17 @@ public class ServiceController {
 		// System.out.println("dowork pat="+pat + "    msg=" + message);
 		if (pat.equalsIgnoreCase("servicecontroller.treeinit")) {
 			doNodeTreeInit();
-		} else if (pat.equalsIgnoreCase("servicecontroller.index.init")) {
+		} else if (pat.equalsIgnoreCase("servicecontroller.init.movetotree")) {
+			doNodeMoveToTreeInit(message);
+		} else if (pat.equalsIgnoreCase("servicecontroller.move.movetotree")) {
+			doMoveTreeCbatNode(message);
+		}
+		else if (pat.equalsIgnoreCase("servicecontroller.index.init")) {
 			doNodeIndexInit(message);
-		} else if (pat.equalsIgnoreCase("servicecontroller.cbatdetail")) {
+		}else if (pat.equalsIgnoreCase("servicecontroller.tree.addnode")) {
+			doAddNode(message);
+		}		
+		else if (pat.equalsIgnoreCase("servicecontroller.cbatdetail")) {
 			doNodeCbatdetail(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.cnudetail")) {
 			doNodeCnudetail(message);
@@ -1464,7 +1472,46 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
-	private static void doEditNode(String message)  {
+	private static void doMoveTreeCbatNode(String message)  {
+		Jedis jedis = null;
+		try {
+			jedis = redisUtil.getConnection();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		
+		try {
+			// 获取设备id
+			System.out.println("message=+message"+message);
+			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+			String cbatmac = jsondata.get("mac").toString();
+			String treeparentkey = jsondata.get("treeparentkey").toString();
+			String id = jedis.get("mac:" + cbatmac + ":deviceid");
+			String cbatid  = "cbatid:"+id+":entity";
+			
+			System.out.println("cbatid="+cbatid);
+			System.out.println("treeparentkey="+treeparentkey);
+			
+			jedis.hset(cbatid, "treeparentkey", treeparentkey);
+			jedis.save();
+			
+			JSONObject json = new JSONObject();
+			json.put("key", treeparentkey);
+			json.put("result", "ok");
+			jedis.publish("node.tree.move.movetotree", json.toJSONString());
+			redisUtil.getJedisPool().returnResource(jedis);
+			
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	private static void  doEditNode(String message)  {
 		Jedis jedis = null;
 		try {
 			jedis = redisUtil.getConnection();
@@ -1486,12 +1533,66 @@ public class ServiceController {
 			jedis.hset(treeid, "title", title);
 			jedis.bgsave();
 			
+			redisUtil.getJedisPool().returnResource(jedis);
 			
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
 
+	private static void  doAddNode(String message)  {
+		Jedis jedis = null;
+		try {
+			jedis = redisUtil.getConnection();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		
+		try {
+			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+			String key = jsondata.get("key").toString();
+			String title = jsondata.get("title").toString();
+			String path = jsondata.get("path").toString();
+			
+			String treeid = "tree:"+ key;
+			// 获取设备id
+			System.out.println("treeid="+treeid);
+			Map<String, String> datamap = new HashMap<String, String>();
+			
+			String childtreekey ="";
+			int childnum = jedis.smembers(treeid+":children").size();
+			
+			childtreekey = key + String.valueOf(childnum+1);
+		
+			System.out.println("childtreeid="+childtreekey);
+			
+			datamap.clear();
+			datamap.put("key", childtreekey);
+			datamap.put("title", title);
+			datamap.put("path", path+","+key);
+			datamap.put("isFolder", "true");
+			datamap.put("expand", "true");						
+			
+			jedis.hmset("tree:"+ childtreekey, datamap);
+			jedis.sadd("tree:root:heirs", childtreekey);			
+			jedis.sadd("tree:"+key+ ":children", childtreekey);
+			jedis.save();
+			
+			JSONObject json = new JSONObject();
+			json.put("key", childtreekey);
+			json.put("result", "ok");
+			jedis.publish("node.tree.addnode", json.toJSONString());
+			
+			redisUtil.getJedisPool().returnResource(jedis);
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 	private static void doFtpInfo(String message) throws ParseException {
 		Jedis jedis = null;
 		try {
@@ -1603,6 +1704,7 @@ public class ServiceController {
 
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
+	
 
 	private static void doNodeIndexInit(String message) throws ParseException {
 		Jedis jedis = null;
@@ -1773,6 +1875,65 @@ public class ServiceController {
 
 	}
 
+	private static void doNodeMoveToTreeInit(String message) {
+		try {
+			Jedis jedis = null;
+			try {
+				jedis = redisUtil.getConnection();
+				
+				/////////////////////////
+				JSONArray jsonResponseArray = new JSONArray();
+
+				
+				
+				
+				// root node
+
+				JSONObject rootjson = new JSONObject();
+				String rootkey ="tree:root";
+
+				rootjson.put((String) "title", (String)jedis.hget(rootkey, "title"));
+				rootjson.put("key", jedis.hget(rootkey, "key"));
+				rootjson.put("isFolder", jedis.hget(rootkey, "isFolder"));
+				rootjson.put("expand", jedis.hget(rootkey, "expand"));
+				rootjson.put("icon", jedis.hget(rootkey, "icon"));
+				
+				getChildNodes(jedis, rootjson, rootkey);	
+
+				
+			
+				
+				jsonResponseArray.add(rootjson);
+				// hfc
+				// W9000显示模式判断
+				if ((jedis.get("global:displaymode")) != null) {
+					if (jedis.get("global:displaymode").equalsIgnoreCase("1")) {
+						// 显示HFC设备
+						hfctreeinit(jedis, jsonResponseArray);
+					}
+				}
+
+				redisUtil.getJedisPool().returnResource(jedis);
+
+				String jsonString = jsonResponseArray.toJSONString();
+
+				// publish to notify node.js a new alarm
+				jedis.publish("node.tree.movetotree.init", jsonString);
+
+				
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				return;
+			}
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
 	private static void doNodeTreeDataInit(Jedis jedis) throws ParseException {
 		if (jedis == null)
 			return;
@@ -1835,7 +1996,6 @@ public class ServiceController {
 			datamap.put("path", "root,2");
 			jedis.hmset("tree:21", datamap);
 			jedis.sadd("tree:root:heirs", "21");
-			jedis.sadd("tree:2:heirs", "21");
 			jedis.sadd("tree:2:children", "21");
 
 			// node 211
@@ -1847,10 +2007,30 @@ public class ServiceController {
 			datamap.put("path", "root,2,21");
 			jedis.hmset("tree:211", datamap);
 			jedis.sadd("tree:root:heirs", "211");
-			jedis.sadd("tree:2:heirs", "211");
-			jedis.sadd("tree:21:heirs", "211");
 			jedis.sadd("tree:21:children", "211");
 			
+			// node 2111
+			datamap.clear();
+			datamap.put("key", "2111");
+			datamap.put("title", "小区");
+			datamap.put("isFolder", "false");
+			datamap.put("expand", "true");
+			datamap.put("path", "root,2,21,211");
+			jedis.hmset("tree:2111", datamap);
+			jedis.sadd("tree:root:heirs", "2111");			
+			jedis.sadd("tree:211:children", "2111");
+
+			// node 21111
+			datamap.clear();
+			datamap.put("key", "21111");
+			datamap.put("title", "单元");
+			datamap.put("isFolder", "false");
+			datamap.put("expand", "true");
+			datamap.put("path", "root,2,21,211,2111");
+			jedis.hmset("tree:21111", datamap);
+			jedis.sadd("tree:root:heirs", "21111");			
+			jedis.sadd("tree:2111:children", "21111");
+
 			
 		}
 

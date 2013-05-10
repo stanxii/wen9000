@@ -21,7 +21,7 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
 
   ul#myMenu(class='contextMenu')
     li.delete
-      a(href='#createnode')  创建节点      
+      a(href='#createnode')  添加节点      
       a(href='#delete')  删除节点
       a(href='#movenode')  移动节点
       a(href='#editnode')  编辑节点
@@ -57,9 +57,11 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
     lable  参数值:
     input(id='hfc_setval',type='text')
   div(id='dialog_movenode',title='移动节点',style='display:none')
-    lable  节点移动到:
-    input(id='dg_movenode',type='text')
+    lable  双击节点移动到:
+    div(id='moveto_tree')        
   div(id='dialog_editnode',title='编辑节点',style='display:none')
     lable  编辑节点:
     input(id='dg_editnode',type='text')
-    
+  div(id='dialog_addnode',title='添加节点',style='display:none')
+    lable  添加节点:
+    input(id='dg_addnode',type='text')    

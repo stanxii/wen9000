@@ -323,7 +323,19 @@ redis.on('pmessage', function(pat,ch,data) {
       }else if(ch == 'node.tree.init') {
        data = JSON.parse(data);
        sio.sockets.emit('initDynatree',data);
-    }else if(ch == 'node.tree.cbatdetail') {
+    }else if(ch == 'node.tree.movetotree.init') {
+        data = JSON.parse(data);
+        sio.sockets.emit('toweb.init.movetotree',data);
+     }else if(ch == 'node.tree.move.movetotree') {
+         data = JSON.parse(data);
+         sio.sockets.emit('toweb.tree.move.movetotree',data);
+      }else if(ch == 'node.tree.addnode') {
+          data = JSON.parse(data);
+          sio.sockets.emit('toweb.tree.addnode',data);
+       }  
+   
+   
+      else if(ch == 'node.tree.cbatdetail') {
         data = JSON.parse(data);
         sio.sockets.emit('cbatdetail',data);
     }else if(ch == 'node.tree.cnudetail') {
@@ -517,6 +529,21 @@ sio.sockets.on('connection', function (socket) {
      console.log('nodeserver: inittree');
      publish.publish('servicecontroller.treeinit', 'inittree');
   });
+  
+  socket.on('fromweb.init.movetotree', function (data) {
+	     console.log('nodeserver: movetotree');
+	     publish.publish('servicecontroller.init.movetotree', 'inittree');
+	  });
+  
+  socket.on('fromweb.move.movetotree', function (data) {
+	     console.log('nodeserver: fromweb.move.movetotree');	     
+	     publish.publish('servicecontroller.move.movetotree', data);
+	  });
+  
+  socket.on('fromweb.tree.addnode', function (data) {
+	     console.log('nodeserver: fromweb.tree.addnode');	     
+	     publish.publish('servicecontroller.tree.addnode', data);
+	  });  
   
   socket.on('historyalarmall', function (data) {
      console.log('from client: nodeserver: historyalarmall');

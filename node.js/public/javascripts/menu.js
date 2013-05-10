@@ -38,6 +38,9 @@
                   socket.emit('initDynatree', 'init tree' );
 
                   socket.on('initDynatree', onInitTree);
+                  socket.on('toweb.init.movetotree', fun_movetotreeinit );
+                  socket.on('toweb.tree.move.movetotree', fun_movetotreemove );  
+                  socket.on('toweb.tree.addnode', fun_addnode );
                   socket.on('cbatdetail', fun_cbatdetail );
                   socket.on('cnudetail', fun_cnudetail );
                   socket.on('hfcdetail', fun_hfcdetail );
@@ -1337,6 +1340,68 @@
 
    }
    
+   
+   var cbatmovetree;
+   function initmovetree(cbatmac) {
+	   //get move to  tree
+	   cbatmovetree =  cbatmac;
+	   
+	}
+   
+   function fun_movetotreemove(node) {
+	   
+	   if(node!=null && node.key !=null){
+		   var treenode = $("#navtree").dynatree("getTree").getNodeByKey("root");
+		   if(node!=null){
+			   window.location.reload();
+		   }
+		   //treenode.render();
+		   //socket.emit('initDynatree', 'init tree' );
+	   }
+	   
+   }
+   
+   function fun_movetotreeinit(treedata){
+	   //alert("fuckkkk");
+	   
+		$("#moveto_tree").dynatree({
+	  			 	persist: true,
+	  			 	selectMode: 3,
+	  			 	activeVisible: true, 
+	  			 	autoFocus: false,  			 	
+	  			 	onPostInit: function(isReloading, isError) {
+			               //logMsg("onPostInit(%o, %o) - %o", isReloading, isError, this);
+			         this.reactivate();
+			        }, 
+			      	fx: { height: "toggle", duration: 200 },
+	                children: treedata,
+			        imagePath: "http://localhost:3000/images/",
+			        minExpandLevel: 1,
+					onDblClick: function(node, event) {
+						var jsondata = '{"mac":"'+cbatmovetree+'","treeparentkey":"'+node.data.key+'"}';
+				        	
+				        	socket.emit('fromweb.move.movetotree', jsondata );			        						        	
+						
+				        	 $("#dialog_movenode").dialog("close");
+				          
+				    },				   
+				    
+				    strings: {
+				        loading: "Loading…",
+				        loadError: "Load error!"
+				    },		                
+			        onActivate: function(node) {
+			        			        	       	
+				    },
+			    }); 	
+   }
+   
+   
+   function fun_addnode (node){
+			   window.location.reload();
+		   
+   }
+   
    function bindContextMenu(span) {
 	   var flag = getCookie("flag");
 	   if(flag == "3"){
@@ -1370,28 +1435,68 @@
 	    	  break;
 	      case "movenode":
 	    	  //移动节点
-	    	  $('#dialog_movenode').dialog({
-					autoOpen: false,
-					resizable: false,
-					show: "blind",
-					hide: "explode",
-					modal: true,
-					height: 550,
-					width: 600
-	    	  });
 	    	  
-	    	  $("#dialog_movenode").dialog("open");
-	    	  
-	        //删除节点
-	    	  /*
-	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
-	    	  socket.emit('movenode',datastring);
-	    	  node.remove();
-	    	  window.location.reload();
-				*/
+	        
+	    	  if( (node.data.type != "cbat") ){
+	    		  alert("不能移动节点！");
+	    	  }else {
+	    		  socket.emit('fromweb.init.movetotree', 'movetree' );	
+	    		  
+	    		  $('#dialog_movenode').dialog({
+						autoOpen: false,
+						resizable: false,
+						show: "blind",
+						hide: "explode",
+						modal: true,
+						height: 550,
+						open: function(){
+				    		  initmovetree(node.data.key);
+				    	  },
+						width: 600
+		    	  });
+		    	  
+		    	  $("#dialog_movenode").dialog("open");
+		    	  
+		    	
+		    	  
+	    	  }
 	    	  
 	    	  break;
 	      case "createnode":
+	    	  //添加节点
+	    	//移动节点
+	    	  if(  (node.data.key == "1") ||  (node.data.key == "11")   ){
+	    		  alert("不能编辑修改！");
+	    	  }else{
+	    		  $('#dialog_addnode').dialog({
+						autoOpen: false,
+						resizable: false,
+						show: "blind",
+						hide: "explode",
+						modal: true,
+						buttons:{
+							"确定":function(){
+						    	  
+						    	  
+						    	 
+						    		  //编辑节点
+										
+						    		  var editstring = $("input#dg_addnode").val();
+						    		  var datastring = '{"key":"'+node.data.key+'","path":"'+node.data.path +'","title":"'+ editstring+'"}';
+						    		  socket.emit('fromweb.tree.addnode',datastring);  					    		  						    		  						    		  
+						    		  $("#dialog_addnode").dialog("close");
+						    	  
+						    	  
+						    	 
+						    	  
+							}
+						},
+						height: 150,
+						width: 300
+		    	  });
+		    	  
+		    	  $("#dialog_addnode").dialog("open");
+	    	  }
 	    	  break;
 	      case "editnode":
 	    	  //移动节点
@@ -2063,7 +2168,12 @@
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicetype == "WEC9720EK XD25"){
 				
+			}else if(jsondata.devicetype == "WEC9720EK SD220"){
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
 			}
+			
+			
+			
    }
    
    function checknull(name,val){
