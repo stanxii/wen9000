@@ -168,6 +168,9 @@
 	<bean id="serviceHfcStatus" class="com.stan.wen9000.web.ServiceHfcStatus" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
+	<bean id="serviceHfcalarmprocessor" class="com.stan.wen9000.web.ServiceHfcAlarmProcessor" >
+		<property name="redisUtil" ref="redisUtil" />
+	</bean>
 	
 	
 	<!-- 调度业务 -->
@@ -238,6 +241,11 @@
 	</bean>
 	<bean id="serviceHfcStatusjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 	 <property name="targetObject" ref="serviceHfcStatus" />
+	 <property name="targetMethod"  value="start"/>
+	 <property name="concurrent" value="true" />	 	
+	</bean>
+	<bean id="serviceHfcalarmprocessorjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	 <property name="targetObject" ref="serviceHfcalarmprocessor" />
 	 <property name="targetMethod"  value="start"/>
 	 <property name="concurrent" value="true" />	 	
 	</bean>
@@ -327,6 +335,12 @@
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="0" />
 	</bean>
+	<bean id="serviceHfcalarmprocessorTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	 <property name="jobDetail" ref="serviceHfcalarmprocessorjob" />
+	 <property name="startDelay" value="2000" />
+	 <property name="repeatInterval" value="5" />
+	 <property name="repeatCount" value="0" />
+	</bean>
 	
 	
 	<!-- 设置调度 -->
@@ -349,6 +363,7 @@
 	   <ref bean="serviceHfcRealtimeTrigger" />
 	   <ref bean="workerHfcStatusTrigger" />
 	   <ref bean="serviceHfcStatusTrigger" />
+	   <ref bean="serviceHfcalarmprocessorTrigger" />
 	  </list>
 	 </property>	 
 	</bean>

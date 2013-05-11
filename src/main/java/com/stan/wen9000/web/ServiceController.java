@@ -1,6 +1,13 @@
 package com.stan.wen9000.web;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,6 +17,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +36,7 @@ import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.snmp4j.smi.Integer32;
@@ -301,7 +311,10 @@ public class ServiceController {
 			doCltDel(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.Cltregister")) {
 			doCltRegister(message);
-		}
+		}else if(pat.equalsIgnoreCase("servicecontroller.importhfcredis")){
+			doImportHfcRedis(message);
+		}		
+
 
 	}
 
@@ -1868,9 +1881,37 @@ public class ServiceController {
 			doNodeTreeDataInit(jedis);
 
 			// 保存数据到硬盘
-			jedis.save();
+			proid = String.valueOf(jedis.incr("global:profileid"));
+	    	prokey = "profileid:"+proid + ":entity";
+	    	proentity = new HashMap<String, String>();
+	    	proentity.put("profilename", "标准4M");
+	    	proentity.put("authorization", "1");
+	    	proentity.put("vlanen", "2");
+	    	proentity.put("vlan0id", "1");
+	    	proentity.put("vlan1id", "1");
+	    	proentity.put("vlan2id", "1");
+	    	proentity.put("vlan3id", "1");
+	    	
+	    	proentity.put("rxlimitsts", "1");
+	    	proentity.put("cpuportrxrate", "4096");
+	    	proentity.put("port0txrate", "0");
+	    	proentity.put("port1txrate", "0");
+	    	proentity.put("port2txrate", "0");
+	    	proentity.put("port3txrate", "0");
+	    	
+	    	proentity.put("txlimitsts", "1");
+	    	proentity.put("cpuporttxrate", "2048");
+	    	proentity.put("port0rxrate", "0");
+	    	proentity.put("port1rxrate", "0");
+	    	proentity.put("port2rxrate", "0");
+	    	proentity.put("port3rxrate", "0");
+	    	//save
+	    	jedis.hmset(prokey, proentity);
+	    	//保存数据到硬盘
+	    	jedis.save();
 
 			redisUtil.getJedisPool().returnResource(jedis);
+
 		}
 
 	}
@@ -3034,69 +3075,74 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		String result = "";
+		//String result = "";
 		JSONArray jsonResponseArray = new JSONArray();
 		Set<String> list = jedis.keys("cnuid:*:entity");
-		for (Iterator it = list.iterator(); it.hasNext();) {
-			JSONObject cnujson = new JSONObject();
-			String prokey = (String) it.next();
-			if (jedis.hget(
-					"cbatid:" + jedis.hget(prokey, "cbatid") + ":entity",
-					"active").equalsIgnoreCase("0")) {
-				continue;
-			}
-			int index1 = prokey.indexOf(':') + 1;
-			int index2 = prokey.lastIndexOf(':');
-			String cid = prokey.substring(index1, index2);
-			// 判断key是否存在
-			if (jedis.exists("global:checkedcnus")) {
-				// 判断是否checked
-				if (jedis.sismember("global:checkedcnus", cid)) {
-					cnujson.put("check",
-							"<input type=checkbox class=chk checked />");
-				} else {
-					cnujson.put("check", "<input type=checkbox class=chk />");
-				}
-			} else {
-				cnujson.put("check", "<input type=checkbox class=chk />");
-			}
-			String cbatid = jedis.hget(prokey, "cbatid");
-			cnujson.put("cbatip",
-					jedis.hget("cbatid:" + cbatid + ":entity", "ip"));
-			cnujson.put("mac", jedis.hget(prokey, "mac"));
-			cnujson.put("active", jedis.hget(prokey, "active"));
-			cnujson.put("label", jedis.hget(prokey, "label"));
 
-			switch (Integer.parseInt(jedis.hget(prokey, "devicetype"))) {
-			case 10:
-				result = "3702I-C4";
-				break;
-			case 7:
-				result = "3702I-L2";
-				break;
-			case 9:
-				result = "3702I-C2";
-				break;
-			default:
-				result = "Unknown";
-				break;
-			}
-			cnujson.put("devicetype", result);
-			cnujson.put(
-					"proname",
-					jedis.hget("profileid:" + jedis.hget(prokey, "profileid")
-							+ ":entity", "profilename"));
-			cnujson.put("contact", jedis.hget(prokey, "contact"));
-			cnujson.put("label", jedis.hget(prokey, "label"));
+        for(Iterator it = list.iterator(); it.hasNext(); ) {
+        	JSONObject cnujson = new JSONObject();
+        	String prokey = (String) it.next();
+        	if(jedis.hget("cbatid:"+jedis.hget(prokey, "cbatid")+":entity", "active").equalsIgnoreCase("0")){
+        		continue;
+        	}
+        	int index1 = prokey.indexOf(':') +1;
+    		int index2 = prokey.lastIndexOf(':');
+    		String cid = prokey.substring(index1, index2);
+    		//判断key是否存在
+    		if(jedis.exists("global:checkedcnus")){
+    			//判断是否checked
+            	if(jedis.sismember("global:checkedcnus", cid)){
+            		cnujson.put("check", "<input type=checkbox class=chk checked />");
+            	}else{
+            		cnujson.put("check", "<input type=checkbox class=chk />");
+            	}
+    		}else{
+    			cnujson.put("check", "<input type=checkbox class=chk />");
+    		}
+    		String cbatid = jedis.hget(prokey, "cbatid");
+    		cnujson.put("cbatip", jedis.hget("cbatid:"+cbatid+":entity", "ip"));
+    		cnujson.put("mac", jedis.hget(prokey, "mac"));
+    		cnujson.put("active", jedis.hget(prokey, "active"));
+    		cnujson.put("label", jedis.hget(prokey, "label"));
+    		switch(Integer.parseInt(jedis.hget(prokey, "devicetype")))
+    		{
+	    		case 10:
+	    			cnujson.put("devicetype", jedis.get("global:3702I-C4"));         		
+	        		break;
+	        	case 7:
+	        		cnujson.put("devicetype", "3702I-L2");           		
+	        		break;
+	        	case 9:
+	        		cnujson.put("devicetype", jedis.get("global:3702I-C2"));
+	        		break;
+	        	case 36:
+	        		cnujson.put("devicetype", "WEC701 M0");
+	        		break;
+	        	case 40:
+	        		cnujson.put("devicetype", jedis.get("global:WEC701-C2"));
+	        		break;
+	        	case 41:
+	        		cnujson.put("devicetype", jedis.get("global:WEC701-C4"));
+	        		break;
+	        	default:
+	        		cnujson.put("devicetype", "Unknown");
+	        		break;
+    		}        		
 
-			jsonResponseArray.add(cnujson);
-		}
-
-		String jsonstring = jsonResponseArray.toJSONString();
-
-		jedis.publish("node.opt.cnus", jsonstring);
-
-		redisUtil.getJedisPool().returnResource(jedis);
+    		//cnujson.put("devicetype", result);
+    		cnujson.put("proname", jedis.hget("profileid:"+jedis.hget(prokey, "profileid")+":entity", "profilename"));
+    		cnujson.put("contact", jedis.hget(prokey, "contact"));
+    		cnujson.put("label", jedis.hget(prokey, "label"));
+    		
+    		jsonResponseArray.add(cnujson);
+        }
+        
+        String jsonstring = jsonResponseArray.toJSONString();
+        
+        jedis.publish("node.opt.cnus", jsonstring);
+        
+        redisUtil.getJedisPool().returnResource(jedis);
+        
 	}
 
 	private static void doCnuSub(String message) throws ParseException,
@@ -4387,6 +4433,7 @@ public class ServiceController {
 			return;
 		}
 
+
 		JSONArray jsonResponseArray = new JSONArray();
 
 		
@@ -5589,8 +5636,96 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 
-	private static void ThresholdSet_EDFA(Jedis jedis, String ParamMibOID,
-			JSONObject json, JSONObject jsondata) {
+	private static void doImportHfcRedis(String message) throws ParseException, UnsupportedEncodingException, FileNotFoundException{
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		String user = jsondata.get("user").toString();
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);	
+		
+		//String filepath = ServiceController.class.getResource("ServiceController.class").toString();
+		//log.info("--------------Path--->>>"+filepath+"------->>>>"+System.getProperty("user.dir"));
+		File file = new File(System.getProperty("user.dir")+"/redisjsonfile.txt");
+		InputStreamReader read = new InputStreamReader (new FileInputStream(file),"UTF-8");
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(read);
+            String tempString = null;
+            String filestring = "";
+            // 一次读入一行，直到读入null为文件结束
+            while ((tempString = reader.readLine()) != null) {
+            	filestring += tempString;
+            }
+            reader.close();
+            JSONParser parser = new JSONParser();
+            ContainerFactory containerFactory = new ContainerFactory(){
+              public List creatArrayContainer() {
+                return new LinkedList();
+              }
+
+              public Map createObjectContainer() {
+                return new LinkedHashMap();
+              }
+                                  
+            };
+                          
+            try{
+              Map json = (Map)parser.parse(filestring, containerFactory);
+              Iterator iter = json.entrySet().iterator();
+              //System.out.println("==iterate result==");
+              while(iter.hasNext()){
+                Map.Entry entry = (Map.Entry)iter.next();
+                System.out.println(entry.getKey() + "=>" + entry.getValue());
+                Object obj = entry.getValue();
+                LinkedHashMap childhash = (LinkedHashMap)obj;
+                Iterator iterator = childhash.keySet().iterator();
+                Map<String,String> map = new HashMap<String,String>();
+                while (iterator.hasNext()) {
+	                 String key = iterator.next().toString();
+	                 String value = childhash.get(key).toString();
+	                 map.put(key, value);
+                }
+                
+                //Map<String,String> map = (Map)entry.getValue();
+                jedis.hmset(entry.getKey().toString(), map);
+                jedis.save();
+                optjson.put("desc", "导入HFC数据库成功");
+              }
+            }
+            catch(ParseException pe){
+              System.out.println(pe);
+              optjson.put("desc", "导入HFC数据库失败");
+            }
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+            optjson.put("desc", "导入HFC数据库失败");
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e1) {
+                }
+            }
+        }
+		sendoptlog(jedis,optjson);
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void ThresholdSet_EDFA(Jedis jedis, String ParamMibOID, JSONObject json,JSONObject jsondata){
 		String key = jsondata.get("key").toString();
 		String mac = jsondata.get("mac").toString().trim();
 		String id = jedis.get("mac:" + mac + ":deviceid");

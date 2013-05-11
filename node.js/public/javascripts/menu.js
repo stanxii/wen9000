@@ -1414,24 +1414,32 @@
 	      // is stored in the parent <li> tag
 	      var node = $.ui.dynatree.getNode(el);
 	      
+
 	      switch( action ) {
-	      case "cut":
-	      case "copy":
-	      case "paste":
+	      case "rename":
+	    	  
+	    	  break;
+	      case "move":
+	    	  
+	    	  break;
+	      case "add":
 	        //copyPaste(action, node);
 	        break;
 	      case "quit":		        
 		      break;
 	      case "delete":
+
 	    	  if((confirm( "确定要删除吗？ ")!=true))
 	    	  {
 		    	  return;
 	    	  }
-	        //删除节点	    	  
+
+	    	  //删除节点	    	  
 	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
 	    	  socket.emit('delnode',datastring);
 	    	  node.remove();
 	    	  window.location.reload();
+
 	    	  break;
 	      case "movenode":
 	    	  //移动节点

@@ -37,6 +37,11 @@ block content
         button(id='btn_gsyslog')  发送
   br
   h3  Redis数据库操作
+  p  当启用HFC模式时，需要导入HFC设备数据库才能正常显示HFC设备的相关信息
+  br
+  button(id='btn_import')  导入HFC数据
+  br
   p  本网管采用最新的Redis内存数据库优化数据存储效率，为了保证关键数据不丢失，建议关闭网管前点击保存按钮将内存中未存储的数据保存到硬盘。
   br
   button(id='btn_gsave')  保存 
+  
