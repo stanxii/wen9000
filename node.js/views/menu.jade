@@ -19,15 +19,12 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
       操作失败.
       \请确认参数值和通信是否正常!
 
-  ul#myMenu(class='contextMenu')
-    li.rename
-      a(href='#rename')  重命名
-    li.move
-      a(href='#move')  移动到
-    li.add
-      a(href='#add')  添加
+  ul#myMenu(class='contextMenu')    
     li.delete
-      a(href='#delete')  删除
+      a(href='#createnode')  添加节点      
+      a(href='#delete')  删除节点
+      a(href='#movenode')  移动节点
+      a(href='#editnode')  编辑节点
   
   #dialog-alarmThreshold(title='告警门限设置',style='display:none')
     table
@@ -59,3 +56,12 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
   div(id='dialog_setvalue',title='设置参数值',style='display:none')
     lable  参数值:
     input(id='hfc_setval',type='text')
+  div(id='dialog_movenode',title='移动节点',style='display:none')
+    lable  双击节点移动到:
+    div(id='moveto_tree')        
+  div(id='dialog_editnode',title='编辑节点',style='display:none')
+    lable  编辑节点:
+    input(id='dg_editnode',type='text')
+  div(id='dialog_addnode',title='添加节点',style='display:none')
+    lable  添加节点:
+    input(id='dg_addnode',type='text')    
