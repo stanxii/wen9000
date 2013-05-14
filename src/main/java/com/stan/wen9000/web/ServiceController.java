@@ -898,7 +898,7 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
 		String value = jsondata.get("value").toString();
 		String user = jsondata.get("user").toString();
-		String key = "global:displaymode";
+		String key = "";
 		switch(Integer.parseInt(value)){
 			case 0:
 				key = "global:WEC-3501I-C22";
@@ -4910,11 +4910,18 @@ public class ServiceController {
 		optjson.put("user", user);	
 		
 		//String filepath = ServiceController.class.getResource("ServiceController.class").toString();
-		//log.info("--------------Path--->>>"+filepath+"------->>>>"+System.getProperty("user.dir"));
-		File file = new File(System.getProperty("user.dir")+"/redisjsonfile.txt");
-		InputStreamReader read = new InputStreamReader (new FileInputStream(file),"UTF-8");
-        BufferedReader reader = null;
-        try {
+		String nowpath;             //当前tomcat的bin目录的路径 
+	    String tempdir;  
+	    nowpath=System.getProperty("user.dir");  
+	    tempdir=nowpath.replace("bin", "webapps");  //把bin 文件夹变到 webapps文件里面   
+	    tempdir=nowpath.replace("\\wen9000", "");
+	    tempdir+="\\"+"wen9000";    
+		log.info("--------------Path--->>>"+tempdir+"------->>>>"+System.getProperty("user.dir"));
+		BufferedReader reader = null;
+		try {
+			File file = new File(tempdir+"/redisjsonfile.txt");
+			InputStreamReader read = new InputStreamReader (new FileInputStream(file),"UTF-8");  
+        
             reader = new BufferedReader(read);
             String tempString = null;
             String filestring = "";
@@ -4941,7 +4948,7 @@ public class ServiceController {
               //System.out.println("==iterate result==");
               while(iter.hasNext()){
                 Map.Entry entry = (Map.Entry)iter.next();
-                System.out.println(entry.getKey() + "=>" + entry.getValue());
+                //System.out.println(entry.getKey() + "=>" + entry.getValue());
                 Object obj = entry.getValue();
                 LinkedHashMap childhash = (LinkedHashMap)obj;
                 Iterator iterator = childhash.keySet().iterator();
@@ -4954,18 +4961,21 @@ public class ServiceController {
                 
                 //Map<String,String> map = (Map)entry.getValue();
                 jedis.hmset(entry.getKey().toString(), map);
-                jedis.save();
+                
                 optjson.put("desc", "导入HFC数据库成功");
               }
+              jedis.save();
             }
             catch(ParseException pe){
               System.out.println(pe);
               optjson.put("desc", "导入HFC数据库失败");
+              jedis.publish("node.optlog.ImportHfcResult", "0");
             }
             
         } catch (IOException e) {
             e.printStackTrace();
             optjson.put("desc", "导入HFC数据库失败");
+            jedis.publish("node.optlog.ImportHfcResult", "0");
         } finally {
             if (reader != null) {
                 try {
@@ -4975,7 +4985,7 @@ public class ServiceController {
             }
         }
 		sendoptlog(jedis,optjson);
-		
+		jedis.publish("node.optlog.ImportHfcResult", "1");
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -4983,7 +4993,7 @@ public class ServiceController {
 		String key = jsondata.get("key").toString();
 		String mac = jsondata.get("mac").toString().trim();
 		String id = jedis.get("mac:"+ mac + ":deviceid");
-		String community = jedis.hget("hfcid:"+id+":entity", "community");
+		String community = jedis.hget("hfcid:"+id+":entity", "wcommunity");
 		String ip = jsondata.get("ip").toString();
 		String hihi = jsondata.get("hihi").toString();
 		String hi = jsondata.get("hi").toString();
@@ -5105,7 +5115,7 @@ public class ServiceController {
 		String ip = jsondata.get("ip").toString();
 		String mac = jsondata.get("mac").toString().trim();
 		String id = jedis.get("mac:"+ mac + ":deviceid");
-		String community = jedis.hget("hfcid:"+id+":entity", "community");
+		String community = jedis.hget("hfcid:"+id+":entity", "rcommunity");
 		String extraoid = "";
 		String AlarmSatOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.3";
 		String AlarmEnOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.2";
@@ -5190,7 +5200,7 @@ public class ServiceController {
 		String ip = jsondata.get("ip").toString();
 		String mac = jsondata.get("mac").toString().trim();
 		String id = jedis.get("mac:"+ mac + ":deviceid");
-		String community = jedis.hget("hfcid:"+id+":entity", "community");
+		String community = jedis.hget("hfcid:"+id+":entity", "rcommunity");
 		String extraoid = "";
 		String AlarmSatOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.3";
 		String AlarmEnOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.2";

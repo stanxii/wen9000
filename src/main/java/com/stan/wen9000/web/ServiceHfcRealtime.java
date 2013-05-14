@@ -35,37 +35,34 @@ public class ServiceHfcRealtime {
 	}
 	
 	public static void dowork(){
-		Jedis jedis=null;		
-		JSONObject json = new JSONObject();		
+		
+//		if(!jedis.exists("global:displaymode")){
+//			redisUtil.getJedisPool().returnResource(jedis);
+//			log.info("-----------2222------->>>>ServiceHfcRealtime Done!");
+//			return;
+//		}
 		while(true){	
+			Jedis jedis=null;		
+			JSONObject json = new JSONObject();		
 			try {
 				jedis = redisUtil.getConnection();	 
 			
 			}catch(Exception e){
 				e.printStackTrace();
 				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				log.info("------------1111------>>>>ServiceHfcRealtime Done!");
 				return;
-			}
-			if(!jedis.exists("global:displaymode")){
-				try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				redisUtil.getJedisPool().returnResource(jedis);
-				continue;
 			}
 			if(jedis.get("global:displaymode").equalsIgnoreCase("1")){
 				String key = jedis.get("global:hfcrealtime");
-				if(key != ""){
+				if((key != "")&&(key != null)){
 					if(!jedis.exists(key)){
 						redisUtil.getJedisPool().returnResource(jedis);
 						continue;
 					}
 					if(!jedis.hget(key, "active").equalsIgnoreCase("1")){
 						try {
-							Thread.sleep(3000);
+							Thread.sleep(5000);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -109,7 +106,7 @@ public class ServiceHfcRealtime {
 					}
 					redisUtil.getJedisPool().returnResource(jedis);
 					try {
-						Thread.sleep(3000);
+						Thread.sleep(5000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -124,7 +121,7 @@ public class ServiceHfcRealtime {
 //					// TODO Auto-generated catch block
 //					e.printStackTrace();
 //				}
-				log.info("------------------>>>>ServiceHfcRealtime Done!");
+				log.info("----------333-------->>>>ServiceHfcRealtime Done!");
 				redisUtil.getJedisPool().returnResource(jedis);
 				return;
 			}

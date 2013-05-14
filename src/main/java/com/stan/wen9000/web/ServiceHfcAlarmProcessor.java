@@ -139,15 +139,34 @@ public class ServiceHfcAlarmProcessor {
 	};
   	
   	
+	@SuppressWarnings("static-access")
 	public void start(){
 		
 		System.out.println("[#3] ..... service HfcAlarm starting");
 		Jedis jedis=null;
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		 jedis.psubscribe(jedissubSub, "servicehfcalarm.*");
-		redisUtil.getJedisPool().returnResource(jedis);
+			//加载MIB
+			  String nowpath;             //当前tomcat的bin目录的路径 
+		      String tempdir;  
+		      nowpath=System.getProperty("user.dir");  
+		      tempdir=nowpath.replace("bin", "webapps");  //把bin 文件夹变到 webapps文件里面   
+		      tempdir=nowpath.replace("\\wen9000", "");
+		      tempdir+="\\"+"wen9000"+"\\"+"mibs";    
+			  log.info("--------------Path--->>>"+tempdir+"------->>>>"+System.getProperty("user.dir"));
+			  _MibOperObj = new MibOperations();
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-FOBETMOC-WOS2000-MIB");
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-ALARMS-MIB");
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-COMMON-MIB");
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-PROPERTY-MIB");
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-OPTICALSWITCH-MIB");
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-OPTICALAMPLIFIER-MIB");
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-OPTICALTRANSMITTERDIRECTLY-MIB");
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-DOWNSTREAMOPTICALRECEIVER-MIB");
+			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-FIBERNODE-MIB");
+			  jedis = redisUtil.getConnection();		 
+			  jedis.psubscribe(jedissubSub, "servicehfcalarm.*");
+			  log.info("------->>>>>3333");
+			  redisUtil.getJedisPool().returnResource(jedis);
 		  
 		}catch(Exception e){
 			e.printStackTrace();
@@ -184,12 +203,70 @@ public class ServiceHfcAlarmProcessor {
 	}
 	
 	private void dohfcalarm(Map<String,String> alarm) throws IOException{
-		String devmac = alarm.get("mac");
-		String logicalid = alarm.get("logicalid");
-		String alarminfo = alarm.get("alarminfo");
-		String trapstring = "";
+		String devmac = alarm.get("mac");		
+		String traptype = alarm.get("traptype");
+		String enterprise = alarm.get("enterprise");
+		//log.info("------------->>>---traptype---"+traptype+"----enterprise---"+enterprise);
+		try{
+			if(Integer.valueOf(traptype)!= 6){
+				ProcessGenericTraps(Integer.valueOf(traptype),devmac);
+			}else if(enterprise.equalsIgnoreCase("1.3.6.1.4.1.17409.1")){
+				ProcessHFCTraps(alarm);
+			}else if(enterprise.equalsIgnoreCase("1.3.6.1.4.1.17409.8888.1")){
+				ProcessWosTraps(alarm);
+			}else if(enterprise.equalsIgnoreCase("1.3.6.1.4.1.2000.1.3000")){
+				ProcessWos3kTraps(alarm);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
+	private void ProcessWosTraps(Map<String,String> alarm)
+    {
 		String status = alarm.get("status");
-		switch(Integer.valueOf(status)){
+        switch (Integer.valueOf(status))
+        {
+            case 1://wosTrapRestart
+                ParseTrapWosTrapRestart(alarm);
+                return;
+            case 2://wosTrapDeviceUp
+                ParseTrapWosTrapDeviceUp(alarm);
+                return;
+            case 3://wosTrapDeviceDown
+                ParseTrapWosTrapDeviceDown(alarm);
+                return;
+        }
+    }
+    private void ProcessWos3kTraps(Map<String,String> alarm)
+    {
+    	String status = alarm.get("status");
+        switch (Integer.valueOf(status))
+        {
+            case 1://wosTrapRestart
+                ParseTrapWosTrapRestart(alarm);
+                return;
+            case 2://wosTrapDeviceUp
+                ParseTrapWosTrapDeviceUp(alarm);
+                return;
+            case 3://wosTrapDeviceDown
+                ParseTrapWosTrapDeviceDown(alarm);
+                return;
+            case 4:                             ///////////////  //修改
+                //ParseTrapWos3kAlarmEvent(alarm);
+               return;
+        }
+    }
+	
+	 public void ProcessHFCTraps(Map<String,String> alarm) throws IOException
+     {
+		 String logicalid = alarm.get("logicalid");
+		 String alarminfo = alarm.get("alarminfo");
+		 String status = alarm.get("status");
+		 String devmac = alarm.get("mac");
+		 switch(Integer.valueOf(status)){
 			case 0://hfcColdstart
 				ParseTrapHfcColdStart(devmac,logicalid);
 				break;
@@ -202,7 +279,120 @@ public class ServiceHfcAlarmProcessor {
 			default:
 				break;		
 		}
-	}
+     }
+	
+	public void ProcessGenericTraps(int traptype, String mac)
+    {
+        String cntrapstring = "";
+        String entrapstring = "";
+        Map<String, String> hash = new LinkedHashMap();
+        switch (traptype)
+        { 
+            case 0:
+            	cntrapstring = "标准冷启动";
+            	entrapstring = "Standard ColdStart";
+            	hash.put("alarmlevel", "2");
+                break;
+            case 1:
+            	cntrapstring = "标准热启动";
+            	entrapstring = "Standard WarmStart";
+            	hash.put("alarmlevel", "3");
+                break;
+            case 2:
+            	cntrapstring = "标准连接断开";
+            	entrapstring = "Standard UnLink";
+            	hash.put("alarmlevel", "2");
+                break;
+            case 3:
+            	cntrapstring = "标准连接成功";
+            	entrapstring = "Standard Connect";
+            	hash.put("alarmlevel", "6");
+                break;
+            /*
+            case 4:
+                trapstring = "标准签名错误";
+                break;
+             */
+            case 5:
+            	cntrapstring = "标准目标丢失";
+            	entrapstring = "Standard Lose";
+            	hash.put("alarmlevel", "3");
+                break;
+            default:
+                return;
+        }
+        
+		long alarmtime = System.currentTimeMillis();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String alarmtimes = format.format(date);
+		hash.put("cbatmac", mac);
+		hash.put("alarmcode", "200940");
+		hash.put("lalarmtime", Long.toString(alarmtime));
+		hash.put("salarmtime", alarmtimes);		
+		hash.put("cnalarminfo", cntrapstring);
+		hash.put("enalarminfo", entrapstring);
+		sendToAlarmQueue(JSONValue.toJSONString(hash));
+
+    }
+	
+	public void ParseTrapWosTrapRestart(Map<String,String> alarm)
+    {
+        String cntrapstring = "WOS光平台重启动，";
+        String entrapstring = "WOS PlatForm Restart，";
+        String devmac = alarm.get("mac");
+        String logicalid = alarm.get("logicalid");
+        cntrapstring += ",物理地址：" + devmac;
+        cntrapstring += " ,软件版本：" + Float.valueOf(logicalid) / 100.0f;
+        entrapstring += ",MAC：" + devmac;
+        entrapstring += " ,Version：" + Float.valueOf(logicalid) / 100.0f;
+        Map<String, String> hash = new LinkedHashMap();
+        long alarmtime = System.currentTimeMillis();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		String alarmtimes = format.format(date);
+		hash.put("cbatmac", devmac);
+		hash.put("alarmcode", "200940");
+		hash.put("alarmlevel", "2");
+		hash.put("lalarmtime", Long.toString(alarmtime));
+		hash.put("salarmtime", alarmtimes);		
+		hash.put("cnalarminfo", cntrapstring);
+		hash.put("enalarminfo", entrapstring);
+		sendToAlarmQueue(JSONValue.toJSONString(hash));
+    }
+	
+	public void ParseTrapWosTrapDeviceUp(Map<String,String> alarm)
+    {
+//        String trapstring = "检测到设备上线，" + dev.FullPath + "的子设备";
+//
+//        int[] oidarray = pdu.GetVariableBinding(0).ObjectID.ToIntArray();
+//        int slotnum = oidarray[oidarray.Length - 1];
+//        int subdevtype = oidarray[oidarray.Length - 2];
+//
+//        //trapstring += '第' + slotnum.ToString() + "号插槽的" + GetWosSubDevName(subdevtype);
+//        lock (CAppKernel.ViewTrapLog)
+//        {
+//            CAppKernel.ViewTrapLog.InsertTrapLog(CDatabaseEngine.TrapLogTypes.WosTrapDeviceUp, pdu.Address.ToString(), trapstring,
+//                DateTime.Now);
+//        }
+    }
+
+    public void ParseTrapWosTrapDeviceDown(Map<String,String> alarm)
+    {
+//        String trapstring = "检测到设备下线，" + dev.FullPath + "的子设备";
+//
+//        int[] oidarray = pdu.GetVariableBinding(0).ObjectID.ToIntArray();
+//        int slotnum = oidarray[oidarray.Length - 1];
+//        int subdevtype = oidarray[oidarray.Length - 2];
+//
+//       // trapstring += '第' + slotnum.ToString() + "号插槽的" + GetWosSubDevName(subdevtype);
+//        lock (CAppKernel.ViewTrapLog)
+//        {
+//            CAppKernel.ViewTrapLog.InsertTrapLog(CDatabaseEngine.TrapLogTypes.WosTrapDeviceDown, pdu.Address.ToString(), trapstring,
+//                DateTime.Now);
+//        }
+    }
+
 	
 	public void ParseTrapHfcColdStart(String mac,String logicid){
 		String cntrapstring = "";
@@ -216,8 +406,8 @@ public class ServiceHfcAlarmProcessor {
 		Date date = new Date();
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
 		String alarmtimes = format.format(date);
-		hash.put("mac", mac);
-		hash.put("code", "200940");
+		hash.put("cbatmac", mac);
+		hash.put("alarmcode", "200940");
 		hash.put("lalarmtime", Long.toString(alarmtime));
 		hash.put("salarmtime", alarmtimes);
 		hash.put("alarmlevel", "2");
@@ -227,48 +417,124 @@ public class ServiceHfcAlarmProcessor {
 	}
 	
 	public void ParseTrapHfcAlarmEvent(String mac,String logicid,String alarminfo) throws IOException{
-		String trapstring = "";
-		trapstring = "HFC设备冷启动,";
-		trapstring += "物理地址:"+ mac;
-		trapstring += "逻辑ID:"+ logicid;
-		trapstring = "HFC设备参数告警,";
-		trapstring += "物理地址:"+ mac;
-		trapstring += "逻辑ID:"+ logicid;
-		alarminfo.replace(":", "");
+		Jedis jedis=null;
+		try {
+			jedis = redisUtil.getConnection();		
+		}catch(Exception e){
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			log.info("------>>>>>>>save hfcalarm ex1<<<<<<<<<----------");
+		}
+		String cntrapstring = "";
+		String entrapstring = "";
+		cntrapstring = "HFC设备参数告警,";
+		entrapstring = "HFC Parameters Alarm,";
+		cntrapstring += ",逻辑ID:"+ logicid;
+		entrapstring += ",Logic ID:"+ logicid;
+		alarminfo = alarminfo.replace(":", "");
 		byte[] b_alarminfo = hexStringToBytes(alarminfo);
 		if(b_alarminfo.length<6)
 			return;
-		trapstring += "告警类型:"+ GetAlarmEnumString(b_alarminfo[4]);
-		byte[] alarmvb = new byte[alarminfo.length() - 6];
-		System.arraycopy(alarminfo, 6, alarmvb, 0, alarmvb.length);
+		//log.info("===b_alarminfo=="+b_alarminfo[0]+":"+b_alarminfo[1]+":"+b_alarminfo[2]+":"+b_alarminfo[3]+":"+b_alarminfo[4]+":"+b_alarminfo[5]+":"+b_alarminfo[6]);
+		cntrapstring += ",告警类型:"+ GetAlarmEnumString(b_alarminfo[4]);
+		entrapstring += ",Alarm Type:"+ GetAlarmEnumString(b_alarminfo[4]);
+		byte[] alarmvb = new byte[b_alarminfo.length - 6];
+		System.arraycopy(b_alarminfo, 6, alarmvb, 0, alarmvb.length);
 		SnmpOID oid = null;
 		int val = 0;
-		if(ParseAlarmInform(alarmvb,oid,val)){
+		if((oid=ParseAlarmInform(alarmvb,oid,val))!=null){			
 			MibNode fnode = this.get_MibOperObj().getNearestNode(oid);
-			if(fnode != null){
-				//从数据库读取相关信息
-				
+			if(fnode != null){							
 				int[] nodeoid = fnode.getOID();
 				int[] oidarray = oid.toIntArray();
 				String exstr = "";
 				if(oidarray.length>nodeoid.length){
 					for(int i = nodeoid.length;i<oidarray.length;i++){
-						exstr += ',' + oidarray[i];
+						exstr += "," + oidarray[i];
 					}
 				}
+				//从数据库读取相关信息	
+				Map<String, String> ptr = jedis.hgetAll(fnode.getLabel());
+				if(ptr.get("ParamDispText") != null){
+					cntrapstring += ",参数名称:"+ ptr.get("ParamDispText") + exstr;
+					entrapstring += ",Param Name:"+ ptr.get("ParamDispText") + exstr;
+					log.info("------>>>>>>>3<<<<<<<<<----------"+ptr.get("IsFormatEnable"));
+					if(ptr.get("IsFormatEnable") == "true"){
+						if(ptr.get("ParamMibLable") == "fnReverseOpticalPower"){
+							float tmpf = val * Integer.valueOf(ptr.get("FormatCoff"));
+							cntrapstring += ",参数值:"+tmpf + ptr.get("FormatText");
+							entrapstring += ",Param Val:"+tmpf + ptr.get("FormatText");
+						}else{
+							float tmpf = val * Integer.valueOf(ptr.get("FormatCoff"));
+							cntrapstring += ",参数值:"+tmpf + ptr.get("FormatText") + ptr.get("FormatUnit");
+							entrapstring += ",Param Val:"+tmpf + ptr.get("FormatText") + ptr.get("FormatUnit");
+						}
+					}
+				}else{
+					cntrapstring += ",参数名称:"+ fnode.getLabel() + exstr;
+					entrapstring += ",Param Name:"+ fnode.getLabel() + exstr;
+					cntrapstring += ",参数值:"+ val;
+					entrapstring += ",Param Value:"+ val;
+				}
+			}else{
+				cntrapstring += ",参数名称:"+ oid;
+				entrapstring += ",Param Name:"+ oid;
+				cntrapstring += ",参数值:"+ val;
+				entrapstring += ",Param Value:"+ val;
 			}
+			Map<String, String> hash = new LinkedHashMap();
+			long alarmtime = System.currentTimeMillis();
+			Date date = new Date();
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+			String alarmtimes = format.format(date);
+			hash.put("cbatmac", mac);
+			hash.put("alarmcode", "200940");
+			hash.put("lalarmtime", Long.toString(alarmtime));
+			hash.put("salarmtime", alarmtimes);
+			switch(b_alarminfo[4]){
+			case 1:
+				hash.put("alarmlevel", "7");
+				break;
+			case 2:
+				hash.put("alarmlevel", "1");
+				break;
+			case 3:
+				hash.put("alarmlevel", "2");
+				break;
+			case 4:
+				hash.put("alarmlevel", "2");
+				break;
+			case 5:
+				hash.put("alarmlevel", "1");
+				break;
+			case 6:
+				//return "Discrete Major";
+				hash.put("alarmlevel", "2");
+				break;
+			case 7:
+				//return "Discrete Minor";
+				hash.put("alarmlevel", "2");
+				break;
+			default:
+				//return "Unkown Alarm";
+				hash.put("alarmlevel", "3");
+				break;
+			}	
+			hash.put("cnalarminfo", cntrapstring);
+			hash.put("enalarminfo", entrapstring);
+			sendToAlarmQueue(JSONValue.toJSONString(hash));
 		}
+		
 	}
 	
 	public void ParseTrapHfcOsSwitchEvent(String mac,String logicid,String alarminfo){
 		
 	}
 	
-	public Boolean ParseAlarmInform(byte[] data, SnmpOID oid, int val) throws IOException{
+	public SnmpOID ParseAlarmInform(byte[] data, SnmpOID oid, int val) throws IOException{
 		oid = null;
 		val = 0;
-		if(data.length <2) return false;
-		if(data[0] != 0x06) return false;
+		if(data.length <2) return null;
+		if(data[0] != 0x06) return null;
 		int oidindex = 1,oidlen;
 		if((data[1] & 0x80) == 0){
 			oidlen = data[1] + 1;
@@ -281,14 +547,15 @@ public class ServiceHfcAlarmProcessor {
 			oidlen += arrayindex -1;
 		}
 		byte[] arrayoid = new byte[oidlen];
-		System.arraycopy(data, oidindex, arrayoid, 0, oidlen);		
+		System.arraycopy(data, oidindex, arrayoid, 0, oidlen);	
 		oid = new SnmpOID(new ASN1Parser(arrayoid).decodeOID());
 		oidindex += oidlen;
-		if(data[oidindex++] != 0x02) return false;
+		
+		if(data[oidindex++] != 0x02) return null;
 		byte[] arrayval = new byte[data.length - oidindex];
 		System.arraycopy(data, oidindex, arrayval, 0, arrayval.length);
 		val = new ASN1Parser(arrayval).decodeInteger();
-		return true;
+		return oid;
 	}
 	
 	public String GetAlarmEnumString(byte num){
@@ -320,28 +587,20 @@ public class ServiceHfcAlarmProcessor {
 	 * @return byte[] 
 	 */  
 	public byte[] hexStringToBytes(String hexString) {  
-	    if (hexString == null || hexString.equals("")) {  
-	        return null;  
-	    }  
-	    hexString = hexString.toUpperCase();  
-	    int length = hexString.length() / 2;  
-	    char[] hexChars = hexString.toCharArray();  
-	    byte[] d = new byte[length];  
-	    for (int i = 0; i < length; i++) {  
-	        int pos = i * 2;  
-	        d[i] = (byte) (charToByte(hexChars[pos]) << 4 | charToByte(hexChars[pos + 1]));  
-	    }  
-	    return d;  
+		
+		hexString = hexString.toLowerCase();
+		final byte[] byteArray = new byte[hexString.length() / 2];
+		int k = 0;
+		for (int i = 0; i < byteArray.length; i++) {
+                        //因为是16进制，最多只会占用4位，转换成字节需要两个16进制的字符，高位在先
+			byte high = (byte) (Character.digit(hexString.charAt(k), 16) & 0xff);
+			byte low = (byte) (Character.digit(hexString.charAt(k + 1), 16) & 0xff);
+			byteArray[i] = (byte) (high << 4 | low);
+			k += 2;
+		}
+		return byteArray;
 	}  
-	/** 
-	 * Convert char to byte 
-	 * @param c char 
-	 * @return byte 
-	 */  
-	 private byte charToByte(char c) {  
-	    return (byte) "0123456789ABCDEF".indexOf(c);  
-	}  
-	 
+
 	 private void sendToAlarmQueue(String msg) {
 		try {
 			Jedis jedis = redisUtil.getConnection();

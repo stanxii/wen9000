@@ -18,6 +18,7 @@ import org.json.simple.JSONValue;
 import org.snmp4j.CommandResponder;
 import org.snmp4j.CommandResponderEvent;
 import org.snmp4j.CommunityTarget;
+import org.snmp4j.PDUv1;
 import org.snmp4j.Snmp;
 import org.snmp4j.TransportMapping;
 import org.snmp4j.event.ResponseEvent;
@@ -26,13 +27,18 @@ import org.snmp4j.mp.MPv2c;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.smi.Address;
 import org.snmp4j.smi.GenericAddress;
+import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 
 import redis.clients.jedis.Jedis;
+
+import com.adventnet.snmp.snmp2.SnmpOID;
+import com.adventnet.snmp.snmp2.SnmpPDU;
 import com.stan.wen9000.action.jedis.util.RedisUtil;
+import com.sun.jmx.snmp.SnmpPdu;
 
 
 public class TrapReceiverBean {
@@ -120,101 +126,100 @@ public class TrapReceiverBean {
 		if (event != null && event.getPDU() != null) {
 			Vector<VariableBinding> recVBs = (Vector<VariableBinding>) event.getPDU()
 					.getVariableBindings();
+			//logger.info("-------getSecurityModel---->>>"+event.getSecurityModel());
+			if(event.getSecurityModel() == 2){
+				//trapv2
+				if (recVBs.size() == 10) {
+					Map<String, String> alarmhash=new LinkedHashMap();
+				   
+					for (int i = 0; i < recVBs.size(); i++) {
+						VariableBinding recVB = recVBs.elementAt(i);
+						String content = recVB.getVariable().toString();
 
-			// size=9 is cbat alarm
-			logger.info("alarm receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
-			if (recVBs.size() == 10) {
-				
-				//logger.info("------>>>>>>>alarm receive<<<<<<<<<----------");
-				Map<String, String> alarmhash=new LinkedHashMap();
-			   
-				for (int i = 0; i < recVBs.size(); i++) {
-					VariableBinding recVB = recVBs.elementAt(i);
-					String content = recVB.getVariable().toString();
-					 //System.out.println("SNMP4j traper: content=" + content);
-
-					// populate the alarm
-					switch (i) {
-					case 0:						
-						alarmhash.put("runingtime", content);
-						break;
-					case 1:						
-						alarmhash.put("oid", content);
-						break;
-					case 2:						
-						alarmhash.put("alarmcode", content);
-						break;
-					case 3:						
-						alarmhash.put("trapinfo", content);
-						break;
-					case 4:
-						//alarm.setSerialflow(Long.parseLong(content));						
-						break;
-					case 5:						
-						alarmhash.put("cbatmac", content.toLowerCase());
-						break;
-					case 6:						
-						alarmhash.put("cltindex", content);
-						break;
-					case 7:
-						alarmhash.put("cnuindex", content);						
-						break;
-					case 8:						
-						alarmhash.put("alarmtype", content);
-						break;
-					case 9:
-						alarmhash.put("alarmvalue", content);						
-						break;
-					default:
-						System.out.println("not correct");
-						break;
+						// populate the alarm
+						switch (i) {
+						case 0:						
+							alarmhash.put("runingtime", content);
+							break;
+						case 1:						
+							alarmhash.put("oid", content);
+							break;
+						case 2:						
+							alarmhash.put("alarmcode", content);
+							break;
+						case 3:						
+							alarmhash.put("trapinfo", content);
+							break;
+						case 4:
+							//alarm.setSerialflow(Long.parseLong(content));						
+							break;
+						case 5:						
+							alarmhash.put("cbatmac", content.toLowerCase());
+							break;
+						case 6:						
+							alarmhash.put("cltindex", content);
+							break;
+						case 7:
+							alarmhash.put("cnuindex", content);						
+							break;
+						case 8:						
+							alarmhash.put("alarmtype", content);
+							break;
+						case 9:
+							alarmhash.put("alarmvalue", content);						
+							break;
+						default:
+							System.out.println("not correct");
+							break;
+						}
 					}
-				}
-				
-				
-				
-				String msgservice = JSONValue.toJSONString(alarmhash);
-				
-				
-				 parseAlarmMsg(alarmhash );
-				return;
-			}else if(recVBs.size() == 6){
-				//heart alarm
-				Map hearthash=new LinkedHashMap();
-				for (int i = 0; i < recVBs.size(); i++) {
-					VariableBinding recVB = recVBs.elementAt(i);
-					String content = recVB.getVariable().toString();
+					
+					
+					
+					String msgservice = JSONValue.toJSONString(alarmhash);
+					
+					
+					 parseAlarmMsg(alarmhash );
+					return;
+				}else if(recVBs.size() == 6){
+					//heart alarm
+					Map hearthash=new LinkedHashMap();
+					for (int i = 0; i < recVBs.size(); i++) {
+						VariableBinding recVB = recVBs.elementAt(i);
+						String content = recVB.getVariable().toString();
 
-					// populate the alarm
-					switch (i) {
-					case 0:
-						
-						break;
-					case 1:
-						
-						break;
-					case 2:
-						hearthash.put("code", content);
-						break;
-					case 3:
-						hearthash.put("info", content);
-						break;
-					case 4:
-						hearthash.put("cbatsys", content);
-						break;
-					case 5:
-						hearthash.put("cnusys", content);
-						break;				
-					default:
-						System.out.println("heart read not correct");
-						break;
+						// populate the alarm
+						switch (i) {
+						case 0:
+							
+							break;
+						case 1:
+							
+							break;
+						case 2:
+							hearthash.put("code", content);
+							break;
+						case 3:
+							hearthash.put("info", content);
+							break;
+						case 4:
+							hearthash.put("cbatsys", content);
+							break;
+						case 5:
+							hearthash.put("cnusys", content);
+							break;				
+						default:
+							System.out.println("heart read not correct");
+							break;
+						}
 					}
+					//logger.info("heart receive------>>>"+hearthash.get("cbatsys").toString());
+					//String msgservice = JSONValue.toJSONString(hearthash);
+					parseHeartMsg(hearthash);
 				}
-				//logger.info("heart receive------>>>"+hearthash.get("cbatsys").toString());
-				//String msgservice = JSONValue.toJSONString(hearthash);
-				parseHeartMsg(hearthash);
-			}else if((recVBs.size() == 3)||(recVBs.size() == 2)){
-				//hfc alarm
+			}else if(event.getSecurityModel() == 1){
+				//trapv1
+				//hfc alarm			
 				Jedis jedis=null;
 				try {
 					jedis = redisUtil.getConnection();
@@ -232,9 +237,15 @@ public class TrapReceiverBean {
 					}
 				}
 				redisUtil.getJedisPool().returnResource(jedis);
-				int status = event.getPDU().getErrorIndex();
+				int status = ((PDUv1)event.getPDU()).getSpecificTrap();
+				int traptype = ((PDUv1)event.getPDU()).getGenericTrap();
+				OID enterprise = ((PDUv1)event.getPDU()).getEnterprise();
+				
+				//logger.info("--traptype---->>>"+((PDUv1)event.getPDU()).getGenericTrap());
 				Map<String, String> hfcalarmhash=new LinkedHashMap();
 				hfcalarmhash.put("status", String.valueOf(status));
+				hfcalarmhash.put("traptype", String.valueOf(traptype));
+				hfcalarmhash.put("enterprise", enterprise.toString());
 				for (int i = 0; i < recVBs.size(); i++) {
 					VariableBinding recVB = recVBs.elementAt(i);
 					String content = recVB.getVariable().toString();
@@ -259,37 +270,164 @@ public class TrapReceiverBean {
 				
 				
 				
-				String msgservice = JSONValue.toJSONString(hfcalarmhash);
+				//String msgservice = JSONValue.toJSONString(hfcalarmhash);
 				
 				
-				 parseAlarmMsg(hfcalarmhash );
+				doHfcAlarm(hfcalarmhash );
 				return;
-//				// 设置 target    
-//		        CommunityTarget target = new CommunityTarget();
-//		        target.setCommunity(new OctetString("public"));
-//
-//		        target.setAddress(targetAddress);    
-//		    
-//		        // 通信不成功时的重试次数    
-//		        target.setRetries(2);    
-//		        // 超时时间    
-//		        target.setTimeout(500);    
-//		        // snmp版本    
-//		        target.setVersion(SnmpConstants.version1);  		        
-//
-//		     // 向Agent发送PDU，并接收Response    
-//		        try {
-//		        	snmp_send = new Snmp(new DefaultUdpTransportMapping());
-//					ResponseEvent respEvnt = snmp_send.send(event.getPDU(), target);
-//					
-//				} catch (IOException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}    
-//				
-//				//System.out.println("-------------------------->>>>>>>>alrmlen====="+recVBs.size());
-//				
 			}
+			// size=9 is cbat alarm
+			//logger.info("alarm receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
+//			if (recVBs.size() == 10) {
+//				
+//				//logger.info("------>>>>>>>alarm receive<<<<<<<<<----------");
+//				Map<String, String> alarmhash=new LinkedHashMap();
+//			   
+//				for (int i = 0; i < recVBs.size(); i++) {
+//					VariableBinding recVB = recVBs.elementAt(i);
+//					String content = recVB.getVariable().toString();
+//					 //System.out.println("SNMP4j traper: content=" + content);
+//
+//					// populate the alarm
+//					switch (i) {
+//					case 0:						
+//						alarmhash.put("runingtime", content);
+//						break;
+//					case 1:						
+//						alarmhash.put("oid", content);
+//						break;
+//					case 2:						
+//						alarmhash.put("alarmcode", content);
+//						break;
+//					case 3:						
+//						alarmhash.put("trapinfo", content);
+//						break;
+//					case 4:
+//						//alarm.setSerialflow(Long.parseLong(content));						
+//						break;
+//					case 5:						
+//						alarmhash.put("cbatmac", content.toLowerCase());
+//						break;
+//					case 6:						
+//						alarmhash.put("cltindex", content);
+//						break;
+//					case 7:
+//						alarmhash.put("cnuindex", content);						
+//						break;
+//					case 8:						
+//						alarmhash.put("alarmtype", content);
+//						break;
+//					case 9:
+//						alarmhash.put("alarmvalue", content);						
+//						break;
+//					default:
+//						System.out.println("not correct");
+//						break;
+//					}
+//				}
+//				
+//				
+//				
+//				String msgservice = JSONValue.toJSONString(alarmhash);
+//				
+//				
+//				 parseAlarmMsg(alarmhash );
+//				return;
+//			}else if(recVBs.size() == 6){
+//				//heart alarm
+//				Map hearthash=new LinkedHashMap();
+//				for (int i = 0; i < recVBs.size(); i++) {
+//					VariableBinding recVB = recVBs.elementAt(i);
+//					String content = recVB.getVariable().toString();
+//
+//					// populate the alarm
+//					switch (i) {
+//					case 0:
+//						
+//						break;
+//					case 1:
+//						
+//						break;
+//					case 2:
+//						hearthash.put("code", content);
+//						break;
+//					case 3:
+//						hearthash.put("info", content);
+//						break;
+//					case 4:
+//						hearthash.put("cbatsys", content);
+//						break;
+//					case 5:
+//						hearthash.put("cnusys", content);
+//						break;				
+//					default:
+//						System.out.println("heart read not correct");
+//						break;
+//					}
+//				}
+//				//logger.info("heart receive------>>>"+hearthash.get("cbatsys").toString());
+//				//String msgservice = JSONValue.toJSONString(hearthash);
+//				parseHeartMsg(hearthash);
+//			}else if((recVBs.size() == 3)||(recVBs.size() == 2)){
+//				//hfc alarm
+//				
+//				Jedis jedis=null;
+//				try {
+//					jedis = redisUtil.getConnection();
+//				}catch(Exception e){
+//					e.printStackTrace();
+//					redisUtil.getJedisPool().returnBrokenResource(jedis);
+//					return;
+//				}
+//				//W9000显示模式判断
+//				if((jedis.get("global:displaymode")) != null){
+//					if(!jedis.get("global:displaymode").equalsIgnoreCase("1")){
+//						//不显示HFC设备
+//						redisUtil.getJedisPool().returnResource(jedis);
+//						return;
+//					}
+//				}
+//				redisUtil.getJedisPool().returnResource(jedis);
+//				int status = ((PDUv1)event.getPDU()).getSpecificTrap();
+//				int traptype = ((PDUv1)event.getPDU()).getGenericTrap();
+//				OID enterprise = ((PDUv1)event.getPDU()).getEnterprise();
+//				
+//				//logger.info("--traptype---->>>"+((PDUv1)event.getPDU()).getGenericTrap());
+//				Map<String, String> hfcalarmhash=new LinkedHashMap();
+//				hfcalarmhash.put("status", String.valueOf(status));
+//				hfcalarmhash.put("traptype", String.valueOf(traptype));
+//				hfcalarmhash.put("enterprise", enterprise.toString());
+//				for (int i = 0; i < recVBs.size(); i++) {
+//					VariableBinding recVB = recVBs.elementAt(i);
+//					String content = recVB.getVariable().toString();
+//					 //System.out.println("SNMP4j traper: content=" + content);
+//
+//					// populate the alarm
+//					switch (i) {
+//					case 0:						
+//						hfcalarmhash.put("mac", content);
+//						break;
+//					case 1:						
+//						hfcalarmhash.put("logicalid", content);
+//						break;
+//					case 2:						
+//						hfcalarmhash.put("alarminfo", content);
+//						break;				
+//					default:
+//						System.out.println("not correct");
+//						break;
+//					}
+//				}
+//				
+//				
+//				
+//				//String msgservice = JSONValue.toJSONString(hfcalarmhash);
+//				
+//				
+//				doHfcAlarm(hfcalarmhash );
+//				return;
+////				
+//			}
 
 		}
 

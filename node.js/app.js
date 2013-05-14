@@ -507,6 +507,8 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('Getcltmac',data);       
     }else if(ch == 'node.optlog.optresult') {
     	sio.sockets.emit('optresult',data);       
+    }else if(ch == 'node.optlog.ImportHfcResult') {
+    	sio.sockets.emit('opt.ImportHfcResult',data);       
     }
 });
 
