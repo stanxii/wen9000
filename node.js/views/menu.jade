@@ -20,10 +20,13 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
       \请确认参数值和通信是否正常!
 
   ul#myMenu(class='contextMenu')    
-    li.delete
-      a(href='#createnode')  添加节点      
+    li.add
+      a(href='#createnode')  添加节点
+    li.delete            
       a(href='#delete')  删除节点
+    li.move
       a(href='#movenode')  移动节点
+    li.edit
       a(href='#editnode')  编辑节点
   
   #dialog-alarmThreshold(title='告警门限设置',style='display:none')

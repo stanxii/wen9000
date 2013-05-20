@@ -165,7 +165,7 @@ public class ServiceHfcAlarmProcessor {
 			  this._MibOperObj.loadMibModules(tempdir+"/NSCRTV-HFCEMS-FIBERNODE-MIB");
 			  jedis = redisUtil.getConnection();		 
 			  jedis.psubscribe(jedissubSub, "servicehfcalarm.*");
-			  log.info("------->>>>>3333");
+			  //log.info("------->>>>>3333");
 			  redisUtil.getJedisPool().returnResource(jedis);
 		  
 		}catch(Exception e){
