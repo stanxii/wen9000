@@ -301,7 +301,7 @@ public class ServiceHeartProcessor{
 			
 			cbatentity.put("mac", cbatmac.toLowerCase().trim());
 			cbatentity.put("active", "1");
-			cbatentity.put("treeparentkey", "11");
+			cbatentity.put("treeparentkey", "2");
 			cbatentity.put("ip", cbatip.toLowerCase().trim());
 			cbatentity.put("label", cbatmac.toLowerCase().trim());
 			cbatentity.put("devicetype", type.toLowerCase().trim());

@@ -1428,6 +1428,8 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 
 	}
+	
+	
 
 	private static void doDelNode(String message) throws ParseException {
 		Jedis jedis = null;
@@ -1441,47 +1443,105 @@ public class ServiceController {
 		}
 		// 获取设备id
 		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
-		String mac = jsondata.get("mac").toString();
-		String type = jsondata.get("type").toString();
-		String id = jedis.get("mac:" + mac + ":deviceid");
-		jedis.del("mac:" + mac + ":deviceid");
-		if (type.equalsIgnoreCase("cbat")) {
-			// 删除头端下的所有终端
-			Set<String> cnus = jedis.smembers("cbatid:" + id + ":cnus");
-			for (Iterator it = cnus.iterator(); it.hasNext();) {
-				String cnuid = it.next().toString();
-				jedis.del("mac:"
-						+ jedis.hget("cnuid:" + cnuid + ":entity", "mac")
+		
+		
+		String type = jsondata.get("type").toString();		
+		
+		
+
+		if(type.equalsIgnoreCase("system")){
+			//can't delete
+			System.out.println("system node can't delete");
+		}
+		else if(type.equalsIgnoreCase("custom")){
+			//can del custom node  mac=key
+			
+			String treeid = jsondata.get("key").toString();
+			String pkey = jedis.hget("tree:"+treeid, "pkey");
+			
+			
+			String treeheirs = "tree:"+ treeid+":heirs";				
+						
+			//get this key's all children key
+			Set<String> childrenkeys = jedis.smembers(treeheirs);
+			
+			for(String childrenkey: childrenkeys){
+				
+				
+				//判断node下面是否挂有设备
+				Set<String> cbats = jedis.keys("cbatid:*:entity");
+				for(Iterator it= cbats.iterator();it.hasNext();){
+					String cbatkey = it.next().toString();
+					if(jedis.hget(cbatkey, "treeparentkey").equalsIgnoreCase(childrenkey)){
+						//编辑告警信息												
+						//移动头端设备到默认节点
+						jedis.hset(cbatkey, "treeparentkey","2");
+
+					}										
+				}
+				
+				
+				System.out.println("childrenkey="+childrenkey);
+				jedis.del("tree:"+childrenkey+":heirs");
+				jedis.del("tree:"+childrenkey+":children");
+				jedis.del(childrenkey);
+			}
+			
+			jedis.srem("tree:"+pkey+":heirs", treeid);
+			jedis.srem("tree:"+pkey+":children", treeid);
+			jedis.srem("tree:0:heirs", treeid);
+			
+		}else{
+			//delete device
+			
+			String mac = jsondata.get("mac").toString();
+			String id = jedis.get("mac:" + mac + ":deviceid");
+			jedis.del("mac:" + mac + ":deviceid");
+			if (type.equalsIgnoreCase("cbat")) {
+				// 删除头端下的所有终端
+				Set<String> cnus = jedis.smembers("cbatid:" + id + ":cnus");
+				for (Iterator it = cnus.iterator(); it.hasNext();) {
+					String cnuid = it.next().toString();
+					jedis.del("mac:"
+							+ jedis.hget("cnuid:" + cnuid + ":entity", "mac")
+							+ ":deviceid");
+					// 删除模板中记录的此cnu信息
+					String proid = jedis.hget("cnuid:" + id + ":entity",
+							"profileid");
+					jedis.srem("profileid:" + proid + ":entity", id);
+					jedis.del("cnuid:" + cnuid + ":entity");
+
+					// jedis.decr("global:deviceid");
+				}
+				// 删除头端
+				jedis.del("cbatid:" + id + ":entity");
+				jedis.del("cbatid:" + id + ":cnus");
+				jedis.del("cbatid:" + id + ":cbatinfo");
+			} else if (type.equalsIgnoreCase("cnu")) {
+				String cbatid = jedis.hget("cnuid:" + id + ":entity", "cbatid");
+				jedis.srem("cbatid:" + cbatid + ":cnus", id);
+				jedis.del("mac:" + jedis.hget("cnuid:" + id + ":entity", "mac")
 						+ ":deviceid");
 				// 删除模板中记录的此cnu信息
-				String proid = jedis.hget("cnuid:" + id + ":entity",
-						"profileid");
+				String proid = jedis.hget("cnuid:" + id + ":entity", "profileid");
 				jedis.srem("profileid:" + proid + ":entity", id);
-				jedis.del("cnuid:" + cnuid + ":entity");
-
-				// jedis.decr("global:deviceid");
+				jedis.del("cnuid:" + id + ":entity");
+			} else if (type.equalsIgnoreCase("hfc")) {
+				// hfc
+				jedis.del("mac:" + jedis.hget("hfcid:" + id + ":entity", "mac")
+						+ ":deviceid");
+				jedis.del("hfcid:" + id + ":entity");
 			}
-			// 删除头端
-			jedis.del("cbatid:" + id + ":entity");
-			jedis.del("cbatid:" + id + ":cnus");
-			jedis.del("cbatid:" + id + ":cbatinfo");
-		} else if (type.equalsIgnoreCase("cnu")) {
-			String cbatid = jedis.hget("cnuid:" + id + ":entity", "cbatid");
-			jedis.srem("cbatid:" + cbatid + ":cnus", id);
-			jedis.del("mac:" + jedis.hget("cnuid:" + id + ":entity", "mac")
-					+ ":deviceid");
-			// 删除模板中记录的此cnu信息
-			String proid = jedis.hget("cnuid:" + id + ":entity", "profileid");
-			jedis.srem("profileid:" + proid + ":entity", id);
-			jedis.del("cnuid:" + id + ":entity");
-		} else if (type.equalsIgnoreCase("hfc")) {
-			// hfc
-			jedis.del("mac:" + jedis.hget("hfcid:" + id + ":entity", "mac")
-					+ ":deviceid");
-			jedis.del("hfcid:" + id + ":entity");
-		}
 
-		jedis.save();
+			jedis.save();
+
+		}
+		
+		
+		
+		
+		
+		
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
@@ -1506,8 +1566,6 @@ public class ServiceController {
 			String id = jedis.get("mac:" + cbatmac + ":deviceid");
 			String cbatid  = "cbatid:"+id+":entity";
 			
-			System.out.println("cbatid="+cbatid);
-			System.out.println("treeparentkey="+treeparentkey);
 			
 			jedis.hset(cbatid, "treeparentkey", treeparentkey);
 			jedis.save();
@@ -1544,7 +1602,7 @@ public class ServiceController {
 			// 获取设备id
 		
 			jedis.hset(treeid, "title", title);
-			jedis.bgsave();
+			jedis.save();
 			
 			redisUtil.getJedisPool().returnResource(jedis);
 			
@@ -1567,39 +1625,50 @@ public class ServiceController {
 		
 		try {
 			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
-			String key = jsondata.get("key").toString();
+			
+			String pkey = jsondata.get("key").toString();
 			String title = jsondata.get("title").toString();
-			String path = jsondata.get("path").toString();
 			
-			String treeid = "tree:"+ key;
-			// 获取设备id
-			System.out.println("treeid="+treeid);
-			Map<String, String> datamap = new HashMap<String, String>();
 			
-			String childtreekey ="";
-			int childnum = jedis.smembers(treeid+":children").size();
-			
-			childtreekey = key + String.valueOf(childnum+1);
-		
-			System.out.println("childtreeid="+childtreekey);
-			
-			datamap.clear();
-			datamap.put("key", childtreekey);
-			datamap.put("title", title);
-			datamap.put("path", path+","+key);
-			datamap.put("isFolder", "true");
-			datamap.put("expand", "true");						
-			
-			jedis.hmset("tree:"+ childtreekey, datamap);
-			jedis.sadd("tree:root:heirs", childtreekey);			
-			jedis.sadd("tree:"+key+ ":children", childtreekey);
-			jedis.save();
+			String pkeyid = "tree:"+ pkey;
 			
 			JSONObject json = new JSONObject();
-			json.put("key", childtreekey);
-			json.put("result", "ok");
-			jedis.publish("node.tree.addnode", json.toJSONString());
 			
+			
+			// 获取设备id
+			System.out.println("pkey tree id="+pkeyid);
+			
+			// 初始化设备类型显示
+			if (!jedis.exists(pkeyid)) {
+				//不存在退出
+				
+				json.put("result", "no");
+				jedis.publish("node.tree.addnode", json.toJSONString());							
+			}else{
+				
+				Map<String, String> datamap = new HashMap<String, String>();
+				String childtreeid = String.valueOf(jedis.incr("global:treeid"));
+				System.out.println("childtreeid="+childtreeid);	
+				datamap.clear();
+				datamap.put("key", childtreeid);
+				datamap.put("pkey", pkey);				
+				datamap.put("title", title);
+				datamap.put("type", "custom");				
+				datamap.put("isFolder", "true");
+				datamap.put("expand", "true");
+				
+				jedis.hmset("tree:"+ childtreeid, datamap);						
+				jedis.sadd("tree:"+pkey+ ":heirs", childtreeid);
+				jedis.sadd("tree:"+pkey+ ":children", childtreeid);
+				jedis.sadd("tree:0:heirs", childtreeid);				
+				jedis.save();
+				
+				json.put("key", childtreeid);
+				json.put("result", "ok");
+				jedis.publish("node.tree.addnode", json.toJSONString());
+
+			}
+					
 			redisUtil.getJedisPool().returnResource(jedis);
 			
 		}catch(Exception e){
@@ -1979,99 +2048,134 @@ public class ServiceController {
 		if (jedis == null)
 			return;
 
+		String gtreeidkey="global:treeid";
+		
+		
+		
+		String treeid = "0";
+		jedis.set(gtreeidkey, treeid);
+		
+		
+		
+		
 		// 初始化设备类型显示
-		if (!jedis.exists("tree:root")) {
-			// node root
+		if (!jedis.exists("tree:0")) {
+			// node root		
+			String pkey="";			
+			
 			Map<String, String> datamap = new HashMap<String, String>();
-			datamap.put("key", "root");
+			datamap.put("key", treeid);
+			datamap.put("pkey", "");
 			datamap.put("title", "网络中心");
+			datamap.put("type", "system");
 			datamap.put("isFolder", "true");
 			datamap.put("expand", "true");
-			datamap.put("icon", "home.png");
-			datamap.put("path", "");
-			jedis.hmset("tree:root", datamap);
+			datamap.put("icon", "home.png");						
+			jedis.hmset("tree:"+treeid, datamap);
 
 			// node 1
 			datamap.clear();
-			datamap.put("key", "1");
+			pkey=treeid;
+			treeid = String.valueOf(jedis.incr(gtreeidkey));
+			
+						
+			datamap.put("key", treeid);
+			datamap.put("pkey", pkey);
 			datamap.put("title", "默认节点");
+			datamap.put("type", "system");
 			datamap.put("isFolder", "true");
-			datamap.put("expand", "true");
-			datamap.put("path", "root");
-			jedis.hmset("tree:1", datamap);
-			jedis.sadd("tree:root:heirs", "1");
-			jedis.sadd("tree:root:children", "1");
+			datamap.put("expand", "true");		
+			jedis.hmset("tree:"+treeid, datamap);			
+			jedis.sadd("tree:"+pkey+":heirs", treeid);
+			jedis.sadd("tree:"+pkey+":children", treeid);
 			
 
 			// node 11
 			datamap.clear();
-			datamap.put("key", "11");
+			pkey = treeid;
+			treeid = String.valueOf(jedis.incr(gtreeidkey));
+			
+			datamap.put("key", treeid);
+			datamap.put("pkey", pkey);
 			datamap.put("title", "EOC设备");
 			datamap.put("isFolder", "true");
 			datamap.put("expand", "true");
 			datamap.put("icon", "home.png");
-			datamap.put("path", "root");
-			jedis.hmset("tree:11", datamap);
-			jedis.sadd("tree:root:heirs", "11");
-			jedis.sadd("tree:1:heirs", "11");
-			jedis.sadd("tree:1:children", "11");
+			
+			jedis.hmset("tree:"+treeid, datamap);			
+			jedis.sadd("tree:"+pkey+":heirs", treeid);
+			jedis.sadd("tree:"+pkey+":children", treeid);
+			jedis.sadd("tree:0:heirs", treeid);
 			
 
 			// node 2
 			datamap.clear();
-			datamap.put("key", "2");
+			pkey="0";
+			treeid = String.valueOf(jedis.incr(gtreeidkey));
+			datamap.put("key", treeid);
+			datamap.put("pkey", pkey);			
 			datamap.put("title", "我的省");
 			datamap.put("isFolder", "true");
 			datamap.put("expand", "true");
-			datamap.put("path", "root");
-			jedis.hmset("tree:2", datamap);
-			jedis.sadd("tree:root:heirs", "2");
-			jedis.sadd("tree:root:children", "2");
-
+			datamap.put("type", "custom");			
+			
+			jedis.hmset("tree:"+treeid, datamap);			
+			jedis.sadd("tree:"+pkey+":heirs", treeid);
+			jedis.sadd("tree:"+pkey+":children", treeid);
+			
+			
 			// node 21
 			datamap.clear();
-			datamap.put("key", "21");
+			pkey = treeid;
+			treeid = String.valueOf(jedis.incr(gtreeidkey));
+								
+			datamap.put("key", treeid);
+			datamap.put("pkey", pkey);
 			datamap.put("title", "我的市");
 			datamap.put("isFolder", "true");
 			datamap.put("expand", "true");
-			datamap.put("path", "root,2");
-			jedis.hmset("tree:21", datamap);
-			jedis.sadd("tree:root:heirs", "21");
-			jedis.sadd("tree:2:children", "21");
-
+			datamap.put("type", "custom");			
+			
+			jedis.hmset("tree:"+treeid, datamap);			
+			jedis.sadd("tree:"+pkey+":heirs", treeid);
+			jedis.sadd("tree:"+pkey+":children", treeid);
+			jedis.sadd("tree:0:heirs", treeid);
+			
+			
 			// node 211
 			datamap.clear();
-			datamap.put("key", "211");
-			datamap.put("title", "我的区域");
+			pkey = treeid;
+			treeid = String.valueOf(jedis.incr(gtreeidkey));
+						
+			datamap.put("key", treeid);
+			datamap.put("pkey", pkey);
+			datamap.put("title", "我的县");
 			datamap.put("isFolder", "true");
-			datamap.put("expand", "true");
-			datamap.put("path", "root,2,21");
-			jedis.hmset("tree:211", datamap);
-			jedis.sadd("tree:root:heirs", "211");
-			jedis.sadd("tree:21:children", "211");
+			datamap.put("expand", "true");						
+			datamap.put("type", "custom");
+			
+			jedis.hmset("tree:"+treeid, datamap);			
+			jedis.sadd("tree:"+pkey+":heirs", treeid);
+			jedis.sadd("tree:"+pkey+":children", treeid);
+			jedis.sadd("tree:0:heirs", treeid);
 			
 			// node 2111
 			datamap.clear();
-			datamap.put("key", "2111");
-			datamap.put("title", "小区");
+			pkey = treeid;
+			treeid = String.valueOf(jedis.incr(gtreeidkey));
+			
+			datamap.put("key", treeid);
+			datamap.put("pkey", pkey);
+			datamap.put("title", "区域");
 			datamap.put("isFolder", "false");
-			datamap.put("expand", "true");
-			datamap.put("path", "root,2,21,211");
-			jedis.hmset("tree:2111", datamap);
-			jedis.sadd("tree:root:heirs", "2111");			
-			jedis.sadd("tree:211:children", "2111");
-
-			// node 21111
-			datamap.clear();
-			datamap.put("key", "21111");
-			datamap.put("title", "单元");
-			datamap.put("isFolder", "false");
-			datamap.put("expand", "true");
-			datamap.put("path", "root,2,21,211,2111");
-			jedis.hmset("tree:21111", datamap);
-			jedis.sadd("tree:root:heirs", "21111");			
-			jedis.sadd("tree:2111:children", "21111");
-
+			datamap.put("expand", "true");		
+			datamap.put("type", "custom");
+			
+			jedis.hmset("tree:"+treeid, datamap);			
+			jedis.sadd("tree:"+pkey+":heirs", treeid);
+			jedis.sadd("tree:"+pkey+":children", treeid);
+			jedis.sadd("tree:0:heirs", treeid);
+			
 			
 		}
 
@@ -4442,14 +4546,16 @@ public class ServiceController {
 		// root node
 
 		JSONObject rootjson = new JSONObject();
-		String rootkey ="tree:root";
+		String rootkey ="tree:0";
 
 		rootjson.put((String) "title", (String)jedis.hget(rootkey, "title"));
 		rootjson.put("key", jedis.hget(rootkey, "key"));
+		rootjson.put("pkey", jedis.hget(rootkey, "pkey"));
+		rootjson.put("type", jedis.hget(rootkey, "type"));
+		rootjson.put("key", jedis.hget(rootkey, "key"));
 		rootjson.put("isFolder", jedis.hget(rootkey, "isFolder"));
 		rootjson.put("expand", jedis.hget(rootkey, "expand"));
-		rootjson.put("icon", jedis.hget(rootkey, "icon"));
-		
+		rootjson.put("icon", jedis.hget(rootkey, "icon"));		
 		getChildNodes(jedis, rootjson, rootkey);	
 		setEocs(jedis, rootjson);
 		

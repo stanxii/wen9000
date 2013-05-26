@@ -1429,16 +1429,33 @@
 		      break;
 	      case "delete":
 
+	    	  
+	    	  
 	    	  if((confirm( "确定要删除吗？ ")!=true))
 	    	  {
 		    	  return;
 	    	  }
 
-	    	  //删除节点	    	  
-	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
-	    	  socket.emit('delnode',datastring);
-	    	  node.remove();
-	    	  window.location.reload();
+	    	  //删除节点
+	    	  
+	    	  if( (node.data.type == "custom") ){
+	    		  
+	    		  var datastring = '{"key":"'+node.data.key+'","type":"'+node.data.type+'"}';
+		    	  socket.emit('delnode',datastring);
+		    	  node.remove();
+		    	  window.location.reload();	    		  
+	    	  }
+	    	  else if(node.data.type == "system"){
+	    		  alert("不能删除");
+	    	  }
+	    	  else if(node.data.type == "cbat"){	    		  
+	    		  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
+		    	  socket.emit('delnode',datastring);
+		    	  node.remove();
+		    	  window.location.reload();
+	    	  }
+	    	  
+	    	  
 
 	    	  break;
 	      case "movenode":
@@ -1473,8 +1490,8 @@
 	      case "createnode":
 	    	  //添加节点
 	    	//移动节点
-	    	  if(  (node.data.key == "1") ||  (node.data.key == "11")   ){
-	    		  alert("不能编辑修改！");
+	    	  if(  (node.data.type != "custom")   ){
+	    		  alert("不能添加节点！");
 	    	  }else{
 	    		  $('#dialog_addnode').dialog({
 						autoOpen: false,
@@ -1490,7 +1507,7 @@
 						    		  //编辑节点
 										
 						    		  var editstring = $("input#dg_addnode").val();
-						    		  var datastring = '{"key":"'+node.data.key+'","path":"'+node.data.path +'","title":"'+ editstring+'"}';
+						    		  var datastring = '{"key":"'+node.data.key+'","pkey":"'+node.data.pkey +'","title":"'+ editstring+'"}';
 						    		  socket.emit('fromweb.tree.addnode',datastring);  					    		  						    		  						    		  
 						    		  $("#dialog_addnode").dialog("close");
 						    	  
