@@ -1454,38 +1454,45 @@ public class ServiceController {
 			System.out.println("system node can't delete");
 		}
 		else if(type.equalsIgnoreCase("custom")){
+			
+			
+			
 			//can del custom node  mac=key
 			
 			String treeid = jsondata.get("key").toString();
-			String pkey = jedis.hget("tree:"+treeid, "pkey");
+			String pkey = jedis.hget("tree:"+treeid, ":pkey");
 			
+			String treekey = "tree:"+treeid;			
+			String treeheirs = "tree:"+ treeid+":heirs";	
+			//del device
+			//判断node下面是否挂有设备
+			Set<String> cbats = jedis.keys("cbatid:*:entity");
+			for(Iterator it= cbats.iterator();it.hasNext();){
+				String cbatkey = it.next().toString();
+				if(jedis.hget(cbatkey, "treeparentkey").equalsIgnoreCase(treeid)){
+					//编辑告警信息												
+					//移动头端设备到默认节点
+					System.out.println("cbatkey="+cbatkey+"treeid="+treeid);
+					jedis.hset(cbatkey, "treeparentkey","2");
+
+				}										
+			}
 			
-			String treeheirs = "tree:"+ treeid+":heirs";				
 						
 			//get this key's all children key
 			Set<String> childrenkeys = jedis.smembers(treeheirs);
 			
+			
+			
 			for(String childrenkey: childrenkeys){
-				
-				
-				//判断node下面是否挂有设备
-				Set<String> cbats = jedis.keys("cbatid:*:entity");
-				for(Iterator it= cbats.iterator();it.hasNext();){
-					String cbatkey = it.next().toString();
-					if(jedis.hget(cbatkey, "treeparentkey").equalsIgnoreCase(childrenkey)){
-						//编辑告警信息												
-						//移动头端设备到默认节点
-						jedis.hset(cbatkey, "treeparentkey","2");
-
-					}										
-				}
-				
 				
 				System.out.println("childrenkey="+childrenkey);
 				jedis.del("tree:"+childrenkey+":heirs");
 				jedis.del("tree:"+childrenkey+":children");
 				jedis.del(childrenkey);
 			}
+			
+			jedis.del("tree:"+treeid+"*");
 			
 			jedis.srem("tree:"+pkey+":heirs", treeid);
 			jedis.srem("tree:"+pkey+":children", treeid);

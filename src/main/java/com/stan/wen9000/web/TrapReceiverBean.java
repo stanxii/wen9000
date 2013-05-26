@@ -122,7 +122,7 @@ public class TrapReceiverBean {
 					.getVariableBindings();
 
 			// size=9 is cbat alarm
-			logger.info("alarm receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
+		//	logger.info("alarm receive------>>>"+recVBs.toString()+"================size>>>"+recVBs.size());
 			if (recVBs.size() == 10) {
 				
 				//logger.info("------>>>>>>>alarm receive<<<<<<<<<----------");
