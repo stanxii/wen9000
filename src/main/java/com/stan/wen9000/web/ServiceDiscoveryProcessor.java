@@ -232,6 +232,9 @@ public class ServiceDiscoveryProcessor  {
 		
 		cbatentity.put("deviceclass", "cbat");
 		cbatentity.put("mac", cbatmac.toLowerCase().trim());
+		//pkey 树形结构 默认节点  root ->默认节点->EOC设备
+		cbatentity.put("treeparentkey", "2");
+		
 		cbatentity.put("active", "1");
 		cbatentity.put("ip", cbatip.toLowerCase().trim());
 		cbatentity.put("label", cbatmac.toLowerCase().trim());

@@ -2000,10 +2000,12 @@ public class ServiceController {
 				// root node
 
 				JSONObject rootjson = new JSONObject();
-				String rootkey ="tree:root";
+				String rootkey ="tree:0";
 
 				rootjson.put((String) "title", (String)jedis.hget(rootkey, "title"));
 				rootjson.put("key", jedis.hget(rootkey, "key"));
+				rootjson.put("pkey", jedis.hget(rootkey, "pkey"));
+				rootjson.put("type", jedis.hget(rootkey, "type"));
 				rootjson.put("isFolder", jedis.hget(rootkey, "isFolder"));
 				rootjson.put("expand", jedis.hget(rootkey, "expand"));
 				rootjson.put("icon", jedis.hget(rootkey, "icon"));
