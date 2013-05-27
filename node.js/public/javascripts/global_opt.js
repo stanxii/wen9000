@@ -8,6 +8,7 @@
 		socket.on('opt.globalopt',fun_GlobalOpt);
 		socket.on('opt.globalsave',fun_GlobalSave);
 		socket.on('opt.saveredis',fun_SaveRedis);
+		socket.on('opt.ImportHfcResult',fun_ImportHfcResult);
 		var flag = getCookie("flag");
 		$("#btn_gsub").click( function(){
 			if(flag == "3"){
@@ -35,8 +36,52 @@
 	    	  }
 			var data = '{"user":"'+user+'"}';
 			socket.emit('opt.importhfcredis',data);
+			$( "#dialog-message-proc" ).dialog({
+				autoOpen: false,
+				show: "blind",
+				modal: true,
+				resizable: false,
+				hide: "explode"
+			});
+			$("#dialog-message-proc").dialog("open");
     	});
 	});
+	
+	function fun_ImportHfcResult(data){
+		$( "#dialog-message-proc" ).dialog("destroy");
+		if(data == "0"){
+			//failed
+			$( "#dialog-message-failed" ).dialog({
+  				autoOpen: false,
+  				show: "blind",
+  				modal: true,
+  				resizable: false,
+  				hide: "explode",
+  				buttons: {
+  					Ok: function() {
+  						$( this ).dialog( "close" );
+  					}
+  				}
+  			});
+  			$("#dialog-message-failed").dialog("open");
+		}else{
+			$( "#dialog:ui-dialog" ).dialog( "destroy" );
+
+ 			$( "#dialog-message" ).dialog({
+ 				autoOpen: false,
+ 				show: "blind",
+ 				modal: true,
+ 				resizable: false,
+ 				hide: "explode",
+ 				buttons: {
+ 					Ok: function() {
+ 						$( this ).dialog( "close" );
+ 					}
+ 				}
+ 			});
+ 			$("#dialog-message").dialog("open");
+		}
+	}
 	
 	function fun_GlobalSave(data){
 		//成功提示对话框

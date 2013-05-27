@@ -76,7 +76,7 @@ public class ServiceAlarmProcessor {
 
       public void onPMessage(String arg0, String arg1, String msg) {
 
-      	System.out.println("[x]ServiceAlarmProcesser  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
+      	//System.out.println("[x]ServiceAlarmProcesser  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
       	try {
   			//arg2 is mssage now is currenti p
   			

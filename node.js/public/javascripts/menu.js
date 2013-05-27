@@ -764,6 +764,7 @@
 			//	如果是新设备
 			if(node == null){
 				//cbat tree parent key
+
 				node = $("#navtree").dynatree("getTree").getNodeByKey("2");
 				var img;
 				if(itemv.online == "1"){

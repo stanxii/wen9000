@@ -1,0 +1,628 @@
+NSCRTV-FOBETMOC-WOS2000-MIB DEFINITIONS ::= BEGIN
+
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+IMPORTS -- 从其它MIB导入的参数
+    TRAP-TYPE
+        FROM RFC-1215
+    OBJECT-TYPE
+        FROM RFC-1212
+    NetworkAddress, IpAddress, Counter, Gauge, TimeTicks
+        FROM RFC1155-SMI
+    DisplayString
+        FROM RFC1213-MIB
+    wos2kIdent
+        FROM NSCRTV-FOBETMOC-ROOT;
+
+    -- 定义MAC地址类型提供该MIB文件内部使用
+    PhysAddress ::= OCTET STRING (SIZE (6))
+
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+    -- 定义WOS2000主机内部的管理变量
+    wosHostAppVersion OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 1 }
+
+    wosHostTemperature OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 2 }
+
+    wosHostPhysAddress OBJECT-TYPE
+        SYNTAX  PhysAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 3 }
+
+    wosHostIPAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 4 }
+        
+    wosHostGatewayAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 5 }
+
+    wosHostSubnetMask OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 6 }
+        
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+    -- 定义WOS2000内部电源模块的管理变量
+    wosPowerModuleTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF WosPowerModuleEntry
+        ACCESS not-accessible
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 60 }
+    
+    wosPowerModuleEntry OBJECT-TYPE
+        SYNTAX WosPowerModuleEntry
+        ACCESS not-accessible
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        INDEX { wosPowerModuleIndex }
+        ::= { wosPowerModuleTable 1 }
+
+    WosPowerModuleEntry ::= SEQUENCE
+        {
+        wosPowerModuleIndex
+            INTEGER,
+        wosPowerModuleMasterP5V
+            INTEGER,
+        wosPowerModuleMasterN5V
+            INTEGER,
+        wosPowerModuleMasterP24V
+            INTEGER,
+        wosPowerModuleSlaveP5V
+            INTEGER,
+        wosPowerModuleSlaveN5V
+            INTEGER,
+        wosPowerModuleSlaveP24V
+            INTEGER,
+        wosPowerModuleSubDevOnline
+            INTEGER,
+        wosPowerModuleLastTime
+            TimeTicks,
+        wosPowerModuleTotalTime
+            TimeTicks,
+        wosPowerModuleVersion
+            INTEGER
+        }
+
+    wosPowerModuleIndex OBJECT-TYPE
+        SYNTAX INTEGER (0)
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 1 }
+    
+    wosPowerModuleMasterP5V OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 2 }
+    
+    wosPowerModuleMasterN5V OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 3 }
+    
+    wosPowerModuleMasterP24V OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 4 }
+    
+    wosPowerModuleSlaveP5V OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 5 }
+    
+    wosPowerModuleSlaveN5V OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 6 }
+    
+    wosPowerModuleSlaveP24V OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 7 }
+    
+    wosPowerModuleSubDevOnline OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 8 }
+    
+    wosPowerModuleLastTime OBJECT-TYPE
+        SYNTAX TimeTicks
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 9 }
+    
+    wosPowerModuleTotalTime OBJECT-TYPE
+        SYNTAX TimeTicks
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 10 }
+    
+    wosPowerModuleVersion OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosPowerModuleEntry 11 }
+    
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+    -- 定义WOS2000系统的光接收机的管理变量
+    wosReceiverIndexNumbers OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 61 }
+
+    wosReceiverTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF WosReceiverEntry
+        ACCESS not-accessible
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 62 }
+    
+    wosReceiverEntry OBJECT-TYPE
+        SYNTAX WosReceiverEntry
+        ACCESS not-accessible
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        INDEX { wosReceiverIndex }
+        ::= { wosReceiverTable 1 }
+
+    WosReceiverEntry ::= SEQUENCE
+        {
+        wosReceiverIndex
+            INTEGER,
+        wosReceiverRePower
+            INTEGER,
+        wosReceiverRFdB
+            INTEGER,
+        wosReceiverMGC
+            INTEGER,
+        wosReceiverAlarmFlag
+            INTEGER,
+        wosReceiverEQ
+            INTEGER,
+        wosReceiverLastTime
+            TimeTicks,
+        wosReceiverTotalTime
+            TimeTicks,
+        wosReceiverVersion
+            INTEGER
+        }
+
+    wosReceiverIndex OBJECT-TYPE
+        SYNTAX INTEGER (1..8)
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 1 }
+    
+    wosReceiverRePower OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 2 }
+    
+    wosReceiverRFdB OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 3 }
+    
+    wosReceiverMGC OBJECT-TYPE
+        SYNTAX INTEGER (0..63)
+        ACCESS read-write
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 4 }
+    
+    wosReceiverAlarmFlag OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 5 }
+    
+    wosReceiverEQ OBJECT-TYPE
+        SYNTAX INTEGER (0..63)
+        ACCESS read-write
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 6 }
+    
+    wosReceiverLastTime OBJECT-TYPE
+        SYNTAX TimeTicks
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 7 }
+    
+    wosReceiverTotalTime OBJECT-TYPE
+        SYNTAX TimeTicks
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 8 }
+    
+    wosReceiverVersion OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReceiverEntry 9 }
+    
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+    -- 定义WOS2000系统的反向光接收机的管理变量
+    wosReReceiverIndexNumbers OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 63 }
+
+    wosReReceiverTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF WosReReceiverEntry
+        ACCESS not-accessible
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 64 }
+    
+    wosReReceiverEntry OBJECT-TYPE
+        SYNTAX WosReReceiverEntry
+        ACCESS not-accessible
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        INDEX { wosReReceiverIndex }
+        ::= { wosReReceiverTable 1 }
+
+    WosReReceiverEntry ::= SEQUENCE
+        {
+        wosReReceiverIndex
+            INTEGER,
+        wosReReceiverRePowerA
+            INTEGER,
+        wosReReceiverRFdBA
+            INTEGER,
+        wosReReceiverMGCA
+            INTEGER,
+        wosReReceiverAlarmFlagA
+            INTEGER,
+        wosReReceiverRePowerB
+            INTEGER,
+        wosReReceiverRFdBB
+            INTEGER,
+        wosReReceiverMGCB
+            INTEGER,
+        wosReReceiverAlarmFlagB
+            INTEGER,
+        wosReReceiverLastTime
+            TimeTicks,
+        wosReReceiverTotalTime
+            TimeTicks,
+        wosReReceiverVersion
+            INTEGER
+        }
+
+    wosReReceiverIndex OBJECT-TYPE
+        SYNTAX INTEGER (1..8)
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 1 }
+    
+    wosReReceiverRePowerA OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 2 }
+    
+    wosReReceiverRFdBA OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 3 }
+    
+    wosReReceiverMGCA OBJECT-TYPE
+        SYNTAX INTEGER (0..63)
+        ACCESS read-write
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 4 }
+    
+    wosReReceiverAlarmFlagA OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 5 }
+
+    wosReReceiverRePowerB OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 6 }
+    
+    wosReReceiverRFdBB OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 7 }
+    
+    wosReReceiverMGCB OBJECT-TYPE
+        SYNTAX INTEGER (0..63)
+        ACCESS read-write
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 8 }
+    
+    wosReReceiverAlarmFlagB OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 9 }
+
+    wosReReceiverLastTime OBJECT-TYPE
+        SYNTAX TimeTicks
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 10 }
+    
+    wosReReceiverTotalTime OBJECT-TYPE
+        SYNTAX TimeTicks
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 11 }
+    
+    wosReReceiverVersion OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosReReceiverEntry 12 }
+    
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+    -- 定义WOS2000系统的光发射机的管理变量
+    wosTransmitterIndexNumbers OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 65 }
+
+    wosTransmitterTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF WosTransmitterEntry
+        ACCESS not-accessible
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wos2kIdent 66 }
+    
+    wosTransmitterEntry OBJECT-TYPE
+        SYNTAX WosTransmitterEntry
+        ACCESS not-accessible
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        INDEX { wosTransmitterIndex }
+        ::= { wosTransmitterTable 1 }
+
+    WosTransmitterEntry ::= SEQUENCE
+        {
+        wosTransmitterIndex
+            INTEGER,
+        wosTransmitterOutPower
+            INTEGER,
+        wosTransmitterBias
+            INTEGER,
+        wosTransmitterTemp
+            INTEGER,
+        wosTransmitterHeating
+            INTEGER,
+        wosTransmitterStatus
+            INTEGER,
+        wosTransmitterMGCAndAGC
+            INTEGER,
+        wosTransmitterLastTime
+            TimeTicks,
+        wosTransmitterTotalTime
+            TimeTicks,
+        wosTransmitterVersion
+            INTEGER
+        }
+
+    wosTransmitterIndex OBJECT-TYPE
+        SYNTAX INTEGER (1..8)
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 1 }
+    
+    wosTransmitterOutPower OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 2 }
+    
+    wosTransmitterBias OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 3 }
+    
+    wosTransmitterTemp OBJECT-TYPE
+        SYNTAX INTEGER (0..63)
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 4 }
+    
+    wosTransmitterHeating OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 5 }
+    
+    wosTransmitterStatus OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-write
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 6 }
+    
+    wosTransmitterMGCAndAGC OBJECT-TYPE
+        SYNTAX INTEGER (-15..15)
+        ACCESS read-write
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 7 }
+    
+    wosTransmitterLastTime OBJECT-TYPE
+        SYNTAX TimeTicks
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 8 }
+    
+    wosTransmitterTotalTime OBJECT-TYPE
+        SYNTAX TimeTicks
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 9 }
+    
+    wosTransmitterVersion OBJECT-TYPE
+        SYNTAX INTEGER
+        ACCESS read-only
+        STATUS mandatory
+        DESCRIPTION
+            ""
+        ::= { wosTransmitterEntry 10 }
+
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+--///////////////////////////////////////////////////////////////////////////////////////////////////
+
+END
