@@ -1957,33 +1957,7 @@ public class ServiceController {
 
 			doNodeTreeDataInit(jedis);
 
-			// 保存数据到硬盘
-			proid = String.valueOf(jedis.incr("global:profileid"));
-	    	prokey = "profileid:"+proid + ":entity";
-	    	proentity = new HashMap<String, String>();
-	    	proentity.put("profilename", "标准4M");
-	    	proentity.put("authorization", "1");
-	    	proentity.put("vlanen", "2");
-	    	proentity.put("vlan0id", "1");
-	    	proentity.put("vlan1id", "1");
-	    	proentity.put("vlan2id", "1");
-	    	proentity.put("vlan3id", "1");
-	    	
-	    	proentity.put("rxlimitsts", "1");
-	    	proentity.put("cpuportrxrate", "4096");
-	    	proentity.put("port0txrate", "0");
-	    	proentity.put("port1txrate", "0");
-	    	proentity.put("port2txrate", "0");
-	    	proentity.put("port3txrate", "0");
-	    	
-	    	proentity.put("txlimitsts", "1");
-	    	proentity.put("cpuporttxrate", "2048");
-	    	proentity.put("port0rxrate", "0");
-	    	proentity.put("port1rxrate", "0");
-	    	proentity.put("port2rxrate", "0");
-	    	proentity.put("port3rxrate", "0");
-	    	//save
-	    	jedis.hmset(prokey, proentity);
+
 	    	//保存数据到硬盘
 	    	jedis.save();
 
