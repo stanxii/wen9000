@@ -1,6 +1,10 @@
-ddaadd
-add zhu
-add ni
-add frank
-add stan
-now add tree move add node fun v1.1.7
+
+//*** add stan
+for compile you must run script first in wen9000 directory
+***//
+mvn clean
+mvn install:install-file -Dfile=lib/AdventNetSnmp.jar -DgroupId=com.adventnetsnmp -DartifactId=netsnmp -Dversion=1.0.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/AdventNetLogging.jar -DgroupId=com.netsnmplogging -DartifactId=netsnmplogging -Dversion=1.0.0 -Dpackaging=jar
+
+mvn compile
+mvn package
