@@ -1441,7 +1441,7 @@
 	    	  
 	    	  if( (node.data.type == "custom") ){
 	    		  
-	    		  var datastring = '{"key":"'+node.data.key+'","type":"'+node.data.type+'"}';
+	    		  var datastring = '{"key":"'+node.data.key+'","pkey":"'+node.data.pkey +'","type":"'+node.data.type+'"}';
 		    	  socket.emit('delnode',datastring);
 		    	  node.remove();
 		    	  window.location.reload();	    		  

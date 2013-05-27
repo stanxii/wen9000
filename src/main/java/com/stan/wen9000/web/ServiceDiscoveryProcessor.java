@@ -234,6 +234,7 @@ public class ServiceDiscoveryProcessor  {
 		cbatentity.put("mac", cbatmac.toLowerCase().trim());
 		//pkey 树形结构 默认节点  root ->默认节点->EOC设备
 		cbatentity.put("treeparentkey", "2");
+		jedis.sadd("tree:2:eocs", String.valueOf(icbatid) );
 		
 		cbatentity.put("active", "1");
 		cbatentity.put("ip", cbatip.toLowerCase().trim());
