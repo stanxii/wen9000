@@ -7,8 +7,8 @@
 		socket.emit('dis.searchtotal',"searchtotal");
 
 		socket.on('dis.searchtotal',fun_SearchTotal);
-		socket.on('dis.proc',fun_Proc);
-		socket.on('dis.findcbat',fun_FindCbat);		
+		socket.on('dis.findcbat',fun_FindCbat);	
+		socket.on('dis.proc',fun_Proc);			
 		
 		//table
 		$('#list').dataTable( {	  			 		
@@ -73,8 +73,9 @@
 		total = data.total;
 		proc = data.proc;
 		if(proc == total){
-			$("#dialog-dis-proc img").css("display","none");
-			$("#dis_proc")[0].textContent="搜索结束!!!";
+			return;
+//			$("#dialog-dis-proc img").css("display","none");
+//			$("#dis_proc")[0].textContent="搜索结束!!!";
 		}
 		//弹出进度窗口
 		$( "#dialog:ui-dialog" ).dialog( "destroy" );

@@ -2641,13 +2641,40 @@ public class ServiceController {
 					cbatjson.put("devicetype", "WEC-3501I Q31");
 					break;
 				case 4:
-					cbatjson.put("devicetype", "WEC-3501I C22");
+					cbatjson.put("devicetype", jedis.get("global:WEC-3501I-C22"));
 					break;
 				case 5:
-					cbatjson.put("devicetype", "WEC-3501I S220");
+					cbatjson.put("devicetype", jedis.get("global:WEC-3501I-S220"));
 					break;
 				case 6:
 					cbatjson.put("devicetype", "WEC-3501I S60");
+					break;				
+				case 20:
+					cbatjson.put("devicetype", jedis.get("global:WEC9720EK-C22"));
+					break;
+				case 21:
+					cbatjson.put("devicetype", "WEC9720EK E31");
+					break;
+				case 22:
+					cbatjson.put("devicetype", "WEC9720EK Q31");
+					break;
+				case 23:
+					cbatjson.put("devicetype", jedis.get("global:WEC9720EK-S220"));
+					break;
+				case 24:
+					cbatjson.put("devicetype", jedis.get("global:WEC9720EK-SD220"));
+					break;
+				case 25:
+					cbatjson.put("devicetype", jedis.get("global:WEC9720EK-XD25"));
+					break;
+				case 26:
+					cbatjson.put("devicetype", jedis.get("global:WR1004JL"));
+					break;
+				case 27:
+					cbatjson.put("devicetype", jedis.get("global:WR1004SJL"));
+					break;
+				case 36:
+					cbatjson.put("devicetype", "WEC701 M0");
 					break;
 				default:
 					cbatjson.put("devicetype", "Unknown");
