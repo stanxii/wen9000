@@ -126,11 +126,11 @@ public class TrapReceiverBean {
 		if (event != null && event.getPDU() != null) {
 			Vector<VariableBinding> recVBs = (Vector<VariableBinding>) event.getPDU()
 					.getVariableBindings();
-
-			//logger.info("-------getSecurityModel---->>>"+event.getSecurityModel());
+			
 			if(event.getSecurityModel() == 2){
 				//trapv2
-				if (recVBs.size() == 10) {
+				if (recVBs.size() == 10) {	
+					
 					Map<String, String> alarmhash=new LinkedHashMap();
 				   
 					for (int i = 0; i < recVBs.size(); i++) {
@@ -175,8 +175,6 @@ public class TrapReceiverBean {
 						}
 					}
 					
-					
-					
 					String msgservice = JSONValue.toJSONString(alarmhash);
 					
 					
@@ -184,6 +182,9 @@ public class TrapReceiverBean {
 					return;
 				}else if(recVBs.size() == 6){
 					//heart alarm
+					
+					
+					
 					Map hearthash=new LinkedHashMap();
 					for (int i = 0; i < recVBs.size(); i++) {
 						VariableBinding recVB = recVBs.elementAt(i);
@@ -717,8 +718,6 @@ public class TrapReceiverBean {
 			//System.out.println("trap save db error alarm save error");
 			e.printStackTrace();
 		}
-		
-		
 		//add by stan alarm filter
 		alarmFilter(alarmhash);
 		

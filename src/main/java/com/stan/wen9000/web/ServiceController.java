@@ -1431,6 +1431,62 @@ public class ServiceController {
 	}
 	
 	
+private static void doDelAllChildNodes(Jedis jedis, String fromkey){
+		
+	
+		Set<String>  childs = jedis.smembers("tree:"+fromkey+":children");
+		
+	
+		
+		if(childs.isEmpty() ){			
+			//stem.out.println
+			//delete all eocs
+			Set<String> deleocids = jedis.smembers("tree:"+fromkey+":eocs");
+			System.out.println("DDDDDEELLLLLLL  leafnode treekdy="+fromkey);
+			//move keyt's cbat to default
+			if(!deleocids.isEmpty()){
+				for(String deleocid: deleocids){
+					System.out.println("Leaf has eocs.....DDDD cbatid="+deleocid);
+					jedis.hset("cbatid:"+deleocid+":entity", "treeparentkey", "2");
+					jedis.sadd("tree:2:eocs", deleocid);
+				}
+				jedis.del("tree:"+fromkey+":eocs");				
+			}
+					
+		}
+		else{
+			
+			for(String child: childs){
+			   
+			 
+			    //get every field
+			 
+			    Set<String> deleocids = jedis.smembers("tree:"+child+":eocs");
+				
+				//move keyt's cbat to default
+				if(!deleocids.isEmpty()){
+					for(String deleocid: deleocids){
+						System.out.println("NNNNNNNNNNNot Leaf has eocs.....DDDD cbatid="+deleocid);
+						jedis.hset("cbatid:"+deleocid+":entity", "treeparentkey", "2");
+						jedis.sadd("tree:2:eocs", deleocid);
+					}
+					jedis.del("tree:"+child+":eocs");				
+				}
+				
+				jedis.del("tree:"+child+"*");
+				
+			 	doDelAllChildNodes(jedis, child);
+				 
+			}
+		
+		}
+		
+		
+		jedis.del("tree:"+fromkey+"*");	
+		
+		
+	}
+	
 
 	private static void doDelNode(String message) throws ParseException {
 		Jedis jedis = null;
@@ -1457,43 +1513,14 @@ public class ServiceController {
 		else if(type.equalsIgnoreCase("custom")){
 			
 			
-			
 			//can del custom node  mac=key
 			
 			String treeid = jsondata.get("key").toString();
 			String pkey = jedis.hget("tree:"+treeid, "pkey");
+	
 			
-			String treekey = "tree:"+treeid;			
-			String treeheirs = "tree:"+ treeid+":heirs";	
-			
-			
-						
-			//get this key's all children key
-			Set<String> childrenkeys = jedis.smembers(treeheirs);
-			
-			
-			
-			for(String childrenkey: childrenkeys){
-				jedis.del("tree:"+childrenkey+":heirs");
-				jedis.del("tree:"+childrenkey+":children");
-				jedis.del("tree:"+childrenkey);
-			}
-			
-			jedis.del("tree:"+treeid+":heirs");
-			jedis.del("tree:"+treeid+":children");
-			jedis.del("tree:"+treeid);
-			
-			
-			Set<String> deleocids = jedis.smembers("tree:"+treeid+":eocs");
-			
-			//move keyt's cbat to default
-			for(String deleocid: deleocids){
-				jedis.hset("cbatid:"+deleocid+":entity", "treeparentkey", "2");
-				jedis.sadd("tree:2:eocs", deleocid);
-			}
-			jedis.del("tree:"+treeid+":eocs");
-			
-			
+			doDelAllChildNodes(jedis, treeid);
+					
 			if(jedis.smembers("tree:"+pkey+":heirs").size() == 1)
 				jedis.del("tree:"+pkey+":heirs");
 			else
@@ -1505,30 +1532,10 @@ public class ServiceController {
 				jedis.srem("tree:"+pkey+":children", treeid);
 			
 			
-			
 			jedis.srem("tree:0:heirs", treeid);
 			
-			///////////////////////
-			//del device
 			
-			//判断node下面是否挂有设备
-			Set<String> cbats = jedis.keys("cbatid:*:entity");
-			for(Iterator it= cbats.iterator();it.hasNext();){
-				String cbatkey = it.next().toString();
-			
-				String cbatparentid = jedis.hget(cbatkey, "treeparentkey");
-				
-				if(!jedis.exists("tree:"+cbatparentid+"*")){
-					//编辑告警信息												
-					//移动头端设备到默认节点					
-					jedis.hset(cbatkey, "treeparentkey","2");
-					String cbatid =cbatkey.substring(cbatkey.indexOf(':')+1 );
-					cbatid= cbatid.substring(0, cbatid.indexOf(':'));
-
-					jedis.sadd("tree:2:eocs", cbatid);
-
-				}										
-			}
+		
 			
 		}else{
 			//delete device
@@ -1618,23 +1625,33 @@ public class ServiceController {
 			String cbatid  = "cbatid:"+id+":entity";
 			String oldtreeparentkey = jedis.hget(cbatid, "treeparentkey");
 			
+			if(jedis.exists("tree:"+treeparentkey+"children")){
+				//not leaf can't move
+				JSONObject json = new JSONObject();
+				json.put("key", treeparentkey);
+				json.put("result", "notok");
+				jedis.publish("node.tree.move.movetotree", json.toJSONString());
+			}else{
+				//move to
+				jedis.hset(cbatid, "treeparentkey", treeparentkey);
+				
+	    		jedis.srem("tree:"+oldtreeparentkey+":eocs", id);
+	    		if(jedis.smembers("tree:"+oldtreeparentkey+":eocs").isEmpty())
+	    			jedis.del("tree:"+oldtreeparentkey+":eocs");
+	    		
+	    		jedis.sadd("tree:"+treeparentkey+":eocs", id);
+	    		
+	    		
+	    		
+				jedis.save();
+				
+				JSONObject json = new JSONObject();
+				json.put("key", treeparentkey);
+				json.put("result", "ok");
+				jedis.publish("node.tree.move.movetotree", json.toJSONString());
+			}
 			
-			jedis.hset(cbatid, "treeparentkey", treeparentkey);
 			
-    		jedis.srem("tree:"+oldtreeparentkey+":eocs", id);
-    		if(jedis.smembers("tree:"+oldtreeparentkey+":eocs").isEmpty())
-    			jedis.del("tree:"+oldtreeparentkey+":eocs");
-    		
-    		jedis.sadd("tree:"+treeparentkey+":eocs", id);
-    		
-    		
-    		
-			jedis.save();
-			
-			JSONObject json = new JSONObject();
-			json.put("key", treeparentkey);
-			json.put("result", "ok");
-			jedis.publish("node.tree.move.movetotree", json.toJSONString());
 			redisUtil.getJedisPool().returnResource(jedis);
 			
 			
@@ -4165,7 +4182,7 @@ public class ServiceController {
 				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
 						1, 36186, 8, 6, 1, 0 }), new Integer32(1));
 				jedis.set("devip:" + ip + ":mac", mac);
-				jedis.hset(cbatkey, "active", "0");
+				//jedis.hset(cbatkey, "active", "0");
 			} else {
 				// save
 				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
@@ -4194,8 +4211,8 @@ public class ServiceController {
 		}
 		optjson.put("desc", "局端设备基本信息修改提交.");
 		sendoptlog(jedis, optjson);
-		redisUtil.getJedisPool().returnResource(jedis);
 		jedis.publish("node.tree.cbatmodify", "modifyok");
+		redisUtil.getJedisPool().returnResource(jedis);		
 	}
 
 	private static void doNodeCnudetail(String mac) {
