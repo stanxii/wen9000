@@ -26,6 +26,7 @@ import redis.clients.jedis.JedisPubSub;
 
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 import com.stan.wen9000.reference.EocDeviceType;
+import com.sun.istack.internal.logging.Logger;
 
 public class ServiceDiscoveryProcessor  {
 
@@ -306,7 +307,6 @@ public class ServiceDiscoveryProcessor  {
 	    		break;
 		}
 		jedis.publish("node.dis.findcbat", json.toJSONString());
-
 		Sendstschange("cbat",String.valueOf(icbatid),jedis);
 		
 		Map<String , String >  hash = new HashMap<String, String>();
