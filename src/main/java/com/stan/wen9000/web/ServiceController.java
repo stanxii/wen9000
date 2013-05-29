@@ -1674,12 +1674,22 @@ private static void doDelAllChildNodes(Jedis jedis, String fromkey){
 		
 		try {
 			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
-			String key = jsondata.get("key").toString();
+			String key = jsondata.get("key").toString();			
 			String title = jsondata.get("title").toString();
-			String treeid = "tree:"+ key;
+			String type = jsondata.get("type").toString();
+			String id = jedis.get("mac:" + key + ":deviceid");
+			String devkey = "";
+			if(type.equalsIgnoreCase("cnu")){
+				devkey = "cnuid:" + id + ":entity";
+			}else if(type.equalsIgnoreCase("cbat")){
+				devkey = "cbatid:" + id + ":entity";
+			}
+			
+			jedis.hset(devkey, "label", title);
+			//String treeid = "tree:"+ key;
 			// 获取设备id
 		
-			jedis.hset(treeid, "title", title);
+			//jedis.hset(treeid, "title", title);
 			jedis.save();
 			
 			redisUtil.getJedisPool().returnResource(jedis);
@@ -3171,24 +3181,33 @@ private static void doDelAllChildNodes(Jedis jedis, String fromkey){
 			json.put("active", jedis.hget(cnukey, "active"));
 			json.put("label", jedis.hget(cnukey, "label"));
 			switch (Integer.parseInt(jedis.hget(cnukey, "devicetype"))) {
-			case 10:
-				result = "3702I-C4";
-				break;
-			case 7:
-				result = "3702I-L2";
-				break;
-			case 9:
-				result = "3702I-C2";
-				break;
-			default:
-				result = "Unknown";
-				break;
+    		case 10:
+    			json.put("devicetype", jedis.get("global:3702I-C4"));         		
+        		break;
+        	case 7:
+        		json.put("devicetype", "3702I-L2");           		
+        		break;
+        	case 9:
+        		json.put("devicetype", jedis.get("global:3702I-C2"));
+        		break;
+        	case 36:
+        		json.put("devicetype", "WEC701 M0");
+        		break;
+        	case 40:
+        		json.put("devicetype", jedis.get("global:WEC701-C2"));
+        		break;
+        	case 41:
+        		json.put("devicetype", jedis.get("global:WEC701-C4"));
+        		break;
+        	default:
+        		json.put("devicetype", "Unknown");
+        		break;
 			}
 			json.put(
 					"cbatip",
 					jedis.hget("cbatid:" + jedis.hget(cnukey, "cbatid")
 							+ ":entity", "ip"));
-			json.put("devicetype", result);
+
 			json.put("contact", jedis.hget(cnukey, "contact"));
 			json.put("phone", jedis.hget(cnukey, "phone"));
 			jsonResponseArray.add(json);
@@ -4259,21 +4278,27 @@ private static void doDelAllChildNodes(Jedis jedis, String fromkey){
 		switch (Integer.parseInt(jedis.hget(cnukey, "devicetype"))) {
 		case 10:
 			cnujson.put("devicetype", jedis.get("global:3702I-C4"));
+			cnujson.put("devicemodal", "3702I-C4");
 			break;
 		case 7:
 			cnujson.put("devicetype", "3702I-L2");
+			cnujson.put("devicemodal", "3702I-L2");
 			break;
 		case 9:
 			cnujson.put("devicetype", jedis.get("global:3702I-C2"));
+			cnujson.put("devicemodal", "3702I-C2");
 			break;
 		case 36:
 			cnujson.put("devicetype", "WEC701 M0");
+			cnujson.put("devicemodal", "WEC701 M0");
 			break;
 		case 40:
 			cnujson.put("devicetype", jedis.get("global:WEC701-C2"));
+			cnujson.put("devicemodal", "WEC701 C2");
 			break;
 		case 41:
 			cnujson.put("devicetype", jedis.get("global:WEC701-C4"));
+			cnujson.put("devicemodal", "WEC701 C4");
 			break;
 		default:
 			cnujson.put("devicetype", "Unknown");
@@ -4353,21 +4378,27 @@ private static void doDelAllChildNodes(Jedis jedis, String fromkey){
 		switch (Integer.parseInt(jedis.hget(cbatkey, "devicetype"))) {
 		case 1:
 			result = "WEC-3501I X7";
+			cbatjson.put("devicemodal", result);
 			break;
 		case 2:
 			result = "WEC-3501I E31";
+			cbatjson.put("devicemodal", result);
 			break;
 		case 3:
 			result = "WEC-3501I Q31";
+			cbatjson.put("devicemodal", result);
 			break;
 		case 4:
 			result = jedis.get("global:WEC-3501I-C22");// "WEC-3501I C22";
+			cbatjson.put("devicemodal", "WEC-3501I C22");
 			break;
 		case 5:
 			result = jedis.get("global:WEC-3501I-S220");// "WEC-3501I S220";
+			cbatjson.put("devicemodal", "WEC-3501I S220");
 			break;
 		case 6:
 			result = "WEC-3501I S60";
+			cbatjson.put("devicemodal", "WEC-3501I S60");
 			break;
 		case 7:
 			// result ="WEC-3501I C22";
@@ -4377,24 +4408,31 @@ private static void doDelAllChildNodes(Jedis jedis, String fromkey){
 			break;
 		case 20:
 			result = jedis.get("global:WEC9720EK-C22");// "WEC9720EK C22";
+			cbatjson.put("devicemodal", "WEC9720EK C22");
 			break;
 		case 21:
 			result = "WEC9720EK E31";
+			cbatjson.put("devicemodal", "WEC9720EK E31");
 			break;
 		case 22:
 			result = "WEC9720EK Q31";
+			cbatjson.put("devicemodal", "WEC9720EK Q31");
 			break;
 		case 23:
 			result = jedis.get("global:WEC9720EK-S220");// "WEC9720EK S220";
+			cbatjson.put("devicemodal", "WEC9720EK S220");
 			break;
 		case 24:
 			result = jedis.get("global:WEC9720EK-SD220");// "WEC9720EK SD220";
+			cbatjson.put("devicemodal", "WEC9720EK SD220");
 			break;
 		case 25:
 			result = jedis.get("global:WEC9720EK-XD25");// "WEC9720EK XD25";
+			cbatjson.put("devicemodal", "WEC9720EK XD25");
 			break;
 		case 26:
 			result = jedis.get("global:WR1004JL");// "WR1004JL";
+			cbatjson.put("devicemodal", "WR1004JL");
 			cbatjson.put("clt1", jedis.hget(cbatkey, "clt1"));
 			cbatjson.put("clt2", jedis.hget(cbatkey, "clt2"));
 			cbatjson.put("clt3", jedis.hget(cbatkey, "clt3"));
@@ -4402,6 +4440,7 @@ private static void doDelAllChildNodes(Jedis jedis, String fromkey){
 			break;
 		case 27:
 			result = jedis.get("global:WR1004SJL");// "WR1004SJL";
+			cbatjson.put("devicemodal", "WR1004SJL");
 			cbatjson.put("clt1", jedis.hget(cbatkey, "clt1"));
 			cbatjson.put("clt2", jedis.hget(cbatkey, "clt2"));
 			cbatjson.put("clt3", jedis.hget(cbatkey, "clt3"));
@@ -4409,6 +4448,7 @@ private static void doDelAllChildNodes(Jedis jedis, String fromkey){
 			break;
 		case 36:
 			result = "WEC701 M0";
+			cbatjson.put("devicemodal", "WEC701 M0");
 			break;
 		// case 40:
 		// result =jedis.get("global:WEC701-C2");//"WEC701 C2";

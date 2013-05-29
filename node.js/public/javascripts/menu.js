@@ -1543,7 +1543,7 @@
 						    	 
 						    		  //编辑节点
 						    		  var editstring = $("input#dg_editnode").val();
-						    		  var datastring = '{"key":"'+node.data.key+'","title":"'+ editstring+'"}';
+						    		  var datastring = '{"key":"'+node.data.key+'","title":"'+ editstring+'","type":"'+node.data.type+'"}';
 						    		  socket.emit('editnode',datastring);  					    		  
 						    		  node.data.title = editstring;
 						    		  node.render();
@@ -2184,17 +2184,17 @@
 	   }
 
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
-			if(jsondata.devicetype == "WEC-3501I C22"){
+			if(jsondata.devicemodal == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC-3501I S220"){
+			}else if(jsondata.devicemodal == "WEC-3501I S220"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I S220.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK C22"){
+			}else if(jsondata.devicemodal == "WEC9720EK C22"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK E31"){
+			}else if(jsondata.devicemodal == "WEC9720EK E31"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK XD25"){
+			}else if(jsondata.devicemodal == "WEC9720EK XD25"){
 				
-			}else if(jsondata.devicetype == "WEC9720EK SD220"){
+			}else if(jsondata.devicemodal == "WEC9720EK SD220"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
 			}
 			

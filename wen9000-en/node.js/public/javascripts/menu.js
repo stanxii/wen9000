@@ -1902,15 +1902,15 @@
 //			});
 //		
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
-			if(jsondata.devicetype == "WEC-3501I C22"){
+			if(jsondata.devicemodal == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC-3501I S220"){
+			}else if(jsondata.devicemodal == "WEC-3501I S220"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I S220.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK C22"){
+			}else if(jsondata.devicemodal == "WEC9720EK C22"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK E31"){
+			}else if(jsondata.devicemodal == "WEC9720EK E31"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK S220"){
+			}else if(jsondata.devicemodal == "WEC9720EK S220"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 			}
    }
