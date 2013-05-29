@@ -79,6 +79,22 @@
 		  node.render();
       });
       
+      
+      
+      $("#dg_movenode").click(function(){
+    	  
+    		var node = $("#moveto_tree").dynatree("getActiveNode");
+    		
+    		
+    	  	var jsondata = '{"mac":"'+cbatmovetree+'","type":"'+node.data.type+'","treeparentkey":"'+node.data.key+'"}';
+      	
+    	  	
+      		socket.emit('fromweb.move.movetotree', jsondata );			        						        	
+		
+      		$("#dialog_movenode").dialog("close");
+      });
+      
+      
       $("#btn_cnusync").live('click', function(){
     	  if(isbusy != false){
 				return;
@@ -1362,6 +1378,7 @@
 	   
    }
    
+   
    function fun_movetotreeinit(treedata){
 	   //alert("fuckkkk");
 	   
@@ -1379,11 +1396,7 @@
 			        imagePath: "http://localhost:3000/images/",
 			        minExpandLevel: 1,
 					onDblClick: function(node, event) {
-						var jsondata = '{"mac":"'+cbatmovetree+'","treeparentkey":"'+node.data.key+'"}';
-				        	
-				        	socket.emit('fromweb.move.movetotree', jsondata );			        						        	
 						
-				        	 $("#dialog_movenode").dialog("close");
 				          
 				    },				   
 				    
@@ -1526,7 +1539,7 @@
 	    	  break;
 	      case "editnode":
 	    	  //移动节点
-	    	  if( (node.data.key == "root") || (node.data.key == "1") ||  (node.data.key == "11")   ){
+	    	  if( (node.data.type == "system") ){
 	    		  alert("不能编辑修改！");
 	    	  }
 	    	  else{

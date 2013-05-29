@@ -1621,36 +1621,49 @@ private static void doDelAllChildNodes(Jedis jedis, String fromkey){
 			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
 			String cbatmac = jsondata.get("mac").toString();
 			String treeparentkey = jsondata.get("treeparentkey").toString();
-			String id = jedis.get("mac:" + cbatmac + ":deviceid");
-			String cbatid  = "cbatid:"+id+":entity";
-			String oldtreeparentkey = jedis.hget(cbatid, "treeparentkey");
+			String type = jsondata.get("type").toString();
 			
-			if(jedis.exists("tree:"+treeparentkey+"children")){
-				//not leaf can't move
+			System.out.println("now will move type="+type);
+			if(treeparentkey.equalsIgnoreCase("2") || (type.equalsIgnoreCase("custom") )){
+				
+				System.out.println("can move type= "+type);
+				
+				String id = jedis.get("mac:" + cbatmac + ":deviceid");
+				String cbatid  = "cbatid:"+id+":entity";
+				String oldtreeparentkey = jedis.hget(cbatid, "treeparentkey");
+				
+				if(jedis.exists("tree:"+treeparentkey+":children")){
+					//not leaf can't move
+					JSONObject json = new JSONObject();
+					json.put("key", treeparentkey);
+					json.put("result", "notok");
+					jedis.publish("node.tree.move.movetotree", json.toJSONString());
+				}else{
+					//move to					
+					
+		    		jedis.srem("tree:"+oldtreeparentkey+":eocs", id);
+		    		if(jedis.smembers("tree:"+oldtreeparentkey+":eocs").isEmpty())
+		    			jedis.del("tree:"+oldtreeparentkey+":eocs");
+		    		
+		    		jedis.sadd("tree:"+treeparentkey+":eocs", id);
+		    		jedis.hset(cbatid, "treeparentkey", treeparentkey);
+	    		
+		    		
+					jedis.save();
+					
+					JSONObject json = new JSONObject();
+					json.put("key", treeparentkey);
+					json.put("result", "ok");
+					jedis.publish("node.tree.move.movetotree", json.toJSONString());
+				}
+			
+			
+			}else{
 				JSONObject json = new JSONObject();
 				json.put("key", treeparentkey);
 				json.put("result", "notok");
 				jedis.publish("node.tree.move.movetotree", json.toJSONString());
-			}else{
-				//move to
-				jedis.hset(cbatid, "treeparentkey", treeparentkey);
-				
-	    		jedis.srem("tree:"+oldtreeparentkey+":eocs", id);
-	    		if(jedis.smembers("tree:"+oldtreeparentkey+":eocs").isEmpty())
-	    			jedis.del("tree:"+oldtreeparentkey+":eocs");
-	    		
-	    		jedis.sadd("tree:"+treeparentkey+":eocs", id);
-	    		
-	    		
-	    		
-				jedis.save();
-				
-				JSONObject json = new JSONObject();
-				json.put("key", treeparentkey);
-				json.put("result", "ok");
-				jedis.publish("node.tree.move.movetotree", json.toJSONString());
 			}
-			
 			
 			redisUtil.getJedisPool().returnResource(jedis);
 			
