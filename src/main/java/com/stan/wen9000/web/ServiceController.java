@@ -5270,7 +5270,7 @@ private static void setEocsInGetChilds(Jedis jedis, JSONObject parentjson, Strin
 						Integer.valueOf(jsondata.get("port3txrate").toString()) / 32);
 			}
 
-			jsonmap.put("permit", 1);
+			//jsonmap.put("permit", 1);
 
 			sjson = JSONValue.toJSONString(jsonmap);
 

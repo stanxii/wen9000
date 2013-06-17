@@ -254,6 +254,12 @@
 	    	var port1rxrate = document.getElementById('port1rxrate').value;
 	    	var port2rxrate = document.getElementById('port2rxrate').value;
 	    	var port3rxrate = document.getElementById('port3rxrate').value;
+	    	if(isNaN(vlan0id)||isNaN(vlan1id)||isNaN(vlan2id)||isNaN(vlan3id)){
+				 document.body.style.cursor = 'default';
+		 		 isbusy = false;
+				 alert("Vlan值必须是数字！");
+				 return;
+			}
 			if((vlan0id>4095)||(vlan0id<0)||(vlan1id>4095)||(vlan1id<0)||(vlan2id>4095)||(vlan2id<0)||(vlan3id>4095)||(vlan3id<0)){
 				document.body.style.cursor = 'default';
 		 		isbusy = false;
@@ -374,13 +380,27 @@
 			if(isNaN(mvlanid)){
 				document.body.style.cursor = 'default';
 				isbusy = false;
-				alert("VLAN值应在0~4095之间！"); 
+				alert("VLAN值必须是数字！"); 
 				return;
 			}
 			if(mvlanid>4095 || mvlanid <0){
 				document.body.style.cursor = 'default';
 				isbusy = false;
 				alert("VLAN值应在0~4095之间！"); 
+				return;
+			}
+			if(isNaN(telnet)){
+				document.body.style.cursor = 'default';
+				isbusy = false;
+				alert("telnet值必须是数字！"); 
+				return;
+			}
+			reg = trapserver.match(dns);
+			if(reg==null) 
+			{ 
+				alert("DNS不合法！"); 
+				document.body.style.cursor = 'default';
+				isbusy = false;
 				return;
 			}
 			var datastring = '{"mac":"'+mac+'","ip":"'+ip+'","label":"'+label+'","address":"'+address+'","mvlanenable":"'+mvlanenable
