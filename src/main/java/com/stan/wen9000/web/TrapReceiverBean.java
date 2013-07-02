@@ -600,9 +600,35 @@ public class TrapReceiverBean {
 				
 				break;
 			case 200903:
-				alarmhash.put("alarmlevel", "1");
-				alarmhash.put("cnalarminfo", "环境温度告警");
-				alarmhash.put("enalarminfo", "Environment temperature alarm");				
+				switch(Integer.valueOf(alarmhash.get("alarmtype").toString())){
+				case 1:
+					alarmhash.put("alarmlevel", "5");
+					break;
+				case 2:
+					alarmhash.put("alarmlevel", "1");
+					break;
+				case 3:
+					alarmhash.put("alarmlevel", "3");
+					break;
+				case 4:
+					alarmhash.put("alarmlevel", "3");
+					break;
+				case 5:
+					alarmhash.put("alarmlevel", "1");
+					break;
+				default:
+					alarmhash.put("alarmlevel", "1");
+					break;
+				}
+				String st = "";
+				int temp = Integer.valueOf(alarmhash.get("alarmvalue").toString());
+				int sti = temp>>24;
+				if(sti != 0){
+					st = "-";
+				}
+				st += String.valueOf((temp>>16)&0xff)+"."+String.valueOf(temp & 0xFFFF);
+				alarmhash.put("cnalarminfo", "环境温度告警("+st+"℃)");
+				alarmhash.put("enalarminfo", "Environment temperature alarm("+st+"℃)");				
 				break;
 			case 200904:
 				alarmhash.put("alarmlevel", "1");

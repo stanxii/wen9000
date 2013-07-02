@@ -340,7 +340,7 @@
 	   <ref bean="serviceAlarmTrigger" />
 	   <ref bean="serviceHeartTrigger" />
 	   <ref bean="trapReceierTrigger" />	
-	   <ref bean="workerCbatStatusTrigger" />  
+	   <ref bean="workerCbatStatusTrigger" />
 	   <ref bean="serviceCbatStatusTrigger" /> 
 	   <ref bean="serviceControllerTrigger" />
 	   <ref bean="serviceUpdateProcessTrigger" />
