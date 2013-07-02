@@ -1436,6 +1436,9 @@
 	      case "move":
 	    	  
 	    	  break;
+	      case "sort":
+	    	  var node = $("#moveto_tree").dynatree("getActiveNode");
+	    	  break;
 	      case "add":
 	        //copyPaste(action, node);
 	        break;
