@@ -112,6 +112,7 @@ table input {
 	top:0;
 	left:21%;
 	width:79%;
+	overflow:auto;
 }
 
 #pre_content {

@@ -17,6 +17,18 @@
 	        var mac = checkbox[0].parentElement.parentElement.cells[1].textContent;
 	        var data = '{"cnumac":"'+mac+'","value":"'+checkbox[0].checked+'"}';
 	        socket.emit('opt.checkedcnus', data );
+	        if(!checkbox[0].checked){
+	        	$("#checkalllist")[0].checked = false;
+	        	$("#checkall")[0].checked = false;
+	        }else{
+	        	for(var i=1;i<cTable[0].rows.length;i++){
+      				if(!cTable[0].rows[i].firstChild.firstChild.checked){
+      					$("#checkalllist")[0].checked = false;
+      					return;
+       				}       				
+       			}
+	        	$("#checkalllist")[0].checked = true;
+	        }
 	    } );
 		
 		//整列全选按钮点击事件
@@ -60,6 +72,7 @@
 	    	}
    			var c_box = $(this);
    			var mac;
+   			var xxx = cTable[0];
    			if(c_box[0].checked){
    				for(var i=1;i<cTable[0].rows.length;i++){
        				if(cTable[0].rows[i].firstChild.firstChild.checked){
@@ -77,7 +90,8 @@
        			}
    				$("#checkalllist")[0].checked = false;
        		    socket.emit('opt.checkallcnus', "false" );       			
-   			}			
+   			}	
+   			socket.emit('opt.cnus', 'cnus' );
 
    		}); 
    		
@@ -131,7 +145,8 @@
 			}
 	}
 	
-	function fun_Allcnus(data){
+	function fun_Allcnus(data){		
+		cTable = null;
 		var groupval=[];
 		$.each(data, function(key, itemv) {  					
 				var item = [itemv.check,itemv.mac,itemv.active,itemv.label,itemv.devicetype,itemv.cbatip,itemv.proname];
@@ -144,6 +159,7 @@
 			"iDisplayLength": 10,					//每页显示10条数据
 			"aaData": groupval,
     		"bInfo": false,	
+    		"bDestroy":true,
 	        "sPaginationType": "full_numbers",				        
 	        "oLanguage": {							//汉化
 				"sLengthMenu": "每页显示 _MENU_ 条记录",
@@ -160,26 +176,6 @@
 				}
 			},
     		"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
-    			if($("#checkall")[0].checked){
-    				for(var i=1;i<cTable[0].rows.length;i++){
-           				if(cTable[0].rows[i].firstChild.firstChild.checked){
-           					continue;
-           				}
-           				cTable[0].rows[i].firstChild.firstChild.checked = true;
-           			}
-    			}else{
-    				if(iDisplayIndex == 0){
-        				$("#checkalllist")[0].checked = true;
-        			}		        	
-
-    				if(nRow.outerHTML.indexOf("checked")<0)
-    				{
-    					$("#checkalllist")[0].checked = false;
-    				}else{
-    					$("#checkalllist")[0].checked = true;
-    				}
-    			}    			
-    			
 	        	if ( aData[2] == "1" )
 	            {
 	            	$('td:eq(2)', nRow).html( '在线' );				               

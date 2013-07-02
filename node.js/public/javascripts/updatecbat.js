@@ -268,6 +268,20 @@
 	        		$('td:eq(5)', nRow).html( 'Pending' );	
 	        	}else if(aData[5] == "20"){
 	        		$('td:eq(5)', nRow).html( 'N/A' );	
+	        	}else if(aData[5] == "50"){
+	        		$('td:eq(5)', nRow).html( 'Socket Io Error' );	
+	        	}else if(aData[5] == "51"){
+	        		$('td:eq(5)', nRow).html( 'Operation TimeOut' );	
+	        	}else if(aData[5] == "52"){
+	        		$('td:eq(5)', nRow).html( 'Generic Io Error' );	
+	        	}else if(aData[5] == "53"){
+	        		$('td:eq(5)', nRow).html( 'Image File Error' );	
+	        	}else if(aData[5] == "54"){
+	        		$('td:eq(5)', nRow).html( 'Image Tag Error' );	
+	        	}else if(aData[5] == "55"){
+	        		$('td:eq(5)', nRow).html( 'Image File Invalid' );	
+	        	}else{
+	        		$('td:eq(5)', nRow).html( 'Unknow Error' );
 	        	}
 	            
 	        },		

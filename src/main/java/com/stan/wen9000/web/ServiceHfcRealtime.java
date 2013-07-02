@@ -46,7 +46,6 @@ public class ServiceHfcRealtime {
 			JSONObject json = new JSONObject();		
 			try {
 				jedis = redisUtil.getConnection();	 
-			
 			}catch(Exception e){
 				e.printStackTrace();
 				redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -65,6 +64,7 @@ public class ServiceHfcRealtime {
 							Thread.sleep(5000);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
+							redisUtil.getJedisPool().returnBrokenResource(jedis);
 							e.printStackTrace();
 						}
 						redisUtil.getJedisPool().returnResource(jedis);
@@ -102,15 +102,27 @@ public class ServiceHfcRealtime {
 						
 					}catch(Exception e){
 						//jedis.publish("node.opt.hfcrealtime", json.toJSONString());
+						redisUtil.getJedisPool().returnBrokenResource(jedis);
 						e.printStackTrace();
 					}
-					redisUtil.getJedisPool().returnResource(jedis);
+					
 					try {
 						Thread.sleep(5000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
+						redisUtil.getJedisPool().returnBrokenResource(jedis);
 						e.printStackTrace();
 					}
+					redisUtil.getJedisPool().returnResource(jedis);
+				}else{
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						redisUtil.getJedisPool().returnBrokenResource(jedis);
+						e.printStackTrace();
+					}
+					redisUtil.getJedisPool().returnResource(jedis);
 				}
 			}else{
 				//未开HFC设备显示模式，延时30s

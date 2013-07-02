@@ -56,7 +56,7 @@
 
 .contextMenu LI.edit A { background-image: url(../images/update.png); }
 .contextMenu LI.move A { background-image: url(../images/show.png); }
-.contextMenu LI.copy A { background-image: url(../images/page_white_copy.png); }
+.contextMenu LI.toweb A { background-image: url(../images/list.png); }
 .contextMenu LI.paste A { background-image: url(../images/page_white_paste.png); }
 .contextMenu LI.delete A { background-image: url(../images/page_white_delete.png); }
 .contextMenu LI.add A { background-image: url(../images/add.png); }

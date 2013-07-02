@@ -28,6 +28,9 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
       a(href='#movenode')  移动节点
     li.edit
       a(href='#editnode')  编辑节点
+    hr
+    li.toweb
+      a(href='#toweb')  WEB网管
   
   #dialog-alarmThreshold(title='告警门限设置',style='display:none')
     table
@@ -59,11 +62,11 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
   div(id='dialog_setvalue',title='设置参数值',style='display:none')
     lable  参数值:
     input(id='hfc_setval',type='text')
-  div(id='dialog_movenode',title='移动节点',style='display:none')
+  div(id='dialog_movenode',title='移动节点',style='display:none;')
     lable  双击节点移动到:
-    div(style='scroll:auto')
+    div(style='overflow-y:scroll;height:450px')
       div(id='moveto_tree') 
-    button(id='dg_movenode')  移动
+    button(id='dg_movenode',style='margin-top:10px')  移动
   div(id='dialog_editnode',title='编辑节点',style='display:none')
     lable  编辑节点:
     input(id='dg_editnode',type='text')

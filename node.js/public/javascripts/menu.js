@@ -16,6 +16,7 @@
     	  var ht = window.screen.availHeight - 348;
     	  $("#wapper").css("height",ht+"px");
     	  $("#menu").css("height",ht-30+"px");
+    	  $("#content").css("height",ht+"px");
     	  $("#navtree").css("height",ht-40+"px");    	  
       }else if(window.screen.height <= 768){
 		  $("#menu").css("overflow","auto");
@@ -254,6 +255,12 @@
 	    	var port1rxrate = document.getElementById('port1rxrate').value;
 	    	var port2rxrate = document.getElementById('port2rxrate').value;
 	    	var port3rxrate = document.getElementById('port3rxrate').value;
+	    	if(isNaN(vlan0id)||isNaN(vlan1id)||isNaN(vlan2id)||isNaN(vlan3id)){
+				 document.body.style.cursor = 'default';
+		 		 isbusy = false;
+				 alert("Vlan值必须是数字！");
+				 return;
+			}
 			if((vlan0id>4095)||(vlan0id<0)||(vlan1id>4095)||(vlan1id<0)||(vlan2id>4095)||(vlan2id<0)||(vlan3id>4095)||(vlan3id<0)){
 				document.body.style.cursor = 'default';
 		 		isbusy = false;
@@ -374,13 +381,27 @@
 			if(isNaN(mvlanid)){
 				document.body.style.cursor = 'default';
 				isbusy = false;
-				alert("VLAN值应在0~4095之间！"); 
+				alert("VLAN值必须是数字！"); 
 				return;
 			}
 			if(mvlanid>4095 || mvlanid <0){
 				document.body.style.cursor = 'default';
 				isbusy = false;
 				alert("VLAN值应在0~4095之间！"); 
+				return;
+			}
+			if(isNaN(telnet)){
+				document.body.style.cursor = 'default';
+				isbusy = false;
+				alert("telnet值必须是数字！"); 
+				return;
+			}
+			reg = trapserver.match(dns);
+			if(reg==null) 
+			{ 
+				alert("DNS不合法！"); 
+				document.body.style.cursor = 'default';
+				isbusy = false;
 				return;
 			}
 			var datastring = '{"mac":"'+mac+'","ip":"'+ip+'","label":"'+label+'","address":"'+address+'","mvlanenable":"'+mvlanenable
@@ -1314,6 +1335,7 @@
 	$("#navtree").dynatree({
   			 	persist: true,
   			 	selectMode: 3,
+  			 	minExpandLevel:3,
   			 	activeVisible: true, 
   			 	autoFocus: false,  			 	
   			 	onPostInit: function(isReloading, isError) {
@@ -1323,7 +1345,6 @@
 		      	fx: { height: "toggle", duration: 200 },
                 children: treedata,
 		        imagePath: "http://localhost:3000/images/",
-		        minExpandLevel: 1,
 				onDblClick: function(node, event) {
 					var jsondata;
 			        if(node.data.type=="cbat"){	
@@ -1416,22 +1437,20 @@
 		   
    }
    
-   function bindContextMenu(span) {
-	   var flag = getCookie("flag");
-	   if(flag == "3"){
- 		  //alert("只读用户，权限不足！");
- 		  return;
- 	   }
+   function bindContextMenu(span) {	   	   
 	    // Add context menu to this node:
 	    $(span).contextMenu({menu: "myMenu"}, function(action, el, pos) {
 	      // The event was bound to the <span> tag, but the node object
 	      // is stored in the parent <li> tag
-	      var node = $.ui.dynatree.getNode(el);
-	      
+	      var node = $.ui.dynatree.getNode(el);  
 
 	      switch( action ) {
-	      case "rename":
-	    	  
+	      case "toweb":
+	    	  if(node.data.type == "cbat"){
+	    		  window.open("http://"+node.data.tooltip,"_blank");
+	    	  }else{
+	    		  alert("所选节点不是局端，操作错误!");
+	    	  }
 	    	  break;
 	      case "move":
 	    	  
@@ -1445,7 +1464,11 @@
 	      case "quit":		        
 		      break;
 	      case "delete":
-
+	    	  var flag = localStorage.getItem('flag');
+	    	  if(flag == "3"){
+	     		  alert("只读用户，权限不足！");
+	     		  return;
+	     	   }
 	    	  
 	    	  
 	    	  if((confirm( "确定要删除吗？ ")!=true))
@@ -1477,8 +1500,11 @@
 	    	  break;
 	      case "movenode":
 	    	  //移动节点
-	    	  
-	        
+	    	  var flag = localStorage.getItem('flag');
+	    	  if(flag == "3"){
+	     		  alert("只读用户，权限不足！");
+	     		  return;
+	     	   }
 	    	  if( (node.data.type != "cbat") ){
 	    		  alert("不能移动节点！");
 	    	  }else {
@@ -1506,7 +1532,11 @@
 	    	  break;
 	      case "createnode":
 	    	  //添加节点
-	    	//移动节点
+	    	  var flag = localStorage.getItem('flag');
+	    	  if(flag == "3"){
+	     		  alert("只读用户，权限不足！");
+	     		  return;
+	     	   }
 	    	  if(  (node.data.type != "custom")   ){
 	    		  alert("不能添加节点！");
 	    	  }else{
@@ -1541,7 +1571,11 @@
 	    	  }
 	    	  break;
 	      case "editnode":
-	    	  //移动节点
+	    	  var flag = localStorage.getItem('flag');
+	    	  if(flag == "3"){
+	     		  alert("只读用户，权限不足！");
+	     		  return;
+	     	   }
 	    	  if( (node.data.type == "system") ){
 	    		  alert("不能编辑修改！");
 	    	  }
@@ -1559,7 +1593,7 @@
 						    	 
 						    		  //编辑节点
 						    		  var editstring = $("input#dg_editnode").val();
-						    		  var datastring = '{"key":"'+node.data.key+'","title":"'+ editstring+'"}';
+						    		  var datastring = '{"key":"'+node.data.key+'","title":"'+ editstring+'","type":"'+node.data.type+'"}';
 						    		  socket.emit('editnode',datastring);  					    		  
 						    		  node.data.title = editstring;
 						    		  node.render();
@@ -2200,17 +2234,17 @@
 	   }
 
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
-			if(jsondata.devicetype == "WEC-3501I C22"){
+			if(jsondata.devicemodal == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC-3501I S220"){
+			}else if(jsondata.devicemodal == "WEC-3501I S220"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I S220.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK C22"){
+			}else if(jsondata.devicemodal == "WEC9720EK C22"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK E31"){
+			}else if(jsondata.devicemodal == "WEC9720EK E31"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicetype == "WEC9720EK XD25"){
+			}else if(jsondata.devicemodal == "WEC9720EK XD25"){
 				
-			}else if(jsondata.devicetype == "WEC9720EK SD220"){
+			}else if(jsondata.devicemodal == "WEC9720EK SD220"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
 			}
 			
