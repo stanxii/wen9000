@@ -87,7 +87,7 @@
     		var node = $("#moveto_tree").dynatree("getActiveNode");
     		
     		
-    	  	var jsondata = '{"mac":"'+cbatmovetree+'","type":"'+node.data.type+'","treeparentkey":"'+node.data.key+'"}';
+    	  	var jsondata = '{"mac":"'+cbatmovetree+ '","devtype":"'+globaldevtype +  '","type":"'+node.data.type+'","treeparentkey":"'+node.data.key+'"}';
       	
     	  	
       		socket.emit('fromweb.move.movetotree', jsondata );			        						        	
@@ -893,7 +893,7 @@
 			}
 		}else if(itemv.type == "hfc"){
 			if(node == null){
-				node = $("#navtree").dynatree("getTree").getNodeByKey("hfcroot");
+				node = $("#navtree").dynatree("getTree").getNodeByKey("3");
 				var img;
 				if(itemv.online == "1"){
 					img = "cbaton.png";
@@ -1380,9 +1380,10 @@
    
    
    var cbatmovetree;
-   function initmovetree(cbatmac) {
+   function initmovetree(cbatmac, devtype) {
 	   //get move to  tree
 	   cbatmovetree =  cbatmac;
+	   globaldevtype = devtype;
 	   
 	}
    
@@ -1390,9 +1391,11 @@
 	   
 	   if(node!=null && node.key !=null){
 		   var treenode = $("#navtree").dynatree("getTree").getNodeByKey("root");
+		   
 		   if(node!=null){
 			   window.location.reload();
 		   }
+		   
 		   //treenode.render();
 		   //socket.emit('initDynatree', 'init tree' );
 	   }
@@ -1488,7 +1491,7 @@
 	    	  else if(node.data.type == "system"){
 	    		  alert("不能删除");
 	    	  }
-	    	  else if(node.data.type == "cbat"){	    		  
+	    	  else if((node.data.type == "cbat") || (node.data.type == "hfc") ){	    		  
 	    		  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
 		    	  socket.emit('delnode',datastring);
 		    	  node.remove();
@@ -1505,9 +1508,10 @@
 	     		  alert("只读用户，权限不足！");
 	     		  return;
 	     	   }
-	    	  if( (node.data.type != "cbat") ){
+	    	  if( (node.data.type != "cbat") && (node.data.type != "hfc") ){
 	    		  alert("不能移动节点！");
 	    	  }else {
+	    		  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
 	    		  socket.emit('fromweb.init.movetotree', 'movetree' );	
 	    		  
 	    		  $('#dialog_movenode').dialog({
@@ -1518,7 +1522,7 @@
 						modal: true,
 						height: 550,
 						open: function(){
-				    		  initmovetree(node.data.key);
+				    		  initmovetree(node.data.key, node.data.type);
 				    	  },
 						width: 600
 		    	  });
