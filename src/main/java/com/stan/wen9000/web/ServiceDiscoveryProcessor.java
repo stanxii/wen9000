@@ -574,6 +574,10 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("switchval", switchval);
 		hfcentity.put("rcommunity", "public");
 		hfcentity.put("wcommunity", "public");
+		//pkey 树形结构 默认节点  root ->默认节点->HFC设备
+		hfcentity.put("treeparentkey", "3");
+		jedis.sadd("tree:3:hfcs", String.valueOf(hfcid) );
+
 		jedis.hmset(shfcentitykey, hfcentity);
 		jedis.set("devip:"+ip+":mac", hfcmac.toLowerCase());
 		jedis.save();
@@ -668,11 +672,16 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("innertemp", innertemp);
 		hfcentity.put("rcommunity", "public");
 		hfcentity.put("wcommunity", "public");
+		//pkey 树形结构 默认节点  root ->默认节点->HFC设备
+		hfcentity.put("treeparentkey", "3");
+		jedis.sadd("tree:3:hfcs", String.valueOf(hfcid) );
+
 		jedis.hmset(shfcentitykey, hfcentity);
 		jedis.set("devip:"+ip+":mac", hfcmac.toLowerCase());
 		jedis.save();
 		
 		Sendstschange("hfc",String.valueOf(hfcid),jedis);
+		
 		
 		//发现新设备，通知前端		
 		JSONObject json = new JSONObject();
@@ -790,6 +799,10 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("innertemp", innertemp);
 		hfcentity.put("rcommunity", "public");
 		hfcentity.put("wcommunity", "public");
+		//pkey 树形结构 默认节点  root ->默认节点->HFC设备
+		hfcentity.put("treeparentkey", "3");
+		jedis.sadd("tree:3:hfcs", String.valueOf(hfcid) );
+
 		jedis.hmset(shfcentitykey, hfcentity);
 		jedis.set("devip:"+ip+":mac", hfcmac.toLowerCase());
 		jedis.save();
@@ -885,6 +898,10 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("innertemp", innertemp.trim());
 		hfcentity.put("rcommunity", "public");
 		hfcentity.put("wcommunity", "public");
+		//pkey 树形结构 默认节点  root ->默认节点->HFC设备
+		hfcentity.put("treeparentkey", "3");
+		jedis.sadd("tree:3:hfcs", String.valueOf(hfcid) );
+		
 		jedis.hmset(shfcentitykey, hfcentity);
 
 		jedis.save();

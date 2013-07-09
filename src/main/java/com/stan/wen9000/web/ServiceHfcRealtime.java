@@ -52,6 +52,16 @@ public class ServiceHfcRealtime {
 				log.info("------------1111------>>>>ServiceHfcRealtime Done!");
 				return;
 			}
+			if(!jedis.exists("global:displaymode")){
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
+					e.printStackTrace();
+				}
+				continue;
+			}
 			if(jedis.get("global:displaymode").equalsIgnoreCase("1")){
 				String key = jedis.get("global:hfcrealtime");
 				if((key != "")&&(key != null)){
