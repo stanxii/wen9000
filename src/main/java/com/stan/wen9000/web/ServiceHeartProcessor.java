@@ -213,6 +213,7 @@ public class ServiceHeartProcessor{
 		//判断头端是否已存在
 		if(jedis.exists("mac:"+cbatmac+":deviceid")){
 			//头端已存在			
+			System.out.println("Cbatid mac="+cbatmac);
 			String deviceid = jedis.get("mac:"+cbatmac+":deviceid");
 			String cbatkey = "cbatid:"+deviceid+":entity";
 			if(jedis.hget("cbatid:"+deviceid+":cbatinfo", "appver").equalsIgnoreCase("")){
@@ -229,31 +230,6 @@ public class ServiceHeartProcessor{
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, deviceid);
 				jedis.hset(cbatkey,"active", "1");
 				
-//				//判断新头端ip是否与已发现头端重复
-//				Set<String> cbats = jedis.keys("cbatid:*:entity");
-//				for(Iterator it= cbats.iterator();it.hasNext();){
-//					String ckey = it.next().toString();
-//					if(jedis.hget(ckey, "ip").equalsIgnoreCase(cbatip) && (!jedis.hget(ckey, "mac").equalsIgnoreCase(cbatmac))){
-//						//编辑告警信息
-//						Map<String, String> alarmhash=new LinkedHashMap();
-//						alarmhash.put("runingtime", "N/A");
-//						alarmhash.put("oid", "N/A");
-//						alarmhash.put("alarmcode", "200934");		
-//						alarmhash.put("cbatmac", cbatmac); 		
-//						Date date = new Date();
-//						DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
-//						String alarmtimes = format.format(date);
-//						alarmhash.put("salarmtime", alarmtimes);
-//						alarmhash.put("alarmlevel", "1");
-//						alarmhash.put("cnalarminfo", "新发现头端["+cbatmac+"]IP地址冲突！");
-//						alarmhash.put("enalarminfo", "New Cbat["+cbatmac+ "]IP Conflict!");
-//						
-//						String msgservice = JSONValue.toJSONString(alarmhash);
-//						jedis.publish("servicealarm.new", msgservice);
-//						redisUtil.getJedisPool().returnResource(jedis);
-//						return;
-//					}
-//				}
 				//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
 				Sendstschange("cbat",deviceid,jedis);
 			}			
@@ -271,6 +247,9 @@ public class ServiceHeartProcessor{
 			for(Iterator it= cbats.iterator();it.hasNext();){
 				String cbatkey = it.next().toString();
 				if(jedis.hget(cbatkey, "ip").equalsIgnoreCase(cbatip)){
+					
+					System.out.println("The same  IP IP key=" + cbatkey);
+					
 					//编辑告警信息
 					Map<String, String> alarmhash=new LinkedHashMap();
 					alarmhash.put("runingtime", "N/A");

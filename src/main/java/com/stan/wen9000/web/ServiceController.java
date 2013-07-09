@@ -1426,6 +1426,101 @@ public class ServiceController {
 
 	}
 
+	
+	private static void doDelChildTreeFromId(Jedis jedis, String treeid) {
+
+		String ss = (String) jedis.hget("tree:" + treeid, "type");
+
+		if (!ss.equalsIgnoreCase("custom")) {
+			// 不是能获得子树的节点. device 不能获得子节点.
+			System.out.println("not custom can't delete node return");
+			return ;
+		}
+
+		Stack stack = new Stack();
+		stack.push(treeid);
+		while (!stack.isEmpty()) {
+			String	currentnodeid = (String) stack.pop();
+			Set<String> childs = jedis.smembers("tree:"
+					+ currentnodeid + ":children");
+						
+			if (childs.isEmpty()) {
+				
+			} else {
+				JSONArray newchilds = new JSONArray();
+				for (String child : childs) {
+					
+					Set<String> childchilds = jedis.smembers("tree:"
+							+ child + ":children");
+					if (childchilds.size() > 0) {						
+						stack.push(child);
+					}else if(childchilds.isEmpty()){
+						Set<String> cbats = jedis.smembers("tree:"
+								+ child + ":eocs");
+						if (!cbats.isEmpty()) {													
+							for(String cbatid: cbats){								
+								
+								// 删除头端下的所有终端
+								Set<String> cnus = jedis.smembers("cbatid:" + cbatid + ":cnus");
+								for (Iterator it = cnus.iterator(); it.hasNext();) {
+									String cnuid = it.next().toString();
+									jedis.del("mac:"
+											+ jedis.hget("cnuid:" + cnuid + ":entity", "mac")
+											+ ":deviceid");
+									// 删除模板中记录的此cnu信息
+									String proid = jedis.hget("cnuid:" + cbatid + ":entity",
+											"profileid");
+									jedis.srem("profileid:" + proid + ":entity", cbatid);
+									jedis.del("cnuid:" + cnuid + ":entity");
+									
+								}
+								jedis.del("mac:" + jedis.hget("cbatid:" + cbatid + ":entity", "mac")
+										+ ":deviceid");
+								jedis.del("devip:" + jedis.hget("cbatid:" + cbatid + ":entity", "ip")
+										+ ":ip");
+								
+								jedis.del("cbatid:" + cbatid + ":cnus");
+								jedis.del("cbatid:" + cbatid + ":cbatinfo");
+								
+								jedis.del("cbatid:" + cbatid + ":entity");
+							}
+						}
+						
+						jedis.del("tree:"+ child + ":eocs");
+
+						// 显示 eoc+hfc
+					     Set<String> hfcs = jedis.smembers("tree:"
+									+ child + ":hfcs");
+							if (!hfcs.isEmpty()) {
+								for(String hfcid: hfcs){
+									 jedis.del("hfcid:"+hfcid+":entity");
+									 jedis.del("mac:"
+												+ jedis.hget("hfcid:" + hfcid + ":entity", "mac")
+												+ ":deviceid");
+								}
+								
+							}
+							
+							
+							jedis.del("tree:"+ child + ":hfcs");
+							
+						
+					}
+															
+				}
+				
+			}
+			
+			//del currentnode			
+			
+			jedis.del("tree:"+currentnodeid+"children");
+			jedis.del("tree:"+currentnodeid);
+
+		}
+				
+
+	}
+
 	private static void doDelAllChildNodes(Jedis jedis, String fromkey) {
 
 		Set<String> childs = jedis.smembers("tree:" + fromkey + ":children");
@@ -1526,15 +1621,19 @@ public class ServiceController {
 
 			// can del custom node mac=key
 
+			
 			String treeid = jsondata.get("key").toString();
-			String pkey = jedis.hget("tree:" + treeid, "pkey");
+			String pkey = jedis.hget("tree:" + treeid, "pkey");			
 
-			doDelAllChildNodes(jedis, treeid);
-
+			System.out.println("now will id="+treeid+  " del node json="+jsondata+ "and pkey="+pkey);
 			if (jedis.smembers("tree:" + pkey + ":children").size() == 1)
 				jedis.del("tree:" + pkey + ":children");
 			else
 				jedis.srem("tree:" + pkey + ":children", treeid);
+			
+			
+			
+			doDelChildTreeFromId(jedis, treeid);
 
 		} else {
 			// delete device
