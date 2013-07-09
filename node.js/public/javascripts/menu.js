@@ -1415,7 +1415,7 @@
 			      	fx: { height: "toggle", duration: 200 },
 	                children: treedata,
 			        imagePath: "http://localhost:3000/images/",
-			        minExpandLevel: 1,
+			        minExpandLevel: 3,
 					onDblClick: function(node, event) {
 						
 				          
@@ -1998,17 +1998,17 @@
 					   		'<tr><td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
 							'<tr><td><lable>设备标识 : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp地址 : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
-							'<tr><td><lable>ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
-							'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
-							'<tr><td><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
+							'<tr><td><lable>ip : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="ip" value='+jsondata.ip+'></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
+							'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" value='+jsondata.gateway+'></input></td></tr>'+						
+							'<tr><td><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" value='+jsondata.trapserver+'></input></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp端口号 : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
 							'<tr><td><lable>管理VLAN使能 : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
 											'<option value="1">启用</option>'+
 											'<option value="2">禁用</option>'+
 										'</select></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
-							'<tr><td><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
+							'<tr><td><lable>DNS : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="dns" value='+jsondata.dns+'></input></td>'+
 							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspTELNET超时(s) : </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
 							//'<tr><td><lable>生产厂家 : </lable></td><td><lable>杭州万隆光电设备股份有限公司</lable></td>'+
 							'<tr><td><lable>软件更新时间 : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
@@ -2129,17 +2129,17 @@
 			   		'<tr><td><lable>软件版本 : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
 					'<tr><td><lable>设备标识 : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
 					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp地址 : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
-					'<tr><td><lable>ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
-					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
-					'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
-					'<tr><td><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
+					'<tr><td><lable>ip : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="ip" value='+jsondata.ip+'></input></td>'+
+					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp子网掩码 : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
+					'<tr><td><lable>网关 : </lable></td><td><input type="text" id="gateway" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" value='+jsondata.gateway+'></input></td></tr>'+						
+					'<tr><td><lable>TrapServer : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
 					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp端口号 : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
 					'<tr><td><lable>管理VLAN使能 : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
 									'<option value="1">启用</option>'+
 									'<option value="2">禁用</option>'+
 								'</select></td>'+
 					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp管理VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
-					'<tr><td><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
+					'<tr><td><lable>DNS : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="dns" value='+jsondata.dns+'></input></td>'+
 					'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspTELNET超时(s) : </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
 					//'<tr><td><lable>生产厂家 : </lable></td><td><lable>杭州万隆光电设备股份有限公司</lable></td>'+
 					'<tr><td><lable>软件更新时间 : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
