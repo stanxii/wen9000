@@ -1444,15 +1444,13 @@ public class ServiceController {
 			Set<String> childs = jedis.smembers("tree:"
 					+ currentnodeid + ":children");
 						
-			if (childs.isEmpty()) {
-				
-			} else {
+			if (!childs.isEmpty()) {						
 				JSONArray newchilds = new JSONArray();
 				for (String child : childs) {
 					
 					Set<String> childchilds = jedis.smembers("tree:"
 							+ child + ":children");
-					if (childchilds.size() > 0) {						
+					if (childchilds.size() > 0) {							
 						stack.push(child);
 					}else if(childchilds.isEmpty()){
 						Set<String> cbats = jedis.smembers("tree:"
@@ -1503,7 +1501,7 @@ public class ServiceController {
 							
 							
 							jedis.del("tree:"+ child + ":hfcs");
-							
+							jedis.del("tree:"+child);
 						
 					}
 															
@@ -1513,89 +1511,11 @@ public class ServiceController {
 			
 			//del currentnode			
 			
-			jedis.del("tree:"+currentnodeid+"children");
+			jedis.del("tree:"+currentnodeid+":children");
 			jedis.del("tree:"+currentnodeid);
 
 		}
 				
-
-	}
-
-	private static void doDelAllChildNodes(Jedis jedis, String fromkey) {
-
-		Set<String> childs = jedis.smembers("tree:" + fromkey + ":children");
-
-		if (childs.isEmpty()) {
-			// stem.out.println
-			// delete all eocs
-			Set<String> deleocids = jedis.smembers("tree:" + fromkey + ":eocs");			
-			// move keyt's cbat to default
-			if (!deleocids.isEmpty()) {
-				for (String deleocid : deleocids) {
-					System.out.println("Leaf has eocs.....DDDD cbatid="
-							+ deleocid);
-					jedis.hset("cbatid:" + deleocid + ":entity",
-							"treeparentkey", "2");
-					jedis.sadd("tree:2:eocs", deleocid);
-				}
-				jedis.del("tree:" + fromkey + ":eocs");
-			}
-			
-			///////////del hfcs
-			Set<String> delhfcids = jedis.smembers("tree:" + fromkey + ":hfcs");			
-			// move keyt's cbat to default
-			if (!delhfcids.isEmpty()) {
-				for (String delhfcid : delhfcids) {
-					jedis.hset("hfcid:" + delhfcid + ":entity",
-							"treeparentkey", "3");
-					jedis.sadd("tree:3:hfcs", delhfcid);
-				}
-				jedis.del("tree:" + fromkey + ":hfcs");
-			}
-
-		} else {
-
-			for (String child : childs) {
-
-				// get every field
-
-				Set<String> deleocids = jedis.smembers("tree:" + child
-						+ ":eocs");
-
-				// move keyt's cbat to default
-				if (!deleocids.isEmpty()) {
-					for (String deleocid : deleocids) {
-						System.out
-								.println("NNNNNNNNNNNot Leaf has eocs.....DDDD cbatid="
-										+ deleocid);
-						jedis.hset("cbatid:" + deleocid + ":entity",
-								"treeparentkey", "2");
-						jedis.sadd("tree:2:eocs", deleocid);
-					}
-					jedis.del("tree:" + child + ":eocs");
-				}
-				
-				//del hfc
-				Set<String> delhfcids = jedis.smembers("tree:" + child + ":hfcs");			
-				// move keyt's cbat to default
-				if (!delhfcids.isEmpty()) {
-					for (String delhfcid : delhfcids) {
-						jedis.hset("hfcid:" + delhfcid + ":entity",
-								"treeparentkey", "3");
-						jedis.sadd("tree:3:eocs", delhfcid);
-					}
-					jedis.del("tree:" + fromkey + ":hfcs");
-				}
-
-				jedis.del("tree:" + child + "*");
-
-				doDelAllChildNodes(jedis, child);
-
-			}
-
-		}
-
-		jedis.del("tree:" + fromkey + "*");
 
 	}
 
@@ -1672,12 +1592,16 @@ public class ServiceController {
 					// jedis.decr("global:deviceid");
 				}
 				// 删除头端
-				jedis.del("cbatid:" + id + ":entity");
+				
 				jedis.del("mac:" + jedis.hget("cbatid:" + id + ":entity", "mac")
 						+ ":deviceid");
 				
 				jedis.del("cbatid:" + id + ":cnus");
 				jedis.del("cbatid:" + id + ":cbatinfo");
+				jedis.del("devip:" + jedis.hget("cbatid:" + id + ":entity", "ip")
+						+ ":ip");
+				
+				jedis.del("cbatid:" + id + ":entity");
 			} else if (type.equalsIgnoreCase("cnu")) {
 				String cbatid = jedis.hget("cnuid:" + id + ":entity", "cbatid");
 				jedis.srem("cbatid:" + cbatid + ":cnus", id);
@@ -1847,18 +1771,26 @@ public class ServiceController {
 			String title = jsondata.get("title").toString();
 			String type = jsondata.get("type").toString();
 			String id = jedis.get("mac:" + key + ":deviceid");
-			String devkey = "";
-			if (type.equalsIgnoreCase("cnu")) {
-				devkey = "cnuid:" + id + ":entity";
-			} else if (type.equalsIgnoreCase("cbat")) {
-				devkey = "cbatid:" + id + ":entity";
+			
+			
+			String editkey = "";
+			if(type.equalsIgnoreCase("custom")){
+				System.out.println("edit node custom node key="+key);
+				editkey = "tree:" + key;
+				jedis.hset(editkey, "title", title);
+			} else if (type.equalsIgnoreCase("cbat")){
+				editkey = "cbatid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else if (type.equalsIgnoreCase("cnu")){
+				editkey = "cnuid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else if (type.equalsIgnoreCase("hfc")){
+				editkey = "hfcid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else{
+				System.out.println("edit node type="+type + "edit error f*k");
 			}
-
-			jedis.hset(devkey, "label", title);
-			// String treeid = "tree:"+ key;
-			// 获取设备id
-
-			// jedis.hset(treeid, "title", title);
+			
 			jedis.save();
 
 			redisUtil.getJedisPool().returnResource(jedis);
@@ -1913,7 +1845,8 @@ public class ServiceController {
 
 				jedis.hmset("tree:" + childtreeid, datamap);
 				jedis.sadd("tree:" + pkey + ":children", childtreeid);
-				jedis.save();
+
+				
 
 				// set eocs to child
 
@@ -1936,10 +1869,12 @@ public class ServiceController {
 					Set<String> hfcids = jedis.smembers("tree:" + childtreeid
 							+ ":hfcs");
 					for (String hfcid : hfcids) {						
-						jedis.hset("cbatid:" + hfcid + ":entity",
+						jedis.hset("hfcid:" + hfcid + ":entity",
 								"treeparentkey", childtreeid);
 					}
 				}
+				
+				
 
 
 				// ///
@@ -1947,6 +1882,7 @@ public class ServiceController {
 				json.put("result", "ok");
 				jedis.publish("node.tree.addnode", json.toJSONString());
 
+				jedis.save();
 			}
 
 			redisUtil.getJedisPool().returnResource(jedis);
