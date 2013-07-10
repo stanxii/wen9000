@@ -678,7 +678,7 @@ public class WorkerDiscoveryProcessor{
 	   		 paramhash.put("power1", power1);
 	   		 paramhash.put("power_v1", power_v1); 
 	   		 paramhash.put("power2", power2);
-	   		 paramhash.put("power_v2", power_v1);
+	   		 paramhash.put("power_v2", power_v2);
 	   		 paramhash.put("channelnum", channelnum);
 	   		 paramhash.put("innertemp", innertemp);    	   		 
 	   		paramhash.put("Ainputpower", Ainputpower);
