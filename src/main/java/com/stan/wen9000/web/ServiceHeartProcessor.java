@@ -212,8 +212,7 @@ public class ServiceHeartProcessor{
 			
 		//判断头端是否已存在
 		if(jedis.exists("mac:"+cbatmac+":deviceid")){
-			//头端已存在			
-			System.out.println("Cbatid mac="+cbatmac);
+			//头端已存在						
 			String deviceid = jedis.get("mac:"+cbatmac+":deviceid");
 			String cbatkey = "cbatid:"+deviceid+":entity";
 			if(jedis.hget("cbatid:"+deviceid+":cbatinfo", "appver").equalsIgnoreCase("")){
@@ -247,8 +246,6 @@ public class ServiceHeartProcessor{
 			for(Iterator it= cbats.iterator();it.hasNext();){
 				String cbatkey = it.next().toString();
 				if(jedis.hget(cbatkey, "ip").equalsIgnoreCase(cbatip)){
-					
-					System.out.println("The same  IP IP key=" + cbatkey);
 					
 					//编辑告警信息
 					Map<String, String> alarmhash=new LinkedHashMap();

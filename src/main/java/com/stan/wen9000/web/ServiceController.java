@@ -1444,15 +1444,13 @@ public class ServiceController {
 			Set<String> childs = jedis.smembers("tree:"
 					+ currentnodeid + ":children");
 						
-			if (childs.isEmpty()) {
-				
-			} else {
+			if (!childs.isEmpty()) {						
 				JSONArray newchilds = new JSONArray();
 				for (String child : childs) {
 					
 					Set<String> childchilds = jedis.smembers("tree:"
 							+ child + ":children");
-					if (childchilds.size() > 0) {						
+					if (childchilds.size() > 0) {							
 						stack.push(child);
 					}else if(childchilds.isEmpty()){
 						Set<String> cbats = jedis.smembers("tree:"
@@ -1503,7 +1501,7 @@ public class ServiceController {
 							
 							
 							jedis.del("tree:"+ child + ":hfcs");
-							
+							jedis.del("tree:"+child);
 						
 					}
 															
@@ -1513,7 +1511,7 @@ public class ServiceController {
 			
 			//del currentnode			
 			
-			jedis.del("tree:"+currentnodeid+"children");
+			jedis.del("tree:"+currentnodeid+":children");
 			jedis.del("tree:"+currentnodeid);
 
 		}
@@ -1839,7 +1837,8 @@ public class ServiceController {
 
 				jedis.hmset("tree:" + childtreeid, datamap);
 				jedis.sadd("tree:" + pkey + ":children", childtreeid);
-				jedis.save();
+
+				
 
 				// set eocs to child
 
@@ -1862,10 +1861,12 @@ public class ServiceController {
 					Set<String> hfcids = jedis.smembers("tree:" + childtreeid
 							+ ":hfcs");
 					for (String hfcid : hfcids) {						
-						jedis.hset("cbatid:" + hfcid + ":entity",
+						jedis.hset("hfcid:" + hfcid + ":entity",
 								"treeparentkey", childtreeid);
 					}
 				}
+				
+				
 
 
 				// ///
@@ -1873,6 +1874,7 @@ public class ServiceController {
 				json.put("result", "ok");
 				jedis.publish("node.tree.addnode", json.toJSONString());
 
+				jedis.save();
 			}
 
 			redisUtil.getJedisPool().returnResource(jedis);
