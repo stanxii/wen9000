@@ -1771,18 +1771,26 @@ public class ServiceController {
 			String title = jsondata.get("title").toString();
 			String type = jsondata.get("type").toString();
 			String id = jedis.get("mac:" + key + ":deviceid");
-			String devkey = "";
-			if (type.equalsIgnoreCase("cnu")) {
-				devkey = "cnuid:" + id + ":entity";
-			} else if (type.equalsIgnoreCase("cbat")) {
-				devkey = "cbatid:" + id + ":entity";
+			
+			
+			String editkey = "";
+			if(type.equalsIgnoreCase("custom")){
+				System.out.println("edit node custom node key="+key);
+				editkey = "tree:" + key;
+				jedis.hset(editkey, "title", title);
+			} else if (type.equalsIgnoreCase("cbat")){
+				editkey = "cbatid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else if (type.equalsIgnoreCase("cnu")){
+				editkey = "cnuid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else if (type.equalsIgnoreCase("hfc")){
+				editkey = "hfcid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else{
+				System.out.println("edit node type="+type + "edit error f*k");
 			}
-
-			jedis.hset(devkey, "label", title);
-			// String treeid = "tree:"+ key;
-			// 获取设备id
-
-			// jedis.hset(treeid, "title", title);
+			
 			jedis.save();
 
 			redisUtil.getJedisPool().returnResource(jedis);
