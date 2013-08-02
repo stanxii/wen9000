@@ -2,7 +2,7 @@
 	$(function(){
 		socket = io.connect('http://localhost:3000');
 		if (!html5_storage_support) {
-			  alert("You Need to Upgrade your browser!!");
+			  alert("Your Browser is too low.please upgrade your browser!");
 		}
 		socket.on('getflag',fun_flag);
 		Login_init();
@@ -18,6 +18,8 @@
 		$("#remember").click(function(){
 			if(localStorage.getItem('check')){
 				localStorage.setItem('check','');
+				//localStorage.setItem('password','');
+				//$("#password")[0].value = "";
 			}else{
 				localStorage.setItem('check','true');
 			}
@@ -64,7 +66,7 @@
 	        for(var i = 0;i < arrStr.length;i++)
 	            {
 	                var temp = arrStr[i].split("=");
-	                if(objName.trim()==temp[0].trim()) //此处如果没有去掉字符串空格就不行,偶在这里折腾了半死,主要是这种错误不好跟踪啊
+	                if(objName.trim()==temp[0].trim()) 
 	                {                
 	                	return temp[1];
 	                }                            

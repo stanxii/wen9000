@@ -26,6 +26,7 @@ import redis.clients.jedis.JedisPubSub;
 
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 import com.stan.wen9000.reference.EocDeviceType;
+import com.sun.istack.internal.logging.Logger;
 
 public class ServiceDiscoveryProcessor  {
 
@@ -232,6 +233,10 @@ public class ServiceDiscoveryProcessor  {
 		
 		cbatentity.put("deviceclass", "cbat");
 		cbatentity.put("mac", cbatmac.toLowerCase().trim());
+		//pkey 树形结构 默认节点  root ->默认节点->EOC设备
+		cbatentity.put("treeparentkey", "2");
+		jedis.sadd("tree:2:eocs", String.valueOf(icbatid) );
+		
 		cbatentity.put("active", "1");
 		cbatentity.put("ip", cbatip.toLowerCase().trim());
 		cbatentity.put("label", cbatmac.toLowerCase().trim());
@@ -302,7 +307,6 @@ public class ServiceDiscoveryProcessor  {
 	    		break;
 		}
 		jedis.publish("node.dis.findcbat", json.toJSONString());
-
 		Sendstschange("cbat",String.valueOf(icbatid),jedis);
 		
 		Map<String , String >  hash = new HashMap<String, String>();
@@ -351,9 +355,9 @@ public class ServiceDiscoveryProcessor  {
 		Map jsonobj = (Map)parser.parse(message, containerFactory);
 		    
 		String hfctype =(String) jsonobj.get("hfctype");
-		if(hfctype.equalsIgnoreCase("掺铒光纤放大器")){
+		if(hfctype.equalsIgnoreCase("EDFA")){
 			saveEDFA(hfctype,jsonobj);			
-		}else if(hfctype.equalsIgnoreCase("1310nm光发射机")){
+		}else if(hfctype.equalsIgnoreCase("1310nm Optical Transmitter")){
 			save1310(hfctype,jsonobj);			
 		}else if(hfctype.equalsIgnoreCase("光平台")){
 			saveOpticalPlatform(hfctype,jsonobj);			
@@ -363,11 +367,11 @@ public class ServiceDiscoveryProcessor  {
 			saveSwitch(hfctype,jsonobj);			
 		}else if(hfctype.equalsIgnoreCase("光工作站")){
 			saveWorkStation(hfctype,jsonobj);			
-		}else if(hfctype.equalsIgnoreCase("光接收机")){
+		}else if(hfctype.equalsIgnoreCase("Optical Receiver")){
 			saveReceiver(hfctype,jsonobj);			
 		}else if(hfctype.equalsIgnoreCase("1550光发射机")){
 			save1550(hfctype,jsonobj);			
-		}else if(hfctype.equalsIgnoreCase("带切换开关光接收机")){
+		}else if(hfctype.equalsIgnoreCase("Switching Optical Receiver")){
 			saveSwitchReceiver(hfctype,jsonobj);			
 		}	
 		
@@ -570,6 +574,10 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("switchval", switchval);
 		hfcentity.put("rcommunity", "public");
 		hfcentity.put("wcommunity", "public");
+		//pkey 树形结构 默认节点  root ->默认节点->HFC设备
+		hfcentity.put("treeparentkey", "3");
+		jedis.sadd("tree:3:hfcs", String.valueOf(hfcid) );
+
 		jedis.hmset(shfcentitykey, hfcentity);
 		jedis.set("devip:"+ip+":mac", hfcmac.toLowerCase());
 		jedis.save();
@@ -664,11 +672,16 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("innertemp", innertemp);
 		hfcentity.put("rcommunity", "public");
 		hfcentity.put("wcommunity", "public");
+		//pkey 树形结构 默认节点  root ->默认节点->HFC设备
+		hfcentity.put("treeparentkey", "3");
+		jedis.sadd("tree:3:hfcs", String.valueOf(hfcid) );
+
 		jedis.hmset(shfcentitykey, hfcentity);
 		jedis.set("devip:"+ip+":mac", hfcmac.toLowerCase());
 		jedis.save();
 		
 		Sendstschange("hfc",String.valueOf(hfcid),jedis);
+		
 		
 		//发现新设备，通知前端		
 		JSONObject json = new JSONObject();
@@ -786,6 +799,10 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("innertemp", innertemp);
 		hfcentity.put("rcommunity", "public");
 		hfcentity.put("wcommunity", "public");
+		//pkey 树形结构 默认节点  root ->默认节点->HFC设备
+		hfcentity.put("treeparentkey", "3");
+		jedis.sadd("tree:3:hfcs", String.valueOf(hfcid) );
+
 		jedis.hmset(shfcentitykey, hfcentity);
 		jedis.set("devip:"+ip+":mac", hfcmac.toLowerCase());
 		jedis.save();
@@ -881,6 +898,10 @@ public class ServiceDiscoveryProcessor  {
 		hfcentity.put("innertemp", innertemp.trim());
 		hfcentity.put("rcommunity", "public");
 		hfcentity.put("wcommunity", "public");
+		//pkey 树形结构 默认节点  root ->默认节点->HFC设备
+		hfcentity.put("treeparentkey", "3");
+		jedis.sadd("tree:3:hfcs", String.valueOf(hfcid) );
+		
 		jedis.hmset(shfcentitykey, hfcentity);
 
 		jedis.save();

@@ -2,8 +2,7 @@ body {
     margin:0; 
     padding:0; 
     background-color:#E4E8EC; 
-}
-
+} 
 .m_core {
 	margin:150px auto;
 	height:250px; 
@@ -27,7 +26,6 @@ body {
     background: -moz-linear-gradient(top, #EEE, #FFF 1px, #EEE 24px); 
     background: -o-linear-gradient(top, #EEEEEE, #FFFFFF 1px, #EEEEEE 24px); 
 }
-
 .loginForm { 
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.2), 0 3px 0 #fff, 0 4px 0 rgba(0, 0, 0, 0.2), 0 6px 0 #fff, 0 7px 0 rgba(0, 0, 0, 0.2); 
     position:absolute; 
@@ -84,8 +82,8 @@ fieldset input[type=text], fieldset input[type=password] {
     width:300px; 
 } 
 fieldset input[type=submit] { 
-		float:right;
-		margin-right:10px;
+	float:right;
+	margin-right:10px;
     text-align:center; 
     padding:2px 20px; 
     line-height:2em; 

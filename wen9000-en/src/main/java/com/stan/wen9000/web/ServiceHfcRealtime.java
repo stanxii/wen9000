@@ -35,39 +35,46 @@ public class ServiceHfcRealtime {
 	}
 	
 	public static void dowork(){
-		Jedis jedis=null;		
-		JSONObject json = new JSONObject();		
+		
+//		if(!jedis.exists("global:displaymode")){
+//			redisUtil.getJedisPool().returnResource(jedis);
+//			log.info("-----------2222------->>>>ServiceHfcRealtime Done!");
+//			return;
+//		}
 		while(true){	
+			Jedis jedis=null;		
+			JSONObject json = new JSONObject();		
 			try {
 				jedis = redisUtil.getConnection();	 
-			
 			}catch(Exception e){
 				e.printStackTrace();
 				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				log.info("------------1111------>>>>ServiceHfcRealtime Done!");
 				return;
 			}
 			if(!jedis.exists("global:displaymode")){
 				try {
-					Thread.sleep(3000);
+					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
 					e.printStackTrace();
 				}
-				redisUtil.getJedisPool().returnResource(jedis);
 				continue;
 			}
 			if(jedis.get("global:displaymode").equalsIgnoreCase("1")){
 				String key = jedis.get("global:hfcrealtime");
-				if(key != ""){
+				if((key != "")&&(key != null)){
 					if(!jedis.exists(key)){
 						redisUtil.getJedisPool().returnResource(jedis);
 						continue;
 					}
 					if(!jedis.hget(key, "active").equalsIgnoreCase("1")){
 						try {
-							Thread.sleep(3000);
+							Thread.sleep(5000);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
+							redisUtil.getJedisPool().returnBrokenResource(jedis);
 							e.printStackTrace();
 						}
 						redisUtil.getJedisPool().returnResource(jedis);
@@ -83,9 +90,9 @@ public class ServiceHfcRealtime {
 							redisUtil.getJedisPool().returnResource(jedis);
 							continue;
 						}
-						if(jedis.hget(key, "hfctype").equalsIgnoreCase("掺铒光纤放大器")){
+						if(jedis.hget(key, "hfctype").equalsIgnoreCase("EDFA")){
 							Realtime_EDFA(ip,jedis,json,key);	
-						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("1310nm光发射机")){
+						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("1310nm Optical Transmitter")){
 							Realtime_1310(ip,jedis,json,key);							
 						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("光平台")){
 							
@@ -95,25 +102,37 @@ public class ServiceHfcRealtime {
 							
 						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("光工作站")){
 							
-						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("光接收机")){
+						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("Optical Receiver")){
 							Realtime_Receiver(ip,jedis,json,key);
 						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("1550光发射机")){
 							
-						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("带切换开关光接收机")){
+						}else if(jedis.hget(key, "hfctype").equalsIgnoreCase("Switching Optical Receiver")){
 							Realtime_SwitchReceiver(ip,jedis,json,key);
 						}
 						
 					}catch(Exception e){
 						//jedis.publish("node.opt.hfcrealtime", json.toJSONString());
+						redisUtil.getJedisPool().returnBrokenResource(jedis);
+						e.printStackTrace();
+					}
+					
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						redisUtil.getJedisPool().returnBrokenResource(jedis);
 						e.printStackTrace();
 					}
 					redisUtil.getJedisPool().returnResource(jedis);
+				}else{
 					try {
-						Thread.sleep(3000);
+						Thread.sleep(5000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
+						redisUtil.getJedisPool().returnBrokenResource(jedis);
 						e.printStackTrace();
 					}
+					redisUtil.getJedisPool().returnResource(jedis);
 				}
 			}else{
 				//未开HFC设备显示模式，延时30s
@@ -124,7 +143,7 @@ public class ServiceHfcRealtime {
 //					// TODO Auto-generated catch block
 //					e.printStackTrace();
 //				}
-				log.info("------------------>>>>ServiceHfcRealtime Done!");
+				log.info("----------333-------->>>>ServiceHfcRealtime Done!");
 				redisUtil.getJedisPool().returnResource(jedis);
 				return;
 			}
@@ -463,25 +482,25 @@ public class ServiceHfcRealtime {
 			jedis.hset(key, "out_level", val/10 + "."+Math.abs(val%10) + "dBuV");
 			val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,13,1,2,1}),community );
 			if(val == new Integer(1)){
-				json.put("workchannel",  "A通道");
-				jedis.hset(key, "workchannel", "A通道");
+				json.put("workchannel",  "Channel A");
+				jedis.hset(key, "workchannel", "Channel A");
 			}else{
-				json.put("workchannel",  "B通道");
-				jedis.hset(key, "workchannel","B通道");
+				json.put("workchannel",  "Channel B");
+				jedis.hset(key, "workchannel","Channel B");
 			}			
 			val = util.gethfcINT32PDU(ip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,10,13,1,3,1}),community );
 			if(val == new Integer(1)){
-				json.put("workmode",  "强制切换到A通道");
-				jedis.hset(key, "workmode", "强制切换到A通道");
+				json.put("workmode",  "Enforcing to A Channel");
+				jedis.hset(key, "workmode", "Enforcing to A Channel");
 			}else if(val == new Integer(2)){
-				json.put("workmode",  "强制切换到B通道");
-				jedis.hset(key, "workmode","强制切换到B通道");
+				json.put("workmode",  "Enforcing to B Channel");
+				jedis.hset(key, "workmode","Enforcing to B Channel");
 			}else if(val == new Integer(3)){
-				json.put("workmode",  "A通道优先");
-				jedis.hset(key, "workmode","A通道优先");
+				json.put("workmode",  "A channel priority");
+				jedis.hset(key, "workmode","A channel priority");
 			}else if(val == new Integer(4)){
-				json.put("workmode",  "B通道优先");
-				jedis.hset(key, "workmode","B通道优先");
+				json.put("workmode",  "B channel priority");
+				jedis.hset(key, "workmode","B channel priority");
 			}else{
 				json.put("workmode",  "");
 				jedis.hset(key, "workmode","");

@@ -396,14 +396,7 @@
 				alert("telnet值必须是数字！"); 
 				return;
 			}
-			reg = trapserver.match(dns);
-			if(reg==null) 
-			{ 
-				alert("DNS不合法！"); 
-				document.body.style.cursor = 'default';
-				isbusy = false;
-				return;
-			}
+			
 			var datastring = '{"mac":"'+mac+'","ip":"'+ip+'","label":"'+label+'","address":"'+address+'","mvlanenable":"'+mvlanenable
 			+'","mvlanid":"'+mvlanid+'","trapserver":"'+trapserver+'","trap_port":"'+trap_port+'","netmask":"'+netmask+'","gateway":"'
 			+gateway+'","dns":"'+dns+'","telnet":"'+telnet+'","user":"'+user+'"}';

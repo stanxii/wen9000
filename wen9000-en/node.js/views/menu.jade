@@ -19,9 +19,18 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
       Operate Failed.
       \Please make sure the connection is all right!
 
-  ul#myMenu(class='contextMenu')
-    li.delete
+  ul#myMenu(class='contextMenu')    
+    li.add
+      a(href='#createnode')  Add
+    li.delete            
       a(href='#delete')  Delete
+    li.move
+      a(href='#movenode')  Move To
+    li.edit
+      a(href='#editnode')  Edit
+    hr
+    li.toweb
+      a(href='#toweb')  WEB
   
   #dialog-alarmThreshold(title='Alarm Threshold',style='display:none')
     table
@@ -53,3 +62,14 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
   div(id='dialog_setvalue',title='Setting Value',style='display:none')
     lable  Value:
     input(id='hfc_setval',type='text')
+  div(id='dialog_movenode',title='Move',style='display:none')
+    lable  Move To Destination Node:
+    div(style='overflow-y:scroll;height:450px')
+      div(id='moveto_tree') 
+    button(id='dg_movenode')  Move        
+  div(id='dialog_editnode',title='Edit',style='display:none')
+    lable  Edit:
+    input(id='dg_editnode',type='text')
+  div(id='dialog_addnode',title='Add',style='display:none')
+    lable  Add:
+    input(id='dg_addnode',type='text')    

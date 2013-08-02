@@ -16,6 +16,7 @@
     	  var ht = window.screen.availHeight - 348;
     	  $("#wapper").css("height",ht+"px");
     	  $("#menu").css("height",ht-30+"px");
+    	  $("#content").css("height",ht+"px");
     	  $("#navtree").css("height",ht-40+"px");    	  
       }else if(window.screen.height <= 768){
 		  $("#menu").css("overflow","auto");
@@ -38,6 +39,9 @@
                   socket.emit('initDynatree', 'init tree' );
 
                   socket.on('initDynatree', onInitTree);
+                  socket.on('toweb.init.movetotree', fun_movetotreeinit );
+                  socket.on('toweb.tree.move.movetotree', fun_movetotreemove );  
+                  socket.on('toweb.tree.addnode', fun_addnode );
                   socket.on('cbatdetail', fun_cbatdetail );
                   socket.on('cnudetail', fun_cnudetail );
                   socket.on('hfcdetail', fun_hfcdetail );
@@ -51,7 +55,8 @@
                   socket.on('hfcrealtime', fun_Hfcrealtime );                 
                   socket.on('hfcsubresponse', fun_Hfcresponse );    
                   socket.on('devsearch', fun_Devsearch ); 
-      
+                  socket.on('Getcltmac', fun_Getcltmac );
+                  socket.on('optresult', fun_Optresult );
       $("#btn_hbase").live('click', function(){
     	  if(flag == "3"){
     		  alert("Read-Only, permission denied!");
@@ -73,6 +78,19 @@
     	  var node = $("#navtree").dynatree("getTree").getNodeByKey(hfcmac);
 		  node.data.title = hfclable;
 		  node.render();
+      });
+      
+      $("#dg_movenode").click(function(){
+    	  
+    		var node = $("#moveto_tree").dynatree("getActiveNode");
+    		
+    		
+    	  	var jsondata = '{"mac":"'+cbatmovetree+'","type":"'+node.data.type+'","treeparentkey":"'+node.data.key+'"}';
+      	
+    	  	
+      		socket.emit('fromweb.move.movetotree', jsondata );			        						        	
+		
+      		$("#dialog_movenode").dialog("close");
       });
       
       $("#btn_cnusync").live('click', function(){
@@ -140,7 +158,7 @@
     		  alert("Read-Only, permission denied!");
     		  return;
     	  }
-    	  if((confirm( "RESET? ")==true))
+    	  if((confirm( "RESET?  ")==true))
     	  {
     		  if(isbusy != false){
   					return;
@@ -197,7 +215,7 @@
     				  if(node == null){
     					  alert("Search Failed!");
     				  }
-    				  node.activate()
+    				  node.activate();
     			  }else{
     				  socket.emit('devsearch',search_val);
     			  } 
@@ -234,6 +252,12 @@
 	    	var port1rxrate = document.getElementById('port1rxrate').value;
 	    	var port2rxrate = document.getElementById('port2rxrate').value;
 	    	var port3rxrate = document.getElementById('port3rxrate').value;
+	    	if(isNaN(vlan0id)||isNaN(vlan1id)||isNaN(vlan2id)||isNaN(vlan3id)){
+				 document.body.style.cursor = 'default';
+		 		 isbusy = false;
+				 alert("Vlan ID Must be numberal!");
+				 return;
+			}
 			if((vlan0id>4095)||(vlan0id<0)||(vlan1id>4095)||(vlan1id<0)||(vlan2id>4095)||(vlan2id<0)||(vlan3id>4095)||(vlan3id<0)){
 				document.body.style.cursor = 'default';
 		 		isbusy = false;
@@ -277,6 +301,8 @@
 			socket.emit('cnu_sub',datastring);
 	 });
 	 
+	 
+	
 	 $("#btn_sub").live('click', function() { 	
 		    if(flag == "3"){
 	   		  alert("Read-Only, permission denied!");
@@ -352,13 +378,27 @@
 			if(isNaN(mvlanid)){
 				document.body.style.cursor = 'default';
 				isbusy = false;
-				alert("VLAN ID value should between 0~4095!"); 
+				alert("VLAN ID value must be numberal!"); 
 				return;
 			}
 			if(mvlanid>4095 || mvlanid <0){
 				document.body.style.cursor = 'default';
 				isbusy = false;
 				alert("VLAN ID value should between 0~4095!"); 
+				return;
+			}
+			if(isNaN(telnet)){
+				document.body.style.cursor = 'default';
+				isbusy = false;
+				alert("telnet value must be numberal!"); 
+				return;
+			}
+			reg = trapserver.match(dns);
+			if(reg==null) 
+			{ 
+				alert("DNS Invalid"); 
+				document.body.style.cursor = 'default';
+				isbusy = false;
 				return;
 			}
 			var datastring = '{"mac":"'+mac+'","ip":"'+ip+'","label":"'+label+'","address":"'+address+'","mvlanenable":"'+mvlanenable
@@ -428,7 +468,7 @@
 		 var mac = document.getElementById('hfc_mac').textContent;
 		 var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
 		 if(node.data.online == "0"){
-			 alert("Device Offline!");
+			 alert("Device Offline");
 			 return;
 		 }		 
 		var type = document.getElementById('hfctype').textContent;
@@ -455,7 +495,7 @@
 					document.body.style.cursor = 'wait';
 					val = $("#hfc_setval")[0].value;
 					if(id=="hfcagccontrol"){
-						if(document.getElementById('hfcagccontrol').textContent == "当前状态:AGC"){
+						if(document.getElementById('hfcagccontrol').textContent == "Mode:AGC"){
 							//document.getElementById('hfcagccontrol').textContent = "当前状态:MGC"
 							val = "1";
 						}else{
@@ -469,7 +509,7 @@
 							if(isNaN(val)||(val>84)||(val<0)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								alert("频道数超出范围!必须是0~84之间的值!");
+								alert("Channel exceeded,must between 0~84!");
 								return;								
 							}
 						}else if(id == "hfc_mgc"){
@@ -479,7 +519,7 @@
 							if(isNaN(val)||(val>10)||(val<0)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								alert("MGC衰减量超出范围!必须是0~10之间的值!");
+								alert("MGC exceeded,must between 0~10!");
 								return;								
 							}
 						}else if(id == "hfc_agc"){
@@ -489,14 +529,14 @@
 							if(isNaN(val)||(val>5)||(val<-5)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								alert("AGC偏移量超出范围!必须是-5~5之间的值!");
+								alert("AGC exceeded,must between -5~5!");
 								return;								
 							}
 						}else if(id == "hfc_rechannelnum"){
 							if(isNaN(val)||(val<0)||(val>200)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								alert("频道数不正确!(0~200)");
+								alert("Channel Num Error!(0~200)");
 								return;								
 							}
 						}else if(id == "hfc_att"){
@@ -506,7 +546,7 @@
 							if(isNaN(val)||(val<0)||(val>20)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								alert("衰减值超出范围!(0~20)");
+								alert("ATT exceeded!(0~20)");
 								return;								
 							}
 						}else if(id == "hfc_eqv"){
@@ -516,7 +556,7 @@
 							if(isNaN(val)||(val<0)||(val>10)){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								alert("均衡值超出范围!(0~10)");
+								alert("EQ exceeded!(0~10)");
 								return;								
 							}
 						}else if(id == "hfc_reagc"){
@@ -526,7 +566,7 @@
 							if(isNaN(val)||(val<(-10))||(val>(-4))){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								alert("AGC启控光功率超出范围!(-4~-9)");
+								alert("AGC optical power exceeded!(-4~-9)");
 								return;								
 							}
 						}else if(id == "hfc_switchval"){
@@ -536,7 +576,7 @@
 							if(isNaN(val)||(val<(-12))||(val>(1))){
 								document.body.style.cursor = 'default';
 								isbusy = false;
-								alert("切换阀值超出范围!(-12~1)");
+								alert("Switch threshold exceeded!(-12~1)");
 								return;								
 							}
 						}
@@ -544,7 +584,7 @@
 						socket.emit('hfc_set',datastring);
 						$("#dialog_setvalue").dialog("close");						
 				}},
-				"取消": function() {
+				"Cancel": function() {
 					$( this ).dialog("close");
 				}
 			},
@@ -577,7 +617,7 @@
 		 var mac = document.getElementById('hfc_mac').textContent;
 		 var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
 		 if(node.data.online == "0"){
-			 alert("Device offline!");
+			 alert("Device Offline");
 			 return;
 		 }
 		 if(isbusy != false){
@@ -595,29 +635,70 @@
 			
 	 });
 	 
+	 $('#s_clt').live('change',function(){
+		 var value = $(this)[0].value;
+		 var cbatmac = $('#mac')[0].textContent;
+		 var datastring = '{"value":"'+value+'","cbatmac":"'+cbatmac+'","user":"'+user+'"}';
+		 socket.emit('Scltchange',datastring);
+	 });
+	 
+	 $('#btn_cltdel').live('click',function(){
+		 if((confirm( "Sure to delete? ")!=true))
+	   	  {
+		    	  return;
+	   	  }
+		 var cltindex = $('#s_clt')[0].value;
+		 var cbatmac = $('#mac')[0].textContent;
+		 var datastring = '{"cltindex":"'+cltindex+'","cbatmac":"'+cbatmac+'","user":"'+user+'"}';
+		 socket.emit('Cltdel',datastring);
+	 });
+	 
+	 $('#btn_cltregister').live('click',function(){
+		 var cltindex = $('#s_clt')[0].value;
+		 var optstring = "#clt"+cltindex+"mac";
+		 var cltmac = $(optstring)[0].textContent;
+		 var reg_name=/^\w{2}(:\w{2}){5}$/; 
+		 var newcltmac = $('#clt_mac')[0].value;
+		 if(!reg_name.test(newcltmac)){
+     		alert("Mac Error!");
+     		return;
+     	}
+		 if(cltmac != ""){
+			 if((confirm( "This slot detect a clt, register? ")!=true))
+		   	  {
+			    	  return;
+		   	  }
+			 var cbatmac = $('#mac')[0].textContent;
+			 
+			 var datastring = '{"cltindex":"'+cltindex+'","cltmac":"'+newcltmac+'","cbatmac":"'+cbatmac+'","user":"'+user+'"}';
+			 socket.emit('Cltregister',datastring);
+		 }	 
+	 });
+	 
+	 
 	//table
 		$('#power').dataTable( {	  			 		
 			"bFilter": false,						//不使用过滤功能
 			"bLengthChange": false,					//用户不可改变每页显示数量
 			"iDisplayLength": 5,					//每页显示5条数据
  		"bInfo": false,	
-	        "sPaginationType": "full_numbers",				        
+	        "sPaginationType": "full_numbers",
 	        "oLanguage": {							//汉化
-				"sLengthMenu": "每页显示 _MENU_ 条记录",
-				"sZeroRecords": "没有检索到数据",
-				"sInfo": "当前数据为从第 _START_ 到第 _END_ 条数据；总共有 _TOTAL_ 条记录",
-				"sInfoEmtpy": "没有数据",
-				"sProcessing": "正在加载数据...",
+				"sLengthMenu": "Display _MENU_ strip record per page",
+				"sZeroRecords": "No data has been dicoveryed",
+				"sInfo": "Current data is from _START_ to _END_ strip data; has _TOTAL_ strip record in all",
+				"sInfoEmtpy": "No data",
+				"sProcessing": "Data loading...",
 				"oPaginate": {
-					"sFirst": "首页",
-					"sPrevious": "前页",
-					"sNext": "后页",
-					"sLast": "尾页"
+					"sFirst": "Home",
+					"sPrevious": "Previous",
+					"sNext": "Next",
+					"sLast": "End"
 				}
 			},
 			"aoColumns": [	
-						  { "sTitle": "电源名称" , "sClass": "center"},
-						  { "sTitle": "电源电压" , "sClass": "center"}
+						  { "sTitle": "Power Name" , "sClass": "center"},
+						  { "sTitle": "Power Voltage" , "sClass": "center"}
 						],
 			
 	    } );
@@ -650,17 +731,61 @@
     	 }
      }
      
+     function fun_Getcltmac(data){
+    	 if(data == ""){
+    		 
+    	 }else{
+    		 $('#clt_mac')[0].value = data;
+    	 }
+     }
+     
+     function fun_Optresult(data){
+    	 if(data == ""){
+    		//失败提示对话框					
+  			$( "#dialog-message-failed" ).dialog({
+  				autoOpen: false,
+  				show: "blind",
+  				modal: true,
+  				resizable: false,
+  				hide: "explode",
+  				buttons: {
+  					Ok: function() {
+  						$( this ).dialog( "close" );
+  					}
+  				}
+  			});
+  			$("#dialog-message-failed").dialog("open");
+    	 }else{
+    		//成功提示对话框
+	 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
+
+	 			$( "#dialog-message" ).dialog({
+	 				autoOpen: false,
+	 				show: "blind",
+	 				modal: true,
+	 				resizable: false,
+	 				hide: "explode",
+	 				buttons: {
+	 					Ok: function() {
+	 						$( this ).dialog( "close" );
+	 					}
+	 				}
+	 			});
+	 			$("#dialog-message").dialog("open");
+    	 }
+     }
+     
      function fun_Hfcrealtime(data){
     	 if(data == ""){
     		 //alert("获取数据失败！");
     	 }else{
-    		 if(data.hfctype == "掺铒光纤放大器"){
+    		 if(data.hfctype == "EDFA"){
     			 HfcRealtime_EDFA(data);
-    		 }else if(data.hfctype == "1310nm光发射机"){
+    		 }else if(data.hfctype == "1310nm Optical Transmitter"){
     			 HfcRealtime_1310(data);
-    		 }else if(data.hfctype == "光接收机"){
+    		 }else if(data.hfctype == "Optical Receiver"){
     			 HfcRealtime_Receiver(data);   			 
-    		 }else if(data.hfctype == "带切换开关光接收机"){
+    		 }else if(data.hfctype == "Switching Optical Receiver"){
     			 HfcRealtime_SwitchReceiver(data);   			 
     		 }
     	 }
@@ -672,7 +797,9 @@
 		if(itemv.type == "cbat"){
 			//	如果是新设备
 			if(node == null){
-				node = $("#navtree").dynatree("getTree").getNodeByKey("eocroot");
+				//cbat tree parent key
+
+				node = $("#navtree").dynatree("getTree").getNodeByKey("2");
 				var img;
 				if(itemv.online == "1"){
 					img = "cbaton.png";
@@ -923,9 +1050,9 @@
     		 }else if(data.code == "3"){
     			 //hfc mgc/agc change
     			 if(data.result == "2"){
-    				 $("#hfcagccontrol")[0].textContent = "当前状态:AGC";
+    				 $("#hfcagccontrol")[0].textContent = "Mode:AGC";
     			 }else{
-    				 $("#hfcagccontrol")[0].textContent = "当前状态:MGC";
+    				 $("#hfcagccontrol")[0].textContent = "Mode:MGC";
     			 }
     		 }else{
     			//成功提示对话框
@@ -1214,7 +1341,7 @@
 		      	fx: { height: "toggle", duration: 200 },
                 children: treedata,
 		        imagePath: "http://localhost:3000/images/",
-		        minExpandLevel: 1,
+		        minExpandLevel: 3,
 				onDblClick: function(node, event) {
 					var jsondata;
 			        if(node.data.type=="cbat"){	
@@ -1248,35 +1375,239 @@
 
    }
    
+   
+   var cbatmovetree;
+   function initmovetree(cbatmac) {
+	   //get move to  tree
+	   cbatmovetree =  cbatmac;
+	   
+	}
+   
+   function fun_movetotreemove(node) {
+	   
+	   if(node!=null && node.key !=null){
+		   var treenode = $("#navtree").dynatree("getTree").getNodeByKey("root");
+		   if(node!=null){
+			   window.location.reload();
+		   }
+		   //treenode.render();
+		   //socket.emit('initDynatree', 'init tree' );
+	   }
+	   
+   }
+   
+   function fun_movetotreeinit(treedata){
+	   //alert("fuckkkk");
+	   
+		$("#moveto_tree").dynatree({
+	  			 	persist: true,
+	  			 	selectMode: 3,
+	  			 	activeVisible: true, 
+	  			 	autoFocus: false,  			 	
+	  			 	onPostInit: function(isReloading, isError) {
+			               //logMsg("onPostInit(%o, %o) - %o", isReloading, isError, this);
+			         this.reactivate();
+			        }, 
+			      	fx: { height: "toggle", duration: 200 },
+	                children: treedata,
+			        imagePath: "http://localhost:3000/images/",
+			        minExpandLevel: 3,
+					onDblClick: function(node, event) {
+						
+				    },				   
+				    
+				    strings: {
+				        loading: "Loading…",
+				        loadError: "Load error!"
+				    },		                
+			        onActivate: function(node) {
+			        			        	       	
+				    },
+			    }); 	
+   }
+   
+   
+   function fun_addnode (node){
+			   window.location.reload();
+		   
+   }
+   
    function bindContextMenu(span) {
-	   var flag = getCookie("flag");
-	   if(flag == "3"){
- 		  //alert("Read-Only, permission denied!");
- 		  return;
- 	   }
 	    // Add context menu to this node:
 	    $(span).contextMenu({menu: "myMenu"}, function(action, el, pos) {
 	      // The event was bound to the <span> tag, but the node object
 	      // is stored in the parent <li> tag
-	      var node = $.ui.dynatree.getNode(el);
-	      if((confirm( "Be sure to delete? ")!=true))
-    	  {
-	    	  return;
-    	  }
+	      var node = $.ui.dynatree.getNode(el);  
+
 	      switch( action ) {
-	      case "cut":
-	      case "copy":
-	      case "paste":
+	      case "toweb":
+	    	  if(node.data.type == "cbat"){
+	    		  window.open("http://"+node.data.tooltip,"_blank");
+	    	  }else{
+	    		  alert("This Node is not Cbat,Operate Error!");
+	    	  }
+	    	  break;
+	      case "move":
+	    	  
+	    	  break;
+	      case "add":
 	        //copyPaste(action, node);
 	        break;
 	      case "quit":		        
 		      break;
+	      case "delete":
+					var flag = localStorage.getItem('flag');
+	    	  if(flag == "3"){
+	     		  alert("ReadOnly,Can not Operate!");
+	     		  return;
+	     	   }	    	  
+	    	  
+	    	  if((confirm( "Sure to delete? ")!=true))
+	    	  {
+		    	  return;
+	    	  }
+
+	    	  //删除节点
+	    	  
+	    	  if( (node.data.type == "custom") ){
+	    		  
+	    		  var datastring = '{"key":"'+node.data.key+'","pkey":"'+node.data.pkey +'","type":"'+node.data.type+'"}';
+		    	  socket.emit('delnode',datastring);
+		    	  node.remove();
+		    	  window.location.reload();	    		  
+	    	  }
+	    	  else if(node.data.type == "system"){
+	    		  alert("Can not delete!");
+	    	  }
+	    	  else if(node.data.type == "cbat"){	    		  
+	    		  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
+		    	  socket.emit('delnode',datastring);
+		    	  node.remove();
+		    	  window.location.reload();
+	    	  }
+	    	  
+	    	  
+
+	    	  break;
+	      case "movenode":
+	    	  //移动节点
+	    	  var flag = localStorage.getItem('flag');
+	    	  if(flag == "3"){
+	     		  alert("ReadOnly,Can not Operate!");
+	     		  return;
+	     	   }	
+	        
+	    	  if( (node.data.type != "cbat") ){
+	    		  alert("Can not move !");
+	    	  }else {
+	    		  socket.emit('fromweb.init.movetotree', 'movetree' );	
+	    		  
+	    		  $('#dialog_movenode').dialog({
+						autoOpen: false,
+						resizable: false,
+						show: "blind",
+						hide: "explode",
+						modal: true,
+						height: 550,
+						open: function(){
+				    		  initmovetree(node.data.key);
+				    	  },
+						width: 600
+		    	  });
+		    	  
+		    	  $("#dialog_movenode").dialog("open");
+		    	  
+		    	
+		    	  
+	    	  }
+	    	  
+	    	  break;
+	      case "createnode":
+	    	  //添加节点
+	    		var flag = localStorage.getItem('flag');
+	    	  if(flag == "3"){
+	     		  alert("ReadOnly,Can not Operate!");
+	     		  return;
+	     	   }	
+	    	  if(  (node.data.type != "custom")   ){
+	    		  alert("Can not add!");
+	    	  }else{
+	    		  $('#dialog_addnode').dialog({
+						autoOpen: false,
+						resizable: false,
+						show: "blind",
+						hide: "explode",
+						modal: true,
+						buttons:{
+							"OK":function(){
+						    	  
+						    	  
+						    	 
+						    		  //编辑节点
+										
+						    		  var editstring = $("input#dg_addnode").val();
+						    		  var datastring = '{"key":"'+node.data.key+'","pkey":"'+node.data.pkey +'","title":"'+ editstring+'"}';
+						    		  socket.emit('fromweb.tree.addnode',datastring);  					    		  						    		  						    		  
+						    		  $("#dialog_addnode").dialog("close");
+						    	  
+						    	  
+						    	 
+						    	  
+							}
+						},
+						height: 150,
+						width: 300
+		    	  });
+		    	  
+		    	  $("#dialog_addnode").dialog("open");
+	    	  }
+	    	  break;
+	      case "editnode":
+	    	  var flag = localStorage.getItem('flag');
+	    	  if(flag == "3"){
+	     		  alert("ReadOnly,Can not Operate!");
+	     		  return;
+	     	   }	
+	    	  if( (node.data.key == "root") || (node.data.key == "1") ||  (node.data.key == "11")   ){
+	    		  alert("Can not edit!");
+	    	  }
+	    	  else{
+		    	  $('#dialog_editnode').dialog({
+						autoOpen: false,
+						resizable: false,
+						show: "blind",
+						hide: "explode",
+						modal: true,
+						buttons:{
+							"OK":function(){
+						    	  
+						    	  
+						    	 
+						    		  //编辑节点
+						    		  var editstring = $("input#dg_editnode").val();
+						    		  var datastring = '{"key":"'+node.data.key+'","title":"'+ editstring+'","type":"'+node.data.type+'"}';
+						    		  socket.emit('editnode',datastring);  					    		  
+						    		  node.data.title = editstring;
+						    		  node.render();
+						    		  $("#dialog_editnode").dialog("close");
+						    	  
+						    	  
+						    	 
+						    	  
+							}
+						},
+						height: 150,
+						width: 300
+		    	  });
+		    	  
+		    	  $("#dialog_editnode").dialog("open");
+	    	  
+	    	  }
+	    	  
+	    	  
+	    	  break;
 	      default:
-	        //删除节点	    	  
-	    	  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
-	    	  socket.emit('delnode',datastring);
-	    	  node.remove();
-	    	  window.location.reload();
+	    	  
 	      }
 	    });
    }
@@ -1296,108 +1627,108 @@
 		   style = "color:red";
 	   }
 	   $("#content").empty();
-	   if(jsondata.hfctype == "掺铒光纤放大器"){
-		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+	   if(jsondata.hfctype == "EDFA"){
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC Info>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
 				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 				   	'<br/><div id="configinfo"><ul>'+
-					'<li><a href="#tabs-1">基本信息</a></li>'+
-					'<li><a href="#tabs-2">相关参数</a></li>'+
-					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<li><a href="#tabs-1">Base Info</a></li>'+
+					'<li><a href="#tabs-2">Parameters</a></li>'+
+					'<li><a href="#tabs-3">Trap</a></li></ul>'+
 					'<div id="tabs-1">'+
-						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
-					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+						'<table id="baseinfo"><tr><td><lable>Serial : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspType : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLogical ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
-							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLable : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>Read-only community : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspWrite-only community : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
-						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">Submit</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">Reboot</button>'+
 					'</div>'+
 					'<div id="tabs-2">'+
 						'<table>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power2+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
-						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inpower+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><lable id = "hfc_gonglv" class="hfcalarmthreshold">'+jsondata.outpower+'</lable></td></tr>'+
-						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
+				   		'<tr><td><lable>Name : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspVoltage : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
+				   		'<tr><td><lable>Name : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power2+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspVoltage : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
+						'<tr><td><lable>Input Power : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspOutput power : </lable></td><td><lable id = "hfc_gonglv" class="hfcalarmthreshold">'+jsondata.outpower+'</lable></td></tr>'+
+						'<tr><td><lable>Inner-temperature : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
 						'</table>'+
-						'<label style="color:green">泵浦参数</label><br/><hr/>'+
+						'<label style="color:green">Pump Parameters</label><br/><hr/>'+
 						'<table>'+
-						'<tr><td><lable>偏置电流1 : </lable></td><td><lable id = "hfc_bias_c1" class="hfcalarmthreshold">'+jsondata.bias_c1+'</lable></td>'+	
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp制冷电流1 : </lable></td><td><lable id = "hfc_ref_c1" class="hfcalarmthreshold">'+jsondata.ref_c1+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp泵浦温度1 : </lable></td><td><lable id = "hfc_pump_t1" class="hfcalarmthreshold">'+jsondata.pump_t1+'</lable></td></tr>'+
-						'<tr><td><lable>偏置电流2 : </lable></td><td><lable id = "hfc_bias_c2" class="hfcalarmthreshold">'+jsondata.bias_c2+'</lable></td>'+	
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp制冷电流2 : </lable></td><td><lable id = "hfc_ref_c2" class="hfcalarmthreshold">'+jsondata.ref_c2+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp泵浦温度2 : </lable></td><td><lable id = "hfc_pump_t2" class="hfcalarmthreshold">'+jsondata.pump_t2+'</lable></td></tr>'+					
+						'<tr><td><lable>Bias-Current1 : </lable></td><td><lable id = "hfc_bias_c1" class="hfcalarmthreshold">'+jsondata.bias_c1+'</lable></td>'+	
+						'<td><lable>&nbsp &nbsp &nbsp &nbspCooling Current1 : </lable></td><td><lable id = "hfc_ref_c1" class="hfcalarmthreshold">'+jsondata.ref_c1+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspTemperature1 : </lable></td><td><lable id = "hfc_pump_t1" class="hfcalarmthreshold">'+jsondata.pump_t1+'</lable></td></tr>'+
+						'<tr><td><lable>Bias-Current2 : </lable></td><td><lable id = "hfc_bias_c2" class="hfcalarmthreshold">'+jsondata.bias_c2+'</lable></td>'+	
+						'<td><lable>&nbsp &nbsp &nbsp &nbspCooling Current2 : </lable></td><td><lable id = "hfc_ref_c2" class="hfcalarmthreshold">'+jsondata.ref_c2+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspTemperature2 : </lable></td><td><lable id = "hfc_pump_t2" class="hfcalarmthreshold">'+jsondata.pump_t2+'</lable></td></tr>'+					
 						'</table>'+			
 					'</div>'+
 					'<div id="tabs-3">'+
-						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
-						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
-						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">Modify</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">Modify</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">Modify</button>'+
 					'</div>'+
 					'</div>');
 		   document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/edfa.gif";
-	   }else if(jsondata.hfctype == "1310nm光发射机"){
-		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+	   }else if(jsondata.hfctype == "1310nm Optical Transmitter"){
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC Info</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
 				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 				   	'<br/><div id="configinfo"><ul>'+
-					'<li><a href="#tabs-1">基本信息</a></li>'+
-					'<li><a href="#tabs-2">相关参数</a></li>'+
-					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<li><a href="#tabs-1">Base Info</a></li>'+
+					'<li><a href="#tabs-2">Parameters</a></li>'+
+					'<li><a href="#tabs-3">Trap</a></li></ul>'+
 					'<div id="tabs-1">'+
-						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
-					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+						'<table id="baseinfo"><tr><td><lable>Serial : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspType : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLogical ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
-							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLable : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>Read-only community : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspWrite-only community : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
-						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">Submit</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">Reboot</button>'+
 					'</div>'+
 					'<div id="tabs-2">'+
 						'<table>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable>'+jsondata.power1+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable>'+jsondata.power2+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable>'+jsondata.power3+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv3" class="hfcalarmthreshold">'+jsondata.power_v3+'</lable></td></tr>'+
+				   		'<tr><td><lable>Power Name : </lable></td><td><lable>'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspVoltage : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
+				   		'<tr><td><lable>Power Name : </lable></td><td><lable>'+jsondata.power2+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspVoltage : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
+				   		'<tr><td><lable>Power Name : </lable></td><td><lable>'+jsondata.power3+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspVoltage : </lable></td><td><lable id = "hfc_powerv3" class="hfcalarmthreshold">'+jsondata.power_v3+'</lable></td></tr>'+
 				   		'</table>'+
 				   		'<table>'+
-						'<tr><td><lable>电视信号频道数 : </lable></td><td><input id = "hfc_channelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp激光器激励电平 : </lable></td><td><lable id = "hfc_drivelevel" class="hfcalarmthreshold">'+jsondata.drivelevel+'</lable></td></tr>'+
-						'<tr><td><lable>激光器波长(nm) : </lable></td><td><lable id = "hfc_wavelength">'+jsondata.wavelength+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp射频信号衰减量范围 : </lable></td><td><lable id = "hfc_rfattrange">'+jsondata.rfattrange+'</lable></td></tr>'+
-						'<tr><td><lable>激光器类型 : </lable></td><td><lable id = "hfc_lasertype">'+jsondata.lasertype+'</lable></td>'+	
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp输出光功率 : </lable></td><td><lable id = "hfc_outputpower" class="hfcalarmthreshold">'+jsondata.outputpower+'</lable></td>'+
-						'<tr><td><lable>激光器偏置电流 : </lable></td><td><lable id = "hfc_lasercurrent" class="hfcalarmthreshold">'+jsondata.lasercurrent+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbspAGC控制使能 : </lable></td><td><button id = "hfcagccontrol" class="hfcset"></button></td></tr>'+	
-						'<tr><td><lable>激光器温度 : </lable></td><td><lable id = "hfc_temp" class="hfcalarmthreshold">'+jsondata.temp+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前MGC衰减量 : </lable></td><td><input id = "hfc_mgc" class="hfcset" readonly="readonly" value ="'+jsondata.mgc+'"></input></td></tr>'+	
-						'<tr><td><lable>激光器制冷电流 : </lable></td><td><lable id = "hfc_teccurrent" class="hfcalarmthreshold">'+jsondata.teccurrent+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前AGC偏移量 : </lable></td><td><input id = "hfc_agc" class="hfcset" readonly="readonly" value ="'+jsondata.agc+'"></input></td></tr>'+
-						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+	
+						'<tr><td><lable>TV channel : </lable></td><td><input id = "hfc_channelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspLaser power level : </lable></td><td><lable id = "hfc_drivelevel" class="hfcalarmthreshold">'+jsondata.drivelevel+'</lable></td></tr>'+
+						'<tr><td><lable>Laser wavelength(nm) : </lable></td><td><lable id = "hfc_wavelength">'+jsondata.wavelength+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspRF ATT range : </lable></td><td><lable id = "hfc_rfattrange">'+jsondata.rfattrange+'</lable></td></tr>'+
+						'<tr><td><lable>Laser Type : </lable></td><td><lable id = "hfc_lasertype">'+jsondata.lasertype+'</lable></td>'+	
+						'<td><lable>&nbsp &nbsp &nbsp &nbspOutput Power : </lable></td><td><lable id = "hfc_outputpower" class="hfcalarmthreshold">'+jsondata.outputpower+'</lable></td>'+
+						'<tr><td><lable>Laser bias current : </lable></td><td><lable id = "hfc_lasercurrent" class="hfcalarmthreshold">'+jsondata.lasercurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspAGC Enable : </lable></td><td><button id = "hfcagccontrol" class="hfcset"></button></td></tr>'+	
+						'<tr><td><lable>Laser Temperature : </lable></td><td><lable id = "hfc_temp" class="hfcalarmthreshold">'+jsondata.temp+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspMGC : </lable></td><td><input id = "hfc_mgc" class="hfcset" readonly="readonly" value ="'+jsondata.mgc+'"></input></td></tr>'+	
+						'<tr><td><lable>Laser Cooling Temperature : </lable></td><td><lable id = "hfc_teccurrent" class="hfcalarmthreshold">'+jsondata.teccurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspAGC : </lable></td><td><input id = "hfc_agc" class="hfcset" readonly="readonly" value ="'+jsondata.agc+'"></input></td></tr>'+
+						'<tr><td><lable>Inner-temperature : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+	
 						'</table>'+			
 					'</div>'+
 					'<div id="tabs-3">'+
-						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
-						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
-						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">Modify</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">Modify</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">Modify</button>'+
 					'</div>'+
 					'</div>');
 		   if(jsondata.agccontrol=="1"){
-				document.getElementById('hfcagccontrol').textContent = "当前状态:AGC";
+				document.getElementById('hfcagccontrol').textContent = "Mode:AGC";
 			}else{
-				document.getElementById('hfcagccontrol').textContent = "当前状态:MGC";
+				document.getElementById('hfcagccontrol').textContent = "Mode:MGC";
 			}
 		   document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/trans.gif";
 	   }else if(jsondata.hfctype == "光平台"){
@@ -1408,11 +1739,11 @@
 		   
 	   }else if(jsondata.hfctype == "光工作站"){
 		   
-	   }else if(jsondata.hfctype == "光接收机"){
+	   }else if(jsondata.hfctype == "Optical Receiver"){
 		   OpticalReceiver(style,jsondata,active );		   
 	   }else if(jsondata.hfctype == "1550光发射机"){
 		   
-	   }else if(jsondata.hfctype == "带切换开关光接收机"){
+	   }else if(jsondata.hfctype == "Switching Optical Receiver"){
 		   SwitchReceiver(style,jsondata,active );
 	   }	   
 		
@@ -1659,17 +1990,17 @@
 		   		'<tr><td style="width:160px"><lable>Software version : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
 				'<tr><td style="width:160px"><lable>Lable : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
 				'<td style="width:160px"><lable>&nbsp &nbsp &nbspAddress : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
-				'<tr><td style="width:160px"><lable">ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
-				'<td style="width:160px"><lable>&nbsp &nbsp &nbspSubnet mask : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
-				'<tr><td style="width:160px"><lable>Gateway : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
-				'<tr><td style="width:160px"><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
+				'<tr><td style="width:160px"><lable">ip : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="ip" value='+jsondata.ip+'></input></td>'+
+				'<td style="width:160px"><lable>&nbsp &nbsp &nbspSubnet mask : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
+				'<tr><td style="width:160px"><lable>Gateway : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
+				'<tr><td style="width:160px"><lable>TrapServer : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
 				'<td style="width:160px"><lable>&nbsp &nbsp &nbspPort ID : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
 				'<tr><td style="width:160px"><lable>MGT-VLAN En : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
 								'<option value="1">enable</option>'+
 								'<option value="2">disable</option>'+
 							'</select></td>'+
 				'<td style="width:160px"><lable>&nbsp &nbsp &nbspMGT-VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
-				'<tr><td style="width:160px"><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
+				'<tr><td style="width:160px"><lable>DNS : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="dns" value='+jsondata.dns+'></input></td>'+
 				'<td style="width:160px"><lable>&nbsp &nbsp &nbspTelnet-Timeout: </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
 				'<tr><td style="width:160px"><lable>update time : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
 				'</table><br/>'+
@@ -1789,17 +2120,17 @@
 		   		'<tr><td style="width:160px"><lable>Software version : </lable></td><td><lable>'+jsondata.appver+'</lable></td></tr>'+
 				'<tr><td style="width:160px"><lable>Lable : </lable></td><td><input type="text" id="label" value="'+jsondata.label+'"></input></td>'+
 				'<td style="width:160px"><lable>&nbsp &nbsp &nbspAddress : </lable></td><td><input type="text" id="address" value="'+jsondata.address+'"></input></td></tr>'+			
-				'<tr><td style="width:160px"><lable">ip : </lable></td><td><input type="text" id="ip" value='+jsondata.ip+'></input></td>'+
-				'<td style="width:160px"><lable>&nbsp &nbsp &nbspSubnet mask : </lable></td><td><input type="text" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
-				'<tr><td style="width:160px"><lable>Gateway : </lable></td><td><input type="text" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
-				'<tr><td style="width:160px"><lable>TrapServer : </lable></td><td><input type="text" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
+				'<tr><td style="width:160px"><lable">ip : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="ip" value='+jsondata.ip+'></input></td>'+
+				'<td style="width:160px"><lable>&nbsp &nbsp &nbspSubnet mask : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="netmask" value='+jsondata.netmask+'></input></td></tr>'+
+				'<tr><td style="width:160px"><lable>Gateway : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="gateway" value='+jsondata.gateway+'></input></td></tr>'+						
+				'<tr><td style="width:160px"><lable>TrapServer : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="trapserver" value='+jsondata.trapserver+'></input></td>'+
 				'<td style="width:160px"><lable>&nbsp &nbsp &nbspPort ID : </lable></td><td><input type="text" id="trap_port" value='+jsondata.agentport+'></input></td></tr>'+
 				'<tr><td style="width:160px"><lable>MGT-VLAN En : </lable></td><td><select name="vlanen_e" id="vlanen_e">'+
 								'<option value="1">enable</option>'+
 								'<option value="2">disable</option>'+
 							'</select></td>'+
 				'<td style="width:160px"><lable>&nbsp &nbsp &nbspMGT-VLAN ID : </lable></td><td><input type="text" id="mvlanid" value='+jsondata.mvlanid+'></input></td></tr>'+
-				'<tr><td style="width:160px"><lable>DNS : </lable></td><td><input type="text" id="dns" value='+jsondata.dns+'></input></td>'+
+				'<tr><td style="width:160px"><lable>DNS : </lable></td><td><input type="text" pattern="([\\d]{1,3}\\.){3}[\\d]{1,3}" id="dns" value='+jsondata.dns+'></input></td>'+
 				'<td style="width:160px"><lable>&nbsp &nbsp &nbspTelnet-Timeout: </lable></td><td><input type="text" id="telnet_timeout" value='+jsondata.telnet+'></input></td></tr>'+
 				'<tr><td style="width:160px"><lable>update time : </lable></td><td><lable>'+jsondata.upsoftdate+'</lable></td></tr>'+			
 				'</table><br/>'+
@@ -1893,14 +2224,7 @@
 			);
 	  	
 	   }
-	   	
-	   	
-	   	
-	   	    //tab select performence
-//			$("#cbatconfiginfo").bind( "tabsselect", function(event, ui) {
-//				alert("select :" + ui.tab);
-//			});
-//		
+
 			document.getElementById('vlanen_e').value = jsondata.mvlanenable;
 			if(jsondata.devicemodal == "WEC-3501I C22"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
@@ -1910,9 +2234,14 @@
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 			}else if(jsondata.devicemodal == "WEC9720EK E31"){
 				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
-			}else if(jsondata.devicemodal == "WEC9720EK S220"){
-				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
+			}else if(jsondata.devicemodal == "WEC9720EK XD25"){
+				
+			}else if(jsondata.devicemodal == "WEC9720EK SD220"){
+				document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
 			}
+			
+			
+			
    }
    
    function checknull(name,val){
@@ -1938,58 +2267,58 @@
    
    function SwitchReceiver(style,jsondata,active ){
 	   if((jsondata.modelnumber.toUpperCase() == "WR1001JS")||(jsondata.modelnumber.toUpperCase() == "WR1002JS")){
-		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC Info</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
 				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 				   	'<br/><div id="configinfo"><ul>'+
-					'<li><a href="#tabs-1">基本信息</a></li>'+
-					'<li><a href="#tabs-2">相关参数</a></li>'+
-					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<li><a href="#tabs-1">Base Info</a></li>'+
+					'<li><a href="#tabs-2">Parameters</a></li>'+
+					'<li><a href="#tabs-3">Trap</a></li></ul>'+
 					'<div id="tabs-1">'+
-						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
-					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+						'<table id="baseinfo"><tr><td><lable>Serial : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspType : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLogical ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
-							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLable : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>Read-only community : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspWrite-only community : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
-						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">Submit</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">Reboot</button>'+
 					'</div>'+
 					'<div id="tabs-2">'+
 						'<table>'+
-				   		'<tr><td><lable>A电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbspA电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+	
-				   		'<tr><td><lable>B电源名称 : </lable></td><td><lable id="hfc_dcpowerb">'+jsondata.power2+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbspB电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+	
-						'<tr><td><lable>A路输入光功率 : </lable></td><td><lable id = "hfc_Ainputpower" class="hfcalarmthreshold">'+jsondata.Ainputpower+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbspB路输入光功率 : </lable></td><td><lable id = "hfc_Binputpower" class="hfcalarmthreshold">'+jsondata.Binputpower+'</lable></td></tr>'+
-						'<tr><td><lable>切换阀值 : </lable></td><td><input id = "hfc_switchval" class="hfcset" readonly="readonly" value ="'+jsondata.switchval +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp当前工作通道 : </lable></td><td><lable id = "hfc_workchannel">'+jsondata.workchannel+'</lable></td></tr>'+
-						'<tr><td><lable>当前控制模式 : </lable></td><td><lable id = "hfc_workmode">'+jsondata.workmode+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp控制模式选择 : </lable></td><td><select name="hfc_smode" id="hfc_smode">'+
-							'<option value="0">请选择</option>'+
-							'<option value="1">强制切换到A通道</option>'+
-							'<option value="2">强制切换到B通道</option>'+
-							'<option value="3">A通道优先</option>'+
-							'<option value="4">B通道优先</option>'+
+				   		'<tr><td><lable>A Power : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspA Voltage : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+	
+				   		'<tr><td><lable>B Power : </lable></td><td><lable id="hfc_dcpowerb">'+jsondata.power2+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspB Voltage : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+	
+						'<tr><td><lable>A Input Power : </lable></td><td><lable id = "hfc_Ainputpower" class="hfcalarmthreshold">'+jsondata.Ainputpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspB Input Power : </lable></td><td><lable id = "hfc_Binputpower" class="hfcalarmthreshold">'+jsondata.Binputpower+'</lable></td></tr>'+
+						'<tr><td><lable>Switch threshold : </lable></td><td><input id = "hfc_switchval" class="hfcset" readonly="readonly" value ="'+jsondata.switchval +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspWorking Channel : </lable></td><td><lable id = "hfc_workchannel">'+jsondata.workchannel+'</lable></td></tr>'+
+						'<tr><td><lable>Control Mode : </lable></td><td><lable id = "hfc_workmode">'+jsondata.workmode+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspMode Select : </lable></td><td><select name="hfc_smode" id="hfc_smode">'+
+							'<option value="0">Select</option>'+
+							'<option value="1">Enforcing to A Channel</option>'+
+							'<option value="2">Enforcing to B Channel</option>'+
+							'<option value="3">A channel priority</option>'+
+							'<option value="4">B channel priority</option>'+
 							'</select></td></tr>'+
-						'<tr><td><lable>AGC启控光功率 : </lable></td><td><input id = "hfc_reagc" class="hfcset" readonly="readonly" value ="'+jsondata.agc +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
-						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
+						'<tr><td><lable>AGC optical power : </lable></td><td><input id = "hfc_reagc" class="hfcset" readonly="readonly" value ="'+jsondata.agc +'"></input></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspChannel Num : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
+						'<tr><td><lable>Inner temperature : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
 						'</table>'+
 						'<table>'+						
-						'<tr><td><lable>输出端口 : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
-						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp输出电平 : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
+						'<tr><td><lable>Output port : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
+						'<td><lable>&nbsp &nbspATT : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
+						'<td><lable>&nbsp &nbspEQ : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
+						'<td><lable>&nbsp &nbspOutput Level : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
 						'</table>'+			
 					'</div>'+
 					'<div id="tabs-3">'+
-						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
-						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
-						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">Modify</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">Modify</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">Modify</button>'+
 					'</div>'+
 					'</div>');
 			document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/oprv-1001j.gif";
@@ -2002,48 +2331,48 @@
    
    function OpticalReceiver(style,jsondata,active ){
 	   if((jsondata.modelnumber.toUpperCase() == "WR8602RJ")||(jsondata.modelnumber.toUpperCase() == "WR8602JL")||(jsondata.modelnumber.toUpperCase() == "WR8600")){
-		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC Info</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
 				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 				   	'<br/><div id="configinfo"><ul>'+
-					'<li><a href="#tabs-1">基本信息</a></li>'+
-					'<li><a href="#tabs-2">相关参数</a></li>'+
-					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<li><a href="#tabs-1">Base Info</a></li>'+
+					'<li><a href="#tabs-2">Parameters</a></li>'+
+					'<li><a href="#tabs-3">Trap</a></li></ul>'+
 					'<div id="tabs-1">'+
-						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
-					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+						'<table id="baseinfo"><tr><td><lable>Serial : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspType : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLogical ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
-							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLable : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>Read-only community : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspWrite-only community : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
-						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">Submit</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">Reboot</button>'+
 					'</div>'+
 					'<div id="tabs-2">'+
 						'<table>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power2+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
-						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inputpower+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp反向发射光功率 : </lable></td><td><lable id = "hfc_r_transpower" class="hfcalarmthreshold">'+jsondata.r_transpower+'</lable></td></tr>'+
-						'<tr><td><lable>反向偏置电流 : </lable></td><td><lable id = "hfc_r_biascurrent" class="hfcalarmthreshold">'+jsondata.r_biascurrent+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
-						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
+				   		'<tr><td><lable>Power Name : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspVoltage : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+
+				   		'<tr><td><lable>Power Name : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power2+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspVoltage : </lable></td><td><lable id = "hfc_powerv2" class="hfcalarmthreshold">'+jsondata.power_v2+'</lable></td></tr>'+
+						'<tr><td><lable>Input Power : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inputpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspRe-optical Power : </lable></td><td><lable id = "hfc_r_transpower" class="hfcalarmthreshold">'+jsondata.r_transpower+'</lable></td></tr>'+
+						'<tr><td><lable>Re-bias current : </lable></td><td><lable id = "hfc_r_biascurrent" class="hfcalarmthreshold">'+jsondata.r_biascurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspChannel Number : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
+						'<tr><td><lable>Inner temperature : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td></tr>'+
 						'</table>'+
 						'<table>'+
-						'<tr><td><lable>输出端口 : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
-						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp输出电平 : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
+						'<tr><td><lable>Output port : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
+						'<td><lable>&nbsp &nbspATT : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
+						'<td><lable>&nbsp &nbspEQ : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
+						'<td><lable>&nbsp &nbspOutput Level : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
 						'</table>'+			
 					'</div>'+
 					'<div id="tabs-3">'+
-						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
-						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
-						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">Modify</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">Modify</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">Modify</button>'+
 					'</div>'+
 					'</div>');
 		   if(jsondata.modelnumber.toUpperCase() == "WR8602RJ"){
@@ -2055,47 +2384,47 @@
 			}
 		   
 	   }else if(jsondata.modelnumber.toUpperCase() == "WR1001J"){
-		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC设备信息</h3>'+
+		   $("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">HFC Info</h3>'+
 				   	'<div style="float:left"><img id="pg_dev" src="" style="width:500px;height:100px"/></div>'+
 				   	'<div id="hfcsts" style="height:100px;width:200px;margin:10px 10px 1px 510px;'+style+'"><lable id="hfcsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 				   	'<br/><div id="configinfo"><ul>'+
-					'<li><a href="#tabs-1">基本信息</a></li>'+
-					'<li><a href="#tabs-2">相关参数</a></li>'+
-					'<li><a href="#tabs-3">Trap信息</a></li></ul>'+
+					'<li><a href="#tabs-1">Base Info</a></li>'+
+					'<li><a href="#tabs-2">Parameters</a></li>'+
+					'<li><a href="#tabs-3">Trap</a></li></ul>'+
 					'<div id="tabs-1">'+
-						'<table id="baseinfo"><tr><td><lable>序列号 : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
-					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
+						'<table id="baseinfo"><tr><td><lable>Serial : </lable></td><td><lable style="margin-left:0px">'+jsondata.serialnumber+'</lable></td>'+
+					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspType : </lable></td><td><lable id="hfctype">'+jsondata.hfctype+'</lable></td>'+
 					   		'<tr><td><lable>MAC : </lable></td><td><lable id = "hfc_mac">'+jsondata.mac+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp逻辑ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLogical ID : </lable></td><td><lable>'+jsondata.logicalid+'</lable></td></tr>'+	
 							'<tr><td><lable>IP : </lable></td><td><lable id = "hfc_ip">'+jsondata.ip+'</lable></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备标识 : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
-							'<tr><td><lable>只读团体名 : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
-							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp只写团体名 : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspLable : </lable></td><td><input id = "hfc_lable" value="'+jsondata.lable+ '"></input></td></tr>'+	
+							'<tr><td><lable>Read-only community : </lable></td><td><input id = "hfc_rcommunity" value="'+jsondata.rcommunity+ '"></input></td>'+
+							'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbspWrite-only community : </lable></td><td><input id = "hfc_wcommunity" value="'+jsondata.wcommunity+ '"></input></td></tr>'+
 						'</table>'+
-						'<br/><button id="btn_hbase" style="margin-left:100px">提交</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">重启设备</button>'+
+						'<br/><button id="btn_hbase" style="margin-left:100px">Submit</button><button style="margin-left:160px" class="hfcbasesub" id="hfcreboot">Reboot</button>'+
 					'</div>'+
 					'<div id="tabs-2">'+
 						'<table>'+
-				   		'<tr><td><lable>电源名称 : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
-				   		'<td><lable>&nbsp &nbsp &nbsp &nbsp电源电压 : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+				   		
-						'<tr><td><lable>输入光功率 : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inputpower+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp反向发射光功率 : </lable></td><td><lable id = "hfc_r_transpower" class="hfcalarmthreshold">'+jsondata.r_transpower+'</lable></td></tr>'+
-						'<tr><td><lable>反向偏置电流 : </lable></td><td><lable id = "hfc_r_biascurrent" class="hfcalarmthreshold">'+jsondata.r_biascurrent+'</lable></td>'+
-						'<td><lable>&nbsp &nbsp &nbsp &nbsp频道数 : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
-						'<tr><td><lable>机内温度 : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td>'+
-						'<td><lable>&nbsp &nbspAGC启控光功率 : </lable></td><td><input id = "hfc_reagc" class="hfcset" value ="'+jsondata.agc +'"></input></td></tr>'+
+				   		'<tr><td><lable>Power Name : </lable></td><td><lable id="hfc_dcpower">'+jsondata.power1+'</lable></td>'+
+				   		'<td><lable>&nbsp &nbsp &nbsp &nbspVoltage : </lable></td><td><lable id = "hfc_powerv1" class="hfcalarmthreshold">'+jsondata.power_v1+'</lable></td></tr>'+				   		
+						'<tr><td><lable>Input Power : </lable></td><td><lable id = "hfc_ingonglv" class="hfcalarmthreshold">'+jsondata.inputpower+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspRe-optical Poewr : </lable></td><td><lable id = "hfc_r_transpower" class="hfcalarmthreshold">'+jsondata.r_transpower+'</lable></td></tr>'+
+						'<tr><td><lable>Re-bias current : </lable></td><td><lable id = "hfc_r_biascurrent" class="hfcalarmthreshold">'+jsondata.r_biascurrent+'</lable></td>'+
+						'<td><lable>&nbsp &nbsp &nbsp &nbspChannel Num : </lable></td><td><input id = "hfc_rechannelnum" class="hfcset" readonly="readonly" value ="'+jsondata.channelnum +'"></input></td></tr>'+
+						'<tr><td><lable>Inner temperature : </lable></td><td><lable id = "hfc_innertemp">'+jsondata.innertemp+'</lable></td>'+
+						'<td><lable>&nbsp &nbspAGC Optical Power : </lable></td><td><input id = "hfc_reagc" class="hfcset" value ="'+jsondata.agc +'"></input></td></tr>'+
 						'</table><br/>'+
 						'<table>'+
-						'<tr><td><lable>输出端口 : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
-						'<td><lable>&nbsp &nbsp衰减值 : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp均衡值 : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
-						'<td><lable>&nbsp &nbsp输出电平 : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
+						'<tr><td><lable>Output Port : </lable></td><td><lable id = "hfc_out_port">'+jsondata.out_port+'</lable></td>'+	
+						'<td><lable>&nbsp &nbspATT : </lable></td><td><input style="width:60px" id = "hfc_att" class="hfcset" readonly="readonly" value ="'+jsondata.att +'"></input></td>'+
+						'<td><lable>&nbsp &nbspEQ : </lable></td><td><input style="width:60px" id = "hfc_eqv" class="hfcset" readonly="readonly" value ="'+jsondata.eqv +'"></input></td>'+
+						'<td><lable>&nbsp &nbspOutput Level : </lable></td><td><lable style="width:60px" id = "hfc_out_level" class="hfcalarmthreshold">'+jsondata.out_level+'</lable></td></tr>'+					
 						'</table>'+			
 					'</div>'+
 					'<div id="tabs-3">'+
-						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">修改</button><br/>'+
-						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">修改</button><br/>'+
-						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">修改</button>'+
+						'<lable>Trap1IP : </lable></td><td><input id = "trapip1" value='+jsondata.trapip1+ '></input><button class="hfcbasesub" id="trap1sub">Modify</button><br/>'+
+						'<lable>Trap2IP : </lable></td><td><input id = "trapip2" value='+jsondata.trapip2+ '></input><button class="hfcbasesub" id="trap2sub">Modify</button><br/>'+
+						'<lable>Trap3IP : </lable></td><td><input id = "trapip3" value='+jsondata.trapip3+ '></input><button class="hfcbasesub" id="trap3sub">Modify</button>'+
 					'</div>'+
 					'</div>');
 		   document.getElementById('pg_dev').src = "http://localhost:3000/images/devpics/oprv-1001j.gif";
@@ -2380,9 +2709,9 @@
 		 $("#hfc_agc")[0].value = data.agc;
 
 		 if(data.agccontrol == "2"){
-			 $("#hfcagccontrol")[0].textContent = "当前状态:AGC";
+			 $("#hfcagccontrol")[0].textContent = "Mode:AGC";
 		 }else{
-			 $("#hfcagccontrol")[0].textContent = "当前状态:MGC";
+			 $("#hfcagccontrol")[0].textContent = "Mode:MGC";
 		 }
    }
    

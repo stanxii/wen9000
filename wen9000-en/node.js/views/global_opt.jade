@@ -26,6 +26,15 @@ block content
   br
   br
   h3  Redis database operation
+  p  When use HFC mode, we must import HFC database to display HFC Alarm Information.
+  br
+  button(id='btn_import')  Import HFC Data
+  br
   p  This NMS use the newest Redis MMDB, Increase efficiency of data store. Please click the Save button for saving the data to hard disk, so that core data will not easy to lose.
   br
   button(id='btn_gsave')  Save 
+  
+  div(id='dialog-message-proc',title='Importing',style='display:none')
+    img(src='http://localhost:3000/images/loading.gif',style='margin-left:80px')
+    br
+    label#up_proc(style='margin-left:100px')  
