@@ -1466,10 +1466,14 @@ public class ServiceController {
 											+ jedis.hget("cnuid:" + cnuid + ":entity", "mac")
 											+ ":deviceid");
 									// 删除模板中记录的此cnu信息
-									String proid = jedis.hget("cnuid:" + cbatid + ":entity",
+									String proid = jedis.hget("cnuid:" + cnuid + ":entity",
 											"profileid");
-									jedis.srem("profileid:" + proid + ":entity", cbatid);
-									jedis.del("cnuid:" + cnuid + ":entity");
+									
+									jedis.srem("profileid:" + proid + ":cnus", cnuid);
+									if(jedis.smembers("profileid:" + proid + ":cnus").isEmpty())								
+									    jedis.del("cnuid:" + cnuid + ":cnus");
+									
+									
 									
 								}
 								jedis.del("mac:" + jedis.hget("cbatid:" + cbatid + ":entity", "mac")
@@ -1481,6 +1485,9 @@ public class ServiceController {
 								jedis.del("cbatid:" + cbatid + ":cbatinfo");
 								
 								jedis.del("cbatid:" + cbatid + ":entity");
+								
+								
+								System.out.println("============now will del cbatid"+ cbatid);
 							}
 						}
 						
@@ -1507,12 +1514,76 @@ public class ServiceController {
 															
 				}
 				
+			}else{
+				//leaf node check is have eocs or hfcs
+
+                //////////////////////////////////////////////////////////000000000000000000000
+				Set<String> cbats = jedis.smembers("tree:"
+						+ currentnodeid + ":eocs");
+				if (!cbats.isEmpty()) {													
+					for(String cbatid: cbats){								
+						
+						// 删除头端下的所有终端
+						Set<String> cnus = jedis.smembers("cbatid:" + cbatid + ":cnus");
+						for (Iterator it = cnus.iterator(); it.hasNext();) {
+							String cnuid = it.next().toString();
+							jedis.del("mac:"
+									+ jedis.hget("cnuid:" + cnuid + ":entity", "mac")
+									+ ":deviceid");
+							// 删除模板中记录的此cnu信息
+							String proid = jedis.hget("cnuid:" + cnuid + ":entity",
+									"profileid");
+							jedis.srem("profileid:" + proid + ":cnus", cnuid);
+							if(jedis.smembers("profileid:" + proid + ":cnus").isEmpty())								
+							    jedis.del("cnuid:" + cnuid + ":cnus");
+							
+						}
+						jedis.del("mac:" + jedis.hget("cbatid:" + cbatid + ":entity", "mac")
+								+ ":deviceid");
+						jedis.del("devip:" + jedis.hget("cbatid:" + cbatid + ":entity", "ip")
+								+ ":ip");
+						
+						jedis.del("cbatid:" + cbatid + ":cnus");
+						jedis.del("cbatid:" + cbatid + ":cbatinfo");
+						
+						jedis.del("cbatid:" + cbatid + ":entity");
+						
+						
+						System.out.println("============now will del cbatid"+ cbatid);
+					}
+				}
+				
+				jedis.del("tree:"+ currentnodeid + ":eocs");
+
+				// 显示 eoc+hfc
+			     Set<String> hfcs = jedis.smembers("tree:"
+							+ currentnodeid + ":hfcs");
+					if (!hfcs.isEmpty()) {
+						for(String hfcid: hfcs){
+							 jedis.del("hfcid:"+hfcid+":entity");
+							 jedis.del("mac:"
+										+ jedis.hget("hfcid:" + hfcid + ":entity", "mac")
+										+ ":deviceid");
+						}
+						
+					}
+					
+					//del currentnode			
+					System.out.println("now will del tree:"+ currentnodeid+" :children");
+					System.out.println("now will del tree:"+ currentnodeid);
+					
+					jedis.del("tree:"+ currentnodeid + ":hfcs");
+					jedis.del("tree:"+currentnodeid);
+					jedis.del("tree:"+currentnodeid+":children");
+					jedis.del("tree:"+currentnodeid);
+				
+			        ////////////////////////////////////////////////////////////000000000000000000000
 			}
 			
-			//del currentnode			
 			
-			jedis.del("tree:"+currentnodeid+":children");
-			jedis.del("tree:"+currentnodeid);
+			
+			
+		
 
 		}
 				
@@ -1552,7 +1623,7 @@ public class ServiceController {
 				jedis.srem("tree:" + pkey + ":children", treeid);
 			
 			
-			
+			System.out.println("delete custom node with eoc devices!  treeid="+treeid);
 			doDelChildTreeFromId(jedis, treeid);
 
 		} else {
