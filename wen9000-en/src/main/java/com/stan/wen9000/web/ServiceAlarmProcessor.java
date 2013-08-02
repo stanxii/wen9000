@@ -76,7 +76,7 @@ public class ServiceAlarmProcessor {
 
       public void onPMessage(String arg0, String arg1, String msg) {
 
-      	System.out.println("[x]ServiceAlarmProcesser  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
+      	//System.out.println("[x]ServiceAlarmProcesser  Subscribing....pmessage....now receive on msgarge1 [" + arg1 + "] arg2=["+msg +"]");
       	try {
   			//arg2 is mssage now is currenti p
   			
@@ -278,7 +278,7 @@ public class ServiceAlarmProcessor {
 				}else if(flag.equalsIgnoreCase("2")){
 					newjson.put("desc", "User["+json.get("user").toString()+"]Logout.");
 				}else if(flag.equalsIgnoreCase("3")){
-					newjson.put("desc", "New user["+json.get("user").toString()+"]Registered,Permission:ReadOnly.");
+					newjson.put("desc", "New User["+json.get("user").toString()+"]register,Permission:ReadOnly.");
 				}
 				jedis.hmset(logkey, newjson);
 			}else{

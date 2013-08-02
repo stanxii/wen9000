@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -54,7 +55,7 @@ public class ServiceController {
 	private static SnmpUtil util = new SnmpUtil();
 
 	private static RedisUtil redisUtil;
-	
+
 	private static JSONObject resultObj;
 
 	public static void setRedisUtil(RedisUtil redisUtil) {
@@ -154,13 +155,11 @@ public class ServiceController {
 			doNodeMoveToTreeInit(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.move.movetotree")) {
 			doMoveTreeCbatNode(message);
-		}
-		else if (pat.equalsIgnoreCase("servicecontroller.index.init")) {
+		} else if (pat.equalsIgnoreCase("servicecontroller.index.init")) {
 			doNodeIndexInit(message);
-		}else if (pat.equalsIgnoreCase("servicecontroller.tree.addnode")) {
+		} else if (pat.equalsIgnoreCase("servicecontroller.tree.addnode")) {
 			doAddNode(message);
-		}		
-		else if (pat.equalsIgnoreCase("servicecontroller.cbatdetail")) {
+		} else if (pat.equalsIgnoreCase("servicecontroller.cbatdetail")) {
 			doNodeCbatdetail(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.cnudetail")) {
 			doNodeCnudetail(message);
@@ -254,11 +253,9 @@ public class ServiceController {
 			doFtpInfo(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.delnode")) {
 			doDelNode(message);
-		}
-	    else if (pat.equalsIgnoreCase("servicecontroller.editnode")) {
-				doEditNode(message);
-		}
-		else if (pat.equalsIgnoreCase("servicecontroller.opt.updatereset")) {
+		} else if (pat.equalsIgnoreCase("servicecontroller.editnode")) {
+			doEditNode(message);
+		} else if (pat.equalsIgnoreCase("servicecontroller.opt.updatereset")) {
 			doUpdateReset(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.hfcdetail")) {
 			doHfcDetail(message);
@@ -311,10 +308,9 @@ public class ServiceController {
 			doCltDel(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.Cltregister")) {
 			doCltRegister(message);
-		}else if(pat.equalsIgnoreCase("servicecontroller.importhfcredis")){
+		} else if (pat.equalsIgnoreCase("servicecontroller.importhfcredis")) {
 			doImportHfcRedis(message);
-		}		
-
+		}
 
 	}
 
@@ -459,13 +455,13 @@ public class ServiceController {
 			JSONObject json, String message) throws ParseException {
 		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
 		String type = jsondata.get("type").toString();
-		if (type.equalsIgnoreCase("掺铒光纤放大器")) {
+		if (type.equalsIgnoreCase("EDFA")) {
 			ThresholdSet_EDFA(jedis, ParamMibOID, json, jsondata);
-		} else if (type.equalsIgnoreCase("1310nm光发射机")) {
+		} else if (type.equalsIgnoreCase("1310nm Optical Transmitter")) {
 			ThresholdSet_1310(jedis, ParamMibOID, json, jsondata);
-		} else if (type.equalsIgnoreCase("光接收机")) {
+		} else if (type.equalsIgnoreCase("Optical Receiver")) {
 			ThresholdSet_Receiver(jedis, ParamMibOID, json, jsondata);
-		} else if (type.equalsIgnoreCase("带切换开关光接收机")) {
+		} else if (type.equalsIgnoreCase("Switching Optical Receiver")) {
 			ThresholdSet_SwitchReceiver(jedis, ParamMibOID, json, jsondata);
 		}
 
@@ -476,13 +472,13 @@ public class ServiceController {
 		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
 		String type = jsondata.get("type").toString();
 
-		if (type.equalsIgnoreCase("掺铒光纤放大器")) {
+		if (type.equalsIgnoreCase("EDFA")) {
 			ThresholdGet_EDFA(jedis, ParamMibOID, json, jsondata);
-		} else if (type.equalsIgnoreCase("1310nm光发射机")) {
+		} else if (type.equalsIgnoreCase("1310nm Optical Transmitter")) {
 			ThresholdGet_1310(jedis, ParamMibOID, json, jsondata);
-		} else if (type.equalsIgnoreCase("光接收机")) {
+		} else if (type.equalsIgnoreCase("Optical Receiver")) {
 			ThresholdGet_Receiver(jedis, ParamMibOID, json, jsondata);
-		} else if (type.equalsIgnoreCase("带切换开关光接收机")) {
+		} else if (type.equalsIgnoreCase("Switching Optical Receiver")) {
 			ThresholdGet_SwitchReceiver(jedis, ParamMibOID, json, jsondata);
 		}
 
@@ -526,12 +522,12 @@ public class ServiceController {
 				redisUtil.getJedisPool().returnResource(jedis);
 				return;
 			}
-			if (type.equalsIgnoreCase("1310nm光发射机")) {
+			if (type.equalsIgnoreCase("1310nm Optical Transmitter")) {
 				if (name.equalsIgnoreCase("hfcagccontrol")) {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 6, 3, 1, 12, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]AGC控制使能状态变迁.");
+					optjson.put("desc", "HFC[" + mac + "]AGC Mode Changed.");
 
 					json.put("code", "3");
 					json.put("result", val);
@@ -545,7 +541,7 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 6, 3, 1, 15, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]电视信号频道数修改,当前值:"
+					optjson.put("desc", "HFC[" + mac + "]TV signal channel number changed,number:"
 							+ val);
 				} else if (name.equalsIgnoreCase("hfc_mgc")) {
 					try {
@@ -562,7 +558,7 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 6, 3, 1, 14, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]MGC衰减量修改,当前值:" + val);
+					optjson.put("desc", "HFC[" + mac + "]MGC Modify,val:" + val);
 				} else if (name.equalsIgnoreCase("hfc_agc")) {
 					try {
 						index = val.indexOf(".");
@@ -578,14 +574,14 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 6, 3, 1, 13, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]AGC偏移量修改,当前值:" + val);
+					optjson.put("desc", "HFC[" + mac + "]AGC Modify,val:" + val);
 				}
-			} else if (type.equalsIgnoreCase("光接收机")) {
+			} else if (type.equalsIgnoreCase("Optical Receiver")) {
 				if (name.equalsIgnoreCase("hfc_rechannelnum")) {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 20, 0 }),
 							new Integer32(Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]频道数修改,当前值:" + val);
+					optjson.put("desc", "HFC[" + mac + "]channel number changed,val:" + val);
 				} else if (name.equalsIgnoreCase("hfc_reagc")) {
 					try {
 						index = val.indexOf(".");
@@ -601,7 +597,7 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 28, 0 }),
 							new Integer32(Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]AGC启控光功率修改,当前值:"
+					optjson.put("desc", "HFC[" + mac + "]AGC Optical power changed,val:"
 							+ val);
 				} else if (name.equalsIgnoreCase("hfc_att")) {
 					try {
@@ -618,7 +614,7 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 11, 1, 9, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]衰减值 修改,当前值:" + val);
+					optjson.put("desc", "HFC[" + mac + "]Att changed,val:" + val);
 				} else if (name.equalsIgnoreCase("hfc_eqv")) {
 					try {
 						index = val.indexOf(".");
@@ -634,14 +630,14 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 11, 1, 10, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]均衡值 修改,当前值:" + val);
+					optjson.put("desc", "HFC[" + mac + "]EQ changed,val:" + val);
 				}
-			} else if (type.equalsIgnoreCase("带切换开关光接收机")) {
+			} else if (type.equalsIgnoreCase("Switching Optical Receiver")) {
 				if (name.equalsIgnoreCase("hfc_rechannelnum")) {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 20, 0 }),
 							new Integer32(Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]频道数修改,当前值:" + val);
+					optjson.put("desc", "HFC[" + mac + "]channel number changed,val:" + val);
 				} else if (name.equalsIgnoreCase("hfc_reagc")) {
 					try {
 						index = val.indexOf(".");
@@ -657,7 +653,7 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 28, 0 }),
 							new Integer32(Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]AGC启控光功率修改,当前值:"
+					optjson.put("desc", "HFC[" + mac + "]AGC optical power changed,val:"
 							+ val);
 				} else if (name.equalsIgnoreCase("hfc_att")) {
 					try {
@@ -674,7 +670,7 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 11, 1, 9, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]衰减值 修改,当前值:" + val);
+					optjson.put("desc", "HFC[" + mac + "]ATT changed,val:" + val);
 				} else if (name.equalsIgnoreCase("hfc_eqv")) {
 					try {
 						index = val.indexOf(".");
@@ -690,12 +686,12 @@ public class ServiceController {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 11, 1, 10, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]均衡值 修改,当前值:" + val);
+					optjson.put("desc", "HFC[" + mac + "]EQ changed,val:" + val);
 				} else if (name.equalsIgnoreCase("hfc_smode")) {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 10, 13, 1, 3, 1 }), new Integer32(
 							Integer.parseInt(val)), community);
-					optjson.put("desc", "HFC设备[" + mac + "]控制模式修改.");
+					optjson.put("desc", "HFC[" + mac + "]control mode changed.");
 				}
 			}
 		} catch (Exception e) {
@@ -761,27 +757,27 @@ public class ServiceController {
 							4, 1, 17409, 1, 3, 3, 1, 7, 1, 2, 1 }),
 							InetAddress.getByName(val), community);
 					jedis.hset("hfcid:" + id + ":entity", "trapip1", val);
-					optjson.put("desc", "HFC设备[" + mac + "]Trapip1修改提交,修改值["
+					optjson.put("desc", "HFC[" + mac + "]Trapip1 modify submit,val["
 							+ val + "].");
 				} else if (name.equalsIgnoreCase("trapip2")) {
 					util.sethfcIpPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 3, 3, 1, 7, 1, 2, 2 }),
 							InetAddress.getByName(val), community);
 					jedis.hset("hfcid:" + id + ":entity", "trapip2", val);
-					optjson.put("desc", "HFC设备[" + mac + "]Trapip2修改提交,修改值["
+					optjson.put("desc", "HFC[" + mac + "]Trapip2 modify submit,val["
 							+ val + "].");
 				} else if (name.equalsIgnoreCase("trapip3")) {
 					util.sethfcIpPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 3, 3, 1, 7, 1, 2, 3 }),
 							InetAddress.getByName(val), community);
 					jedis.hset("hfcid:" + id + ":entity", "trapip3", val);
-					optjson.put("desc", "HFC设备[" + mac + "]Trapip3修改提交,修改值["
+					optjson.put("desc", "HFC[" + mac + "]Trapip3 modify submit,val["
 							+ val + "].");
 				} else if (name.equalsIgnoreCase("hfcreboot")) {
 					util.sethfcPDU(ip, "161", new OID(new int[] { 1, 3, 6, 1,
 							4, 1, 17409, 1, 3, 3, 1, 2, 0 }), new Integer32(1),
 							community);
-					optjson.put("desc", "HFC设备[" + mac + "]设备重启.");
+					optjson.put("desc", "HFC[" + mac + "]Reboot启.");
 				}
 				json.put("code", "1");
 				json.put("result", "ok");
@@ -962,43 +958,43 @@ public class ServiceController {
 		String value = jsondata.get("value").toString();
 		String user = jsondata.get("user").toString();
 		String key = "";
-		switch(Integer.parseInt(value)){
-			case 0:
-				key = "global:WEC-3501I-C22";
-				break;
-			case 1:
-				key = "global:WEC-3501I-S220";
-				break;
-			case 2:
-				key = "global:WEC9720EK-C22";
-				break;
-			case 3:
-				key = "global:WEC9720EK-S220";
-				break;
-			case 4:
-				key = "global:WEC9720EK-SD220";
-				break;
-			case 5:
-				key = "global:WEC701-C2";
-				break;
-			case 6:
-				key = "global:WEC701-C4";
-				break;
-			case 7:
-				key = "global:3702I-C2";
-				break;
-			case 8:
-				key = "global:3702I-C4";
-				break;
-			case 9:
-				key = "global:WEC9720EK-XD25";
-				break;
-			case 10:
-				key = "global:WR1004JL";
-				break;
-			case 11:
-				key = "global:WR1004SJL";
-				break;
+		switch (Integer.parseInt(value)) {
+		case 0:
+			key = "global:WEC-3501I-C22";
+			break;
+		case 1:
+			key = "global:WEC-3501I-S220";
+			break;
+		case 2:
+			key = "global:WEC9720EK-C22";
+			break;
+		case 3:
+			key = "global:WEC9720EK-S220";
+			break;
+		case 4:
+			key = "global:WEC9720EK-SD220";
+			break;
+		case 5:
+			key = "global:WEC701-C2";
+			break;
+		case 6:
+			key = "global:WEC701-C4";
+			break;
+		case 7:
+			key = "global:3702I-C2";
+			break;
+		case 8:
+			key = "global:3702I-C4";
+			break;
+		case 9:
+			key = "global:WEC9720EK-XD25";
+			break;
+		case 10:
+			key = "global:WR1004JL";
+			break;
+		case 11:
+			key = "global:WR1004SJL";
+			break;
 
 		}
 		String val = jedis.get(key);
@@ -1306,7 +1302,7 @@ public class ServiceController {
 		json.put("wcommunity", jedis.hget(hfckey, "wcommunity"));
 		if (jedis.hget(hfckey, "active").equalsIgnoreCase("1")) {
 			// 设备在线，实时获得设备信息
-			json.put("active", "在线");
+			json.put("active", "Online");
 			try {
 				json.put("trapip1", util.gethfcStrPDU(hfcip, "161", new OID(
 						new int[] { 1, 3, 6, 1, 4, 1, 17409, 1, 3, 3, 1, 7, 1,
@@ -1323,7 +1319,7 @@ public class ServiceController {
 
 		} else {
 			// 设备离线，从redis获取设备信息
-			json.put("active", "离线");
+			json.put("active", "Offline");
 			json.put("trapip1", jedis.hget(hfckey, "trapip1"));
 			json.put("trapip2", jedis.hget(hfckey, "trapip2"));
 			json.put("trapip3", jedis.hget(hfckey, "trapip3"));
@@ -1332,7 +1328,7 @@ public class ServiceController {
 		json.put("modelnumber", jedis.hget(hfckey, "modelnumber"));
 		json.put("serialnumber", jedis.hget(hfckey, "serialnumber"));
 
-		if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("掺铒光纤放大器")) {
+		if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("EDFA")) {
 			json.put("power_v1", jedis.hget(hfckey, "power_v1"));
 			json.put("power1", jedis.hget(hfckey, "power1"));
 			json.put("power_v2", jedis.hget(hfckey, "power_v2"));
@@ -1346,7 +1342,7 @@ public class ServiceController {
 			json.put("outpower", jedis.hget(hfckey, "outpower"));
 			json.put("inpower", jedis.hget(hfckey, "inpower"));
 			json.put("innertemp", jedis.hget(hfckey, "innertemp"));
-		} else if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("1310nm光发射机")) {
+		} else if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("1310nm Optical Transmitter")) {
 			json.put("power_v1", jedis.hget(hfckey, "power_v1"));
 			json.put("power1", jedis.hget(hfckey, "power1"));
 			json.put("power_v2", jedis.hget(hfckey, "power_v2"));
@@ -1375,7 +1371,7 @@ public class ServiceController {
 
 		} else if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("光工作站")) {
 
-		} else if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("光接收机")) {
+		} else if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("Optical Receiver")) {
 			json.put("power_v1", jedis.hget(hfckey, "power_v1"));
 			json.put("power1", jedis.hget(hfckey, "power1"));
 			json.put("power_v2", jedis.hget(hfckey, "power_v2"));
@@ -1392,7 +1388,7 @@ public class ServiceController {
 			json.put("innertemp", jedis.hget(hfckey, "innertemp"));
 		} else if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("1550光发射机")) {
 
-		} else if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("带切换开关光接收机")) {
+		} else if (jedis.hget(hfckey, "hfctype").equalsIgnoreCase("Switching Optical Receiver")) {
 			json.put("power_v1", jedis.hget(hfckey, "power_v1"));
 			json.put("power1", jedis.hget(hfckey, "power1"));
 			json.put("power_v2", jedis.hget(hfckey, "power_v2"));
@@ -1405,18 +1401,18 @@ public class ServiceController {
 			json.put("eqv", jedis.hget(hfckey, "eqv"));
 			json.put("out_level", jedis.hget(hfckey, "out_level"));
 			if (jedis.hget(hfckey, "workchannel").equalsIgnoreCase("1")) {
-				json.put("workchannel", "A通道");
+				json.put("workchannel", "Channel A");
 			} else {
-				json.put("workchannel", "B通道");
+				json.put("workchannel", "Channel B");
 			}
 			if (jedis.hget(hfckey, "workmode").equalsIgnoreCase("1")) {
-				json.put("workmode", "强制切换到A通道");
+				json.put("workmode", "Enforcing to A Channel");
 			} else if (jedis.hget(hfckey, "workmode").equalsIgnoreCase("2")) {
-				json.put("workmode", "强制切换到B通道");
+				json.put("workmode", "Enforcing to B Channel");
 			} else if (jedis.hget(hfckey, "workmode").equalsIgnoreCase("3")) {
-				json.put("workmode", "A通道优先");
+				json.put("workmode", "A channel priority");
 			} else if (jedis.hget(hfckey, "workmode").equalsIgnoreCase("4")) {
-				json.put("workmode", "B通道优先");
+				json.put("workmode", "B channel priority");
 			} else {
 				json.put("workmode", "");
 			}
@@ -1429,8 +1425,99 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 
 	}
+
 	
-	
+	private static void doDelChildTreeFromId(Jedis jedis, String treeid) {
+
+		String ss = (String) jedis.hget("tree:" + treeid, "type");
+
+		if (!ss.equalsIgnoreCase("custom")) {
+			// 不是能获得子树的节点. device 不能获得子节点.
+			System.out.println("not custom can't delete node return");
+			return ;
+		}
+
+		Stack stack = new Stack();
+		stack.push(treeid);
+		while (!stack.isEmpty()) {
+			String	currentnodeid = (String) stack.pop();
+			Set<String> childs = jedis.smembers("tree:"
+					+ currentnodeid + ":children");
+						
+			if (!childs.isEmpty()) {						
+				JSONArray newchilds = new JSONArray();
+				for (String child : childs) {
+					
+					Set<String> childchilds = jedis.smembers("tree:"
+							+ child + ":children");
+					if (childchilds.size() > 0) {							
+						stack.push(child);
+					}else if(childchilds.isEmpty()){
+						Set<String> cbats = jedis.smembers("tree:"
+								+ child + ":eocs");
+						if (!cbats.isEmpty()) {													
+							for(String cbatid: cbats){								
+								
+								// 删除头端下的所有终端
+								Set<String> cnus = jedis.smembers("cbatid:" + cbatid + ":cnus");
+								for (Iterator it = cnus.iterator(); it.hasNext();) {
+									String cnuid = it.next().toString();
+									jedis.del("mac:"
+											+ jedis.hget("cnuid:" + cnuid + ":entity", "mac")
+											+ ":deviceid");
+									// 删除模板中记录的此cnu信息
+									String proid = jedis.hget("cnuid:" + cbatid + ":entity",
+											"profileid");
+									jedis.srem("profileid:" + proid + ":entity", cbatid);
+									jedis.del("cnuid:" + cnuid + ":entity");
+									
+								}
+								jedis.del("mac:" + jedis.hget("cbatid:" + cbatid + ":entity", "mac")
+										+ ":deviceid");
+								jedis.del("devip:" + jedis.hget("cbatid:" + cbatid + ":entity", "ip")
+										+ ":ip");
+								
+								jedis.del("cbatid:" + cbatid + ":cnus");
+								jedis.del("cbatid:" + cbatid + ":cbatinfo");
+								
+								jedis.del("cbatid:" + cbatid + ":entity");
+							}
+						}
+						
+						jedis.del("tree:"+ child + ":eocs");
+
+						// 显示 eoc+hfc
+					     Set<String> hfcs = jedis.smembers("tree:"
+									+ child + ":hfcs");
+							if (!hfcs.isEmpty()) {
+								for(String hfcid: hfcs){
+									 jedis.del("hfcid:"+hfcid+":entity");
+									 jedis.del("mac:"
+												+ jedis.hget("hfcid:" + hfcid + ":entity", "mac")
+												+ ":deviceid");
+								}
+								
+							}
+							
+							
+							jedis.del("tree:"+ child + ":hfcs");
+							jedis.del("tree:"+child);
+						
+					}
+															
+				}
+				
+			}
+			
+			//del currentnode			
+			
+			jedis.del("tree:"+currentnodeid+":children");
+			jedis.del("tree:"+currentnodeid);
+
+		}
+				
+
+	}
 
 	private static void doDelNode(String message) throws ParseException {
 		Jedis jedis = null;
@@ -1444,68 +1531,51 @@ public class ServiceController {
 		}
 		// 获取设备id
 		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
-		
-		
-		String type = jsondata.get("type").toString();		
-		
-		
 
-		if(type.equalsIgnoreCase("system")){
-			//can't delete
+		String type = jsondata.get("type").toString();
+
+		if (type.equalsIgnoreCase("system")) {
+			// can't delete
 			System.out.println("system node can't delete");
-		}
-		else if(type.equalsIgnoreCase("custom")){
-			
-			
-			
-			//can del custom node  mac=key
+		} else if (type.equalsIgnoreCase("custom")) {
+
+			// can del custom node mac=key
+
 			
 			String treeid = jsondata.get("key").toString();
-			String pkey = jedis.hget("tree:"+treeid, ":pkey");
-			
-			String treekey = "tree:"+treeid;			
-			String treeheirs = "tree:"+ treeid+":heirs";	
-			//del device
-			//判断node下面是否挂有设备
-			Set<String> cbats = jedis.keys("cbatid:*:entity");
-			for(Iterator it= cbats.iterator();it.hasNext();){
-				String cbatkey = it.next().toString();
-				if(jedis.hget(cbatkey, "treeparentkey").equalsIgnoreCase(treeid)){
-					//编辑告警信息												
-					//移动头端设备到默认节点
-					System.out.println("cbatkey="+cbatkey+"treeid="+treeid);
-					jedis.hset(cbatkey, "treeparentkey","2");
+			String pkey = jedis.hget("tree:" + treeid, "pkey");			
 
-				}										
-			}
-			
-						
-			//get this key's all children key
-			Set<String> childrenkeys = jedis.smembers(treeheirs);
-			
+			System.out.println("now will id="+treeid+  " del node json="+jsondata+ "and pkey="+pkey);
+			if (jedis.smembers("tree:" + pkey + ":children").size() == 1)
+				jedis.del("tree:" + pkey + ":children");
+			else
+				jedis.srem("tree:" + pkey + ":children", treeid);
 			
 			
-			for(String childrenkey: childrenkeys){
-				
-				System.out.println("childrenkey="+childrenkey);
-				jedis.del("tree:"+childrenkey+":heirs");
-				jedis.del("tree:"+childrenkey+":children");
-				jedis.del(childrenkey);
-			}
 			
-			jedis.del("tree:"+treeid+"*");
-			
-			jedis.srem("tree:"+pkey+":heirs", treeid);
-			jedis.srem("tree:"+pkey+":children", treeid);
-			jedis.srem("tree:0:heirs", treeid);
-			
-		}else{
-			//delete device
-			
+			doDelChildTreeFromId(jedis, treeid);
+
+		} else {
+			// delete device
+
 			String mac = jsondata.get("mac").toString();
 			String id = jedis.get("mac:" + mac + ":deviceid");
+
+			
+			
+
 			jedis.del("mac:" + mac + ":deviceid");
 			if (type.equalsIgnoreCase("cbat")) {
+				
+				//del parent eocs
+				String treeparentkey = jedis.hget("cbatid:" + id + ":entity",
+						"treeparentkey");
+
+				jedis.srem("tree:" + treeparentkey + ":eocs", id);
+				if (jedis.smembers("tree:" + treeparentkey + ":eocs").isEmpty()) {
+					jedis.del("tree:" + treeparentkey + ":eocs");
+				}
+				
 				// 删除头端下的所有终端
 				Set<String> cnus = jedis.smembers("cbatid:" + id + ":cnus");
 				for (Iterator it = cnus.iterator(); it.hasNext();) {
@@ -1523,6 +1593,9 @@ public class ServiceController {
 				}
 				// 删除头端
 				jedis.del("cbatid:" + id + ":entity");
+				jedis.del("mac:" + jedis.hget("cbatid:" + id + ":entity", "mac")
+						+ ":deviceid");
+				
 				jedis.del("cbatid:" + id + ":cnus");
 				jedis.del("cbatid:" + id + ":cbatinfo");
 			} else if (type.equalsIgnoreCase("cnu")) {
@@ -1531,10 +1604,21 @@ public class ServiceController {
 				jedis.del("mac:" + jedis.hget("cnuid:" + id + ":entity", "mac")
 						+ ":deviceid");
 				// 删除模板中记录的此cnu信息
-				String proid = jedis.hget("cnuid:" + id + ":entity", "profileid");
+				String proid = jedis.hget("cnuid:" + id + ":entity",
+						"profileid");
 				jedis.srem("profileid:" + proid + ":entity", id);
 				jedis.del("cnuid:" + id + ":entity");
 			} else if (type.equalsIgnoreCase("hfc")) {
+				//del parent eocs
+				String treeparentkey = jedis.hget("hfcid:" + id + ":entity",
+						"treeparentkey");
+
+				jedis.srem("tree:" + treeparentkey + ":hfcs", id);
+				if (jedis.smembers("tree:" + treeparentkey + ":hfcs").isEmpty()) {
+					jedis.del("tree:" + treeparentkey + ":hfcs");
+				}
+
+				
 				// hfc
 				jedis.del("mac:" + jedis.hget("hfcid:" + id + ":entity", "mac")
 						+ ":deviceid");
@@ -1544,16 +1628,11 @@ public class ServiceController {
 			jedis.save();
 
 		}
-		
-		
-		
-		
-		
-		
+
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
-	
-	private static void doMoveTreeCbatNode(String message)  {
+
+	private static void doMoveTreeCbatNode(String message) {
 		Jedis jedis = null;
 		try {
 			jedis = redisUtil.getConnection();
@@ -1563,34 +1642,115 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		
-		
+
 		try {
 			// 获取设备id
-			System.out.println("message=+message"+message);
+			
 			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
 			String cbatmac = jsondata.get("mac").toString();
 			String treeparentkey = jsondata.get("treeparentkey").toString();
-			String id = jedis.get("mac:" + cbatmac + ":deviceid");
-			String cbatid  = "cbatid:"+id+":entity";
+			String type = jsondata.get("type").toString();
+			String devtype = jsondata.get("devtype").toString();
 			
 			
-			jedis.hset(cbatid, "treeparentkey", treeparentkey);
-			jedis.save();
+			if(devtype.equalsIgnoreCase("cbat")){
+				if (treeparentkey.equalsIgnoreCase("2")
+						|| (type.equalsIgnoreCase("custom"))) {
+
+					System.out.println("can move type= " + type);
+
+					String id = jedis.get("mac:" + cbatmac + ":deviceid");
+					String cbatid = "cbatid:" + id + ":entity";
+					String oldtreeparentkey = jedis.hget(cbatid, "treeparentkey");
+
+					if (jedis.exists("tree:" + treeparentkey + ":children")) {
+						// not leaf can't move
+						JSONObject json = new JSONObject();
+						json.put("key", treeparentkey);
+						json.put("result", "notok");
+						jedis.publish("node.tree.move.movetotree",
+								json.toJSONString());
+					} else {
+						// move to
+
+						jedis.srem("tree:" + oldtreeparentkey + ":eocs", id);
+						if (jedis.smembers("tree:" + oldtreeparentkey + ":eocs")
+								.isEmpty())
+							jedis.del("tree:" + oldtreeparentkey + ":eocs");
+
+						jedis.sadd("tree:" + treeparentkey + ":eocs", id);
+						jedis.hset(cbatid, "treeparentkey", treeparentkey);
+
+						jedis.save();
+
+						JSONObject json = new JSONObject();
+						json.put("key", treeparentkey);
+						json.put("result", "ok");
+						jedis.publish("node.tree.move.movetotree",
+								json.toJSONString());
+					}
+
+				} else {
+					JSONObject json = new JSONObject();
+					json.put("key", treeparentkey);
+					json.put("result", "notok");
+					jedis.publish("node.tree.move.movetotree", json.toJSONString());
+				}
+			}else if(devtype.equalsIgnoreCase("hfc")){
+				if (treeparentkey.equalsIgnoreCase("3")
+						|| (type.equalsIgnoreCase("custom"))) {
+
+					System.out.println("can move type= " + type);
+
+					String id = jedis.get("mac:" + cbatmac + ":deviceid");
+					String hfcid = "hfcid:" + id + ":entity";
+					String oldtreeparentkey = jedis.hget(hfcid, "treeparentkey");
+
+					if (jedis.exists("tree:" + treeparentkey + ":children")) {
+						// not leaf can't move
+						JSONObject json = new JSONObject();
+						json.put("key", treeparentkey);
+						json.put("result", "notok");
+						jedis.publish("node.tree.move.movetotree",
+								json.toJSONString());
+					} else {
+						// move to
+
+						jedis.srem("tree:" + oldtreeparentkey + ":hfcs", id);
+						if (jedis.smembers("tree:" + oldtreeparentkey + ":hfcs")
+								.isEmpty())
+							jedis.del("tree:" + oldtreeparentkey + ":hfcs");
+
+						jedis.sadd("tree:" + treeparentkey + ":hfcs", id);
+						jedis.hset(hfcid, "treeparentkey", treeparentkey);
+
+						jedis.save();
+
+						JSONObject json = new JSONObject();
+						json.put("key", treeparentkey);
+						json.put("result", "ok");
+						jedis.publish("node.tree.move.movetotree",
+								json.toJSONString());
+					}
+
+				} else {
+					JSONObject json = new JSONObject();
+					json.put("key", treeparentkey);
+					json.put("result", "notok");
+					jedis.publish("node.tree.move.movetotree", json.toJSONString());
+				}
+			}
 			
-			JSONObject json = new JSONObject();
-			json.put("key", treeparentkey);
-			json.put("result", "ok");
-			jedis.publish("node.tree.move.movetotree", json.toJSONString());
+			
+
 			redisUtil.getJedisPool().returnResource(jedis);
-			
-			
-		}catch(Exception e){
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-	private static void  doEditNode(String message)  {
+
+	private static void doEditNode(String message) {
 		Jedis jedis = null;
 		try {
 			jedis = redisUtil.getConnection();
@@ -1600,26 +1760,43 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		
-		
+
 		try {
 			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
 			String key = jsondata.get("key").toString();
 			String title = jsondata.get("title").toString();
-			String treeid = "tree:"+ key;
-			// 获取设备id
-		
-			jedis.hset(treeid, "title", title);
+			String type = jsondata.get("type").toString();
+			String id = jedis.get("mac:" + key + ":deviceid");
+			
+			
+			String editkey = "";
+			if(type.equalsIgnoreCase("custom")){
+				System.out.println("edit node custom node key="+key);
+				editkey = "tree:" + key;
+				jedis.hset(editkey, "title", title);
+			} else if (type.equalsIgnoreCase("cbat")){
+				editkey = "cbatid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else if (type.equalsIgnoreCase("cnu")){
+				editkey = "cnuid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else if (type.equalsIgnoreCase("hfc")){
+				editkey = "hfcid:" + id + ":entity";
+				jedis.hset(editkey, "label", title);
+			}else{
+				System.out.println("edit node type="+type + "edit error f*k");
+			}
+			
 			jedis.save();
-			
+
 			redisUtil.getJedisPool().returnResource(jedis);
-			
-		}catch(Exception e){
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	private static void  doAddNode(String message)  {
+	private static void doAddNode(String message) {
 		Jedis jedis = null;
 		try {
 			jedis = redisUtil.getConnection();
@@ -1629,60 +1806,88 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		
-		
+
 		try {
 			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
-			
+
 			String pkey = jsondata.get("key").toString();
 			String title = jsondata.get("title").toString();
-			
-			
-			String pkeyid = "tree:"+ pkey;
-			
+
+			String pkeyid = "tree:" + pkey;
+
 			JSONObject json = new JSONObject();
-			
-			
+
 			// 获取设备id
-			System.out.println("pkey tree id="+pkeyid);
-			
+
 			// 初始化设备类型显示
 			if (!jedis.exists(pkeyid)) {
-				//不存在退出
-				
+				// 不存在退出
+
 				json.put("result", "no");
-				jedis.publish("node.tree.addnode", json.toJSONString());							
-			}else{
-				
+				jedis.publish("node.tree.addnode", json.toJSONString());
+			} else {
+
 				Map<String, String> datamap = new HashMap<String, String>();
-				String childtreeid = String.valueOf(jedis.incr("global:treeid"));
-				System.out.println("childtreeid="+childtreeid);	
+				String childtreeid = String
+						.valueOf(jedis.incr("global:treeid"));
+
 				datamap.clear();
 				datamap.put("key", childtreeid);
-				datamap.put("pkey", pkey);				
+				datamap.put("pkey", pkey);
 				datamap.put("title", title);
-				datamap.put("type", "custom");				
+				datamap.put("type", "custom");
 				datamap.put("isFolder", "true");
 				datamap.put("expand", "true");
+
+				jedis.hmset("tree:" + childtreeid, datamap);
+				jedis.sadd("tree:" + pkey + ":children", childtreeid);
+
 				
-				jedis.hmset("tree:"+ childtreeid, datamap);						
-				jedis.sadd("tree:"+pkey+ ":heirs", childtreeid);
-				jedis.sadd("tree:"+pkey+ ":children", childtreeid);
-				jedis.sadd("tree:0:heirs", childtreeid);				
-				jedis.save();
+
+				// set eocs to child
+
+				if (jedis.exists("tree:" + pkey + ":eocs")) {
+					jedis.rename("tree:" + pkey + ":eocs", "tree:"
+							+ childtreeid + ":eocs");
+					Set<String> cbatids = jedis.smembers("tree:" + childtreeid
+							+ ":eocs");
+					for (String cbatid : cbatids) {						
+						jedis.hset("cbatid:" + cbatid + ":entity",
+								"treeparentkey", childtreeid);
+					}
+				}
 				
+				// set hfcs to child
+
+				if (jedis.exists("tree:" + pkey + ":hfcs")) {
+					jedis.rename("tree:" + pkey + ":hfcs", "tree:"
+							+ childtreeid + ":hfcs");
+					Set<String> hfcids = jedis.smembers("tree:" + childtreeid
+							+ ":hfcs");
+					for (String hfcid : hfcids) {						
+						jedis.hset("hfcid:" + hfcid + ":entity",
+								"treeparentkey", childtreeid);
+					}
+				}
+				
+				
+
+
+				// ///
 				json.put("key", childtreeid);
 				json.put("result", "ok");
 				jedis.publish("node.tree.addnode", json.toJSONString());
 
+				jedis.save();
 			}
-					
+
 			redisUtil.getJedisPool().returnResource(jedis);
-			
-		}catch(Exception e){
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+
 	private static void doFtpInfo(String message) throws ParseException {
 		Jedis jedis = null;
 		try {
@@ -1794,7 +1999,6 @@ public class ServiceController {
 
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
-	
 
 	private static void doNodeIndexInit(String message) throws ParseException {
 		Jedis jedis = null;
@@ -1957,9 +2161,8 @@ public class ServiceController {
 
 			doNodeTreeDataInit(jedis);
 
-
-	    	//保存数据到硬盘
-	    	jedis.save();
+			// 保存数据到硬盘
+			jedis.save();
 
 			redisUtil.getJedisPool().returnResource(jedis);
 
@@ -1972,40 +2175,26 @@ public class ServiceController {
 			Jedis jedis = null;
 			try {
 				jedis = redisUtil.getConnection();
-				
-				/////////////////////////
-				JSONArray jsonResponseArray = new JSONArray();
 
-				
-				
-				
+		
 				// root node
 
 				JSONObject rootjson = new JSONObject();
-				String rootkey ="tree:0";
+				String rootid = "0";
+				int displaymode = 0; // 0 is eoc /// 1 is eoc+hfc
 
-				rootjson.put((String) "title", (String)jedis.hget(rootkey, "title"));
-				rootjson.put("key", jedis.hget(rootkey, "key"));
-				rootjson.put("pkey", jedis.hget(rootkey, "pkey"));
-				rootjson.put("type", jedis.hget(rootkey, "type"));
-				rootjson.put("isFolder", jedis.hget(rootkey, "isFolder"));
-				rootjson.put("expand", jedis.hget(rootkey, "expand"));
-				rootjson.put("icon", jedis.hget(rootkey, "icon"));
-				
-				getChildNodes(jedis, rootjson, rootkey);	
-
-				
-			
-				
-				jsonResponseArray.add(rootjson);
-				// hfc
-				// W9000显示模式判断
+				// 显示hfc
 				if ((jedis.get("global:displaymode")) != null) {
 					if (jedis.get("global:displaymode").equalsIgnoreCase("1")) {
 						// 显示HFC设备
-						hfctreeinit(jedis, jsonResponseArray);
+						displaymode = 1;
 					}
 				}
+
+				rootjson = getJsonFromId(jedis, rootid, displaymode);
+
+				JSONArray jsonResponseArray = new JSONArray();
+				jsonResponseArray.add(rootjson);
 
 				redisUtil.getJedisPool().returnResource(jedis);
 
@@ -2014,39 +2203,33 @@ public class ServiceController {
 				// publish to notify node.js a new alarm
 				jedis.publish("node.tree.movetotree.init", jsonString);
 
-				
 
 			} catch (Exception e) {
 				e.printStackTrace();
 				redisUtil.getJedisPool().returnBrokenResource(jedis);
 				return;
 			}
-			
-		}catch(Exception e){
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
-	
+
 	private static void doNodeTreeDataInit(Jedis jedis) throws ParseException {
 		if (jedis == null)
 			return;
 
-		String gtreeidkey="global:treeid";
-		
-		
-		
+		String gtreeidkey = "global:treeid";
+
 		String treeid = "0";
 		jedis.set(gtreeidkey, treeid);
-		
-		
-		
-		
+
 		// 初始化设备类型显示
 		if (!jedis.exists("tree:0")) {
-			// node root		
-			String pkey="";			
-			
+			// node root
+			String pkey = "";
+
 			Map<String, String> datamap = new HashMap<String, String>();
 			datamap.put("key", treeid);
 			datamap.put("pkey", "");
@@ -2054,113 +2237,70 @@ public class ServiceController {
 			datamap.put("type", "system");
 			datamap.put("isFolder", "true");
 			datamap.put("expand", "true");
-			datamap.put("icon", "home.png");						
-			jedis.hmset("tree:"+treeid, datamap);
+			datamap.put("icon", "home.png");
+			jedis.hmset("tree:" + treeid, datamap);
 
 			// node 1
 			datamap.clear();
-			pkey=treeid;
+			pkey = treeid;
 			treeid = String.valueOf(jedis.incr(gtreeidkey));
-			
-						
+
 			datamap.put("key", treeid);
 			datamap.put("pkey", pkey);
 			datamap.put("title", "Default Node");
 			datamap.put("type", "system");
 			datamap.put("isFolder", "true");
-			datamap.put("expand", "true");		
-			jedis.hmset("tree:"+treeid, datamap);			
-			jedis.sadd("tree:"+pkey+":heirs", treeid);
-			jedis.sadd("tree:"+pkey+":children", treeid);
-			
-
-			// node 11
-			datamap.clear();
-			pkey = treeid;
-			treeid = String.valueOf(jedis.incr(gtreeidkey));
-			
-			datamap.put("key", treeid);
-			datamap.put("pkey", pkey);
-			datamap.put("title", "EOC Device");
-			datamap.put("isFolder", "true");
 			datamap.put("expand", "true");
-			datamap.put("icon", "home.png");
-			
-			jedis.hmset("tree:"+treeid, datamap);			
-			jedis.sadd("tree:"+pkey+":heirs", treeid);
-			jedis.sadd("tree:"+pkey+":children", treeid);
-			jedis.sadd("tree:0:heirs", treeid);
-			
+			jedis.hmset("tree:" + treeid, datamap);
+			jedis.sadd("tree:" + pkey + ":children", treeid);
 
 			// node 2
 			datamap.clear();
-			pkey="0";
-			treeid = String.valueOf(jedis.incr(gtreeidkey));
-			datamap.put("key", treeid);
-			datamap.put("pkey", pkey);			
-			datamap.put("title", "My Province");
-			datamap.put("isFolder", "true");
-			datamap.put("expand", "true");
-			datamap.put("type", "custom");			
-			
-			jedis.hmset("tree:"+treeid, datamap);			
-			jedis.sadd("tree:"+pkey+":heirs", treeid);
-			jedis.sadd("tree:"+pkey+":children", treeid);
-			
-			
-			// node 21
-			datamap.clear();
 			pkey = treeid;
 			treeid = String.valueOf(jedis.incr(gtreeidkey));
-								
+
 			datamap.put("key", treeid);
 			datamap.put("pkey", pkey);
-			datamap.put("title", "My City");
+			datamap.put("title", "EOC Device");
+			datamap.put("type", "system");
 			datamap.put("isFolder", "true");
 			datamap.put("expand", "true");
-			datamap.put("type", "custom");			
-			
-			jedis.hmset("tree:"+treeid, datamap);			
-			jedis.sadd("tree:"+pkey+":heirs", treeid);
-			jedis.sadd("tree:"+pkey+":children", treeid);
-			jedis.sadd("tree:0:heirs", treeid);
-			
-			
-			// node 211
+			datamap.put("icon", "home.png");
+
+			jedis.hmset("tree:" + treeid, datamap);
+			jedis.sadd("tree:" + pkey + ":children", treeid);
+
+			// node 3
 			datamap.clear();
-			pkey = treeid;
+			pkey = "1"; // 默认节的为父亲节点
 			treeid = String.valueOf(jedis.incr(gtreeidkey));
-						
+
 			datamap.put("key", treeid);
 			datamap.put("pkey", pkey);
-			datamap.put("title", "My Country");
+			datamap.put("title", "HFC Device");
+			datamap.put("type", "system");
 			datamap.put("isFolder", "true");
-			datamap.put("expand", "true");						
-			datamap.put("type", "custom");
-			
-			jedis.hmset("tree:"+treeid, datamap);			
-			jedis.sadd("tree:"+pkey+":heirs", treeid);
-			jedis.sadd("tree:"+pkey+":children", treeid);
-			jedis.sadd("tree:0:heirs", treeid);
-			
-			// node 2111
+			datamap.put("expand", "true");
+			datamap.put("icon", "home.png");
+
+			jedis.hmset("tree:" + treeid, datamap);
+			jedis.sadd("tree:" + pkey + ":children", treeid);
+
+			// node 4
 			datamap.clear();
-			pkey = treeid;
+			pkey = "0"; // root 节的为父亲节点
 			treeid = String.valueOf(jedis.incr(gtreeidkey));
-			
+
 			datamap.put("key", treeid);
 			datamap.put("pkey", pkey);
 			datamap.put("title", "Region");
 			datamap.put("isFolder", "false");
-			datamap.put("expand", "true");		
+			datamap.put("expand", "true");
 			datamap.put("type", "custom");
-			
-			jedis.hmset("tree:"+treeid, datamap);			
-			jedis.sadd("tree:"+pkey+":heirs", treeid);
-			jedis.sadd("tree:"+pkey+":children", treeid);
-			jedis.sadd("tree:0:heirs", treeid);
-			
-			
+
+			jedis.hmset("tree:" + treeid, datamap);
+			jedis.sadd("tree:" + pkey + ":children", treeid);
+
 		}
 
 	}
@@ -2266,6 +2406,7 @@ public class ServiceController {
 		optjson.put(
 				"desc",
 				"Cnu batch pre-account,From MAC:"+longtomac(tmp1)+",To MAC:"+longtomac(tmp2)+"Template:"+jedis.hget("profileid:"+proid+":entity", "profilename"));
+		
 		sendoptlog(jedis, optjson);
 		JSONArray array = new JSONArray();
 		while (tmp1 <= tmp2) {
@@ -2376,7 +2517,7 @@ public class ServiceController {
 			json.put("salarmtime", jedis.hget(key, "salarmtime"));
 			json.put("cbatmac", jedis.hget(key, "cbatmac"));
 			json.put("alarmcode", jedis.hget(key, "alarmcode"));
-			json.put("enalarminfo", jedis.hget(key, "enalarminfo"));
+			json.put("cnalarminfo", jedis.hget(key, "cnalarminfo"));
 			jedis.publish("node.alarm.newalarm", json.toJSONString());
 
 		}
@@ -2631,16 +2772,19 @@ public class ServiceController {
 					cbatjson.put("devicetype", "WEC-3501I Q31");
 					break;
 				case 4:
-					cbatjson.put("devicetype", jedis.get("global:WEC-3501I-C22"));
+					cbatjson.put("devicetype",
+							jedis.get("global:WEC-3501I-C22"));
 					break;
 				case 5:
-					cbatjson.put("devicetype", jedis.get("global:WEC-3501I-S220"));
+					cbatjson.put("devicetype",
+							jedis.get("global:WEC-3501I-S220"));
 					break;
 				case 6:
 					cbatjson.put("devicetype", "WEC-3501I S60");
-					break;				
+					break;
 				case 20:
-					cbatjson.put("devicetype", jedis.get("global:WEC9720EK-C22"));
+					cbatjson.put("devicetype",
+							jedis.get("global:WEC9720EK-C22"));
 					break;
 				case 21:
 					cbatjson.put("devicetype", "WEC9720EK E31");
@@ -2649,13 +2793,16 @@ public class ServiceController {
 					cbatjson.put("devicetype", "WEC9720EK Q31");
 					break;
 				case 23:
-					cbatjson.put("devicetype", jedis.get("global:WEC9720EK-S220"));
+					cbatjson.put("devicetype",
+							jedis.get("global:WEC9720EK-S220"));
 					break;
 				case 24:
-					cbatjson.put("devicetype", jedis.get("global:WEC9720EK-SD220"));
+					cbatjson.put("devicetype",
+							jedis.get("global:WEC9720EK-SD220"));
 					break;
 				case 25:
-					cbatjson.put("devicetype", jedis.get("global:WEC9720EK-XD25"));
+					cbatjson.put("devicetype",
+							jedis.get("global:WEC9720EK-XD25"));
 					break;
 				case 26:
 					cbatjson.put("devicetype", jedis.get("global:WR1004JL"));
@@ -3074,23 +3221,32 @@ public class ServiceController {
 			json.put("label", jedis.hget(cnukey, "label"));
 			switch (Integer.parseInt(jedis.hget(cnukey, "devicetype"))) {
 			case 10:
-				result = "3702I-C4";
+				json.put("devicetype", jedis.get("global:3702I-C4"));
 				break;
 			case 7:
-				result = "3702I-L2";
+				json.put("devicetype", "3702I-L2");
 				break;
 			case 9:
-				result = "3702I-C2";
+				json.put("devicetype", jedis.get("global:3702I-C2"));
+				break;
+			case 36:
+				json.put("devicetype", "WEC701 M0");
+				break;
+			case 40:
+				json.put("devicetype", jedis.get("global:WEC701-C2"));
+				break;
+			case 41:
+				json.put("devicetype", jedis.get("global:WEC701-C4"));
 				break;
 			default:
-				result = "Unknown";
+				json.put("devicetype", "Unknown");
 				break;
 			}
 			json.put(
 					"cbatip",
 					jedis.hget("cbatid:" + jedis.hget(cnukey, "cbatid")
 							+ ":entity", "ip"));
-			json.put("devicetype", result);
+
 			json.put("contact", jedis.hget(cnukey, "contact"));
 			json.put("phone", jedis.hget(cnukey, "phone"));
 			jsonResponseArray.add(json);
@@ -3176,74 +3332,80 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		//String result = "";
+		// String result = "";
 		JSONArray jsonResponseArray = new JSONArray();
 		Set<String> list = jedis.keys("cnuid:*:entity");
 
-        for(Iterator it = list.iterator(); it.hasNext(); ) {
-        	JSONObject cnujson = new JSONObject();
-        	String prokey = (String) it.next();
-        	if(jedis.hget("cbatid:"+jedis.hget(prokey, "cbatid")+":entity", "active").equalsIgnoreCase("0")){
-        		continue;
-        	}
-        	int index1 = prokey.indexOf(':') +1;
-    		int index2 = prokey.lastIndexOf(':');
-    		String cid = prokey.substring(index1, index2);
-    		//判断key是否存在
-    		if(jedis.exists("global:checkedcnus")){
-    			//判断是否checked
-            	if(jedis.sismember("global:checkedcnus", cid)){
-            		cnujson.put("check", "<input type=checkbox class=chk checked />");
-            	}else{
-            		cnujson.put("check", "<input type=checkbox class=chk />");
-            	}
-    		}else{
-    			cnujson.put("check", "<input type=checkbox class=chk />");
-    		}
-    		String cbatid = jedis.hget(prokey, "cbatid");
-    		cnujson.put("cbatip", jedis.hget("cbatid:"+cbatid+":entity", "ip"));
-    		cnujson.put("mac", jedis.hget(prokey, "mac"));
-    		cnujson.put("active", jedis.hget(prokey, "active"));
-    		cnujson.put("label", jedis.hget(prokey, "label"));
-    		switch(Integer.parseInt(jedis.hget(prokey, "devicetype")))
-    		{
-	    		case 10:
-	    			cnujson.put("devicetype", jedis.get("global:3702I-C4"));         		
-	        		break;
-	        	case 7:
-	        		cnujson.put("devicetype", "3702I-L2");           		
-	        		break;
-	        	case 9:
-	        		cnujson.put("devicetype", jedis.get("global:3702I-C2"));
-	        		break;
-	        	case 36:
-	        		cnujson.put("devicetype", "WEC701 M0");
-	        		break;
-	        	case 40:
-	        		cnujson.put("devicetype", jedis.get("global:WEC701-C2"));
-	        		break;
-	        	case 41:
-	        		cnujson.put("devicetype", jedis.get("global:WEC701-C4"));
-	        		break;
-	        	default:
-	        		cnujson.put("devicetype", "Unknown");
-	        		break;
-    		}        		
+		for (Iterator it = list.iterator(); it.hasNext();) {
+			JSONObject cnujson = new JSONObject();
+			String prokey = (String) it.next();
+			if (jedis.hget(
+					"cbatid:" + jedis.hget(prokey, "cbatid") + ":entity",
+					"active").equalsIgnoreCase("0")) {
+				continue;
+			}
+			int index1 = prokey.indexOf(':') + 1;
+			int index2 = prokey.lastIndexOf(':');
+			String cid = prokey.substring(index1, index2);
+			// 判断key是否存在
+			if (jedis.exists("global:checkedcnus")) {
+				// 判断是否checked
+				if (jedis.sismember("global:checkedcnus", cid)) {
+					cnujson.put("check",
+							"<input type=checkbox class=chk checked />");
+				} else {
+					cnujson.put("check", "<input type=checkbox class=chk />");
+				}
+			} else {
+				cnujson.put("check", "<input type=checkbox class=chk />");
+			}
+			String cbatid = jedis.hget(prokey, "cbatid");
+			cnujson.put("cbatip",
+					jedis.hget("cbatid:" + cbatid + ":entity", "ip"));
+			cnujson.put("mac", jedis.hget(prokey, "mac"));
+			cnujson.put("active", jedis.hget(prokey, "active"));
+			cnujson.put("label", jedis.hget(prokey, "label"));
+			switch (Integer.parseInt(jedis.hget(prokey, "devicetype"))) {
+			case 10:
+				cnujson.put("devicetype", jedis.get("global:3702I-C4"));
+				break;
+			case 7:
+				cnujson.put("devicetype", "3702I-L2");
+				break;
+			case 9:
+				cnujson.put("devicetype", jedis.get("global:3702I-C2"));
+				break;
+			case 36:
+				cnujson.put("devicetype", "WEC701 M0");
+				break;
+			case 40:
+				cnujson.put("devicetype", jedis.get("global:WEC701-C2"));
+				break;
+			case 41:
+				cnujson.put("devicetype", jedis.get("global:WEC701-C4"));
+				break;
+			default:
+				cnujson.put("devicetype", "Unknown");
+				break;
+			}
 
-    		//cnujson.put("devicetype", result);
-    		cnujson.put("proname", jedis.hget("profileid:"+jedis.hget(prokey, "profileid")+":entity", "profilename"));
-    		cnujson.put("contact", jedis.hget(prokey, "contact"));
-    		cnujson.put("label", jedis.hget(prokey, "label"));
-    		
-    		jsonResponseArray.add(cnujson);
-        }
-        
-        String jsonstring = jsonResponseArray.toJSONString();
-        
-        jedis.publish("node.opt.cnus", jsonstring);
-        
-        redisUtil.getJedisPool().returnResource(jedis);
-        
+			// cnujson.put("devicetype", result);
+			cnujson.put(
+					"proname",
+					jedis.hget("profileid:" + jedis.hget(prokey, "profileid")
+							+ ":entity", "profilename"));
+			cnujson.put("contact", jedis.hget(prokey, "contact"));
+			cnujson.put("label", jedis.hget(prokey, "label"));
+
+			jsonResponseArray.add(cnujson);
+		}
+
+		String jsonstring = jsonResponseArray.toJSONString();
+
+		jedis.publish("node.opt.cnus", jsonstring);
+
+		redisUtil.getJedisPool().returnResource(jedis);
+
 	}
 
 	private static void doCnuSub(String message) throws ParseException,
@@ -3524,7 +3686,7 @@ public class ServiceController {
 		jedis.hset(key, "phone", phone);
 		jedis.hset(key, "label", label);
 		jedis.hset(key, "username", cnuusername);
-		System.out.println("XXXXXXXXXusername=" + cnuusername);
+
 		jedis.save();
 		JSONObject optjson = new JSONObject();
 		Date date = new Date();
@@ -4111,7 +4273,7 @@ public class ServiceController {
 				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
 						1, 36186, 8, 6, 1, 0 }), new Integer32(1));
 				jedis.set("devip:" + ip + ":mac", mac);
-				jedis.hset(cbatkey, "active", "0");
+				// jedis.hset(cbatkey, "active", "0");
 			} else {
 				// save
 				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
@@ -4140,8 +4302,8 @@ public class ServiceController {
 		}
 		optjson.put("desc", "Cbat base information modify.");
 		sendoptlog(jedis, optjson);
-		redisUtil.getJedisPool().returnResource(jedis);
 		jedis.publish("node.tree.cbatmodify", "modifyok");
+		redisUtil.getJedisPool().returnResource(jedis);
 	}
 
 	private static void doNodeCnudetail(String mac) {
@@ -4161,21 +4323,27 @@ public class ServiceController {
 		switch (Integer.parseInt(jedis.hget(cnukey, "devicetype"))) {
 		case 10:
 			cnujson.put("devicetype", jedis.get("global:3702I-C4"));
+			cnujson.put("devicemodal", "3702I-C4");
 			break;
 		case 7:
 			cnujson.put("devicetype", "3702I-L2");
+			cnujson.put("devicemodal", "3702I-L2");
 			break;
 		case 9:
 			cnujson.put("devicetype", jedis.get("global:3702I-C2"));
+			cnujson.put("devicemodal", "3702I-C2");
 			break;
 		case 36:
 			cnujson.put("devicetype", "WEC701 M0");
+			cnujson.put("devicemodal", "WEC701 M0");
 			break;
 		case 40:
 			cnujson.put("devicetype", jedis.get("global:WEC701-C2"));
+			cnujson.put("devicemodal", "WEC701 C2");
 			break;
 		case 41:
 			cnujson.put("devicetype", jedis.get("global:WEC701-C4"));
+			cnujson.put("devicemodal", "WEC701 C4");
 			break;
 		default:
 			cnujson.put("devicetype", "Unknown");
@@ -4255,21 +4423,27 @@ public class ServiceController {
 		switch (Integer.parseInt(jedis.hget(cbatkey, "devicetype"))) {
 		case 1:
 			result = "WEC-3501I X7";
+			cbatjson.put("devicemodal", result);
 			break;
 		case 2:
 			result = "WEC-3501I E31";
+			cbatjson.put("devicemodal", result);
 			break;
 		case 3:
 			result = "WEC-3501I Q31";
+			cbatjson.put("devicemodal", result);
 			break;
 		case 4:
 			result = jedis.get("global:WEC-3501I-C22");// "WEC-3501I C22";
+			cbatjson.put("devicemodal", "WEC-3501I C22");
 			break;
 		case 5:
 			result = jedis.get("global:WEC-3501I-S220");// "WEC-3501I S220";
+			cbatjson.put("devicemodal", "WEC-3501I S220");
 			break;
 		case 6:
 			result = "WEC-3501I S60";
+			cbatjson.put("devicemodal", "WEC-3501I S60");
 			break;
 		case 7:
 			// result ="WEC-3501I C22";
@@ -4279,24 +4453,31 @@ public class ServiceController {
 			break;
 		case 20:
 			result = jedis.get("global:WEC9720EK-C22");// "WEC9720EK C22";
+			cbatjson.put("devicemodal", "WEC9720EK C22");
 			break;
 		case 21:
 			result = "WEC9720EK E31";
+			cbatjson.put("devicemodal", "WEC9720EK E31");
 			break;
 		case 22:
 			result = "WEC9720EK Q31";
+			cbatjson.put("devicemodal", "WEC9720EK Q31");
 			break;
 		case 23:
 			result = jedis.get("global:WEC9720EK-S220");// "WEC9720EK S220";
+			cbatjson.put("devicemodal", "WEC9720EK S220");
 			break;
 		case 24:
 			result = jedis.get("global:WEC9720EK-SD220");// "WEC9720EK SD220";
+			cbatjson.put("devicemodal", "WEC9720EK SD220");
 			break;
 		case 25:
 			result = jedis.get("global:WEC9720EK-XD25");// "WEC9720EK XD25";
+			cbatjson.put("devicemodal", "WEC9720EK XD25");
 			break;
 		case 26:
 			result = jedis.get("global:WR1004JL");// "WR1004JL";
+			cbatjson.put("devicemodal", "WR1004JL");
 			cbatjson.put("clt1", jedis.hget(cbatkey, "clt1"));
 			cbatjson.put("clt2", jedis.hget(cbatkey, "clt2"));
 			cbatjson.put("clt3", jedis.hget(cbatkey, "clt3"));
@@ -4304,6 +4485,7 @@ public class ServiceController {
 			break;
 		case 27:
 			result = jedis.get("global:WR1004SJL");// "WR1004SJL";
+			cbatjson.put("devicemodal", "WR1004SJL");
 			cbatjson.put("clt1", jedis.hget(cbatkey, "clt1"));
 			cbatjson.put("clt2", jedis.hget(cbatkey, "clt2"));
 			cbatjson.put("clt3", jedis.hget(cbatkey, "clt3"));
@@ -4311,6 +4493,7 @@ public class ServiceController {
 			break;
 		case 36:
 			result = "WEC701 M0";
+			cbatjson.put("devicemodal", "WEC701 M0");
 			break;
 		// case 40:
 		// result =jedis.get("global:WEC701-C2");//"WEC701 C2";
@@ -4355,175 +4538,253 @@ public class ServiceController {
 		jedis.publish("node.tree.cbatdetail", jsonString);
 	}
 
+	private static void setEocsInGetChilds(Jedis jedis, JSONObject parentjson,
+			String treeid) {
 
-	private static Set<String> getChildNodes(Jedis jedis,JSONObject parentjson, String treekey){
-		
-		Set<String>  childs = jedis.smembers(treekey+":children");
-		
-		if(childs.isEmpty()){			
-			return null;
-		}
-		else{
-			
-			JSONArray jsonArray = new JSONArray();
-			
-			for(String child: childs){
-			    String childkey = "tree:"+child;
-			 
-			    //get every field
-			    
-			    int flag = 0;
-			    Map<String,String> nodemap = new HashMap<String,String>();			
-				nodemap = jedis.hgetAll(childkey);
-				
-				
-				JSONObject nodejson = new JSONObject();
-				
-				Iterator iter = nodemap.entrySet().iterator(); 
-				while (iter.hasNext()) { 
-				    Map.Entry entry = (Map.Entry) iter.next(); 
-				    String key = (String)entry.getKey(); 
-				    String val = (String)entry.getValue(); 
-				    
-				   
-				    nodejson.put(key, val);
-				} 
-				
-				 getChildNodes(jedis,nodejson, childkey);
-				
-				 
-					 jsonArray.add(nodejson);
-				//get every child
-			}
-			
-			parentjson.put("children", jsonArray);
-			
-		}
-		
-		return childs;
-		
-		
-	}
-	
+		// add eoc devics
 
+		Set<String> eoccbatids = jedis.smembers("tree:" + treeid + ":eocs");
 
+		if (!eoccbatids.isEmpty()) {
 
-	
-	
-	private static void findJsonObjByKey(JSONObject rootjson, String findkey){
-			
-		
-		JSONArray childs = (JSONArray) rootjson.get("children");
-		if( childs == null || childs.isEmpty() )
-			return ;
-		else {
-			Iterator iter =childs.iterator();
-			while (iter.hasNext()) { 
-				JSONObject child = (JSONObject) iter.next();
-				String childkey = (String) child.get("key");
-				if(child.get("key").equals(findkey)){					
-					
-					resultObj = child;
-					return;
-					
-				}else{
-					 findJsonObjByKey(child,findkey);
+			for (String eoccbatid : eoccbatids) {
+
+				String key = "cbatid:" + eoccbatid + ":entity";
+				String treeparentkey = jedis.hget(key, "treeparentkey");
+
+				JSONObject cbatjson = new JSONObject();
+				cbatjson.put("treeparentkey", treeparentkey);
+				// add head;
+				cbatjson.put("title", jedis.hget(key, "label"));
+				cbatjson.put("key", jedis.hget(key, "mac"));
+
+				cbatjson.put("online", jedis.hget(key, "active"));
+				// 添加头端信息
+				if (jedis.hget(key, "active") != null) {
+					if (jedis.hget(key, "active").equalsIgnoreCase("1")) {
+						cbatjson.put("icon", "cbaton.png");
+						// "children"+'"'+":";
+					} else {
+						cbatjson.put("icon", "cbatoff.png");
+						// +"children"+'"'+":";
+					}
 				}
-				
-			}
-			
-		
-			
-			
-		}
-		
-		
-		
-	}
-	
-	
-	private static void setEocs(Jedis jedis, JSONObject rootjson){
-		
-		
-		Set<String> list = jedis.keys("cbatid:*:entity");
-		for (Iterator it = list.iterator(); it.hasNext();) {
+				// 添加tips
+				cbatjson.put("tooltip", jedis.hget(key, "ip"));
+				cbatjson.put("type", "cbat");
 
-			JSONObject cbatjson = new JSONObject();
+				// 获取cbatid
+				String cbatid = jedis.get("mac:" + jedis.hget(key, "mac")
+						+ ":deviceid");
+				// logger.info("keys::::::cbatid"+ cbatid);
+				// 取得所有属于cbatid的 cnuid
+				Set<String> list_cnu = jedis.smembers("cbatid:" + cbatid
+						+ ":cnus");// jedis.keys("cnuid:*:cbatid:"+jedis.get("cbatmac:"+jedis.hget(key,
+									// "mac")+":cbatid")+":*:entity");
+				String cnustring = "";
 
-			String key = it.next().toString();
+				JSONArray cnujsons = new JSONArray();
+				for (Iterator jt = list_cnu.iterator(); jt.hasNext();) {
 
-			// add head;
-			cbatjson.put("title", jedis.hget(key, "label"));
-			cbatjson.put("key", jedis.hget(key, "mac"));
-			cbatjson.put("treeparentkey", jedis.hget(key, "treeparentkey"));
-			cbatjson.put("online", jedis.hget(key, "active"));
-			// 添加头端信息
-			if (jedis.hget(key, "active").equalsIgnoreCase("1")) {
-				cbatjson.put("icon", "cbaton.png");
-				// "children"+'"'+":";
-			} else {
-				cbatjson.put("icon", "cbatoff.png");
-				// +"children"+'"'+":";
-			}
-			// 添加tips
-			cbatjson.put("tooltip", jedis.hget(key, "ip"));
-			cbatjson.put("type", "cbat");
+					JSONObject cnujson = new JSONObject();
 
-			// 获取cbatid
-			String cbatid = jedis.get("mac:" + jedis.hget(key, "mac")
-					+ ":deviceid");
-			// logger.info("keys::::::cbatid"+ cbatid);
-			// 取得所有属于cbatid的 cnuid
-			Set<String> list_cnu = jedis.smembers("cbatid:" + cbatid + ":cnus");// jedis.keys("cnuid:*:cbatid:"+jedis.get("cbatmac:"+jedis.hget(key,
-																				// "mac")+":cbatid")+":*:entity");
-			String cnustring = "";
+					String key_cnuid = jt.next().toString();
+					String key_cnu = "cnuid:" + key_cnuid + ":entity";
+					cnujson.put("title", jedis.hget(key_cnu, "label"));
+					cnujson.put("key", jedis.hget(key_cnu, "mac"));
+					cnujson.put("online", jedis.hget(key_cnu, "active"));
 
-			JSONArray cnujsons = new JSONArray();
-			for (Iterator jt = list_cnu.iterator(); jt.hasNext();) {
+					cnujson.put("tooltip", jedis.hget(key_cnu, "mac"));
+					if (jedis.hget(key_cnu, "active").equalsIgnoreCase("1")) {
+						cnujson.put("icon", "online.gif");
+					} else {
+						cnujson.put("icon", "offline.png");
+					}
+					cnujson.put("type", "cnu");
 
-				JSONObject cnujson = new JSONObject();
+					cnujsons.add(cnujson);
 
-				String key_cnuid = jt.next().toString();
-				String key_cnu = "cnuid:" + key_cnuid + ":entity";
-				cnujson.put("title", jedis.hget(key_cnu, "label"));
-				cnujson.put("key", jedis.hget(key_cnu, "mac"));
-				cnujson.put("online", jedis.hget(key_cnu, "active"));
+				}
 
-				cnujson.put("tooltip", jedis.hget(key_cnu, "mac"));
-				if (jedis.hget(key_cnu, "active").equalsIgnoreCase("1")) {
-					cnujson.put("icon", "online.gif");
+				cbatjson.put("children", cnujsons);
+				// cbats
+				if (((JSONArray) parentjson.get("children")) == null) {
+					JSONArray newcbats = new JSONArray();
+					newcbats.add(cbatjson);
+					parentjson.put("children", newcbats);
 				} else {
-					cnujson.put("icon", "offline.png");
+					((JSONArray) parentjson.get("children")).add(cbatjson);
+
 				}
-				cnujson.put("type", "cnu");
-
-				cnujsons.add(cnujson);
 
 			}
 
-			cbatjson.put("children", cnujsons);
-			
-			String parenttreekey = (String) cbatjson.get("treeparentkey");
-			
-			
-			//find cbat parent tree node			 
-			findJsonObjByKey(rootjson, parenttreekey);					
-			
-			if(((JSONArray)resultObj.get("children")) == null){
-				JSONArray newcbats= new JSONArray();
-				          newcbats.add(cbatjson);				          
-				          resultObj.put("children", newcbats);
-			}else{
-				((JSONArray)resultObj.get("children")).add(cbatjson);
-						
+		}
+
+		resultObj = parentjson;
+
+	}
+
+	static void getHFCNodes(Jedis jedis, JSONObject parentjson, String treekey) {
+		JSONArray jsonResponseArray = new JSONArray();
+
+		Set<String> hfcids = jedis.smembers("tree:" + treekey + ":hfcs");
+
+		if (!hfcids.isEmpty()) {
+			for (String hfcid : hfcids) {
+
+				String key = "hfcid:" + hfcid + ":entity";
+
+				JSONArray hfcinfos = new JSONArray();
+				// //////////////////////////////
+				JSONObject hfcjson = new JSONObject();
+				// add head;
+				hfcjson.put("title", jedis.hget(key, "lable"));
+				hfcjson.put("key", jedis.hget(key, "mac"));
+				hfcjson.put("treeparentkey", jedis.hget(key, "treeparentkey"));
+				hfcjson.put("online", jedis.hget(key, "active"));
+				if (jedis.hget(key, "active").equalsIgnoreCase("1")) {
+					hfcjson.put("icon", "cbaton.png");
+				} else {
+					hfcjson.put("icon", "cbatoff.png");
+				}
+				// hfcjson.put("icon", "cbaton.png");
+				// 添加tips
+				hfcjson.put("tooltip", jedis.hget(key, "ip"));
+				hfcjson.put("type", "hfc");
+				// hfcinfo
+				JSONObject hfcinfo = new JSONObject();
+				hfcinfo.put("key", "hfctype_" + jedis.hget(key, "mac"));
+				hfcinfo.put("title", jedis.hget(key, "hfctype"));
+				if (jedis.hget(key, "active").equalsIgnoreCase("1")) {
+					hfcinfo.put("icon", "tp.png");
+				} else {
+					hfcinfo.put("icon", "disable.png");
+				}
+				hfcinfo.put("tooltip", "HP");
+				hfcinfos.add(hfcinfo);
+
+				hfcinfo = new JSONObject();
+				hfcinfo.put("key", "modelnumber_" + jedis.hget(key, "mac"));
+				hfcinfo.put("title", jedis.hget(key, "modelnumber"));
+				if (jedis.hget(key, "active").equalsIgnoreCase("1")) {
+					hfcinfo.put("icon", "tp.png");
+				} else {
+					hfcinfo.put("icon", "disable.png");
+				}
+				hfcinfo.put("tooltip", "MN");
+				hfcinfos.add(hfcinfo);
+
+				hfcinfo = new JSONObject();
+				hfcinfo.put("key", "logicalid_" + jedis.hget(key, "mac"));
+				hfcinfo.put("title", jedis.hget(key, "logicalid"));
+				if (jedis.hget(key, "active").equalsIgnoreCase("1")) {
+					hfcinfo.put("icon", "tp.png");
+				} else {
+					hfcinfo.put("icon", "disable.png");
+				}
+				hfcinfo.put("tooltip", "ID");
+				hfcinfos.add(hfcinfo);
+
+				hfcjson.put("children", hfcinfos);
+
+				// ////////////////////////////////////////////
+				// hfcs
+				if (((JSONArray) parentjson.get("children")) == null) {
+					JSONArray newhfcs = new JSONArray();
+					newhfcs.add(hfcjson);
+					parentjson.put("children", newhfcs);
+				} else {
+					((JSONArray) parentjson.get("children")).add(hfcjson);
+
+				}
 			}
+
+		}
+	}
+
+	private static JSONObject getJsonFromId(Jedis jedis, String id,
+			int displaymode) {
+
+		JSONObject rootjson = new JSONObject();
 		
-			
+		rootjson.putAll(jedis.hgetAll("tree:" + id));
+
+		String ss = (String) jedis.hget("tree:" + id, "type");
+
+		if ((!ss.equalsIgnoreCase("system"))
+				&& (!ss.equalsIgnoreCase("custom"))) {
+			// 不是能获得子树的节点. device 不能获得子节点.
+			return rootjson;
+		}
+
+		Stack stack = new Stack();
+		stack.push(rootjson);
+		while (!stack.isEmpty()) {
+
+			JSONObject currentnode = new JSONObject();
+			try {
+				currentnode = (JSONObject) stack.pop();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			Set<String> childs = jedis.smembers("tree:"
+					+ currentnode.get("key") + ":children");
+						
+			if (childs.isEmpty()) {
+				
+			} else {
+				JSONArray newchilds = new JSONArray();
+				for (String child : childs) {
+					if (child.equalsIgnoreCase("3")) {
+						// HFC根节点 不显示
+						if (displaymode == 1) {
+							//do nothing
+						} else {
+							// 不显示
+							continue;
+						}
+					}
+
+					JSONObject currentchild = new JSONObject();
+					currentchild.putAll(jedis.hgetAll("tree:" + child));
+					newchilds.add(currentchild);
+					
+					Set<String> childchilds = jedis.smembers("tree:"
+							+ currentchild.get("key") + ":children");
+					if (childchilds.size() > 0) {						
+						stack.push(currentchild);
+					}else if(childchilds.isEmpty()){
+						Set<String> eocs = jedis.smembers("tree:"
+								+ currentchild.get("key") + ":eocs");
+						if (!eocs.isEmpty()) {
+							// 叶子节点查看是否显示hfc							
+							setEocsInGetChilds(jedis, currentchild,
+									(String) currentchild.get("key"));
+						}
+
+						// 显示 eoc+hfc
+						if (displaymode == 1) {					
+							Set<String> hfcs = jedis.smembers("tree:"
+									+ currentchild.get("key") + ":hfcs");
+							if (!hfcs.isEmpty()) {
+								
+								getHFCNodes(jedis, currentchild,
+										(String) currentchild.get("key"));
+							}
+						}
+					}
+				}
+				currentnode.put("children", newchilds);
+			}
+
 		}
 		
-		
+		return rootjson;
+
 	}
-	
+
 	private static void doNodeTreeInit() {
 		Jedis jedis = null;
 		try {
@@ -4534,39 +4795,24 @@ public class ServiceController {
 			return;
 		}
 
-
-		JSONArray jsonResponseArray = new JSONArray();
-
-		
-	
-		
 		// root node
 
 		JSONObject rootjson = new JSONObject();
-		String rootkey ="tree:0";
+		String rootid = "0";
+		int displaymode = 0; // 0 is eoc /// 1 is eoc+hfc
 
-		rootjson.put((String) "title", (String)jedis.hget(rootkey, "title"));
-		rootjson.put("key", jedis.hget(rootkey, "key"));
-		rootjson.put("pkey", jedis.hget(rootkey, "pkey"));
-		rootjson.put("type", jedis.hget(rootkey, "type"));
-		rootjson.put("key", jedis.hget(rootkey, "key"));
-		rootjson.put("isFolder", jedis.hget(rootkey, "isFolder"));
-		rootjson.put("expand", jedis.hget(rootkey, "expand"));
-		rootjson.put("icon", jedis.hget(rootkey, "icon"));		
-		getChildNodes(jedis, rootjson, rootkey);	
-		setEocs(jedis, rootjson);
-		
-	
-		
-		jsonResponseArray.add(rootjson);
-		// hfc
-		// W9000显示模式判断
+		// 显示hfc
 		if ((jedis.get("global:displaymode")) != null) {
 			if (jedis.get("global:displaymode").equalsIgnoreCase("1")) {
 				// 显示HFC设备
-				hfctreeinit(jedis, jsonResponseArray);
+				displaymode = 1;
 			}
 		}
+
+		rootjson = getJsonFromId(jedis, rootid, displaymode);
+
+		JSONArray jsonResponseArray = new JSONArray();
+		jsonResponseArray.add(rootjson);
 
 		redisUtil.getJedisPool().returnResource(jedis);
 
@@ -4579,16 +4825,6 @@ public class ServiceController {
 
 	private static void hfctreeinit(Jedis jedis, JSONArray jsonResponseArray) {
 		Set<String> hfclist = jedis.keys("hfcid:*:entity");
-		JSONObject hfchome = new JSONObject();
-		if ((jedis.get("global:displaymode")) != null) {
-			hfchome.put((String) "title", (String) "HFC Device");
-			hfchome.put("key", "hfcroot");
-			hfchome.put("isFolder", "true");
-			hfchome.put("expand", "true");
-			hfchome.put("icon", "home.png");
-		} else {
-			return;
-		}
 
 		// "children"
 
@@ -4602,6 +4838,7 @@ public class ServiceController {
 			// add head;
 			hfcjson.put("title", jedis.hget(key, "lable"));
 			hfcjson.put("key", jedis.hget(key, "mac"));
+			hfcjson.put("treeparentkey", jedis.hget(key, "treeparentkey"));
 			hfcjson.put("online", jedis.hget(key, "active"));
 			if (jedis.hget(key, "active").equalsIgnoreCase("1")) {
 				hfcjson.put("icon", "cbaton.png");
@@ -4650,9 +4887,8 @@ public class ServiceController {
 			hfcjson.put("children", hfcinfos);
 			hfcarray.add(hfcjson);
 		}
-		hfchome.put("children", hfcarray);
 
-		jsonResponseArray.add(hfchome);
+		jsonResponseArray = hfcarray;
 	}
 
 	private static String newcustomprofile(JSONObject jsondata, Jedis jedis) {
@@ -5130,7 +5366,7 @@ public class ServiceController {
 						Integer.valueOf(jsondata.get("port3txrate").toString()) / 32);
 			}
 
-			jsonmap.put("permit", 1);
+			// jsonmap.put("permit", 1);
 
 			sjson = JSONValue.toJSONString(jsonmap);
 
@@ -5424,8 +5660,8 @@ public class ServiceController {
 							jedis.hget(alarmkey, "salarmtime"));
 					alarmjson.put("alarmcode",
 							jedis.hget(alarmkey, "alarmcode"));
-					alarmjson.put("enalarminfo",
-							jedis.hget(alarmkey, "enalarminfo"));
+					alarmjson.put("cnalarminfo",
+							jedis.hget(alarmkey, "cnalarminfo"));
 					alarmjson.put("alarmlevel",
 							jedis.hget(alarmkey, "alarmlevel"));
 					alarmjson.put("runingtime",
@@ -5443,8 +5679,8 @@ public class ServiceController {
 							jedis.hget(alarmkey, "salarmtime"));
 					alarmjson.put("alarmcode",
 							jedis.hget(alarmkey, "alarmcode"));
-					alarmjson.put("enalarminfo",
-							jedis.hget(alarmkey, "enalarminfo"));
+					alarmjson.put("cnalarminfo",
+							jedis.hget(alarmkey, "cnalarminfo"));
 					alarmjson.put("alarmlevel",
 							jedis.hget(alarmkey, "alarmlevel"));
 					alarmjson.put("runingtime",
@@ -5739,111 +5975,116 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 
-	private static void doImportHfcRedis(String message) throws ParseException, UnsupportedEncodingException, FileNotFoundException{
-		Jedis jedis=null;
+	private static void doImportHfcRedis(String message) throws ParseException,
+			UnsupportedEncodingException, FileNotFoundException {
+		Jedis jedis = null;
 		try {
-			jedis = redisUtil.getConnection();	 
-		
-		}catch(Exception e){
+			jedis = redisUtil.getConnection();
+
+		} catch (Exception e) {
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		JSONObject jsondata = (JSONObject)new JSONParser().parse(message);
+		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
 		String user = jsondata.get("user").toString();
 		JSONObject optjson = new JSONObject();
 		Date date = new Date();
-		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");			 			 
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String logtimes = format.format(date);
 		optjson.put("time", logtimes);
-		optjson.put("user", user);	
-		
-		//String filepath = ServiceController.class.getResource("ServiceController.class").toString();
-		String nowpath;             //当前tomcat的bin目录的路径 
-	    String tempdir;  
-	    nowpath=System.getProperty("user.dir");  
-	    tempdir=nowpath.replace("bin", "webapps");  //把bin 文件夹变到 webapps文件里面   
-	    tempdir=nowpath.replace("\\wen9000", "");
-	    tempdir+="\\"+"wen9000";    
-		log.info("--------------Path--->>>"+tempdir+"------->>>>"+System.getProperty("user.dir"));
+		optjson.put("user", user);
+
+		// String filepath =
+		// ServiceController.class.getResource("ServiceController.class").toString();
+		String nowpath; // 当前tomcat的bin目录的路径
+		String tempdir;
+		nowpath = System.getProperty("user.dir");
+		tempdir = nowpath.replace("bin", "webapps"); // 把bin 文件夹变到 webapps文件里面
+		tempdir = nowpath.replace("\\wen9000", "");
+		tempdir += "\\" + "wen9000";
+		log.info("--------------Path--->>>" + tempdir + "------->>>>"
+				+ System.getProperty("user.dir"));
 		BufferedReader reader = null;
 		try {
-			File file = new File(tempdir+"/redisjsonfile.txt");
-			InputStreamReader read = new InputStreamReader (new FileInputStream(file),"UTF-8");  
-        
-            reader = new BufferedReader(read);
-            String tempString = null;
-            String filestring = "";
-            // 一次读入一行，直到读入null为文件结束
-            while ((tempString = reader.readLine()) != null) {
-            	filestring += tempString;
-            }
-            reader.close();
-            JSONParser parser = new JSONParser();
-            ContainerFactory containerFactory = new ContainerFactory(){
-              public List creatArrayContainer() {
-                return new LinkedList();
-              }
+			File file = new File(tempdir + "/redisjsonfile.txt");
+			InputStreamReader read = new InputStreamReader(new FileInputStream(
+					file), "UTF-8");
 
-              public Map createObjectContainer() {
-                return new LinkedHashMap();
-              }
-                                  
-            };
-                          
-            try{
-              Map json = (Map)parser.parse(filestring, containerFactory);
-              Iterator iter = json.entrySet().iterator();
-              //System.out.println("==iterate result==");
-              while(iter.hasNext()){
-                Map.Entry entry = (Map.Entry)iter.next();
-                //System.out.println(entry.getKey() + "=>" + entry.getValue());
-                Object obj = entry.getValue();
-                LinkedHashMap childhash = (LinkedHashMap)obj;
-                Iterator iterator = childhash.keySet().iterator();
-                Map<String,String> map = new HashMap<String,String>();
-                while (iterator.hasNext()) {
-	                 String key = iterator.next().toString();
-	                 String value = childhash.get(key).toString();
-	                 map.put(key, value);
-                }
-                
-                //Map<String,String> map = (Map)entry.getValue();
-                jedis.hmset(entry.getKey().toString(), map);
-                
-                optjson.put("desc", "Import HFC DataBase Success!");
-              }
-              jedis.save();
-            }
-            catch(ParseException pe){
-              System.out.println(pe);
-              optjson.put("desc", "Import HFC DataBase Failed!");
-              jedis.publish("node.optlog.ImportHfcResult", "0");
-            }
-            
-        } catch (IOException e) {
-            e.printStackTrace();
-            optjson.put("desc", "Import HFC DataBase Failed!");
-            jedis.publish("node.optlog.ImportHfcResult", "0");
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e1) {
-                }
-            }
-        }
-		sendoptlog(jedis,optjson);
+			reader = new BufferedReader(read);
+			String tempString = null;
+			String filestring = "";
+			// 一次读入一行，直到读入null为文件结束
+			while ((tempString = reader.readLine()) != null) {
+				filestring += tempString;
+			}
+			reader.close();
+			JSONParser parser = new JSONParser();
+			ContainerFactory containerFactory = new ContainerFactory() {
+				public List creatArrayContainer() {
+					return new LinkedList();
+				}
+
+				public Map createObjectContainer() {
+					return new LinkedHashMap();
+				}
+
+			};
+
+			try {
+				Map json = (Map) parser.parse(filestring, containerFactory);
+				Iterator iter = json.entrySet().iterator();
+				// System.out.println("==iterate result==");
+				while (iter.hasNext()) {
+					Map.Entry entry = (Map.Entry) iter.next();
+					// System.out.println(entry.getKey() + "=>" +
+					// entry.getValue());
+					Object obj = entry.getValue();
+					LinkedHashMap childhash = (LinkedHashMap) obj;
+					Iterator iterator = childhash.keySet().iterator();
+					Map<String, String> map = new HashMap<String, String>();
+					while (iterator.hasNext()) {
+						String key = iterator.next().toString();
+						String value = childhash.get(key).toString();
+						map.put(key, value);
+					}
+
+					// Map<String,String> map = (Map)entry.getValue();
+					jedis.hmset(entry.getKey().toString(), map);
+
+					optjson.put("desc", "Import HFC DataBase Success!");
+				}
+				jedis.save();
+			} catch (ParseException pe) {
+				System.out.println(pe);
+				optjson.put("desc", "Import HFC DataBase Failed!");
+				jedis.publish("node.optlog.ImportHfcResult", "0");
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			optjson.put("desc", "Import HFC DataBase Failed!");
+			jedis.publish("node.optlog.ImportHfcResult", "0");
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e1) {
+				}
+			}
+		}
+		sendoptlog(jedis, optjson);
 		jedis.publish("node.optlog.ImportHfcResult", "1");
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
-	
-	private static void ThresholdSet_EDFA(Jedis jedis, String ParamMibOID, JSONObject json,JSONObject jsondata){
+
+	private static void ThresholdSet_EDFA(Jedis jedis, String ParamMibOID,
+			JSONObject json, JSONObject jsondata) {
 		String key = jsondata.get("key").toString();
 		String mac = jsondata.get("mac").toString().trim();
 
-		String id = jedis.get("mac:"+ mac + ":deviceid");
-		String community = jedis.hget("hfcid:"+id+":entity", "wcommunity");
+		String id = jedis.get("mac:" + mac + ":deviceid");
+		String community = jedis.hget("hfcid:" + id + ":entity", "wcommunity");
 
 		String ip = jsondata.get("ip").toString();
 		String hihi = jsondata.get("hihi").toString();
@@ -5993,8 +6234,8 @@ public class ServiceController {
 		String ip = jsondata.get("ip").toString();
 		String mac = jsondata.get("mac").toString().trim();
 
-		String id = jedis.get("mac:"+ mac + ":deviceid");
-		String community = jedis.hget("hfcid:"+id+":entity", "rcommunity");
+		String id = jedis.get("mac:" + mac + ":deviceid");
+		String community = jedis.hget("hfcid:" + id + ":entity", "rcommunity");
 		String extraoid = "";
 		String AlarmSatOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.3";
 		String AlarmEnOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.2";
@@ -6080,8 +6321,8 @@ public class ServiceController {
 		String ip = jsondata.get("ip").toString();
 		String mac = jsondata.get("mac").toString().trim();
 
-		String id = jedis.get("mac:"+ mac + ":deviceid");
-		String community = jedis.hget("hfcid:"+id+":entity", "rcommunity");
+		String id = jedis.get("mac:" + mac + ":deviceid");
+		String community = jedis.hget("hfcid:" + id + ":entity", "rcommunity");
 		String extraoid = "";
 		String AlarmSatOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.3";
 		String AlarmEnOidStr = ".1.3.6.1.4.1.17409.1.1.1.1.2";

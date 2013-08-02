@@ -110,15 +110,19 @@ public class ServiceHeartProcessor{
 		
 	}
 	
-	private void servicestart(String message) throws InterruptedException, ParseException, IOException{
+	private void servicestart(String message) {
 	
 	
 		
 		//System.out.println(" [x] ServiceHeartProcessor Received '" + message
 		//		+ "'");
 		
-		//long start = System.currentTimeMillis();  			
-		dowork(message);					
+		//long start = System.currentTimeMillis();
+		try{
+			dowork(message);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 
 		//long end = System.currentTimeMillis();  
 		//System.out.println("one ServiceHeartProcessor dowork spend: " + ((end - start)) + " milliseconds");  
@@ -128,7 +132,8 @@ public class ServiceHeartProcessor{
 	
 	
 	
-	private void dowork(String message) throws ParseException, IOException{
+	private void dowork(String message) {
+		try {
 		JSONParser parser = new JSONParser();
 		
 		ContainerFactory containerFactory = new ContainerFactory(){
@@ -141,10 +146,15 @@ public class ServiceHeartProcessor{
 		    }
 		                        
 		  };
-		  
+		  		  
 		  Map<String, String> heart = (Map<String, String>)parser.parse(message, containerFactory);
 		  
+		 
 		  doheart(heart);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	private void doheart(Map<String,String> heart) throws IOException{
@@ -165,7 +175,7 @@ public class ServiceHeartProcessor{
 			clt.put("clt3", heart.get("clt3"));
 			clt.put("clt4", heart.get("clt4"));
 		}
-		//处理cbat 心跳信息
+		//处理cbat 心跳信息		
 		doheartcbat(cbatmac, cbatip, cbattype,clt);
 		
 		//解析cnu 心跳信息
@@ -202,7 +212,7 @@ public class ServiceHeartProcessor{
 			
 		//判断头端是否已存在
 		if(jedis.exists("mac:"+cbatmac+":deviceid")){
-			//头端已存在
+			//头端已存在			
 			String deviceid = jedis.get("mac:"+cbatmac+":deviceid");
 			String cbatkey = "cbatid:"+deviceid+":entity";
 			if(jedis.hget("cbatid:"+deviceid+":cbatinfo", "appver").equalsIgnoreCase("")){
@@ -256,7 +266,7 @@ public class ServiceHeartProcessor{
 			
 		}else{
 			//新头端
-			//判断新头端ip是否与已发现头端重复
+			//判断新头端ip是否与已发现头端重复			
 			Set<String> cbats = jedis.keys("cbatid:*:entity");
 			for(Iterator it= cbats.iterator();it.hasNext();){
 				String cbatkey = it.next().toString();
@@ -291,6 +301,9 @@ public class ServiceHeartProcessor{
 			
 			cbatentity.put("mac", cbatmac.toLowerCase().trim());
 			cbatentity.put("active", "1");
+			cbatentity.put("treeparentkey", "2");
+			jedis.sadd("tree:2:eocs", Long.toString(icbatid) );
+			
 			cbatentity.put("ip", cbatip.toLowerCase().trim());
 			cbatentity.put("label", cbatmac.toLowerCase().trim());
 			cbatentity.put("devicetype", type.toLowerCase().trim());

@@ -22,6 +22,6 @@
 	});
 	
 	function fun_err(data){
-		alert("Please input username!");
+		alert("请输入用户名！");
 	}
 })(jQuery);

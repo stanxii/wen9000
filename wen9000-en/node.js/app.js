@@ -323,7 +323,19 @@ redis.on('pmessage', function(pat,ch,data) {
       }else if(ch == 'node.tree.init') {
        data = JSON.parse(data);
        sio.sockets.emit('initDynatree',data);
-    }else if(ch == 'node.tree.cbatdetail') {
+    }else if(ch == 'node.tree.movetotree.init') {
+        data = JSON.parse(data);
+        sio.sockets.emit('toweb.init.movetotree',data);
+     }else if(ch == 'node.tree.move.movetotree') {
+         data = JSON.parse(data);
+         sio.sockets.emit('toweb.tree.move.movetotree',data);
+      }else if(ch == 'node.tree.addnode') {
+          data = JSON.parse(data);
+          sio.sockets.emit('toweb.tree.addnode',data);
+       }  
+   
+   
+      else if(ch == 'node.tree.cbatdetail') {
         data = JSON.parse(data);
         sio.sockets.emit('cbatdetail',data);
     }else if(ch == 'node.tree.cnudetail') {
@@ -503,6 +515,12 @@ redis.on('pmessage', function(pat,ch,data) {
     }else if(ch == 'node.optlog.getall') {
     	data = JSON.parse(data);
     	sio.sockets.emit('optlogall',data);       
+    }else if(ch == 'node.optlog.getcltmac') {
+    	sio.sockets.emit('Getcltmac',data);       
+    }else if(ch == 'node.optlog.optresult') {
+    	sio.sockets.emit('optresult',data);       
+    }else if(ch == 'node.optlog.ImportHfcResult') {
+    	sio.sockets.emit('opt.ImportHfcResult',data);       
     }
 });
 
@@ -513,6 +531,21 @@ sio.sockets.on('connection', function (socket) {
      console.log('nodeserver: inittree');
      publish.publish('servicecontroller.treeinit', 'inittree');
   });
+  
+  socket.on('fromweb.init.movetotree', function (data) {
+	     console.log('nodeserver: movetotree');
+	     publish.publish('servicecontroller.init.movetotree', 'inittree');
+	  });
+  
+  socket.on('fromweb.move.movetotree', function (data) {
+	     console.log('nodeserver: fromweb.move.movetotree');	     
+	     publish.publish('servicecontroller.move.movetotree', data);
+	  });
+  
+  socket.on('fromweb.tree.addnode', function (data) {
+	     console.log('nodeserver: fromweb.tree.addnode');	     
+	     publish.publish('servicecontroller.tree.addnode', data);
+	  });  
   
   socket.on('historyalarmall', function (data) {
      console.log('from client: nodeserver: historyalarmall');
@@ -752,6 +785,11 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: delnode==='+data);
 	  publish.publish('servicecontroller.delnode', data);
   });
+//编辑节点
+  socket.on('editnode', function (data) {
+	  console.log('nodeserver: editnode==='+data);
+	  publish.publish('servicecontroller.editnode', data);
+  });  
 //初始化升级信息
   socket.on('opt.updatereset', function (data) {
 	  console.log('nodeserver: updatereset==='+data);
@@ -812,7 +850,7 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: Viewmodechange==='+data);
 	  publish.publish('servicecontroller.Viewmodechange', data);
   });
-  //设备类型显示
+//设备类型显示
   socket.on('Devmodechange', function (data) {
 	  console.log('nodeserver: Devmodechange==='+data);
 	  publish.publish('servicecontroller.Devmodechange', data);
@@ -873,6 +911,26 @@ sio.sockets.on('connection', function (socket) {
   socket.on('optlogpre', function (data) {
 	  console.log('nodeserver: optlogpre==='+data);
 	  publish.publish('servicecontroller.optlogpre', data);
+  });
+//clt线卡选择变迁
+  socket.on('Scltchange', function (data) {
+	  console.log('nodeserver: Scltchange==='+data);
+	  publish.publish('servicecontroller.Scltget', data);
+  });
+//clt删除
+  socket.on('Cltdel', function (data) {
+	  console.log('nodeserver: Cltdel==='+data);
+	  publish.publish('servicecontroller.cltdel', data);
+  });
+//clt注册
+  socket.on('Cltregister', function (data) {
+	  console.log('nodeserver: Cltregister==='+data);
+	  publish.publish('servicecontroller.Cltregister', data);
+  });
+//hfc数据库导入
+  socket.on('opt.importhfcredis', function (data) {
+	  console.log('nodeserver: importhfcredis==='+data);
+	  publish.publish('servicecontroller.importhfcredis', data);
   });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);

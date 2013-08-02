@@ -519,7 +519,7 @@ public class WorkerDiscoveryProcessor{
     	String eqv = new String();
     	String out_level = new String();
     	String agc = new String();
-    	hfctype = "光接收机";
+    	hfctype = "Optical Receiver";
     	try{
     		hfc_version = util.gethfcStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,17409,1,3,1,18,0}),community );
 
@@ -602,7 +602,7 @@ public class WorkerDiscoveryProcessor{
 		String hfc_LogicalID = "";
 		String hfc_ModelNumber = "";
 		String hfc_SerialNumber = "";
-		String hfctype = "带切换开关光接收机";
+		String hfctype = "Switching Optical Receiver";
 		String power1 = "";
 		String power_v1 = "";
 		String power2 = "";
@@ -678,7 +678,7 @@ public class WorkerDiscoveryProcessor{
 	   		 paramhash.put("power1", power1);
 	   		 paramhash.put("power_v1", power_v1); 
 	   		 paramhash.put("power2", power2);
-	   		 paramhash.put("power_v2", power_v1);
+	   		 paramhash.put("power_v2", power_v2);
 	   		 paramhash.put("channelnum", channelnum);
 	   		 paramhash.put("innertemp", innertemp);    	   		 
 	   		paramhash.put("Ainputpower", Ainputpower);
@@ -721,7 +721,7 @@ public class WorkerDiscoveryProcessor{
 		String hfc_LogicalID = "";
 		String hfc_ModelNumber = "";
 		String hfc_SerialNumber = "";
-		String hfctype = "1310nm光发射机";
+		String hfctype = "1310nm Optical Transmitter";
 		String trapip1="";
 		String trapip2="";
 		String trapip3="";
@@ -835,7 +835,7 @@ public class WorkerDiscoveryProcessor{
 		String hfc_LogicalID = "";
 		String hfc_ModelNumber = "";
 		String hfc_SerialNumber = "";
-		String hfctype = "掺铒光纤放大器";
+		String hfctype = "EDFA";
 		String inpower="";
 		String outpower="";
 		String trapip1="";

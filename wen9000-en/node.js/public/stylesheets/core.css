@@ -112,6 +112,7 @@ table input {
 	top:0;
 	left:21%;
 	width:79%;
+	overflow:auto;
 }
 
 #pre_content {
@@ -233,7 +234,44 @@ table input {
 	 text-align:center;
 }
 
+#cltinfo {
+	margin-left:30px;
+}
 
+#cltinfo tr td{	
+	border-style:solid;
+	border-color:blue;
+	border-width:1px;
+	cellpadding:3;
+	cellspacing:1;
+	align:center;
+}
+
+#cltopt {
+	margin-left:30px;
+	align:center;
+}
+
+#dg_movenode {
+	text-decoration: none;
+	padding: 5px 7px;
+	margin: 10px 0px 5px 0px;
+	border: 1px solid #778;
+	border:1px solid gray;
+	background: #cccccc;
+	border-radius: 8px; /*w3c border radius*/
+	box-shadow: 3px 3px 4px rgba(0,0,0,.5); /* w3c box shadow */
+	-moz-border-radius: 8px; /* mozilla border radius */
+	-moz-box-shadow: 3px 3px 4px rgba(0,0,0,.5); /* mozilla box shadow */
+	background: -moz-linear-gradient(center top, #cccccc, #ccccdd 25%, #ccccdd 45%, #cccffc 85%, #ccccdf); /* mozilla gradient background */
+	-webkit-border-radius: 8px; /* webkit border radius */
+	-webkit-box-shadow: 3px 3px 4px rgba(0,0,0,.5); /* webkit box shadow */
+	background: -webkit-gradient(linear, center top, center bottom, from(#a4ccec), color-stop(25%, #72a6d4), color-stop(45%, #3282c2), color-stop(85%, #357cbd), to(#72a6d4)); /* webkit gradient background */
+}
+
+#dg_movenode:hover{
+	color: blue;
+}
 
 
 
