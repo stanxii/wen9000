@@ -567,7 +567,7 @@ public class ServiceHeartProcessor{
 			//添加cnu到profile集合中
 			jedis.sadd("profileid:1:cnus", cnumac);
 			
-			jedis.bgsave();
+			jedis.save();
 			//发现新cnu,发往STSCHANGE_QUEUE_NAME
 			//jedis.lpush(STSCHANGE_QUEUE_NAME, String.valueOf(icnuid));
 			Sendstschange("cnu",String.valueOf(icnuid),jedis);
