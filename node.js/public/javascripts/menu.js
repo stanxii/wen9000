@@ -1489,6 +1489,11 @@
 		    	  socket.emit('delnode',datastring);
 		    	  node.remove();
 		    	  window.location.reload();
+	    	  }else if( node.data.type == "cnu") {
+	    		  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
+	    		  socket.emit('delnode',datastring);
+		    	  node.remove();
+		    	  //window.location.reload();	    		  
 	    	  }
 	    	  
 	    	  

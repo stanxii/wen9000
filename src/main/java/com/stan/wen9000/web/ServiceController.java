@@ -1681,7 +1681,9 @@ public class ServiceController {
 				// 删除模板中记录的此cnu信息
 				String proid = jedis.hget("cnuid:" + id + ":entity",
 						"profileid");
-				jedis.srem("profileid:" + proid + ":entity", id);
+				jedis.srem("profileid:" + proid + ":cnus", id);
+				if(jedis.smembers("profileid:" + proid + ":cnus").isEmpty())
+					jedis.del("profileid:" + proid + ":cnus");
 				jedis.del("cnuid:" + id + ":entity");
 			} else if (type.equalsIgnoreCase("hfc")) {
 				//del parent eocs
