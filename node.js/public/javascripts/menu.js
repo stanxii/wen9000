@@ -1534,7 +1534,7 @@
 	     		  alert("只读用户，权限不足！");
 	     		  return;
 	     	   }
-	    	  if(  (node.data.type != "custom")   ){
+	    	  if(  (node.data.key != "0") && (node.data.type != "custom")   ){
 	    		  alert("不能添加节点！");
 	    	  }else{
 	    		  $('#dialog_addnode').dialog({
