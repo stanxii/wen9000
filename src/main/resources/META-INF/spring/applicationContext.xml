@@ -141,9 +141,6 @@
 	<bean id="trapReceiverBean" class="com.stan.wen9000.web.TrapReceiverBean" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="workerCbatStatus" class="com.stan.wen9000.web.WorkerCbatStatus" >
-		<property name="redisUtil" ref="redisUtil" />
-	</bean>
 	<bean id="serviceCbatStatus" class="com.stan.wen9000.web.ServiceCbatStatus" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
@@ -195,12 +192,7 @@
 	 <property name="targetObject" ref="trapReceiverBean" />
 	 <property name="targetMethod"  value="start"/>
 	 <property name="concurrent" value="true" />	 	
-	</bean>
-	<bean id="workerCbatStatusjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-	 <property name="targetObject" ref="workerCbatStatus" />
-	 <property name="targetMethod"  value="start"/>
-	 <property name="concurrent" value="true" />	 	
-	</bean>
+	</bean>	
 	<bean id="serviceCbatStatusjob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 	 <property name="targetObject" ref="serviceCbatStatus" />
 	 <property name="targetMethod"  value="start"/>
@@ -273,12 +265,6 @@
 	 <property name="repeatInterval" value="5" />
 	 <property name="repeatCount" value="0" />		  	 
 	</bean>
-	<bean id="workerCbatStatusTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
-	 <property name="jobDetail" ref="workerCbatStatusjob" />
-	 <property name="startDelay" value="40000" />
-	 <property name="repeatInterval" value="5" />
-	 <property name="repeatCount" value="0" />		  	 
-	</bean>
 	<bean id="serviceCbatStatusTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 	 <property name="jobDetail" ref="serviceCbatStatusjob" />
 	 <property name="startDelay" value="3000" />
@@ -339,8 +325,7 @@
 	   <ref bean="serviceProcessTrigger" />
 	   <ref bean="serviceAlarmTrigger" />
 	   <ref bean="serviceHeartTrigger" />
-	   <ref bean="trapReceierTrigger" />	
-	   <ref bean="workerCbatStatusTrigger" />
+	   <ref bean="trapReceierTrigger" />		   
 	   <ref bean="serviceCbatStatusTrigger" /> 
 	   <ref bean="serviceControllerTrigger" />
 	   <ref bean="serviceUpdateProcessTrigger" />

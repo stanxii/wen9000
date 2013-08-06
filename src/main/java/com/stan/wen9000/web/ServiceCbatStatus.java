@@ -124,16 +124,7 @@ public class ServiceCbatStatus{
 	         */
 
 	        public void onPMessage(String arg0, String arg1, String arg2) {
-	        	try {
-	      			//arg2 is mssage now is currenti p
-	      			
-	      			
-	      			
-	      			servicestart(arg1, arg2);
-	      			
-	      		}catch(Exception e){
-	      			e.printStackTrace();			
-	      		}
+	        	
 	        }
 
 	    };
@@ -144,12 +135,18 @@ public class ServiceCbatStatus{
 	
 	private void start(){
 		log.info("[#3] ..... ServiceCbatStatus start");
-		Jedis jedis=null;
+		
 		try {
-		 jedis = redisUtil.getConnection();
-		 
-		 jedis.psubscribe(jedissubSub, "ServiceCbatStatus.*");
-		redisUtil.getJedisPool().returnResource(jedis);
+			
+		 while(true){
+				try{
+					servicestart();
+					Thread.currentThread().sleep(2000);
+				}catch(Exception e){
+					
+				}
+				
+			}
 		}catch(Exception e){
 			e.printStackTrace();
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
@@ -160,38 +157,54 @@ public class ServiceCbatStatus{
 	
 	
 	
-	private static void servicestart(String pat, String message){
+	private static void servicestart(){
 
 			
-			//System.out.println(" [x] ServiceCbatStatus Received '" + message
-			//		+ "'");
-						
-			dowork(message);					
+		//获取所有cbat设备
+				Jedis jedis=null;
+				try {
+				 jedis = redisUtil.getConnection();	 
+				
+				}catch(Exception e){
+					e.printStackTrace();
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
+					return;
+				}
+				
+		//log.info("----------------------------->>>>log testing~~~~");
+				String key;
+				Set<String> cbats = jedis.keys("cbatid:*:entity");
+				for(Iterator it=cbats.iterator();it.hasNext();){
+					key = it.next().toString();
+					if(jedis.hget(key, "active").equalsIgnoreCase("0")){
+						continue;
+					}
+					//将ip发往server
+					dowork(jedis, key);	
+										
+				}
+				
+				
+				redisUtil.getJedisPool().returnResource(jedis);
+							
 
 	}
 	
-	private static void dowork(String message){	
-		Jedis jedis=null;
-		try {
-		 jedis = redisUtil.getConnection();	 
-		
-		}catch(Exception e){
-			e.printStackTrace();
-			redisUtil.getJedisPool().returnBrokenResource(jedis);
-			return;
-		}
+	private static void dowork(Jedis jedis, String message){			
 		
 		//获取头端时间戳
 		long timeticks = Long.parseLong(jedis.hget(message, "timeticks"));
 		Date date = new Date();
 		long now = date.getTime();
-		String id = jedis.get("mac:"+jedis.hget(message, "mac")+":deviceid");
+		String cbatmac = jedis.hget(message, "mac");
+		String id = jedis.get("mac:"+ cbatmac +":deviceid");
 		if(now - timeticks > 75000){
 			//log.info("发现设备下线:time====="+date.toString()+"======now==="+now+"======timeticks===="+timeticks+"====timedate==="+new Date(timeticks).toString());
 			//确认设备不在线
 			jedis.hset(message, "active", "0");
 
 			//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
+			System.out.println("===now cbatstatus check cbat offline! cbatmac="+ cbatmac);
 			Sendstschange("cbat",id,jedis);
 			//jedis.lpush(STSCHANGE_QUEUE_NAME, id);
 			//置所属CNU下线
@@ -220,90 +233,10 @@ public class ServiceCbatStatus{
 			alarmhash.put("enalarminfo", "Mac:"+ jedis.hget(message, "mac") +"  Master offline!");
 			
 			String msgservice = JSONValue.toJSONString(alarmhash);
-			jedis.publish("servicealarm.new", msgservice);
-			redisUtil.getJedisPool().returnResource(jedis);
-			return;
+			jedis.publish("servicealarm.new", msgservice);			
 		}
 		
-//		//判断并修改设备trapserver ip/port
-//		String devtrapserverip = null;
-//		Integer trap_port = 0;
-//		String cbatip = jedis.hget(message, "ip");
-//		String cbatinfokey = "cbatid:"+id+":cbatinfo";
-//		try {
-//			devtrapserverip = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
-//			trap_port = util.getINT32PDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}));
-//		}
-//		catch(Exception e){
-//			redisUtil.getJedisPool().returnBrokenResource(jedis);
-//			return;
-//		}
-//
-//		if(devtrapserverip==""){
-//			redisUtil.getJedisPool().returnResource(jedis);
-//			return;
-//		}
-//		
-//		//如果global:trapserver:ip键不存在，创建之
-//		if(jedis.get("global:trapserver:ip")==null){
-//			jedis.set("global:trapserver:ip", "192.168.223.253");
-//			jedis.set("global:trapserver:port", "162");
-//		}
-//
-//		//if systemconfig db trap ip = device trap ip not need set trap server ip
-//		if( !jedis.get("global:trapserver:ip").equalsIgnoreCase(devtrapserverip)){
-//			try {
-//				//set trap server ip
-//			util.setV2StrPDU(cbatip,
-//					"161",
-//					new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}), 
-//					jedis.get("global:trapserver:ip")
-//					);
-//			//save
-//			util.setV2PDU(cbatip,
-//					"161",
-//					new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
-//					new Integer32(1)
-//					);
-//			
-//			jedis.hset(cbatinfokey, "trapserverip", devtrapserverip);
-//			//reset
-//			/*
-//			util.setV2PDU(currentip,
-//					"161",
-//					new OID(new int[] {1,3,6,1,4,1,36186,8,6,1,0}), 
-//					new Integer32(1)
-//					);
-//			 */
-//			 		
-//			}catch(Exception e){
-//				redisUtil.getJedisPool().returnBrokenResource(jedis);
-//				//e.printStackTrace();
-//			}
-//		}
-//		//if trap port != systemconfig db trap port
-//		if(trap_port != Integer.valueOf(jedis.get("global:trapserver:port")))
-//		{
-//			try {
-//				//set trap server ip
-//				util.setV2PDU(cbatip,
-//						"161",
-//						new OID(new int[] {1,3,6,1,4,1,36186,8,2,7,0}), 
-//						new Integer32(Integer.valueOf(jedis.get("global:trapserver:port")))
-//						);
-//				//save
-//				util.setV2PDU(cbatip,
-//						"161",
-//						new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
-//						new Integer32(1)
-//						);
-//				
-//				jedis.hset(cbatinfokey, "agentport", String.valueOf(trap_port));
-//			}catch(Exception e){
-//				redisUtil.getJedisPool().returnBrokenResource(jedis);
-//			}
-//		}
-		redisUtil.getJedisPool().returnResource(jedis);
+		
 		
 	}
 	

@@ -203,9 +203,8 @@
 			  node.activate();
 			  var activeLi = node && node.li;
 			  $('.dynatree-container').animate({
-				 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
-				 'slow');
-			  });
+				 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()}, 'slow');
+			 
 		  }else{
 			  socket.emit('devsearch',search_val);
 		  } 
@@ -228,7 +227,7 @@
     				  $('.dynatree-container').animate({
     					 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
     					 'slow');
-    				  });
+    				 
     			  }else{
     				  socket.emit('devsearch',search_val);
     			  } 
@@ -738,7 +737,7 @@
 			  $('.dynatree-container').animate({
 				 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
 				 'slow');
-			  });
+			  
     	 }
      }
      
