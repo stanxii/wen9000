@@ -640,7 +640,7 @@ public class TrapReceiverBean {
 					System.out.println("TrapReceiverBean:200903 create jedis error!");
 
 				}
-				if(Integer.valueOf(st) < value){
+				if((Integer.valueOf(st) < value)&&(Integer.valueOf(st)> (-30))){
 					return;
 				}
 				alarmhash.put("cnalarminfo", "环境温度告警("+st+"℃)");

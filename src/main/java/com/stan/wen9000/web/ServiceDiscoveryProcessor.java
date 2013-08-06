@@ -202,8 +202,8 @@ public class ServiceDiscoveryProcessor  {
 				if(jedis.hget(cbatkey, "ip").equalsIgnoreCase(cbatip)){
 					//编辑告警信息
 					Map<String, String> alarmhash=new LinkedHashMap();
-					alarmhash.put("runingtime", "N/A");
-					alarmhash.put("oid", "N/A");
+					alarmhash.put("runingtime", "NA");
+					alarmhash.put("oid", "NA");
 					alarmhash.put("alarmcode", "200934");		
 					alarmhash.put("cbatmac", cbatmac); 		
 					Date date = new Date();
@@ -312,10 +312,10 @@ public class ServiceDiscoveryProcessor  {
 		Map<String , String >  hash = new HashMap<String, String>();
 
 		String scbatinfokey = "cbatid:" + icbatid + ":cbatinfo";
-		hash.put("address", "N/A");
+		hash.put("address", "NA");
 		hash.put("phone", "13988777");
 		hash.put("bootver", "cml-boot-v1.1.0_for_linux_sdk");
-		hash.put("contact", "N/A");
+		hash.put("contact", "NA");
 		hash.put("agentport", agentport);
 		hash.put("trapserverip", trapserverip);
 		hash.put("appver", appver);
