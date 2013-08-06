@@ -1474,6 +1474,9 @@ public class ServiceController {
 									    jedis.del("cnuid:" + cnuid + ":cnus");
 									
 									
+									//del cnuid entity	
+									jedis.del("cnuid:" + cnuid + ":entity");
+									//System.out.println("============now will del cnuid entity"+ cnuid);
 									
 								}
 								jedis.del("mac:" + jedis.hget("cbatid:" + cbatid + ":entity", "mac")
@@ -1536,6 +1539,11 @@ public class ServiceController {
 							jedis.srem("profileid:" + proid + ":cnus", cnuid);
 							if(jedis.smembers("profileid:" + proid + ":cnus").isEmpty())								
 							    jedis.del("cnuid:" + cnuid + ":cnus");
+							
+							
+							//del cnuid entity	
+							jedis.del("cnuid:" + cnuid + ":entity");
+							
 							
 						}
 						jedis.del("mac:" + jedis.hget("cbatid:" + cbatid + ":entity", "mac")
