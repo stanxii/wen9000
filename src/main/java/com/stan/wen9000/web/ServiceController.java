@@ -1580,8 +1580,7 @@ public class ServiceController {
 					System.out.println("now will del tree:"+ currentnodeid+" :children");
 					System.out.println("now will del tree:"+ currentnodeid);
 					
-					jedis.del("tree:"+ currentnodeid + ":hfcs");
-					jedis.del("tree:"+currentnodeid);
+					jedis.del("tree:"+ currentnodeid + ":hfcs");					
 					jedis.del("tree:"+currentnodeid+":children");
 					jedis.del("tree:"+currentnodeid);
 				
@@ -1589,8 +1588,11 @@ public class ServiceController {
 			}
 			
 			
-			
-			
+			//del now parent node
+			jedis.del("tree:"+ treeid + ":hfcs");			
+			jedis.del("tree:"+treeid+":children");
+			jedis.del("tree:"+treeid);
+		
 		
 
 		}
