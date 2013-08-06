@@ -932,6 +932,11 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: importhfcredis==='+data);
 	  publish.publish('servicecontroller.importhfcredis', data);
   });
+//头端温度告警门限设置
+  socket.on('opt.alarmtmpset', function (data) {
+	  console.log('nodeserver: opt.alarmtmpset==='+data);
+	  publish.publish('servicecontroller.alarmtmpset', data);
+  });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
         socket.join(ch);

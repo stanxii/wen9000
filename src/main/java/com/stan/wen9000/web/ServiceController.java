@@ -230,8 +230,7 @@ public class ServiceController {
 			doOptLastAlarms(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.opt.preconfig_one")) {
 			doOptPreconfig_one(message);
-		} else if (pat
-				.equalsIgnoreCase("servicecontroller.opt.preconfig_batch")) {
+		} else if (pat.equalsIgnoreCase("servicecontroller.opt.preconfig_batch")) {
 			doOptPreconfig_batch(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.opt.preconfig_all")) {
 			doOptPreconfig_all(message);
@@ -289,8 +288,7 @@ public class ServiceController {
 			doHfcsub(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.hfc_set")) {
 			doHfcset(message);
-		} else if (pat
-				.equalsIgnoreCase("servicecontroller.hfc_alarmthresholdsub")) {
+		} else if (pat.equalsIgnoreCase("servicecontroller.hfc_alarmthresholdsub")) {
 			doHfcThresholdsub(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.devsearch")) {
 			doDevSearch(message);
@@ -310,6 +308,8 @@ public class ServiceController {
 			doCltRegister(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.importhfcredis")) {
 			doImportHfcRedis(message);
+		} else if (pat.equalsIgnoreCase("servicecontroller.alarmtmpset")) {
+			doAlarmtmpset(message);
 		}
 
 	}
@@ -2034,6 +2034,11 @@ public class ServiceController {
 			jedis.hset("user:admin", "password", "admin");
 			jedis.hset("user:admin", "flag", "0");
 		}
+		
+		//初始化告警温度设置
+		if(!jedis.exists("global:alarm:temperature")){
+			jedis.set("global:alarm:temperature", "55");
+		}
 
 		// 初始化设备类型显示
 		if (!jedis.exists("global:WEC-3501I-C22")) {
@@ -2899,11 +2904,41 @@ public class ServiceController {
 		// 获取全局配置trap server端口号和IP地址
 		String ip = jedis.get("global:trapserver:ip");
 		String port = jedis.get("global:trapserver:port");
+		String tmp = jedis.get("global:alarm:temperature");
 		JSONObject json = new JSONObject();
 		json.put("ip", ip);
 		json.put("port", port);
+		json.put("tmp", tmp);
 		jedis.publish("node.opt.globalopt", json.toJSONString());
 
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static void doAlarmtmpset(String message) throws ParseException {
+		Jedis jedis = null;
+		try {
+			jedis = redisUtil.getConnection();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+		String val = jsondata.get("val").toString();
+		String user = jsondata.get("user").toString();
+		jedis.set("global:alarm:temperature", val);
+		JSONObject optjson = new JSONObject();
+		Date date = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String logtimes = format.format(date);
+		optjson.put("time", logtimes);
+		optjson.put("user", user);
+		optjson.put("desc", "头端温度告警门限值更改（"+val+"）");
+		sendoptlog(jedis, optjson);
+		jedis.save();
+		//提示操作成功
+		jedis.publish("node.opt.saveredis", "");
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 

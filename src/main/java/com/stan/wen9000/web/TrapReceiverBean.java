@@ -627,6 +627,22 @@ public class TrapReceiverBean {
 					st = "-";
 				}
 				st += String.valueOf((temp>>16)&0xff)+"."+String.valueOf(temp & 0xFFFF);
+				//温度告警大于小于设定值不产生告警
+				int value = 0;
+				try {
+					Jedis jedis = redisUtil.getConnection();
+					value = Integer.valueOf(jedis.get("global:alarm:temperature"));
+					redisUtil.closeConnection(jedis);
+
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					//e.printStackTrace();
+					System.out.println("TrapReceiverBean:200903 create jedis error!");
+
+				}
+				if(Integer.valueOf(st) < value){
+					return;
+				}
 				alarmhash.put("cnalarminfo", "环境温度告警("+st+"℃)");
 				alarmhash.put("enalarminfo", "Environment temperature alarm("+st+"℃)");				
 				break;

@@ -41,6 +41,13 @@ block content
   br
   button(id='btn_import')  导入HFC数据
   br
+  br
+  头端设备温度告警阀门设置：当头端温度大于
+  input(id='tmpalarm',type='text')
+  时，产生温度告警
+  br
+  button(id='btn_tmpsub')  提交 
+  br
   p  本网管采用最新的Redis内存数据库优化数据存储效率，为了保证关键数据不丢失，建议关闭网管前点击保存按钮将内存中未存储的数据保存到硬盘。
   br
   button(id='btn_gsave')  保存 

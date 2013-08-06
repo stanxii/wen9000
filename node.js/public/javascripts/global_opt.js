@@ -45,6 +45,16 @@
 			});
 			$("#dialog-message-proc").dialog("open");
     	});
+		
+		$("#btn_tmpsub").click( function(){
+			if(flag == "3"){
+	    		  alert("只读用户，权限不足！");
+	    		  return;
+	    	  }
+			var data = '{"val":"'+$("#tmpalarm")[0].value+'","user":"'+user+'"}';
+			socket.emit('opt.alarmtmpset',data);
+			
+    	});
 	});
 	
 	function fun_ImportHfcResult(data){
@@ -108,6 +118,7 @@
 		}else{
 			$("#trap_server")[0].value = data.ip;
 			$("#trap_serport")[0].value = data.port;
+			$("#tmpalarm")[0].value = data.tmp;
 		}
 	}
 	

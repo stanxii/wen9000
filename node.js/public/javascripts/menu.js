@@ -200,7 +200,12 @@
 			  if(node == null){
 				  alert("无法查询到设备!");
 			  }
-			  node.activate()
+			  node.activate();
+			  var activeLi = node && node.li;
+			  $('.dynatree-container').animate({
+				 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
+				 'slow');
+			  });
 		  }else{
 			  socket.emit('devsearch',search_val);
 		  } 
@@ -219,6 +224,11 @@
     					  alert("无法查询到设备!");
     				  }
     				  node.activate();
+    				  var activeLi = node && node.li;
+    				  $('.dynatree-container').animate({
+    					 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
+    					 'slow');
+    				  });
     			  }else{
     				  socket.emit('devsearch',search_val);
     			  } 
@@ -723,7 +733,12 @@
 			  if(node == null){
 				  alert("无法查询到设备!");
 			  }
-			  node.activate()
+			  node.activate();
+			  var activeLi = node && node.li;
+			  $('.dynatree-container').animate({
+				 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
+				 'slow');
+			  });
     	 }
      }
      
