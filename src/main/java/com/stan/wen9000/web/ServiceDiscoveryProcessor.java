@@ -26,7 +26,7 @@ import redis.clients.jedis.JedisPubSub;
 
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 import com.stan.wen9000.reference.EocDeviceType;
-import com.sun.istack.internal.logging.Logger;
+
 
 public class ServiceDiscoveryProcessor  {
 
