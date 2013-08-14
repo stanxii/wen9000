@@ -239,6 +239,9 @@ public class ServiceHeartProcessor{
 			long time = date.getTime();
 			jedis.hset(cbatkey, "timeticks", String.valueOf(time));
 			
+			//sum tongji online cbats
+			jedis.setbit("cbat:alives", Long.parseLong(deviceid), true);
+			
 		}else{
 			//新头端
 			//判断新头端ip是否与已发现头端重复			
@@ -271,6 +274,9 @@ public class ServiceHeartProcessor{
  			String cbatmackey = "mac:" +  cbatmac.toLowerCase().trim() + ":deviceid";
 			long icbatid = jedis.incr("global:deviceid");
 			jedis.set(cbatmackey, Long.toString(icbatid) );
+			
+			//new cbat sum tongji online cbats
+			jedis.setbit("cbat:alives", icbatid, true);
 			
 			String scbatentitykey = "cbatid:" + icbatid + ":entity";
 			Map<String , String >  cbatentity = new HashMap<String, String>();
@@ -377,6 +383,8 @@ public class ServiceHeartProcessor{
 		//判断cnu是否已存在
 		if(jedis.exists("mac:"+cnumac+":deviceid")){
 			String cnuid = jedis.get("mac:"+cnumac+":deviceid");
+			//sum tongji online cnus
+			jedis.setbit("cnu:alives", Long.parseLong(cnuid), true);
 			//log.info("cnumac-----"+cnumac + "----------cnuid-----"+cnuid);
 			//cnu已存在
 			//以下判断是否有移机操作
@@ -432,7 +440,12 @@ public class ServiceHeartProcessor{
 		}else{
 			//发现新cnu
 			String cnumackey = "mac:" +  cnumac.toLowerCase().trim() + ":deviceid";
-			long icnuid = jedis.incr("global:deviceid");		
+			long icnuid = jedis.incr("global:deviceid");
+			
+			//tongji cnu online
+			jedis.setbit("cnu:alives", icnuid, true);
+			
+			
 			jedis.set(cnumackey, Long.toString(icnuid) );
 			//组合cnu信息
 			String scnuentitykey = "cnuid:" + icnuid + ":entity";
@@ -547,6 +560,11 @@ public class ServiceHeartProcessor{
 			String cnumackey = "mac:" +  cnumac.toLowerCase().trim() + ":deviceid";
 			long icnuid = jedis.incr("global:deviceid");		
 			jedis.set(cnumackey, Long.toString(icnuid) );
+			
+			//sum tongji online cnus
+			jedis.setbit("cnu:alives", icnuid, false);
+			
+			
 			//组合cnu信息
 			String scnuentitykey = "cnuid:" + icnuid + ":entity";
 			Map<String , String >  cnuentity = new HashMap<String, String>();			
@@ -576,6 +594,9 @@ public class ServiceHeartProcessor{
 		}
 		//以下判断是否是所属头端发出的心跳
 		String cnuid = jedis.get("mac:"+cnumac+":deviceid");
+		
+		//sum tongji online cnus
+		jedis.setbit("cnu:alives", Long.parseLong(cnuid), false);
 
 		String cur_cbatid = jedis.hget("cnuid:"+cnuid+":entity", "cbatid");
 

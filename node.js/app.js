@@ -946,6 +946,21 @@ sio.sockets.on('connection', function (socket) {
         console.log('Socket dis connected: ' + socket.id);
    });
 
+ //timer for  count
+   setInterval(function(){
+   	  //console.log('Counting cbats.... and cnus......');
+   	  jedis.eval("return redis.call('bitcount','cbat:alive')", 0 ,function(err,res){
+   		  //console.log('Counting cbat:alives.........' + res);		  
+   		  socket.emit('countcbat', res);
+   		  
+   	  });
+   	  
+   	  jedis.eval("return redis.call('bitcount','cnu:alive')", 0 ,function(err,res){		  
+   		  //console.log('Counting cnu:alives........' + res);
+   		  socket.emit('countcnu', res);
+   	  });
+   	  
+   	},  1 * 4 * 1000);
 
 });
 

@@ -1,4 +1,21 @@
 #footer
+  link(rel='stylesheet', href='/stylesheets/footer.css')
+  script(type='text/javascript', src='/javascripts/footer.js')
   span
     label(style='margin-left:350px')
       \Copyright @ 2011 - 2012. All Rights Reserved. Designed by EOC TEAM.
+#pop.box-lanrenzhijia
+  .pop_title
+    .pop_title_left
+      label counting onlines!
+    .pop_title_right
+      img#contraction(src="/images/minbox.gif")
+      img#open_window(src="/images/maxbox.gif")", style="display:none;")
+      img#close_window(src="/images/closebox.gif")", onClick="closeDiv()")
+  .pop_Content
+    label Cbats numbers: 
+    input#cbatcounts(value='0', readOnly='true', style='width:30px; backgroundColor:"#FFCC80";')
+    br
+    label Cnus  numbers: 
+    input#cnucounts(value='0', readOnly='true', style='width:30px;')    
+

@@ -22,12 +22,14 @@ html
     script(type='text/javascript', src='/javascripts/jquery.contextMenu-custom.js')
 
     script(type='text/javascript', src='/javascripts/header.js')
+    script(type='text/javascript', src='/javascripts/historyalarm.js')
+    script(type='text/javascript', src='/javascripts/doversion.js')
   body
     include header
     #wapper
       include menu
       #content
-        block content
+        block content        
       #menuclear
     include alarm
     include footer

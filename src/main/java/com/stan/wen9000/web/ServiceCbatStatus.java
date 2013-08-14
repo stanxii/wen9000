@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
@@ -142,6 +141,11 @@ public class ServiceCbatStatus{
 				try{
 					servicestart();
 					Thread.currentThread().sleep(2000);
+					
+					
+					//tongji publis to web
+					doCount();
+					
 				}catch(Exception e){
 					
 				}
@@ -155,6 +159,24 @@ public class ServiceCbatStatus{
 		
 	}
 	
+	
+	private static void doCount(){		
+		Jedis jedis=null;
+		try {
+		 jedis = redisUtil.getConnection();	 
+		
+		}catch(Exception e){
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		
+		/////do
+		
+		jedis.getbit("cbat:alives", 0);
+		
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
 	
 	
 	private static void servicestart(){
@@ -202,6 +224,9 @@ public class ServiceCbatStatus{
 			//log.info("发现设备下线:time====="+date.toString()+"======now==="+now+"======timeticks===="+timeticks+"====timedate==="+new Date(timeticks).toString());
 			//确认设备不在线
 			jedis.hset(message, "active", "0");
+			
+			//sum tongji online cbats
+			jedis.setbit("cbat:alives", Long.parseLong(id), false);
 
 			//cbat状态有变迁,发往STSCHANGE_QUEUE_NAME
 			System.out.println("===now cbatstatus check cbat offline! cbatmac="+ cbatmac);
@@ -215,6 +240,9 @@ public class ServiceCbatStatus{
 				String cnukey = "cnuid:"+cnuid+":entity";
 				jedis.hset(cnukey, "active", "0");
 
+				//sum tongji online cbats
+				jedis.setbit("cnu:alives", Long.parseLong(cnuid), false);
+				
 				//cnu状态有变迁,发往STSCHANGE_QUEUE_NAME
 				Sendstschange("cnu",cnuid,jedis);
 				//jedis.lpush(STSCHANGE_QUEUE_NAME, cnuid);

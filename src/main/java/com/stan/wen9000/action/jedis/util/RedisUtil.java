@@ -22,7 +22,7 @@ public class RedisUtil {
 	 */     
 	public Jedis getConnection() {
 		Jedis jedis=null;          
-		try {              
+		try {          			
 			jedis=jedisPool.getResource();          
 		} catch (Exception e) {              
 			e.printStackTrace();   
