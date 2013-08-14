@@ -24,12 +24,12 @@
 				   '<table>'+
 				    '<tr><td><label>版本hash值：</label></td><td>'+
 				    
-				    '<label>7f5bcd277b49fc8870f7119465b578284d7dc258</label>'+
+				    '<label>615ed70c06f20e8d6776f85e91742ffdc933e4e3</label>'+
 				    
 				   '</td></tr>'+
 				   '<tr><td><label>版本号:：</label></td><td>'+
 				   
-				    '<label>v1.1.19</label>'+
+				    '<label>v1.1.20</label>'+
 				    
 				   '</td></tr>'+
 				   '</td></tr>'+
