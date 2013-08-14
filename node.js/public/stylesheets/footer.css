@@ -1,0 +1,12 @@
+/* CSS Document */
+
+
+.box-lanrenzhijia{ background:url(../images/backbox.gif) no-repeat; width:250px; height:100px; position:fixed ; _position:absolute; z-index:200; right:0px; bottom:0px;
+_top:expression(eval(document.documentElement.scrollTop+document.documentElement.clientHeight-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)));}
+.pop_title{ width:100%; float:left; height:33px; line-height:33px;}
+.pop_title_left{float:left; padding-left:10px;}
+.pop_title_left strong{ font-size:14px;}
+.pop_title_right{float:right; padding-top:10px; padding-right:12px;}
+.pop_title_right img{ margin-left:10px; cursor:pointer;}
+.pop_Content{ width:258px; height:163px; padding-left:4px;}
+.pop_Content img{ margin-top:15px;}

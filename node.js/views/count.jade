@@ -1,0 +1,34 @@
+extends main.layout
+
+block content
+  script(type='text/javascript', src='/javascripts/counts.js')
+  h1
+    label  统计设备数量  
+  br
+  div
+    div#countdevice
+      ul
+        li
+          a(href="#tabs-1") EOC局端在线数量统计
+        li
+          a(href="#tabs-2") EOC终端在线数量统计
+      div#tabs-1
+      h5 局端统计
+        table
+          tr
+            td(style="width:200px")
+              label EOC局端在线数量
+            td(style="width:200px")
+              label 等于
+            td(style="width:200px")
+              input(type='text',id='cbatcounts',value='0')                  
+      div#tabs-2
+        h5 终端统计
+        table
+          tr
+            td(style="width:200px")
+              label EOC终端在线数量
+            td(style="width:200px")
+              label 等于
+            td(style="width:200px")
+              input(type='text',id='cnucounts',value='0')
