@@ -39,6 +39,7 @@
                   socket.emit('initDynatree', 'init tree' );
 
                   socket.on('initDynatree', onInitTree);
+                  socket.on('tree.lazyloading', fun_nodelazyloading );
                   socket.on('toweb.init.movetotree', fun_movetotreeinit );
                   socket.on('toweb.tree.move.movetotree', fun_movetotreemove );  
                   socket.on('toweb.tree.addnode', fun_addnode );
@@ -205,7 +206,6 @@
 			  $('.dynatree-container').animate({
 				 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
 				 'slow');
-			  });
 		  }else{
 			  socket.emit('devsearch',search_val);
 		  } 
@@ -228,7 +228,6 @@
     				  $('.dynatree-container').animate({
     					 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
     					 'slow');
-    				  });
     			  }else{
     				  socket.emit('devsearch',search_val);
     			  } 
@@ -738,7 +737,6 @@
 			  $('.dynatree-container').animate({
 				 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()},
 				 'slow');
-			  });
     	 }
      }
      
@@ -1379,8 +1377,9 @@
 			        loading: "Loading…",
 			        loadError: "Load error!"
 			    },		                
-		        onActivate: function(node) {
-		        			        	       	
+		        onLazyRead: function(node) {		        	
+//		        	var datastring = node.data.key;
+//					 socket.emit('dynatreelazyloading',datastring);        	       	
 			    },
 		    }); 	  		
 
@@ -1395,25 +1394,24 @@
 	   
 	}
    
-   function fun_movetotreemove(node) {
-	   
-	   if(node!=null && node.key !=null){
-		   var treenode = $("#navtree").dynatree("getTree").getNodeByKey("root");
-		   
-		   if(node!=null){
-			   window.location.reload();
-		   }
-		   
-		   //treenode.render();
-		   //socket.emit('initDynatree', 'init tree' );
+   function fun_movetotreemove(data) {
+	   if(data.result == "ok"){
+		   var node = $("#navtree").dynatree("getTree").getNodeByKey(data.oldkey);
+		   //下面移动节点
+		   var pnode = $("#navtree").dynatree("getTree").getNodeByKey(data.newkey);
+		   node.move(pnode,"child");
 	   }
 	   
    }
    
+   function fun_nodelazyloading(rdata){
+	   var node = $("#navtree").dynatree("getTree").getNodeByKey(rdata.pkey);
+	   node.setLazyNodeStatus(DTNodeStatus_Ok);
+	   node.addChild(rdata.children);
+   }
    
    function fun_movetotreeinit(treedata){
-	   //alert("fuckkkk");
-	   
+	   //alert("fuckkkk");	   
 		$("#moveto_tree").dynatree({
 	  			 	persist: true,
 	  			 	selectMode: 3,
@@ -1439,13 +1437,30 @@
 			        onActivate: function(node) {
 			        			        	       	
 				    },
-			    }); 	
+			    }); 
+		$("#moveto_tree").dynatree("getTree").reload();
    }
    
    
-   function fun_addnode (node){
-			   window.location.reload();
-		   
+   function fun_addnode (data){
+			   //window.location.reload();
+	   if(data.result == "ok"){		   
+		   var pnode = $("#navtree").dynatree("getTree").getNodeByKey(data.pkey);
+ 		   pnode.addChild({
+			 title: data.title,
+			 key: data.key,
+			 pkey:data.pkey,
+			 isFolder:true,
+			 expand:true,
+			 type:"custom"
+		 });
+ 		  var node = $("#navtree").dynatree("getTree").getNodeByKey(data.key);
+ 		  var children = data.children;
+ 		  for(var cl in children){
+ 			 var tnode = $("#navtree").dynatree("getTree").getNodeByKey(children[cl]);
+ 			 tnode.move(node,"child")
+ 		  }
+	   }
    }
    
    function bindContextMenu(span) {	   	   
@@ -1487,14 +1502,15 @@
 		    	  return;
 	    	  }
 
-	    	  //删除节点
-	    	  
+	    	  //删除节点	    	  
 	    	  if( (node.data.type == "custom") ){
 	    		  
 	    		  var datastring = '{"key":"'+node.data.key+'","pkey":"'+node.data.pkey +'","type":"'+node.data.type+'"}';
 		    	  socket.emit('delnode',datastring);
+		    	  var pnode = $("#navtree").dynatree("getTree").getNodeByKey(node.data.pkey);
 		    	  node.remove();
-		    	  window.location.reload();	    		  
+		    	  pnode.render();
+		    	  //window.location.reload();	    		  
 	    	  }
 	    	  else if(node.data.type == "system"){
 	    		  alert("不能删除");
@@ -1503,7 +1519,7 @@
 	    		  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
 		    	  socket.emit('delnode',datastring);
 		    	  node.remove();
-		    	  window.location.reload();
+		    	  //window.location.reload();
 	    	  }else if( node.data.type == "cnu") {
 	    		  var datastring = '{"mac":"'+node.data.key+'","type":"'+node.data.type+'"}';
 	    		  socket.emit('delnode',datastring);
@@ -1565,19 +1581,11 @@
 						modal: true,
 						buttons:{
 							"确定":function(){
-						    	  
-						    	  
-						    	 
-						    		  //编辑节点
-										
+						    		  //添加节点						
 						    		  var editstring = $("input#dg_addnode").val();
 						    		  var datastring = '{"key":"'+node.data.key+'","pkey":"'+node.data.pkey +'","title":"'+ editstring+'"}';
-						    		  socket.emit('fromweb.tree.addnode',datastring);  					    		  						    		  						    		  
-						    		  $("#dialog_addnode").dialog("close");
-						    	  
-						    	  
-						    	 
-						    	  
+						    		  socket.emit('fromweb.tree.addnode',datastring); 
+						    		  $("#dialog_addnode").dialog("close");			    	  
 							}
 						},
 						height: 150,
@@ -1585,6 +1593,7 @@
 		    	  });
 		    	  
 		    	  $("#dialog_addnode").dialog("open");
+		    	  $("input#dg_addnode")[0].value = "";
 	    	  }
 	    	  break;
 	      case "editnode":
@@ -1605,20 +1614,13 @@
 						modal: true,
 						buttons:{
 							"确定":function(){
-						    	  
-						    	  
-						    	 
 						    		  //编辑节点
 						    		  var editstring = $("input#dg_editnode").val();
 						    		  var datastring = '{"key":"'+node.data.key+'","title":"'+ editstring+'","type":"'+node.data.type+'"}';
-						    		  socket.emit('editnode',datastring);  					    		  
+						    		  socket.emit('editnode',datastring);  
 						    		  node.data.title = editstring;
 						    		  node.render();
 						    		  $("#dialog_editnode").dialog("close");
-						    	  
-						    	  
-						    	 
-						    	  
 							}
 						},
 						height: 150,
@@ -1626,7 +1628,7 @@
 		    	  });
 		    	  
 		    	  $("#dialog_editnode").dialog("open");
-	    	  
+		    	  $("input#dg_editnode")[0].value = "";
 	    	  }
 	    	  
 	    	  

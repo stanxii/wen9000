@@ -303,7 +303,7 @@ publish.publish('servicecontroller.index.init', '');
 
 redis.on('pmessage', function(pat,ch,data) {
 
-   console.log('pmessage receive from redis with pubsub pat='+ pat + ' ch = ' + ch + ' data' + data);
+   //console.log('pmessage receive from redis with pubsub pat='+ pat + ' ch = ' + ch + ' data' + data);
    if(pat == 'node.alarm.*') {
        data = JSON.parse(data);
        sio.sockets.emit('newAlarm',data);
@@ -332,10 +332,7 @@ redis.on('pmessage', function(pat,ch,data) {
       }else if(ch == 'node.tree.addnode') {
           data = JSON.parse(data);
           sio.sockets.emit('toweb.tree.addnode',data);
-       }  
-   
-   
-      else if(ch == 'node.tree.cbatdetail') {
+       }else if(ch == 'node.tree.cbatdetail') {
         data = JSON.parse(data);
         sio.sockets.emit('cbatdetail',data);
     }else if(ch == 'node.tree.cnudetail') {
@@ -521,6 +518,9 @@ redis.on('pmessage', function(pat,ch,data) {
     	sio.sockets.emit('optresult',data);       
     }else if(ch == 'node.optlog.ImportHfcResult') {
     	sio.sockets.emit('opt.ImportHfcResult',data);       
+    }else if(ch == 'node.tree.lazyloading') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('tree.lazyloading',data);       
     }
 });
 
@@ -531,6 +531,11 @@ sio.sockets.on('connection', function (socket) {
      console.log('nodeserver: inittree');
      publish.publish('servicecontroller.treeinit', 'inittree');
   });
+  
+  socket.on('dynatreelazyloading', function (data) {
+	     console.log('nodeserver: dynatreelazyloading');
+	     publish.publish('servicecontroller.dynatreelazyloading', data);
+	  });
   
   socket.on('fromweb.init.movetotree', function (data) {
 	     console.log('nodeserver: movetotree');
