@@ -177,9 +177,7 @@ app.get('/opt/updatecbat', function( request, response ) {
 		response.redirect('/login');
 	}     
 });
-app.get('/version', function( request, response ) {
-    response.render( 'version.jade', { title: 'Wen9000网络管理系统---版本信息' } );
-});
+
 app.get('/historyalarm', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
 		response.render( 'historyalarm.jade', { title: 'Wen9000网络管理系统---历史告警' } );
