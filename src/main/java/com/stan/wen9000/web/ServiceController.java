@@ -1477,6 +1477,7 @@ public class ServiceController {
 									
 									//del cnuid entity	
 									jedis.del("cnuid:" + cnuid + ":entity");
+									jedis.setbit("cnu:alives", Long.parseLong(cnuid), false);
 									//System.out.println("============now will del cnuid entity"+ cnuid);
 									
 								}
@@ -1489,6 +1490,7 @@ public class ServiceController {
 								jedis.del("cbatid:" + cbatid + ":cbatinfo");
 								
 								jedis.del("cbatid:" + cbatid + ":entity");
+								jedis.setbit("cbat:alives", Long.parseLong(cbatid), false);
 								
 								
 								System.out.println("============now will del cbatid"+ cbatid);
@@ -1544,6 +1546,7 @@ public class ServiceController {
 							
 							//del cnuid entity	
 							jedis.del("cnuid:" + cnuid + ":entity");
+							jedis.setbit("cnu:alives", Long.parseLong(cnuid), false);
 							
 							
 						}
@@ -1556,7 +1559,7 @@ public class ServiceController {
 						jedis.del("cbatid:" + cbatid + ":cbatinfo");
 						
 						jedis.del("cbatid:" + cbatid + ":entity");
-						
+						jedis.setbit("cbat:alives", Long.parseLong(cbatid), false);
 						
 						System.out.println("============now will del cbatid"+ cbatid);
 					}
@@ -1652,6 +1655,7 @@ public class ServiceController {
 				//del parent eocs
 				String treeparentkey = jedis.hget("cbatid:" + id + ":entity",
 						"treeparentkey");
+				
 
 				jedis.srem("tree:" + treeparentkey + ":eocs", id);
 				if (jedis.smembers("tree:" + treeparentkey + ":eocs").isEmpty()) {
@@ -1670,8 +1674,8 @@ public class ServiceController {
 							"profileid");
 					jedis.srem("profileid:" + proid + ":entity", id);
 					jedis.del("cnuid:" + cnuid + ":entity");
-
-					// jedis.decr("global:deviceid");
+					jedis.setbit("cnu:alives", Long.parseLong(cnuid), false);
+					
 				}
 				// 删除头端
 				
@@ -1684,6 +1688,7 @@ public class ServiceController {
 						+ ":ip");
 				
 				jedis.del("cbatid:" + id + ":entity");
+				jedis.setbit("cbat:alives", Long.parseLong(id), false);
 			} else if (type.equalsIgnoreCase("cnu")) {
 				String cbatid = jedis.hget("cnuid:" + id + ":entity", "cbatid");
 				jedis.srem("cbatid:" + cbatid + ":cnus", id);
@@ -1696,6 +1701,7 @@ public class ServiceController {
 				if(jedis.smembers("profileid:" + proid + ":cnus").isEmpty())
 					jedis.del("profileid:" + proid + ":cnus");
 				jedis.del("cnuid:" + id + ":entity");
+				jedis.setbit("cnu:alives", Long.parseLong(id), false);
 			} else if (type.equalsIgnoreCase("hfc")) {
 				//del parent eocs
 				String treeparentkey = jedis.hget("hfcid:" + id + ":entity",
