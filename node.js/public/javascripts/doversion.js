@@ -24,7 +24,7 @@
 				   '<table>'+
 				    '<tr><td><label>版本hash值：</label></td><td>'+
 				    
-				    '<label>615ed70c06f20e8d6776f85e91742ffdc933e4e3</label>'+
+				    '<label>863504b7bc81030bf948c9430509f82a644a1831</label>'+
 				    
 				   '</td></tr>'+
 				   '<tr><td><label>版本号:：</label></td><td>'+
@@ -35,7 +35,7 @@
 				   '</td></tr>'+
 				   '<tr><td><label>发布时间:：</label></td><td>'+
 				   
-				    '<label>2013-8-14</label>'+
+				    '<label>2013-8-15</label>'+
 				    
 				   '</td></tr>'+
 				   '</div>'
