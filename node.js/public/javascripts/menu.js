@@ -1377,10 +1377,6 @@
 			    strings: {
 			        loading: "Loading…",
 			        loadError: "Load error!"
-			    },		                
-		        onLazyRead: function(node) {		        	
-//		        	var datastring = node.data.key;
-//					 socket.emit('dynatreelazyloading',datastring);        	       	
 			    },
 		    }); 	  		
 
@@ -1554,7 +1550,15 @@
 						open: function(){
 				    		  initmovetree(node.data.key, node.data.type);
 				    	  },
-						width: 600
+						width: 600,
+						buttons:{
+							'移动':function(){
+								var node = $("#moveto_tree").dynatree("getActiveNode");				    		
+					    	  	var jsondata = '{"mac":"'+cbatmovetree+ '","devtype":"'+globaldevtype +  '","type":"'+node.data.type+'","treeparentkey":"'+node.data.key+'"}';					      						    	  	
+					      		socket.emit('fromweb.move.movetotree', jsondata );
+					      		$(this).dialog("close");
+							}
+						}
 		    	  });
 		    	  
 		    	  $("#dialog_movenode").dialog("open");

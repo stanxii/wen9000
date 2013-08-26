@@ -1918,7 +1918,6 @@ public class ServiceController {
 			String title = jsondata.get("title").toString();
 
 			String pkeyid = "tree:" + pkey;
-
 			JSONObject json = new JSONObject();
 
 			// 获取设备id
@@ -1930,7 +1929,6 @@ public class ServiceController {
 				json.put("result", "no");
 				jedis.publish("node.tree.addnode", json.toJSONString());
 			} else {
-
 				Map<String, String> datamap = new HashMap<String, String>();
 				String childtreeid = String
 						.valueOf(jedis.incr("global:treeid"));
@@ -1948,7 +1946,6 @@ public class ServiceController {
 				jedis.sadd("tree:" + pkey + ":children", childtreeid);
 
 				
-
 				// set eocs to child
 				JSONObject childjson = new JSONObject();
 				if (jedis.exists("tree:" + pkey + ":eocs")) {
@@ -1963,7 +1960,6 @@ public class ServiceController {
 						childjson.put(cbatid, jedis.hget("cbatid:" + cbatid + ":entity", "mac"));
 					}
 				}
-				
 				// set hfcs to child
 
 				if (jedis.exists("tree:" + pkey + ":hfcs")) {
@@ -1977,10 +1973,6 @@ public class ServiceController {
 						childjson.put(hfcid, jedis.hget("hfcid:" + hfcid + ":entity", "mac"));
 					}
 				}
-				
-				
-
-
 				// ///
 				json.put("children", childjson);
 				json.put("key", childtreeid);
@@ -3675,12 +3667,15 @@ public class ServiceController {
 		// String result = "";
 		JSONArray jsonResponseArray = new JSONArray();
 		Set<String> list = jedis.keys("cnuid:*:entity");
-
+		if(list.isEmpty()){
+			jedis.publish("node.opt.cnus", "");
+			redisUtil.getJedisPool().returnResource(jedis);
+			return;
+		}
 		for (Iterator it = list.iterator(); it.hasNext();) {
 			JSONObject cnujson = new JSONObject();
 			String prokey = (String) it.next();
-			if (jedis.hget(
-					"cbatid:" + jedis.hget(prokey, "cbatid") + ":entity",
+			if (jedis.hget("cbatid:" + jedis.hget(prokey, "cbatid") + ":entity",
 					"active").equalsIgnoreCase("0")) {
 				continue;
 			}
