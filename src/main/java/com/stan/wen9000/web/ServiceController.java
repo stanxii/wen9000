@@ -3667,11 +3667,7 @@ public class ServiceController {
 		// String result = "";
 		JSONArray jsonResponseArray = new JSONArray();
 		Set<String> list = jedis.keys("cnuid:*:entity");
-		if(list.isEmpty()){
-			jedis.publish("node.opt.cnus", "");
-			redisUtil.getJedisPool().returnResource(jedis);
-			return;
-		}
+
 		for (Iterator it = list.iterator(); it.hasNext();) {
 			JSONObject cnujson = new JSONObject();
 			String prokey = (String) it.next();
@@ -5233,7 +5229,6 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 
 		String jsonString = jsonResponseArray.toJSONString();
-
 		// publish to notify node.js a new alarm
 		jedis.publish("node.tree.init", jsonString);
 
