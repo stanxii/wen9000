@@ -166,6 +166,11 @@
 							updateTips( "模板名称 不能为空! ");
 							bValid = false;
 						}
+						if(proname.val().length>50){
+							proname.addClass( "ui-state-error" );
+							updateTips( "模板名称 太长! ");
+							bValid = false;
+						}
 						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"ETH1限速")&& checknum(port1txrate,"ETH2限速")&& checknum(port2txrate,"ETH3限速")&& checknum(port3txrate,"ETH4限速")
 							&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"ETH1限速")&& checknum(port1rxrate,"ETH2限速")&& checknum(port2rxrate,"ETH3限速")&& checknum(port3rxrate,"ETH4限速"); 
 							
@@ -214,10 +219,10 @@
 	        }
 	        socket.emit('profile_isedit',proid);
 	      }); 
-	});
-
+	});	
 	
-	function updateTips( t ) {
+	function updateTips( t ) {		
+		tips = $( ".validateTips" );
 		tips
 			.text( t )
 			.addClass( "ui-state-highlight" );
@@ -227,6 +232,11 @@
 	}
 
 	function checkvalue( o, n, min, max){
+		if(o.val() == ""){
+			o.addClass( "ui-state-error" );
+			updateTips( n + "不能为空!" );
+			return false;
+		}
 		if(isNaN(o.val())){
 			o.addClass( "ui-state-error" );
 			updateTips( n + "必须是数字!" );
@@ -390,33 +400,6 @@
 		if(tmpdata != ""){
 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 			
-			var proname = $( "#proname" ),
-			authorization = $( "#authorization" ),
-			vlanen = $( "#vlanen" ),
-			vlan0id = $( "#vlan0id" ),
-			vlan1id = $( "#vlan1id" ),
-			vlan2id = $( "#vlan2id" ),
-			vlan3id = $( "#vlan3id" ),
-			rxlimitsts = $( "#rxlimitsts" ),
-			cpuportrxrate = $( "#cpuportrxrate" ),
-			port0txrate = $( "#port0txrate" ),
-			port1txrate = $( "#port1txrate" ),
-			port2txrate = $( "#port2txrate" ),
-			port3txrate = $( "#port3txrate" ),
-			txlimitsts = $( "#txlimitsts" ),
-			cpuporttxrate = $( "#cpuporttxrate" ),
-			port0rxrate = $( "#port0rxrate" ),
-			port1rxrate = $( "#port1rxrate" ),
-			port2rxrate = $( "#port2rxrate" ),
-			port3rxrate = $( "#port3rxrate" ),
-			
-			
-			allFields = $( [] ).add( proname ).add( authorization ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
-			.add( vlan3id ).add( rxlimitsts ).add( cpuportrxrate ).add( port0txrate ).add( port1txrate ).add( port2txrate )
-			.add( port3txrate ).add( txlimitsts ).add( cpuporttxrate ).add( port0rxrate ).add( port1rxrate ).add( port2rxrate )
-			.add( port3rxrate ),
-			
-			tips = $( ".validateTips" );
 			//组装弹出窗口html	
 			$("#dialog-edit").empty();
 			$("#dialog-edit").append('<p class="validateTips">所有选项都不能为空.</p>'+	
@@ -486,7 +469,7 @@
 				document.getElementById('rxlimitsts_e').value = tmpdata.rxlimitsts;
 				document.getElementById('txlimitsts_e').value = tmpdata.txlimitsts;
 				
-				proname = $( "#proname_e" ),
+				var proname = $( "#proname_e" ),
 				authorization = $( "#authorization_e" ),
 				vlanen = $( "#vlanen_e" ),
 				//vlanid = $( "#vlanid_e" ),
@@ -506,7 +489,12 @@
 				port1rxrate = $( "#port1rxrate_e" ),
 				port2rxrate = $( "#port2rxrate_e" ),
 				port3rxrate = $( "#port3rxrate_e" ),
-		
+				
+				allFields = $( [] ).add( proname ).add( authorization ).add( vlanen ).add( vlan0id ).add( vlan1id ).add( vlan2id )
+				.add( vlan3id ).add( rxlimitsts ).add( cpuportrxrate ).add( port0txrate ).add( port1txrate ).add( port2txrate )
+				.add( port3txrate ).add( txlimitsts ).add( cpuporttxrate ).add( port0rxrate ).add( port1rxrate ).add( port2rxrate )
+				.add( port3rxrate );
+				
 				//弹出窗口
 				$("#dialog-edit").dialog({
 				autoOpen: false,
@@ -524,6 +512,11 @@
 						if(proname.val() == ""){
 							proname.addClass( "ui-state-error" );
 							updateTips( "模板名称 不能为空! ");
+							bValid = false;
+						}
+						if(proname.val().length>50){
+							proname.addClass( "ui-state-error" );
+							updateTips( "模板名称 太长! ");
 							bValid = false;
 						}
 						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"ETH1限速")&& checknum(port1txrate,"ETH2限速")&& checknum(port2txrate,"ETH3限速")&& checknum(port3txrate,"ETH4限速")

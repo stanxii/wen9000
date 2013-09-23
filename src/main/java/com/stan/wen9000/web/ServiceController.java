@@ -398,8 +398,12 @@ public class ServiceController {
 		}
 
 		if (IsIp(message.trim())) {
-			String mac = jedis.get("devip:" + message.trim() + ":mac");
-			jedis.publish("node.opt.devsearch", mac);
+			String mac = jedis.get("devip:" + message.trim() + ":mac");			
+			if(mac == null){
+				jedis.publish("node.opt.devsearch", "");
+			}else{
+				jedis.publish("node.opt.devsearch", mac);
+			}
 		} else {
 			jedis.publish("node.opt.devsearch", "");
 		}
@@ -4333,7 +4337,7 @@ public class ServiceController {
 		String user = jsondata.get("user").toString();
 		String prokey = "profileid:" + proid + ":entity";
 		// 判断profile集合中是否有cnu
-		if (jedis.smembers("profileid:" + message + ":cnus").isEmpty()) {
+		if (jedis.smembers("profileid:" + proid + ":cnus").isEmpty()) {
 			// 无CNU
 			// 删除此profile
 			jedis.del(prokey);
