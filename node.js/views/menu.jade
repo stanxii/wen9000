@@ -29,7 +29,9 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
     li.edit
       a(href='#editnode')  编辑节点
     hr
-    li.toweb
+    li.topology
+      a(href='#topology')  网络拓扑
+    li.toweb    	
       a(href='#toweb')  WEB网管
   
   #dialog-alarmThreshold(title='告警门限设置',style='display:none')
@@ -72,3 +74,4 @@ script(type='text/javascript', src='/javascripts/flotr2.min.js')
   div(id='dialog_addnode',title='添加节点',style='display:none')
     lable  添加节点:
     input(id='dg_addnode',type='text')    
+  #dialog-devinfo(title='设备信息')

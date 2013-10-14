@@ -23,6 +23,40 @@ table input {
 	width:150px;
 }
 
+.link {
+	  fill: none;
+	  stroke: #ccc;
+	  stroke-width: 1.5px;
+}
+
+.node {
+	  cursor: pointer;
+}
+
+.node circle {
+	  fill: #fff;
+	  stroke: steelblue;
+	  stroke-width: 1.5px;
+}
+
+.nodetext {
+
+    font: 12px sans-serif;
+    -webkit-user-select:none;
+    -moze-user-select:none;
+    stroke-linejoin:bevel;
+    
+}
+
+#topcontainer{
+    width:800px;
+    height:600px;
+    border:1px solid gray;
+    border-radius:5px;
+    position:relative;
+    margin:20px;
+}
+
 #wapper {
       min-height:500px;
       min-width:1024px;
