@@ -60,3 +60,4 @@
 .contextMenu LI.paste A { background-image: url(../images/page_white_paste.png); }
 .contextMenu LI.delete A { background-image: url(../images/page_white_delete.png); }
 .contextMenu LI.add A { background-image: url(../images/add.png); }
+.contextMenu LI.topology A { background-image: url(../images/customDoc2.gif); }

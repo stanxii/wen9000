@@ -216,6 +216,13 @@ app.get('/userManager', function( request, response ) {
 		response.redirect('/login');
 	}     
 });
+app.get('/topology', function( request, response ) {
+	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
+		response.render( 'topology.jade', { title: 'Wen9000网络管理系统---网络拓扑' } );
+	} else {
+		response.redirect('/login');
+	}     
+});
 app.get('/viewmode', function( request, response ) {
     response.render( 'viewmode.jade', { title: 'Wen9000网络管理系统---显示模式' } );
 });
@@ -301,7 +308,7 @@ publish.publish('servicecontroller.index.init', '');
 
 redis.on('pmessage', function(pat,ch,data) {
 
-   //console.log('pmessage receive from redis with pubsub pat='+ pat + ' ch = ' + ch + ' data' + data);
+   console.log('pmessage receive from redis with pubsub pat='+ pat + ' ch = ' + ch + ' data' + data);
    if(pat == 'node.alarm.*') {
        data = JSON.parse(data);
        sio.sockets.emit('newAlarm',data);
@@ -519,6 +526,9 @@ redis.on('pmessage', function(pat,ch,data) {
     }else if(ch == 'node.tree.lazyloading') {
     	data = JSON.parse(data);
     	sio.sockets.emit('tree.lazyloading',data);       
+    }else if(ch == 'node.opt.distopology') {
+    	data = JSON.parse(data);
+    	sio.sockets.emit('opt.distopology',data);       
     }
 });
 
@@ -939,6 +949,11 @@ sio.sockets.on('connection', function (socket) {
   socket.on('opt.alarmtmpset', function (data) {
 	  console.log('nodeserver: opt.alarmtmpset==='+data);
 	  publish.publish('servicecontroller.alarmtmpset', data);
+  });
+//头端温度告警门限设置
+  socket.on('topdevices', function (data) {
+	  console.log('nodeserver: topdevices==='+data);
+	  publish.publish('servicecontroller.topdevices', data);
   });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);

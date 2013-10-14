@@ -311,8 +311,118 @@ public class ServiceController {
 			doImportHfcRedis(message);
 		} else if (pat.equalsIgnoreCase("servicecontroller.alarmtmpset")) {
 			doAlarmtmpset(message);
+		}else if (pat.equalsIgnoreCase("servicecontroller.topdevices")) {
+			doTopdevices(message);
 		}
 
+	}
+	
+	private static void doTopdevices(String message) throws ParseException {
+		Jedis jedis = null;
+		try {
+			jedis = redisUtil.getConnection();
+		} catch (Exception e) {
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
+		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+		String key = jsondata.get("key").toString();
+		String type = jsondata.get("type").toString();
+		JSONObject jsonResponse= new JSONObject();
+		
+		if(type.equalsIgnoreCase("cbat")){
+			//添加cbat nodes json
+			String id = jedis.get("mac:"+key+":deviceid");
+			jsonResponse = cbatNodesJson(jedis,id);	
+		}else{
+			jsonResponse = NodesJson(jedis,key);
+		}
+		jedis.publish("node.opt.distopology", jsonResponse.toJSONString());
+		redisUtil.getJedisPool().returnResource(jedis);
+	}
+	
+	private static JSONObject NodesJson(Jedis jedis,String key){
+		//folder节点下的拓扑json生成
+		JSONObject nodesjson = new JSONObject();
+		String jkey = "tree:"+key;
+		JSONObject folderjson = new JSONObject();
+		folderjson.putAll(jedis.hgetAll(jkey));
+		if(key.equalsIgnoreCase("0")){
+			//中心机房
+			folderjson.put("type", "center");
+		}else{
+			folderjson.put("type", "folder");
+		}
+		
+		//仅当ID使用
+		folderjson.put("mac", key);
+		folderjson.put("label", jedis.hget("tree:"+key, "title"));
+		if(jedis.exists("tree:"+key+":eocs")){
+			//该节点是叶子节点
+			devicesnodes(jedis,key,folderjson);
+		}else if(jedis.exists("tree:"+key+":children")){
+			childnodes(jedis,key,folderjson);
+		}
+		
+
+		return folderjson;
+	}
+	
+	private static void childnodes(Jedis jedis, String key,JSONObject nodesarray){
+		//添加folder节点下的子节点		
+		Set<String> ids = jedis.smembers("tree:"+key+":children");	
+		JSONArray folderarray = new JSONArray();
+		for (Iterator it = ids.iterator(); it.hasNext();) {	
+			String treeid = it.next().toString();
+			JSONObject folderjson = new JSONObject();
+			folderjson.putAll(jedis.hgetAll("tree:"+treeid));
+			folderjson.put("type", "folder");
+			folderjson.put("mac", treeid);
+			folderjson.put("label", jedis.hget("tree:"+treeid, "title"));
+			
+			if(jedis.exists("tree:"+treeid+":eocs")){
+				devicesnodes(jedis,treeid,folderjson);
+			}else if(jedis.exists("tree:"+treeid+":children")){
+				childnodes(jedis,treeid,folderjson);
+			}
+			folderarray.add(folderjson);
+		}
+		nodesarray.put("children", folderarray);
+		
+	}
+	
+	private static void devicesnodes(Jedis jedis, String key,JSONObject nodesarray){
+		//设备节点添加
+		Set<String> ids = jedis.smembers("tree:"+key+":eocs");
+		JSONArray devarray = new JSONArray();
+		for (Iterator it = ids.iterator(); it.hasNext();) {				
+			String deviceid = it.next().toString();
+			JSONObject devicejson = new JSONObject();		
+			devicejson = cbatNodesJson(jedis, deviceid);		
+			devarray.add(devicejson);			
+		}
+		nodesarray.put("children", devarray);
+	}
+	
+	private static JSONObject cbatNodesJson(Jedis jedis,String key){	
+		//String id = jedis.get("mac:"+key+":deviceid");
+		String jkey = "cbatid:"+key+":entity";			
+		JSONObject cbatjson = new JSONObject();
+		cbatjson.putAll(jedis.hgetAll(jkey));
+		cbatjson.put("type", "cbat");		
+		Set<String> cnus = jedis.smembers("cbatid:" + key + ":cnus");
+		JSONArray jsonCnuArray = new JSONArray();
+		for (Iterator it = cnus.iterator(); it.hasNext();) {			
+			String cnuid = it.next().toString();
+			JSONObject cnujson = new JSONObject();
+			cnujson.putAll(jedis.hgetAll("cnuid:"+cnuid+":entity"));
+			cnujson.put("type", "cnu");
+			jsonCnuArray.add(cnujson);
+			
+		}
+		cbatjson.put("children", jsonCnuArray);
+		return cbatjson;
 	}
 
 	private static void doOptlogAll(String message) {
@@ -1281,7 +1391,7 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 
-	private static void doHfcDetail(String message) {
+	private static void doHfcDetail(String message) throws ParseException {
 		Jedis jedis = null;
 		try {
 			jedis = redisUtil.getConnection();
@@ -1290,7 +1400,10 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-		String id = jedis.get("mac:" + message + ":deviceid");
+		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String flag = jsondata.get("flag").toString();
+		String id = jedis.get("mac:" + mac + ":deviceid");
 		String hfckey = "hfcid:" + id + ":entity";
 		String community = jedis.hget(hfckey, "rcommunity");
 		String hfcip = jedis.hget(hfckey, "ip");
@@ -1298,6 +1411,7 @@ public class ServiceController {
 		jedis.set("global:hfcrealtime", hfckey);
 		jedis.bgsave();
 		JSONObject json = new JSONObject();
+		json.put("flag", flag);
 		json.put("mac", jedis.hget(hfckey, "mac"));
 		json.put("ip", hfcip);
 		json.put("oid", jedis.hget(hfckey, "oid"));
@@ -4641,7 +4755,7 @@ public class ServiceController {
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 
-	private static void doNodeCnudetail(String mac) {
+	private static void doNodeCnudetail(String message) throws ParseException {
 		Jedis jedis = null;
 		try {
 			jedis = redisUtil.getConnection();
@@ -4650,10 +4764,13 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
-
+		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String flag = jsondata.get("flag").toString();
 		String id = jedis.get("mac:" + mac + ":deviceid");
 		String cnukey = "cnuid:" + id + ":entity";
 		JSONObject cnujson = new JSONObject();
+		cnujson.put("flag", flag);
 		cnujson.put("mac", jedis.hget(cnukey, "mac"));
 		switch (Integer.parseInt(jedis.hget(cnukey, "devicetype"))) {
 		case 10:
@@ -4737,7 +4854,7 @@ public class ServiceController {
 		jedis.publish("node.tree.cnudetail", jsonString);
 	}
 
-	private static void doNodeCbatdetail(String mac) {
+	private static void doNodeCbatdetail(String message) throws ParseException {
 		Jedis jedis = null;
 		try {
 			jedis = redisUtil.getConnection();
@@ -4746,11 +4863,15 @@ public class ServiceController {
 			redisUtil.getJedisPool().returnBrokenResource(jedis);
 			return;
 		}
+		JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+		String mac = jsondata.get("mac").toString();
+		String flag = jsondata.get("flag").toString();
 		String id = jedis.get("mac:" + mac + ":deviceid");
 		String cbatkey = "cbatid:" + id + ":entity";
 		String result = "";
 		JSONObject cbatjson = new JSONObject();
-
+		
+		cbatjson.put("flag", flag);
 		cbatjson.put("mac", jedis.hget(cbatkey, "mac"));
 		cbatjson.put("ip", jedis.hget(cbatkey, "ip"));
 		cbatjson.put("label", jedis.hget(cbatkey, "label"));
