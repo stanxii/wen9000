@@ -34,9 +34,6 @@ import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 
 import redis.clients.jedis.Jedis;
-
-import com.adventnet.snmp.snmp2.SnmpOID;
-import com.adventnet.snmp.snmp2.SnmpPDU;
 import com.stan.wen9000.action.jedis.util.RedisUtil;
 import com.sun.jmx.snmp.SnmpPdu;
 
@@ -749,10 +746,12 @@ public class TrapReceiverBean {
 				alarmhash.put("alarmlevel", "3");
 				alarmhash.put("cnalarminfo", "线卡丢失");
 				alarmhash.put("enalarminfo", "Lose CLT");
+				break;
 			default:
 				alarmhash.put("alarmlevel", "7");
 				alarmhash.put("cnalarminfo", "未知告警");
 				alarmhash.put("enalarminfo", "Unkonwn");
+				break;
 			}
 
 
