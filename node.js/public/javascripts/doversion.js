@@ -24,18 +24,18 @@
 				   '<table>'+
 				    '<tr><td><label>版本hash值：</label></td><td>'+
 				    
-				    '<label>26f79a31482083ba32ee1ab13b8c8b717edaa271</label>'+
+				    '<label>50720aa235825dc5ad87b2d0cd71e0f50a2d6655</label>'+
 				    
 				   '</td></tr>'+
 				   '<tr><td><label>版本号:：</label></td><td>'+
 				   
-				    '<label>v1.1.21</label>'+
+				    '<label>v1.1.22</label>'+
 				    
 				   '</td></tr>'+
 				   '</td></tr>'+
 				   '<tr><td><label>发布时间:：</label></td><td>'+
 				   
-				    '<label>2013-8-26</label>'+
+				    '<label>2013-8-28</label>'+
 				    
 				   '</td></tr>'+
 				   '</div>'
