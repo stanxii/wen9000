@@ -2013,9 +2013,13 @@
 				   	
 				   	'<br/><div id="cbatconfiginfo"><ul>'+
 					'<li><a href="#tabs-1">基本信息</a></li>'+
+					
+					
 					'<li><a href="#tabs-2">Qos配置信息</a></li>'+
 					'<li><a href="#tabs-3">性能管理</a></li>'+
 					'<li><a href="#tabs-4">线卡管理</a></li></ul>'+
+					
+					
 					'<div id="tabs-1">'+		   	 
 					   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
 					   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td></tr>'+
@@ -2144,9 +2148,17 @@
 		   	'<div id="cbatsts" style="height:100px;width:200px;margin:10px 10px 1px 210px;'+style+'"><lable id="cbatsts_l" style="font-size:30px;background-color:black;line-height:100px">'+active +'</lable></div>'+
 		   	
 		   	'<br/><div id="cbatconfiginfo"><ul>'+
-			'<li><a href="#tabs-1">基本信息</a></li>'+
+			'<li><a href="#tabs-1">基本信息</a></li></ul>'+
+			
+			/*
 			'<li><a href="#tabs-2">Qos配置信息</a></li>'+
+			*/
+			
+			/*
 			'<li><a href="#tabs-3">性能管理</a></li></ul>'+
+			*/
+			
+			
 			'<div id="tabs-1">'+		   	 
 			   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
 			   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td></tr>'+
@@ -2172,7 +2184,9 @@
 					      '<button id="btn_reboot" style="margin-left:100px">设备重启</button>'+
 					      '<button id="btn_reset" style="margin-left:100px">恢复出厂设置</button>'+
 					'</div>'+
-			'</div>'+
+			'</div>'  
+					
+		/*			
 		  '<div id="tabs-2">'+
 		        '<h3>缺省服务优先级</h3>'+
 		  		'<table id="Qosinfo"><tr><td>IGMP组播:</td><td colspan="2"><select name="igmpPri" size="1">'+
@@ -2250,10 +2264,17 @@
 				  							'<div><button id="btn_qossub" style="margin-left:140px">提交</button><button id="btn_qossync" style="margin-left:140px">刷新</button>'+
 				  							'</div>'+            			  							
 	          '</div>'+
+	          
+	          */
+					
+			/*
 	     '<div id="tabs-3">'+
 	                '<div id="performencechart"></div>'+
-	            '</div>'
+	                
+	        '</div>'
+	        */
 			
+					
 				);	  
 	   }
 
