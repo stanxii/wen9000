@@ -1405,7 +1405,13 @@
 			        loading: "Loading…",
 			        loadError: "Load error!"
 			    },
-		    }); 	  		
+		    }); 
+	  var rnode = $("#navtree").dynatree("getTree").getNodeByKey("4");
+	  rnode.sortChildren(function(a,b) {
+		 a = a.data.title.toLowerCase();
+		 b = b.data.title.toLowerCase();
+		 return a>b?1:a<b?-1:0;
+	  },true);
 
    }
    
@@ -1620,6 +1626,11 @@
 		    	  $("#dialog_addnode").dialog("open");
 		    	  $("input#dg_addnode")[0].value = "";
 	    	  }
+	    	  node.sortChildren(function(a,b) {
+				 a = a.data.title.toLowerCase();
+				 b = b.data.title.toLowerCase();
+				 return a>b?1:a<b?-1:0;
+		  	  },true);
 	    	  break;
 	      case "editnode":
 	    	  var flag = localStorage.getItem('flag');
@@ -1654,7 +1665,12 @@
 		    	  
 		    	  $("#dialog_editnode").dialog("open");
 		    	  $("input#dg_editnode")[0].value = "";
-	    	  }	    	  
+	    	  }	 
+	    	  node.sortChildren(function(a,b) {
+	    			 a = a.data.title.toLowerCase();
+	    			 b = b.data.title.toLowerCase();
+	    			 return a>b?1:a<b?-1:0;
+	    		  },true);
 	    	  break;
 	      case "topology":
 	    	  var snode = node.childList[0].data.type;

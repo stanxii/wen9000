@@ -950,7 +950,7 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: opt.alarmtmpset==='+data);
 	  publish.publish('servicecontroller.alarmtmpset', data);
   });
-//头端温度告警门限设置
+//拓扑
   socket.on('topdevices', function (data) {
 	  console.log('nodeserver: topdevices==='+data);
 	  publish.publish('servicecontroller.topdevices', data);
