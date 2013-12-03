@@ -171,6 +171,18 @@
 	  		
       });
       
+      $(".ralarm").live('dblclick', function(){
+    	  var mac = $(this)[0].childNodes[2].textContent;
+    	  var node = $("#navtree").dynatree("getTree").getNodeByKey(mac);
+		  if(node == null){
+			  return;
+		  }
+		  node.activate();
+		  var activeLi = node && node.li;
+		  $('.dynatree-container').animate({
+			 scrollTop: $(activeLi).offset().top - $('.dynatree-container').offset().top + $('.dynatree-container').scrollTop()}, 'slow');
+      });
+      
       $("#btn_reset").live('click', function() { 
     	  if(flag == "3"){
     		  alert("只读用户，权限不足！");
