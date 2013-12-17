@@ -2271,6 +2271,8 @@ public class ServiceController {
 			jedis.set("global:WEC9720EK-XD25", "WEC9720EK XD25");
 			jedis.set("global:WR1004JL", "WR1004JL");
 			jedis.set("global:WR1004SJL", "WR1004SJL");
+			jedis.set("global:3702I-E4", "3702I E4");
+			jedis.set("global:WEC701-E4", "WEC701 E4");
 		}
 
 		if (!jedis.exists("profileid:1:entity")) {
@@ -3550,9 +3552,16 @@ public class ServiceController {
 							|| devicetype.equalsIgnoreCase("41")
 							|| devicetype.equalsIgnoreCase("26")
 							|| devicetype.equalsIgnoreCase("27")) {
-						sendjsonconfig(Integer.valueOf(proid), cip, cnumac,
-								jedis);
+						//74系列设备
+						if(!sendjsonconfig(Integer.valueOf(proid), cip, cnumac,
+								jedis)){
+							//配置终端失败
+							jedis.sadd("global:configfailed", cnuid);
+							jedis.publish("node.opt.proc", proc);
+							continue;
+						}
 					} else {
+						//64系列设备
 						if (!sendconfig(Integer.valueOf(proid), cip,
 								Integer.valueOf(cnuindex), jedis)) {
 							// 发送失败
@@ -4797,6 +4806,14 @@ public class ServiceController {
 			cnujson.put("devicetype", jedis.get("global:WEC701-C4"));
 			cnujson.put("devicemodal", "WEC701 C4");
 			break;
+		case 42:
+			cnujson.put("devicetype", jedis.get("global:3702I-E4"));
+			cnujson.put("devicemodal", "3702I-E4");
+			break;
+		case 43:
+			cnujson.put("devicetype", jedis.get("global:WEC701-E4"));
+			cnujson.put("devicemodal", "WEC701 E4");
+			break;
 		default:
 			cnujson.put("devicetype", "Unknown");
 			break;
@@ -5789,10 +5806,11 @@ public class ServiceController {
 			log.info("status====:" + resultjson.get("status").toString());
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 
-		return (resultjson.get("status").toString() == "0" ? true : false);
+		return (resultjson.get("status").toString().equalsIgnoreCase("0")? true : false);
 
 	}
 
