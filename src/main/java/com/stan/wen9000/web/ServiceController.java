@@ -975,6 +975,12 @@ public class ServiceController {
 		case 11:
 			key = "global:WR1004SJL";
 			break;
+		case 42:
+			key = "global:3702I-E4";
+			break;
+		case 43:
+			key = "global:WEC701-E4";
+			break;
 		}
 
 		String val = jedis.get(key);
@@ -1046,6 +1052,14 @@ public class ServiceController {
 			key = "global:WR1004SJL";
 			optjson.put("desc", "设备类型WR1004SJL将显示为" + value);
 			break;
+		case 42:
+			key = "global:3702I-E4";
+			optjson.put("desc", "设备类型WEC-3702I E4将显示为" + value);
+			break;
+		case 43:
+			key = "global:WEC701-E4";
+			optjson.put("desc", "设备类型WEC701 E4将显示为" + value);
+			break;
 		}
 
 		String val = jedis.set(key, value);
@@ -1109,6 +1123,12 @@ public class ServiceController {
 			break;
 		case 11:
 			key = "global:WR1004SJL";
+			break;
+		case 42:
+			key = "global:3702I-E4";
+			break;
+		case 43:
+			key = "global:WEC701-E4";
 			break;
 
 		}
@@ -2266,12 +2286,12 @@ public class ServiceController {
 			jedis.set("global:WEC9720EK-SD220", "WEC9720EK SD220");
 			jedis.set("global:WEC701-C2", "WEC701 C2");
 			jedis.set("global:WEC701-C4", "WEC701 C4");
-			jedis.set("global:3702I-C4", "3702I C4");
-			jedis.set("global:3702I-C2", "3702I C2");
+			jedis.set("global:3702I-C4", "WEC-3702I C4");
+			jedis.set("global:3702I-C2", "WEC-3702I C2");
 			jedis.set("global:WEC9720EK-XD25", "WEC9720EK XD25");
 			jedis.set("global:WR1004JL", "WR1004JL");
 			jedis.set("global:WR1004SJL", "WR1004SJL");
-			jedis.set("global:3702I-E4", "3702I E4");
+			jedis.set("global:3702I-E4", "WEC-3702I E4");
 			jedis.set("global:WEC701-E4", "WEC701 E4");
 		}
 
@@ -3433,6 +3453,35 @@ public class ServiceController {
 			json.put("active", jedis.hget(key, "active"));
 			json.put("mac", jedis.hget(key, "mac"));
 			json.put("label", jedis.hget(key, "label"));
+			switch (Integer.parseInt(jedis.hget(key, "devicetype"))) {
+			case 10:
+				json.put("devtype", jedis.get("global:3702I-C4"));
+				break;
+			case 7:
+				json.put("devtype", "3702I-L2");
+				break;
+			case 9:
+				json.put("devtype", jedis.get("global:3702I-C2"));
+				break;
+			case 36:
+				json.put("devtype", "WEC701 M0");
+				break;
+			case 40:
+				json.put("devtype", jedis.get("global:WEC701-C2"));
+				break;
+			case 41:
+				json.put("devtype", jedis.get("global:WEC701-C4"));
+				break;
+			case 42:
+				json.put("devtype", jedis.get("global:3702I-E4"));
+				break;
+			case 43:
+				json.put("devtype", jedis.get("global:WEC701-E4"));
+				break;
+			default:
+				json.put("devtype", "Unknown");
+				break;
+			}
 			jsonarray.add(json);
 		}
 		String jsonstring = jsonarray.toJSONString();
@@ -3460,6 +3509,35 @@ public class ServiceController {
 			json.put("active", jedis.hget(key, "active"));
 			json.put("mac", jedis.hget(key, "mac"));
 			json.put("label", jedis.hget(key, "label"));
+			switch (Integer.parseInt(jedis.hget(key, "devicetype"))) {
+			case 10:
+				json.put("devtype", jedis.get("global:3702I-C4"));
+				break;
+			case 7:
+				json.put("devtype", "3702I-L2");
+				break;
+			case 9:
+				json.put("devtype", jedis.get("global:3702I-C2"));
+				break;
+			case 36:
+				json.put("devtype", "WEC701 M0");
+				break;
+			case 40:
+				json.put("devtype", jedis.get("global:WEC701-C2"));
+				break;
+			case 41:
+				json.put("devtype", jedis.get("global:WEC701-C4"));
+				break;
+			case 42:
+				json.put("devtype", jedis.get("global:3702I-E4"));
+				break;
+			case 43:
+				json.put("devtype", jedis.get("global:WEC701-E4"));
+				break;
+			default:
+				json.put("devtype", "Unknown");
+				break;
+			}
 			jsonarray.add(json);
 		}
 		String jsonstring = jsonarray.toJSONString();
@@ -3697,6 +3775,12 @@ public class ServiceController {
 			case 41:
 				json.put("devicetype", jedis.get("global:WEC701-C4"));
 				break;
+			case 42:
+				json.put("devicetype", jedis.get("global:3702I-E4"));
+				break;
+			case 43:
+				json.put("devicetype", jedis.get("global:WEC701-E4"));
+				break;
 			default:
 				json.put("devicetype", "Unknown");
 				break;
@@ -3842,6 +3926,12 @@ public class ServiceController {
 			case 41:
 				cnujson.put("devicetype", jedis.get("global:WEC701-C4"));
 				break;
+			case 42:
+				cnujson.put("devicetype", jedis.get("global:3702I-E4"));
+				break;
+			case 43:
+				cnujson.put("devicetype", jedis.get("global:WEC701-E4"));
+				break;
 			default:
 				cnujson.put("devicetype", "Unknown");
 				break;
@@ -3906,8 +3996,12 @@ public class ServiceController {
 				|| devtype.equalsIgnoreCase("41")
 				|| devtype.equalsIgnoreCase("26")
 				|| devtype.equalsIgnoreCase("27")) {
-			cnujsonconfig(jsondata, cbatip, jsondata.get("mac").toString(),
-					jedis);
+			if(!cnujsonconfig(jsondata, cbatip, jsondata.get("mac").toString(),
+					jedis)){
+				jedis.publish("node.tree.cnu_sub", "");
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
+			}
 		} else {
 			// 配置6400 CNU
 			if (Cnuconfig(jsondata, cbatip, Integer.parseInt(devid), jedis)) {
@@ -3993,6 +4087,12 @@ public class ServiceController {
 			JSONObject resultjson = new JSONObject();
 			resultjson = post("http://" + cbatip + "/getcnu.json", sjson,
 					cbatip);
+			if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+				//设备读取失败
+				jedis.publish("node.optlog.optresult", "");
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
+			}
 			// log.info("------------------jsonget result====>>>"+resultjson.toJSONString());
 			resultjson.put("active", jedis.hget(key, "active"));
 			String proid = jedis.hget(key, "profileid");
@@ -5934,7 +6034,7 @@ public class ServiceController {
 			return false;
 
 		}
-		return (resultjson.get("status").toString() == "0" ? true : false);
+		return (resultjson.get("status").toString().equalsIgnoreCase("0") ? true : false);
 	}
 
 	private static Boolean Cnuconfig(JSONObject jsondata, String cbatip,

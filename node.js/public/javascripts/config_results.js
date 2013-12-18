@@ -16,7 +16,8 @@
   				$('#f_Table').dataTable().fnAddData( [
 			        itemv.mac,
 			        itemv.active,
-			        itemv.label ] );
+			        itemv.label,
+			        itemv.devtype] );
   								
 			 	});
 		}
@@ -28,7 +29,8 @@
   				$('#s_Table').dataTable().fnAddData( [
 			        itemv.mac,
 			        itemv.active,
-			        itemv.label ] );
+			        itemv.label,
+			        itemv.devtype] );
   								
 			 	});
 		}
@@ -67,7 +69,8 @@
 			"aoColumns": [	
 						  { "sTitle": "MAC" , "sClass": "center"},
 						  { "sTitle": "状态" , "sClass": "center"},
-					      { "sTitle": "标识" , "sClass": "center"}
+					      { "sTitle": "标识" , "sClass": "center"},
+					      { "sTitle": "型号" , "sClass": "center"}
 						],
 			
 	    } );
@@ -104,7 +107,8 @@
 			"aoColumns": [	
 						  { "sTitle": "MAC" , "sClass": "center"},
 						  { "sTitle": "状态" , "sClass": "center"},
-					      { "sTitle": "标识" , "sClass": "center"}
+					      { "sTitle": "标识" , "sClass": "center"},
+					      { "sTitle": "型号" , "sClass": "center"}
 						],
 			
 	    } );

@@ -296,10 +296,10 @@
 				 alert("Vlan值必须是数字！");
 				 return;
 			}
-			if((vlan0id>4095)||(vlan0id<0)||(vlan1id>4095)||(vlan1id<0)||(vlan2id>4095)||(vlan2id<0)||(vlan3id>4095)||(vlan3id<0)){
+			if((vlan0id>4094)||(vlan0id<1)||(vlan1id>4094)||(vlan1id<1)||(vlan2id>4094)||(vlan2id<1)||(vlan3id>4094)||(vlan3id<1)){
 				document.body.style.cursor = 'default';
 		 		isbusy = false;
-				alert("VLAN值应在0~4095之间！");
+				alert("VLAN值应在0~4094之间！");
 				return;
 			}
 			if(isNaN(cpuportrxrate)||isNaN(port0txrate)||isNaN(port1txrate)||isNaN(port2txrate)||isNaN(port3txrate)||isNaN(cpuporttxrate)||isNaN(port0rxrate)||isNaN(port1rxrate)||isNaN(port2rxrate)||isNaN(port3rxrate)){
@@ -788,6 +788,8 @@
      }
      
      function fun_Optresult(data){
+    	 document.body.style.cursor = 'default';
+ 		 isbusy = false;
     	 if(data == ""){
     		//失败提示对话框					
   			$( "#dialog-message-failed" ).dialog({

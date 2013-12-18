@@ -133,10 +133,10 @@
 	    	  }
 	    	$( "#dialog:ui-dialog" ).dialog( "destroy" );	    	
 	    	$( "#proname" )[0].value = "";
-			$( "#vlan0id" )[0].value = 0;
-			$( "#vlan1id" )[0].value = 0;
-			$( "#vlan2id" )[0].value = 0;
-			$( "#vlan3id" )[0].value = 0;
+			$( "#vlan0id" )[0].value = 1;
+			$( "#vlan1id" )[0].value = 1;
+			$( "#vlan2id" )[0].value = 1;
+			$( "#vlan3id" )[0].value = 1;
 			$( "#cpuportrxrate" )[0].value = 0;
 			$( "#port0txrate" )[0].value = 0;
 			$( "#port1txrate" )[0].value = 0;
@@ -174,8 +174,8 @@
 						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"ETH1限速")&& checknum(port1txrate,"ETH2限速")&& checknum(port2txrate,"ETH3限速")&& checknum(port3txrate,"ETH4限速")
 							&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"ETH1限速")&& checknum(port1rxrate,"ETH2限速")&& checknum(port2rxrate,"ETH3限速")&& checknum(port3rxrate,"ETH4限速"); 
 							
-						bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2)&& checkvalue(vlan0id,"vlan0id",0,4095)&& checkvalue(vlan1id,"vlan1id",0,4095)
-						&& checkvalue(vlan2id,"vlan2id",0,4095)&& checkvalue(vlan3id,"vlan3id",0,4095)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);
+						bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2)&& checkvalue(vlan0id,"vlan0id",1,4094)&& checkvalue(vlan1id,"vlan1id",1,4094)
+						&& checkvalue(vlan2id,"vlan2id",1,4094)&& checkvalue(vlan3id,"vlan3id",1,4094)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);
 						
 						if(bValid){
 							var datastring = '{"proname":"'+proname.val()+'","authorization":"'+parseInt(authorization.val(),10)+'","vlanen":"'+vlanen.val()+
@@ -522,8 +522,8 @@
 						bValid = bValid && checknum(cpuportrxrate,"全局下行限速")&& checknum(port0txrate,"ETH1限速")&& checknum(port1txrate,"ETH2限速")&& checknum(port2txrate,"ETH3限速")&& checknum(port3txrate,"ETH4限速")
 							&& checknum(cpuporttxrate,"全局上行限速")&& checknum(port0rxrate,"ETH1限速")&& checknum(port1rxrate,"ETH2限速")&& checknum(port2rxrate,"ETH3限速")&& checknum(port3rxrate,"ETH4限速"); 
 							
-						bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2)&& checkvalue(vlan0id,"vlan0id",0,4095)&& checkvalue(vlan1id,"vlan1id",0,4095)
-						&& checkvalue(vlan2id,"vlan2id",0,4095)&& checkvalue(vlan3id,"vlan3id",0,4095)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);
+						bValid = bValid&& checkvalue(vlanen,"Vlan使能",1,2)&& checkvalue(vlan0id,"vlan0id",1,4094)&& checkvalue(vlan1id,"vlan1id",1,4094)
+						&& checkvalue(vlan2id,"vlan2id",1,4094)&& checkvalue(vlan3id,"vlan3id",1,4094)&& checkvalue(rxlimitsts,"rxlimitsts",1,2)&& checkvalue(txlimitsts,"txlimitsts",1,2);
 						
 						if(bValid){
 							var anSelected = fnGetSelected( pTable );
