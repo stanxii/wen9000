@@ -1236,7 +1236,7 @@
 			});
 			$("#dialog-message-failed").dialog("open");
     	}else{
-    		document.getElementById('authorization_en').value = data.authorization;
+    		document.getElementById('authorization_en').value = data.permit;
     		document.getElementById('vlan_en').value = data.vlanen;
         	document.getElementById('vlan0id').value = data.vlan0id;
         	document.getElementById('vlan1id').value = data.vlan1id;
@@ -2238,7 +2238,7 @@
 						'<li><a href="#tabs-1">基本信息</a></li>'+
 						'<li><a href="#tabs-2">Qos配置信息</a></li>'+
 						'<li><a href="#tabs-3">性能管理</a></li>'+
-						'<li><a href="#tabs-4">线卡管理</a></li></ul>'+
+						/*'<li><a href="#tabs-4">线卡管理</a></li>*/'</ul>'+
 						'<div id="tabs-1">'+		   	 
 						   	'<table id="baseinfo"><tr><td><lable>mac : </lable></td><td><lable style="margin-left:0px" id = "mac">'+jsondata.mac+'</lable></td>'+
 						   		'<td><lable>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp设备类型 : </lable></td><td><lable>'+jsondata.devicetype+'</lable></td></tr>'+
@@ -2344,8 +2344,8 @@
 				          '</div>'+
 				     '<div id="tabs-3">'+
 				                '<div id="performencechart"></div>'+
-				            '</div>'+			     
-				     '<div id="tabs-4">'+	
+				            '</div>'			     
+				    /* '<div id="tabs-4">'+	
 				     	'<h3>线卡信息</h3>'+
 				     	'<table id="cltinfo"><tr><td>1号槽位MAC:</td><td><lable id="clt1mac">'+jsondata.clt1+'</lable></td></tr>'+
 				     		'<tr><td>2号槽位MAC:</td><td><lable id="clt2mac">'+jsondata.clt2+'</lable></td></tr>'+
@@ -2358,7 +2358,7 @@
 			     			'</td><td><input type="text" id="clt_mac" value="'+jsondata.clt1+'"></input></td><td>'+
 			     			'<button id="btn_cltregister" style="margin-left:30px">注册</button><button id="btn_cltdel" style="margin-left:20px">删除</td></tr>'+		     			
 			     		'</table>'+
-				     '</div>'
+				     '</div>'*/
 				);	
 		   }else{
 			   //单线卡设备		   
@@ -2493,6 +2493,8 @@
 					
 				}else if(jsondata.devicemodal == "WEC9720EK SD220"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
+				}else if(jsondata.devicemodal == "WR1004SJL"){
+					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004SJL.jpg";
 				}
 	   }else{
 		   $("#dialog-devinfo").empty();
@@ -2761,6 +2763,8 @@
 					
 				}else if(jsondata.devicemodal == "WEC9720EK SD220"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
+				}else if(jsondata.devicemodal == "WR1004SJL"){
+					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004SJL.jpg";
 				}
 				
 				$( "#dialog-devinfo" ).dialog({

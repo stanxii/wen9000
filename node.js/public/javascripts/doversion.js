@@ -29,7 +29,7 @@
 				   '</td></tr>'+
 				   '<tr><td><label>版本号:：</label></td><td>'+
 				   
-				    '<label>v1.1.24</label>'+
+				    '<label>v1.1.25</label>'+
 				    
 				   '</td></tr>'+
 				   '</td></tr>'+
