@@ -40,19 +40,19 @@ app.configure(function(){
 app.get('/login', function (req, res) {
 	//console.log("-----------------old user====>>>"+req.session.user);
 	
-	res.render('login.jade', { title: 'Wen9000网路管理系统---登录' });
+	res.render('login.jade', { title: 'EOC网路管理系统---登录' });
 });
 
 app.get('/register', function (req, res) {
-	res.render('register.jade', { title: 'Wen9000网络管理系统---注册' });
+	res.render('register.jade', { title: 'EOC网络管理系统---注册' });
 });
 //用户不存在
 app.get('/101', function (req, res) {
-	res.render('101.jade', { title: 'Wen9000网络管理系统---错误' });
+	res.render('101.jade', { title: 'EOC网络管理系统---错误' });
 });
 //密码错误
 app.get('/102', function (req, res) {
-	res.render('102.jade', { title: 'Wen9000网络管理系统---错误' });
+	res.render('102.jade', { title: 'EOC网络管理系统---错误' });
 });
 
 app.get('/validate', function (req, res) {
@@ -62,7 +62,7 @@ app.get('/validate', function (req, res) {
 		    if(result){
 		    	jedis.hget('user:'+req.session.user,"password", function(error, result) {
 		    	    if(result == req.session.password){
-		    	    	res.render('index', { title: 'Wen9000网络管理系统' });
+		    	    	res.render('index', { title: 'EOC网络管理系统' });
 		    	    }else{
 		    	    	res.redirect('/102');
 		    	    }
@@ -91,7 +91,7 @@ app.get('/', function (req, res) {
 		    if(result){
 		    	jedis.hget('user:'+req.session.user,"password", function(error, result) {
 		    	    if(result == req.session.password){
-		    	    	res.render('index', { title: 'Wen9000网络管理系统' });
+		    	    	res.render('index', { title: 'EOC网络管理系统' });
 		    	    }else{
 		    	    	res.redirect('/102');
 		    	    }
@@ -128,51 +128,51 @@ app.post('/register', function (req, res) {
 
 app.get('/profilemanager', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'profilemanager.jade', { title: 'Wen9000网络管理系统---模板管理' } );
+		response.render( 'profilemanager.jade', { title: 'EOC网络管理系统---模板管理' } );
 	} else {
 		response.redirect('/login');
 	}    
 });
 app.get('/opt/accounts', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'opt/accounts.jade', { title: 'Wen9000网络管理系统---选择配置用户' } );
+		response.render( 'opt/accounts.jade', { title: 'EOC网络管理系统---选择配置用户' } );
 	} else {
 		response.redirect('/login');
 	}    
 });
 app.get('/opt/selectprofiles', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'opt/selectprofiles.jade', { title: 'Wen9000网络管理系统---选择模板' } );
+		response.render( 'opt/selectprofiles.jade', { title: 'EOC网络管理系统---选择模板' } );
 	} else {
 		response.redirect('/login');
 	}        
 });
 app.get('/opt/confirm', function( request, response ) {
-	response.render( 'opt/confirm.jade', { title: 'Wen9000网络管理系统---操作确认' } );	        
+	response.render( 'opt/confirm.jade', { title: 'EOC网络管理系统---操作确认' } );	        
 });
 app.get('/opt/config_results', function( request, response ) {
-    response.render( 'opt/config_results.jade', { title: 'Wen9000网络管理系统---结果查询' } );
+    response.render( 'opt/config_results.jade', { title: 'EOC网络管理系统---结果查询' } );
 });
 app.get('/dis/search', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'discovery/discovery.jade', { title: 'Wen9000网络管理系统---设备搜索' } );
+		response.render( 'discovery/discovery.jade', { title: 'EOC网络管理系统---设备搜索' } );
 	} else {
 		response.redirect('/login');
 	}     
 });
 app.get('/dis/result', function( request, response ) {
-    response.render( 'discovery/result.jade', { title: 'Wen9000网络管理系统---搜索结果' } );
+    response.render( 'discovery/result.jade', { title: 'EOC网络管理系统---搜索结果' } );
 });
 app.get('/global_opt', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'global_opt.jade', { title: 'Wen9000网络管理系统---全局管理' } );
+		response.render( 'global_opt.jade', { title: 'EOC网络管理系统---全局管理' } );
 	} else {
 		response.redirect('/login');
 	}      
 });
 app.get('/opt/updatecbat', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'opt/updatecbat.jade', { title: 'Wen9000网络管理系统---局端升级' } );
+		response.render( 'opt/updatecbat.jade', { title: 'EOC网络管理系统---局端升级' } );
 	} else {
 		response.redirect('/login');
 	}     
@@ -180,7 +180,7 @@ app.get('/opt/updatecbat', function( request, response ) {
 
 app.get('/historyalarm', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'historyalarm.jade', { title: 'Wen9000网络管理系统---历史告警' } );
+		response.render( 'historyalarm.jade', { title: 'EOC网络管理系统---历史告警' } );
 	} else {
 		response.redirect('/login');
 	}       
@@ -188,7 +188,7 @@ app.get('/historyalarm', function( request, response ) {
 
 app.get('/alarmsetting', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'alarmsetting.jade', { title: 'Wen9000网络管理系统---历史告警' } );
+		response.render( 'alarmsetting.jade', { title: 'EOC网络管理系统---历史告警' } );
 	} else {
 		response.redirect('/login');
 	}       
@@ -196,7 +196,7 @@ app.get('/alarmsetting', function( request, response ) {
 
 app.get('/optlog', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'optlog.jade', { title: 'Wen9000网络管理系统---日志管理' } );
+		response.render( 'optlog.jade', { title: 'EOC网络管理系统---日志管理' } );
 
 	} else {
 		response.redirect('/login');
@@ -204,96 +204,31 @@ app.get('/optlog', function( request, response ) {
 });
 app.get('/opt/pre_config', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'opt/pre_config.jade', { title: 'Wen9000网络管理系统---设备预开户' } );
+		response.render( 'opt/pre_config.jade', { title: 'EOC网络管理系统---设备预开户' } );
 	} else {
 		response.redirect('/login');
 	}      
 });
 app.get('/userManager', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'userManager.jade', { title: 'Wen9000网络管理系统---用户管理' } );
+		response.render( 'userManager.jade', { title: 'EOC网络管理系统---用户管理' } );
 	} else {
 		response.redirect('/login');
 	}     
 });
 app.get('/topology', function( request, response ) {
 	if ((request.session.user != null)&&((request.session.user != "undefined"))) {
-		response.render( 'topology.jade', { title: 'Wen9000网络管理系统---网络拓扑' } );
+		response.render( 'topology.jade', { title: 'EOC网络管理系统---网络拓扑' } );
 	} else {
 		response.redirect('/login');
 	}     
 });
 app.get('/viewmode', function( request, response ) {
-    response.render( 'viewmode.jade', { title: 'Wen9000网络管理系统---显示模式' } );
+    response.render( 'viewmode.jade', { title: 'EOC网络管理系统---显示模式' } );
 });
 //app.listen(3000);
 var node = http.createServer(app).listen(3000);
 var sio = io.listen(node);
-
-
-//test
-function PostCode() {
-	  var date = new Date();
-	  // Build the post string from an object
-	  var post_data = querystring.stringify({
-		  "type":2,    //0-cbat, 1-clt, 2-cnu
-		  "mac":"F0:4D:A2:FD:6A:DF",
-		  "vlanen":"1",  //0-disable, 1-enable
-		  "vlan0id":1,
-		  "vlan1id":1,
-		  "vlan2id":1,
-		  "vlan3id":1,
-		  "txlimitsts":1,   //1-enable, 2-disable  if 1 then have follow param else no
-		  "cpuporttxrate":1024,   //K
-		  "port0rxrate":1024,
-		  "port1rxrate":1024,
-		  "port2rxrate":1024,
-		  "port3rxrate":1024,
-		  "rxlimitsts":1, //1-enable, 2-disable  if 1 then have follow param else no
-		  "cpuportrxrate":1024,
-		  "port0txrate":1024,
-		  "port1txrate":1024,
-		  "port2txrate":1024,
-		  "port3txrate":1024,
-		  "permit":1   //1-kaitong, 2-guanduan
-		  });
-
-	  // An object of options to indicate where to post to
-	  var post_options = {
-	      host: '192.168.1.194',
-	      port: '80',
-	      path: '/setcnu.json',
-	      auth: 'support:support',
-	      method: 'POST',
-	      headers: {
-	          'Content-Type': 'text/json',
-	          'Content-Length': post_data.length
-	      }
-	  };
-
-	  // Set up the request
-	  var post_req = http.request(post_options, function(res) {
-		  res.setEncoding('utf8');
-		  //res.on('response', function (response) {
-			  res.on('data', function (chunk) {
-				date = new Date();
-				console.log("end time ===================="+date.getSeconds()+"=====millsecends==="+date.getMilliseconds());
-			    console.log('BODY: ' + chunk);
-			  });
-			//});		      
-		  });
-	      
-	  post_req.on('error', function (error) {
-		    console.log('server_http:Error: ' + error);
-		});
-	  console.log("first time ====================secends=="+date.getSeconds()+"=====millsecends==="+date.getMilliseconds());
-	  post_req.write(post_data);
-	  post_req.end();
-
-	};
-
-
-//PostCode();
 
 redis.psubscribe('node.alarm.*');
 redis.psubscribe('node.historyalarm.*');

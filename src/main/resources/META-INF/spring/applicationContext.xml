@@ -43,7 +43,7 @@
         The most commonly used annotation is @Autowired, which instructs Spring to
         dependency inject an object into your class.
     -->
-    <context:component-scan base-package="com.stan.wen9000">
+    <context:component-scan base-package="com.stan.eoc">
         <context:exclude-filter expression=".*_Roo_.*" type="regex"/>
         <context:exclude-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
     </context:component-scan>
@@ -96,12 +96,12 @@
 
 	
 	<!-- 包装类 -->
-	<bean id="redisUtil" class="com.stan.wen9000.action.jedis.util.RedisUtil">
+	<bean id="redisUtil" class="com.stan.eoc.action.jedis.util.RedisUtil">
 		<property name="jedisPool" ref="jedisPool" />
 	</bean>
 
 	<!-- 业务对象 -->
-	<bean id="workerDiscoveryProcessor" class="com.stan.wen9000.web.WorkerDiscoveryProcessor" >	
+	<bean id="workerDiscoveryProcessor" class="com.stan.eoc.web.WorkerDiscoveryProcessor" >	
 	  <property name="redisUtil" ref="redisUtil" />		 
 	</bean>
 	
@@ -126,43 +126,43 @@
 	
 	
 	<!-- 业务对象 -->
-	<bean id="serviceDiscoveryProcessor" class="com.stan.wen9000.web.ServiceDiscoveryProcessor" >
+	<bean id="serviceDiscoveryProcessor" class="com.stan.eoc.web.ServiceDiscoveryProcessor" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>	
-	<bean id="serviceProcess" class="com.stan.wen9000.web.ServiceProcess" >
+	<bean id="serviceProcess" class="com.stan.eoc.web.ServiceProcess" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>	
-	<bean id="serviceAlarmProcessor" class="com.stan.wen9000.web.ServiceAlarmProcessor" >
+	<bean id="serviceAlarmProcessor" class="com.stan.eoc.web.ServiceAlarmProcessor" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>		
-	<bean id="serviceHeartProcessor" class="com.stan.wen9000.web.ServiceHeartProcessor" >
+	<bean id="serviceHeartProcessor" class="com.stan.eoc.web.ServiceHeartProcessor" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>		
-	<bean id="trapReceiverBean" class="com.stan.wen9000.web.TrapReceiverBean" >
+	<bean id="trapReceiverBean" class="com.stan.eoc.web.TrapReceiverBean" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="serviceCbatStatus" class="com.stan.wen9000.web.ServiceCbatStatus" >
+	<bean id="serviceCbatStatus" class="com.stan.eoc.web.ServiceCbatStatus" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="serviceController" class="com.stan.wen9000.web.ServiceController" >
+	<bean id="serviceController" class="com.stan.eoc.web.ServiceController" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="serviceUpdateProcess" class="com.stan.wen9000.web.ServiceUpdateProcess" >
+	<bean id="serviceUpdateProcess" class="com.stan.eoc.web.ServiceUpdateProcess" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="serviceSendconfig" class="com.stan.wen9000.web.ServiceSendconfig" >
+	<bean id="serviceSendconfig" class="com.stan.eoc.web.ServiceSendconfig" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="serviceHfcRealtime" class="com.stan.wen9000.web.ServiceHfcRealtime" >
+	<bean id="serviceHfcRealtime" class="com.stan.eoc.web.ServiceHfcRealtime" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="workerHfcStatus" class="com.stan.wen9000.web.WorkerHfcStatus" >
+	<bean id="workerHfcStatus" class="com.stan.eoc.web.WorkerHfcStatus" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="serviceHfcStatus" class="com.stan.wen9000.web.ServiceHfcStatus" >
+	<bean id="serviceHfcStatus" class="com.stan.eoc.web.ServiceHfcStatus" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
-	<bean id="serviceHfcalarmprocessor" class="com.stan.wen9000.web.ServiceHfcAlarmProcessor" >
+	<bean id="serviceHfcalarmprocessor" class="com.stan.eoc.web.ServiceHfcAlarmProcessor" >
 		<property name="redisUtil" ref="redisUtil" />
 	</bean>
 	

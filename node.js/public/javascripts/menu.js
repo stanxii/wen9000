@@ -6,12 +6,6 @@
 	var flag;
   $(function() {
 	//根据屏幕分辨率更改页面布局
-//	  var ht1 = document.body.offsetHeight;
-//	  var ht2 = document.body.scrollHeight;
-//	  var ht3 = document.body.scrollTop;
-//	  var ht4 = document.body.screenTop;
-//	  var ht5 = window.screen.availHeight;
-//	  var ht6 = document.body.clientHeight;
       if(window.screen.height >768){
     	  var ht = window.screen.availHeight - 348;
     	  $("#wapper").css("height",ht+"px");
@@ -31,7 +25,6 @@
       //db = openDatabase("Userdb", "1", "Login users", 1000);
       var user = localStorage.getItem('username');
       flag = localStorage.getItem('flag');
-      var xxx = $("#loginuser");
       $("#loginuser")[0].textContent = user;
 
       
@@ -46,13 +39,13 @@
                   socket.on('cbatdetail', fun_cbatdetail );
                   socket.on('cnudetail', fun_cnudetail );
                   socket.on('hfcdetail', fun_hfcdetail );
-                  socket.on('cbat_modify', fun_cbatmodify );
+                  socket.on('cbat_modify', fun_Optresult );
                   socket.on('cbat_sync', fun_CbatSync );
                   socket.on('cnu_sub', fun_CnuSub );
                   socket.on('cnusync', fun_CnuSync );
                   socket.on('statuschange', fun_Statuschange );
-                  socket.on('cbatreset', fun_Cbatreset );
-                  socket.on('hfcbase', fun_HfcBase );
+                  socket.on('cbatreset', fun_Optresult );
+                  socket.on('hfcbase', fun_Optresult );
                   socket.on('hfcrealtime', fun_Hfcrealtime );                 
                   socket.on('hfcsubresponse', fun_Hfcresponse );    
                   socket.on('devsearch', fun_Devsearch ); 
@@ -299,7 +292,7 @@
 			if((vlan0id>4094)||(vlan0id<1)||(vlan1id>4094)||(vlan1id<1)||(vlan2id>4094)||(vlan2id<1)||(vlan3id>4094)||(vlan3id<1)){
 				document.body.style.cursor = 'default';
 		 		isbusy = false;
-				alert("VLAN值应在0~4094之间！");
+				alert("VLAN值应在1~4094之间！");
 				return;
 			}
 			if(isNaN(cpuportrxrate)||isNaN(port0txrate)||isNaN(port1txrate)||isNaN(port2txrate)||isNaN(port3txrate)||isNaN(cpuporttxrate)||isNaN(port0rxrate)||isNaN(port1rxrate)||isNaN(port2rxrate)||isNaN(port3rxrate)){
@@ -805,7 +798,9 @@
   				}
   			});
   			$("#dialog-message-failed").dialog("open");
-    	 }else{
+    	 }else if(jsondata=="ipconflict"){
+ 			alert("头端IP与其它头端冲突！");
+ 		 }else{
     		//成功提示对话框
 	 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
@@ -1140,83 +1135,7 @@
     	 }
     	 
      }
-     
-     function fun_HfcBase(data){
-    	 document.body.style.cursor = 'default';
- 		 isbusy = false;
-    	 if(data == ""){
-    		//失败提示对话框					
- 			$( "#dialog-message-failed" ).dialog({
- 				autoOpen: false,
- 				show: "blind",
- 				modal: true,
- 				resizable: false,
- 				hide: "explode",
- 				buttons: {
- 					Ok: function() {
- 						$( this ).dialog( "close" );
- 					}
- 				}
- 			});
- 			$("#dialog-message-failed").dialog("open");
-    	 }else{
-    		//成功提示对话框
- 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
 
- 			$( "#dialog-message" ).dialog({
- 				autoOpen: false,
- 				show: "blind",
- 				modal: true,
- 				resizable: false,
- 				hide: "explode",
- 				buttons: {
- 					Ok: function() {
- 						$( this ).dialog( "close" );
- 					}
- 				}
- 			});
- 			$("#dialog-message").dialog("open");
-    	 }
-     }
-     
-     function fun_Cbatreset(data){
-    	 document.body.style.cursor = 'default';
- 		 isbusy = false;
-    	 if(data == ""){
-    		//失败提示对话框					
- 			$( "#dialog-message-failed" ).dialog({
- 				autoOpen: false,
- 				show: "blind",
- 				modal: true,
- 				resizable: false,
- 				hide: "explode",
- 				buttons: {
- 					Ok: function() {
- 						$( this ).dialog( "close" );
- 					}
- 				}
- 			});
- 			$("#dialog-message-failed").dialog("open");
-    	 }else{
-    		//成功提示对话框
- 			$( "#dialog:ui-dialog" ).dialog( "destroy" );
-
- 			$( "#dialog-message" ).dialog({
- 				autoOpen: false,
- 				show: "blind",
- 				modal: true,
- 				resizable: false,
- 				hide: "explode",
- 				buttons: {
- 					Ok: function() {
- 						$( this ).dialog( "close" );
- 					}
- 				}
- 			});
- 			$("#dialog-message").dialog("open");
-    	 }
-     }
-      
     function fun_CnuSync(data){
     	document.body.style.cursor = 'default';
 		isbusy = false;
@@ -1522,17 +1441,6 @@
 	    		  alert("所选节点不是局端，操作错误!");
 	    	  }
 	    	  break;
-	      case "move":
-	    	  
-	    	  break;
-	      case "sort":
-	    	  var node = $("#moveto_tree").dynatree("getActiveNode");
-	    	  break;
-	      case "add":
-	        //copyPaste(action, node);
-	        break;
-	      case "quit":		        
-		      break;
 	      case "delete":
 	    	  var flag = localStorage.getItem('flag');
 	    	  if(flag == "3"){

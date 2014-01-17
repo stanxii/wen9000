@@ -1,7 +1,0 @@
-E:\seamprojects\eocnms\hfcserver\HfcAlarmServer\HfcAlarmServer\obj\Debug\ResolveAssemblyReference.cache
-E:\seamprojects\eocnms\hfcserver\HfcAlarmServer\HfcAlarmServer\bin\Debug\HfcAlarmServer.exe
-E:\seamprojects\eocnms\hfcserver\HfcAlarmServer\HfcAlarmServer\bin\Debug\HfcAlarmServer.pdb
-E:\seamprojects\eocnms\hfcserver\HfcAlarmServer\HfcAlarmServer\bin\Debug\AdventNetMibsAPI.dll
-E:\seamprojects\eocnms\hfcserver\HfcAlarmServer\HfcAlarmServer\bin\Debug\AdventNetSnmp.dll
-E:\seamprojects\eocnms\hfcserver\HfcAlarmServer\HfcAlarmServer\obj\Debug\HfcAlarmServer.exe
-E:\seamprojects\eocnms\hfcserver\HfcAlarmServer\HfcAlarmServer\obj\Debug\HfcAlarmServer.pdb
