@@ -24,7 +24,7 @@
 				   '<table>'+
 				    '<tr><td><label>版本hash值：</label></td><td>'+
 				    
-				    '<label>35d13a39266b481860c6506b155a41c231ecf7b7</label>'+
+				    '<label>c9eeba1dc551e6bd95af1c54976d4eb221f1a44c</label>'+
 				    
 				   '</td></tr>'+
 				   '<tr><td><label>版本号:：</label></td><td>'+

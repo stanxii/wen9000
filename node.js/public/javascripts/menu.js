@@ -798,7 +798,7 @@
   				}
   			});
   			$("#dialog-message-failed").dialog("open");
-    	 }else if(jsondata=="ipconflict"){
+    	 }else if(data=="ipconflict"){
  			alert("头端IP与其它头端冲突！");
  		 }else{
     		//成功提示对话框
