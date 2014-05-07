@@ -53,7 +53,7 @@ public class ServiceController {
 	private static Logger log = Logger.getLogger(ServiceController.class);
 
 	private static SnmpUtil util = new SnmpUtil();
-
+	private static JsonPost jpost = new JsonPost();
 	private static RedisUtil redisUtil;
 
 	private static JSONObject resultObj;
@@ -2168,16 +2168,29 @@ public class ServiceController {
 		String cbatid = jedis.get("mac:" + mac + ":deviceid");
 		String cbatip = jedis.hget("cbatid:" + cbatid + ":entity", "ip");
 		try {
-			String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1,
-					3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
-			if (tmp == "") {
-				jedis.publish("node.opt.cbatreset", "");
-				redisUtil.getJedisPool().returnResource(jedis);
-				return;
+			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal") == null){
+				String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1,
+						3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
+				if (tmp == "") {
+					jedis.publish("node.opt.cbatreset", "");
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
+				// 重启设备
+				util.setV2PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1,
+						36186, 8, 6, 1, 0 }), new Integer32(1));
+			}else{
+				JSONObject sjson = new JSONObject();
+				sjson.put("val", 1);
+				JSONObject resultjson = jpost.post("http://" + cbatip + "/rebootCbat.json",
+						sjson);
+				if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+					jedis.publish("node.opt.cbatreset", "");
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
 			}
-			// 重启设备
-			util.setV2PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1,
-					36186, 8, 6, 1, 0 }), new Integer32(1));
+			
 			JSONObject optjson = new JSONObject();
 			Date date = new Date();
 			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -2212,16 +2225,29 @@ public class ServiceController {
 		String cbatip = jedis.hget("cbatid:" + cbatid + ":entity", "ip");
 
 		try {
-			String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1,
-					3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
-			if (tmp == "") {
-				jedis.publish("node.opt.cbatreset", "");
-				redisUtil.getJedisPool().returnResource(jedis);
-				return;
+			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal") == null){
+				String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1,
+						3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
+				if (tmp == "") {
+					jedis.publish("node.opt.cbatreset", "");
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
+				// 恢复出厂设置
+				util.setV2PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1,
+						36186, 8, 6, 3, 0 }), new Integer32(1));
+			}else{
+				JSONObject sjson = new JSONObject();
+				sjson.put("val", 1);
+				JSONObject resultjson = jpost.post("http://" + cbatip + "/restoreCbat.json",
+						sjson);
+				if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+					jedis.publish("node.opt.cbatreset", "");
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
 			}
-			// 恢复出厂设置
-			util.setV2PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1,
-					36186, 8, 6, 3, 0 }), new Integer32(1));
+			
 
 			JSONObject optjson = new JSONObject();
 			Date date = new Date();
@@ -3609,53 +3635,56 @@ public class ServiceController {
 									+ ":entity", "profilename"));
 			sendoptlog(jedis, optjson);
 			// 下面是具体节点配置过程或发往其它进程进行异步配置
-			// 判断设备是否在线
-			try {
-				String tmp = util.getStrPDU(cip, "161", new OID(new int[] { 1,
-						3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
-				if (tmp == "") {
-					// 将配置失败的设备id存储
+			if(jedis.hget("cbatid:" + cid + ":entity","protocal") == null){
+				if (!(devicetype.equalsIgnoreCase("20")
+						|| devicetype.equalsIgnoreCase("21")
+						|| devicetype.equalsIgnoreCase("22")
+						|| devicetype.equalsIgnoreCase("23")
+						|| devicetype.equalsIgnoreCase("24")
+						|| devicetype.equalsIgnoreCase("36")
+						|| devicetype.equalsIgnoreCase("40")
+						|| devicetype.equalsIgnoreCase("41")
+						|| devicetype.equalsIgnoreCase("26")
+						|| devicetype.equalsIgnoreCase("27"))) {
+					// 判断设备是否在线
+					try {
+						String tmp = util.getStrPDU(cip, "161", new OID(new int[] { 1,
+								3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
+						if (tmp == "") {
+							// 将配置失败的设备id存储
+							jedis.sadd("global:configfailed", cnuid);
+							jedis.publish("node.opt.proc", proc);
+							continue;
+						} else {
+							// 发送配置							
+							//64系列设备
+							if (!sendconfig(Integer.valueOf(proid), cip,
+									Integer.valueOf(cnuindex), jedis)) {
+								// 发送失败
+								// 将配置失败的设备id发往队列
+								jedis.sadd("global:configfailed", cnuid);
+								jedis.publish("node.opt.proc", proc);
+								continue;
+							}
+						}						
+					} catch (Exception e) {
+						e.printStackTrace();
+						jedis.publish("node.opt.proc", proc);
+						continue;
+					}
+
+				}
+			}else{
+				//74系列设备或无SNMP版本
+				if(!sendjsonconfig(Integer.valueOf(proid), cip, cnumac,
+						jedis)){
+					//配置终端失败
 					jedis.sadd("global:configfailed", cnuid);
 					jedis.publish("node.opt.proc", proc);
 					continue;
-				} else {
-					// 发送配置
-					if (devicetype.equalsIgnoreCase("20")
-							|| devicetype.equalsIgnoreCase("21")
-							|| devicetype.equalsIgnoreCase("22")
-							|| devicetype.equalsIgnoreCase("23")
-							|| devicetype.equalsIgnoreCase("24")
-							|| devicetype.equalsIgnoreCase("36")
-							|| devicetype.equalsIgnoreCase("40")
-							|| devicetype.equalsIgnoreCase("41")
-							|| devicetype.equalsIgnoreCase("26")
-							|| devicetype.equalsIgnoreCase("27")) {
-						//74系列设备
-						if(!sendjsonconfig(Integer.valueOf(proid), cip, cnumac,
-								jedis)){
-							//配置终端失败
-							jedis.sadd("global:configfailed", cnuid);
-							jedis.publish("node.opt.proc", proc);
-							continue;
-						}
-					} else {
-						//64系列设备
-						if (!sendconfig(Integer.valueOf(proid), cip,
-								Integer.valueOf(cnuindex), jedis)) {
-							// 发送失败
-							// 将配置失败的设备id发往队列
-							jedis.sadd("global:configfailed", cnuid);
-							jedis.publish("node.opt.proc", proc);
-							continue;
-						}
-					}
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				jedis.publish("node.opt.proc", proc);
-				continue;
 			}
-
+			
 			// 将配置成功的设备id存储
 			jedis.sadd("global:configsuccess", cnuid);
 
@@ -3976,15 +4005,7 @@ public class ServiceController {
 		// 获取所属头端信息
 		String cbatid = jedis.hget(key, "cbatid");
 		String cbatip = jedis.hget("cbatid:" + cbatid + ":entity", "ip");
-
-		// 判断头端是否在线
-		int tmp = (util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
-				1, 4, 1, 36186, 8, 5, 4, 0 })));
-		if (tmp == -1) {
-			redisUtil.getJedisPool().returnBrokenResource(jedis);
-			jedis.publish("node.tree.cnu_sub", "");
-			return;
-		}
+		
 		String devtype = jedis.hget("cbatid:" + cbatid + ":entity",
 				"devicetype");
 		if (devtype.equalsIgnoreCase("20") || devtype.equalsIgnoreCase("21")
@@ -4003,14 +4024,32 @@ public class ServiceController {
 				return;
 			}
 		} else {
-			// 配置6400 CNU
-			if (Cnuconfig(jsondata, cbatip, Integer.parseInt(devid), jedis)) {
+			// 配置6400 CNU			
+			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal") == null){
+				// 判断头端是否在线
+				int tmp = (util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
+						1, 4, 1, 36186, 8, 5, 4, 0 })));
+				if (tmp == -1) {
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
+					jedis.publish("node.tree.cnu_sub", "");
+					return;
+				}
+				if (Cnuconfig(jsondata, cbatip, Integer.parseInt(devid), jedis)) {
 
-			} else {
-				jedis.publish("node.tree.cnu_sub", "");
-				redisUtil.getJedisPool().returnResource(jedis);
-				return;
+				} else {
+					jedis.publish("node.tree.cnu_sub", "");
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
+			}else{
+				if(!cnujsonconfig(jsondata, cbatip, jsondata.get("mac").toString(),
+						jedis)){
+					jedis.publish("node.tree.cnu_sub", "");
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
 			}
+			
 		}
 
 		// 获取cnu原profileid号
@@ -4040,6 +4079,51 @@ public class ServiceController {
 		jedis.bgsave();
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
+	
+	private static JSONObject getJsonCnu(String mac, Jedis jedis, String cbatip, String key){
+		JSONObject sjson = new JSONObject();
+		sjson.put("mac", mac);
+		JSONObject resultjson = new JSONObject();
+		resultjson = jpost.post("http://" + cbatip + "/getcnu.json", sjson);
+		if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+			//设备读取失败
+			jedis.publish("node.optlog.optresult", "");
+			redisUtil.getJedisPool().returnResource(jedis);
+			return null;
+		}
+		// log.info("------------------jsonget result====>>>"+resultjson.toJSONString());
+		resultjson.put("active", jedis.hget(key, "active"));
+		String proid = jedis.hget(key, "profileid");
+		resultjson
+				.put("profilename", jedis.hget("profileid:" + proid
+						+ ":entity", "profilename"));
+		resultjson.put(
+				"cpuporttxrate",
+				String.valueOf(Integer.valueOf(resultjson.get(
+						"cpuporttxrate").toString()) * 32));
+		resultjson.put(
+				"cpuportrxrate",
+				String.valueOf(Integer.valueOf(resultjson.get(
+						"cpuportrxrate").toString()) * 32));
+		resultjson.put("port0txrate", String.valueOf(Integer
+				.valueOf(resultjson.get("port0txrate").toString()) * 32));
+		resultjson.put("port1txrate", String.valueOf(Integer
+				.valueOf(resultjson.get("port1txrate").toString()) * 32));
+		resultjson.put("port2txrate", String.valueOf(Integer
+				.valueOf(resultjson.get("port2txrate").toString()) * 32));
+		resultjson.put("port3txrate", String.valueOf(Integer
+				.valueOf(resultjson.get("port3txrate").toString()) * 32));
+		resultjson.put("port0rxrate", String.valueOf(Integer
+				.valueOf(resultjson.get("port0rxrate").toString()) * 32));
+		resultjson.put("port1rxrate", String.valueOf(Integer
+				.valueOf(resultjson.get("port1rxrate").toString()) * 32));
+		resultjson.put("port2rxrate", String.valueOf(Integer
+				.valueOf(resultjson.get("port2rxrate").toString()) * 32));
+		resultjson.put("port3rxrate", String.valueOf(Integer
+				.valueOf(resultjson.get("port3rxrate").toString()) * 32));
+		
+		return resultjson;
+	}
 
 	private static void doCnuSync(String message) throws ParseException,
 			IOException {
@@ -4059,17 +4143,8 @@ public class ServiceController {
 		String devid = jedis.hget(key, "devcnuid");
 		// 获取所属头端信息
 		String cbatid = jedis.hget(key, "cbatid");
-		String cbatip = jedis.hget("cbatid:" + cbatid + ":entity", "ip");
-
-		// 判断头端是否在线
-		String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
-				1, 4, 1, 36186, 8, 2, 6, 0 }));
-		if (tmp == "") {
-			log.info("--------------------------------->>>>>>>>>>>>tmp -1,头端不在线?");
-			redisUtil.getJedisPool().returnBrokenResource(jedis);
-			jedis.publish("node.tree.cnusync", "");
-			return;
-		}
+		String cbatip = jedis.hget("cbatid:" + cbatid + ":entity", "ip");		
+		
 		// 获取头端设备类型
 		String cbattype = jedis.hget("cbatid:" + cbatid + ":entity",
 				"devicetype");
@@ -4082,137 +4157,111 @@ public class ServiceController {
 				|| cbattype.equalsIgnoreCase("41")
 				|| cbattype.equalsIgnoreCase("26")
 				|| cbattype.equalsIgnoreCase("27")) {
-			JSONObject sjson = new JSONObject();
-			sjson.put("mac", message);
-			JSONObject resultjson = new JSONObject();
-			resultjson = post("http://" + cbatip + "/getcnu.json", sjson,
-					cbatip);
-			if(resultjson.get("status").toString().equalsIgnoreCase("1")){
-				//设备读取失败
-				jedis.publish("node.optlog.optresult", "");
-				redisUtil.getJedisPool().returnResource(jedis);
-				return;
-			}
-			// log.info("------------------jsonget result====>>>"+resultjson.toJSONString());
-			resultjson.put("active", jedis.hget(key, "active"));
-			String proid = jedis.hget(key, "profileid");
-			resultjson
-					.put("profilename", jedis.hget("profileid:" + proid
-							+ ":entity", "profilename"));
-			resultjson.put(
-					"cpuporttxrate",
-					String.valueOf(Integer.valueOf(resultjson.get(
-							"cpuporttxrate").toString()) * 32));
-			resultjson.put(
-					"cpuportrxrate",
-					String.valueOf(Integer.valueOf(resultjson.get(
-							"cpuportrxrate").toString()) * 32));
-			resultjson.put("port0txrate", String.valueOf(Integer
-					.valueOf(resultjson.get("port0txrate").toString()) * 32));
-			resultjson.put("port1txrate", String.valueOf(Integer
-					.valueOf(resultjson.get("port1txrate").toString()) * 32));
-			resultjson.put("port2txrate", String.valueOf(Integer
-					.valueOf(resultjson.get("port2txrate").toString()) * 32));
-			resultjson.put("port3txrate", String.valueOf(Integer
-					.valueOf(resultjson.get("port3txrate").toString()) * 32));
-			resultjson.put("port0rxrate", String.valueOf(Integer
-					.valueOf(resultjson.get("port0rxrate").toString()) * 32));
-			resultjson.put("port1rxrate", String.valueOf(Integer
-					.valueOf(resultjson.get("port1rxrate").toString()) * 32));
-			resultjson.put("port2rxrate", String.valueOf(Integer
-					.valueOf(resultjson.get("port2rxrate").toString()) * 32));
-			resultjson.put("port3rxrate", String.valueOf(Integer
-					.valueOf(resultjson.get("port3rxrate").toString()) * 32));
-			jedis.publish("node.tree.cnusync", resultjson.toJSONString());
+			
+			jedis.publish("node.tree.cnusync", getJsonCnu(message,jedis,cbatip,key).toJSONString());
 
 		} else {
-			// 获取终端信息
-			try {
-				int authorization = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 1, 1, 6,
-								Integer.parseInt(devid) }));
-				int vlanenable = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 36,
-								Integer.parseInt(devid) }));
-				int port0vid = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 37,
-								Integer.parseInt(devid) }));
-				int port1vid = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 38,
-								Integer.parseInt(devid) }));
-				int port2vid = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 39,
-								Integer.parseInt(devid) }));
-				int port3vid = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 40,
-								Integer.parseInt(devid) }));
+			// 判断头端是否在线
+			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal") == null){
+				String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
+						1, 4, 1, 36186, 8, 2, 6, 0 }));
+				if (tmp == "") {
+					log.info("--------------------------------->>>>>>>>>>>>tmp -1,头端不在线?");
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
+					jedis.publish("node.tree.cnusync", "");
+					return;
+				}
+				// 获取终端信息
+				try {
+					int authorization = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 1, 1, 6,
+									Integer.parseInt(devid) }));
+					int vlanenable = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 36,
+									Integer.parseInt(devid) }));
+					int port0vid = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 37,
+									Integer.parseInt(devid) }));
+					int port1vid = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 38,
+									Integer.parseInt(devid) }));
+					int port2vid = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 39,
+									Integer.parseInt(devid) }));
+					int port3vid = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 40,
+									Integer.parseInt(devid) }));
 
-				int txlimitsts = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 52,
-								Integer.parseInt(devid) }));
-				int cpuporttxrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 53,
-								Integer.parseInt(devid) }));
-				int cpuportrxrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 47,
-								Integer.parseInt(devid) }));
-				int port0txrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 48,
-								Integer.parseInt(devid) }));
-				int port1txrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 49,
-								Integer.parseInt(devid) }));
-				int port2txrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 50,
-								Integer.parseInt(devid) }));
-				int port3txrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 51,
-								Integer.parseInt(devid) }));
+					int txlimitsts = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 52,
+									Integer.parseInt(devid) }));
+					int cpuporttxrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 53,
+									Integer.parseInt(devid) }));
+					int cpuportrxrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 47,
+									Integer.parseInt(devid) }));
+					int port0txrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 48,
+									Integer.parseInt(devid) }));
+					int port1txrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 49,
+									Integer.parseInt(devid) }));
+					int port2txrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 50,
+									Integer.parseInt(devid) }));
+					int port3txrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 51,
+									Integer.parseInt(devid) }));
 
-				int rxlimitsts = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 46,
-								Integer.parseInt(devid) }));
-				int port0rxrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 54,
-								Integer.parseInt(devid) }));
-				int port1rxrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 55,
-								Integer.parseInt(devid) }));
-				int port2rxrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 56,
-								Integer.parseInt(devid) }));
-				int port3rxrate = util.getINT32PDU(cbatip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 57,
-								Integer.parseInt(devid) }));
+					int rxlimitsts = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 46,
+									Integer.parseInt(devid) }));
+					int port0rxrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 54,
+									Integer.parseInt(devid) }));
+					int port1rxrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 55,
+									Integer.parseInt(devid) }));
+					int port2rxrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 56,
+									Integer.parseInt(devid) }));
+					int port3rxrate = util.getINT32PDU(cbatip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 8, 1, 57,
+									Integer.parseInt(devid) }));
 
-				JSONObject json = new JSONObject();
-				json.put("active", jedis.hget(key, "active"));
-				String proid = jedis.hget(key, "profileid");
-				json.put("profilename", jedis.hget("profileid:" + proid
-						+ ":entity", "profilename"));
-				json.put("permit", String.valueOf(authorization));
-				json.put("vlanen", String.valueOf(vlanenable));
-				json.put("vlan0id", String.valueOf(port0vid));
-				json.put("vlan1id", String.valueOf(port1vid));
-				json.put("vlan2id", String.valueOf(port2vid));
-				json.put("vlan3id", String.valueOf(port3vid));
-				json.put("txlimitsts", String.valueOf(txlimitsts));
-				json.put("cpuporttxrate", String.valueOf(cpuporttxrate));
-				json.put("cpuportrxrate", String.valueOf(cpuportrxrate));
-				json.put("port0txrate", String.valueOf(port0txrate));
-				json.put("port1txrate", String.valueOf(port1txrate));
-				json.put("port2txrate", String.valueOf(port2txrate));
-				json.put("port3txrate", String.valueOf(port3txrate));
-				json.put("rxlimitsts", String.valueOf(rxlimitsts));
-				json.put("port0rxrate", String.valueOf(port0rxrate));
-				json.put("port1rxrate", String.valueOf(port1rxrate));
-				json.put("port2rxrate", String.valueOf(port2rxrate));
-				json.put("port3rxrate", String.valueOf(port3rxrate));
+					JSONObject json = new JSONObject();
+					json.put("active", jedis.hget(key, "active"));
+					String proid = jedis.hget(key, "profileid");
+					json.put("profilename", jedis.hget("profileid:" + proid
+							+ ":entity", "profilename"));
+					json.put("permit", String.valueOf(authorization));
+					json.put("vlanen", String.valueOf(vlanenable));
+					json.put("vlan0id", String.valueOf(port0vid));
+					json.put("vlan1id", String.valueOf(port1vid));
+					json.put("vlan2id", String.valueOf(port2vid));
+					json.put("vlan3id", String.valueOf(port3vid));
+					json.put("txlimitsts", String.valueOf(txlimitsts));
+					json.put("cpuporttxrate", String.valueOf(cpuporttxrate));
+					json.put("cpuportrxrate", String.valueOf(cpuportrxrate));
+					json.put("port0txrate", String.valueOf(port0txrate));
+					json.put("port1txrate", String.valueOf(port1txrate));
+					json.put("port2txrate", String.valueOf(port2txrate));
+					json.put("port3txrate", String.valueOf(port3txrate));
+					json.put("rxlimitsts", String.valueOf(rxlimitsts));
+					json.put("port0rxrate", String.valueOf(port0rxrate));
+					json.put("port1rxrate", String.valueOf(port1rxrate));
+					json.put("port2rxrate", String.valueOf(port2rxrate));
+					json.put("port3rxrate", String.valueOf(port3rxrate));
 
-				jedis.publish("node.tree.cnusync", json.toJSONString());
-			} catch (Exception e) {
-				jedis.publish("node.tree.cnusync", "");
+					jedis.publish("node.tree.cnusync", json.toJSONString());
+				} catch (Exception e) {
+					jedis.publish("node.tree.cnusync", "");
+				}
+			}else{
+				jedis.publish("node.tree.cnusync", getJsonCnu(message,jedis,cbatip,key).toJSONString());
 			}
+			
 		}
 
 		redisUtil.getJedisPool().returnResource(jedis);
@@ -4648,68 +4697,102 @@ public class ServiceController {
 		String cbatip = jedis.hget(cbatkey, "ip");
 		String cbatinfokey = "cbatid:" + cbatid + ":cbatinfo";
 		// 获得设备相关参数(ip/mvlanenable/mvlanid)
+		if(jedis.hget(cbatkey, "protocal") == null){
+			int tmp = (util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
+					1, 4, 1, 36186, 8, 5, 4, 0 })));
+			if (tmp == -1) {
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
 
-		int tmp = (util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
-				1, 4, 1, 36186, 8, 5, 4, 0 })));
-		if (tmp == -1) {
-			redisUtil.getJedisPool().returnBrokenResource(jedis);
+				jedis.publish("node.tree.cbatsync", "");
+				return;
+			}
 
-			jedis.publish("node.tree.cbatsync", "");
-			return;
-		}
+			try {
+				int mvlanenable = (util.getINT32PDU(cbatip, "161", new OID(
+						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 })));
+				int mvlanid = (util.getINT32PDU(cbatip, "161", new OID(new int[] {
+						1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 })));
+				String netmask = (util.getStrPDU(cbatip, "161", new OID(new int[] {
+						1, 3, 6, 1, 4, 1, 36186, 8, 5, 2, 0 })));
+				String gateway = (util.getStrPDU(cbatip, "161", new OID(new int[] {
+						1, 3, 6, 1, 4, 1, 36186, 8, 5, 3, 0 })));
 
-		try {
-			int mvlanenable = (util.getINT32PDU(cbatip, "161", new OID(
-					new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 })));
-			int mvlanid = (util.getINT32PDU(cbatip, "161", new OID(new int[] {
-					1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 })));
-			String netmask = (util.getStrPDU(cbatip, "161", new OID(new int[] {
-					1, 3, 6, 1, 4, 1, 36186, 8, 5, 2, 0 })));
-			String gateway = (util.getStrPDU(cbatip, "161", new OID(new int[] {
-					1, 3, 6, 1, 4, 1, 36186, 8, 5, 3, 0 })));
+				String hwversion = (util.getStrPDU(cbatip, "161", new OID(
+						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 4, 3, 0 })));
+				String appver = (util.getStrPDU(cbatip, "161", new OID(new int[] {
+						1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 })));
+				String trapserverip = util.getStrPDU(cbatip, "161", new OID(
+						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
+				int trap_port = util.getINT32PDU(cbatip, "161", new OID(new int[] {
+						1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));
 
-			String hwversion = (util.getStrPDU(cbatip, "161", new OID(
-					new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 4, 3, 0 })));
-			String appver = (util.getStrPDU(cbatip, "161", new OID(new int[] {
-					1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 })));
-			String trapserverip = util.getStrPDU(cbatip, "161", new OID(
-					new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
-			int trap_port = util.getINT32PDU(cbatip, "161", new OID(new int[] {
-					1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));
+				// logger.info("mvlanenable::::::"+ mvlanenable);
 
-			// logger.info("mvlanenable::::::"+ mvlanenable);
+				// 更新redis数据
+				jedis.hset(cbatinfokey, "mvlanenable", String.valueOf(mvlanenable));
+				jedis.hset(cbatinfokey, "mvlanid", String.valueOf(mvlanid));
+				jedis.hset(cbatinfokey, "bootver", hwversion);
+				jedis.hset(cbatinfokey, "appver", appver);
+				jedis.hset(cbatinfokey, "agentport", String.valueOf(trap_port));
+				jedis.hset(cbatinfokey, "trapserverip", trapserverip);
 
+				jedis.hset(cbatinfokey, "netmask", netmask);
+				jedis.hset(cbatinfokey, "gateway", gateway);
+
+				JSONObject cbatjson = new JSONObject();
+				cbatjson.put("mvlanenable", mvlanenable);
+				cbatjson.put("mvlanid", mvlanid);
+				cbatjson.put("bootver", hwversion);
+				cbatjson.put("hwversion", hwversion);
+				cbatjson.put("appver", appver);
+				cbatjson.put("netmask", netmask);
+				cbatjson.put("gateway", gateway);
+				cbatjson.put("trapserverip", trapserverip);
+				cbatjson.put("trap_port", trap_port);
+				cbatjson.put("cbatip", cbatip);
+				String jsonString = cbatjson.toJSONString();
+				redisUtil.getJedisPool().returnResource(jedis);
+				jedis.publish("node.tree.cbatsync", jsonString);
+			} catch (Exception e) {
+				// e.printStackTrace();
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				jedis.publish("node.tree.cbatsync", "");
+				return;
+			}
+		}else{
+			JSONObject resultjson = new JSONObject();
+			JSONObject sjson = new JSONObject();
+			sjson.put("mac", message);
+			resultjson = jpost.post("http://" + cbatip + "/getCbatInfo.json", sjson);
+			if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+				redisUtil.getJedisPool().returnBrokenResource(jedis);
+				jedis.publish("node.tree.cbatsync", "");
+				return;
+			}
 			// 更新redis数据
-			jedis.hset(cbatinfokey, "mvlanenable", String.valueOf(mvlanenable));
-			jedis.hset(cbatinfokey, "mvlanid", String.valueOf(mvlanid));
-			jedis.hset(cbatinfokey, "bootver", hwversion);
-			jedis.hset(cbatinfokey, "appver", appver);
-			jedis.hset(cbatinfokey, "agentport", String.valueOf(trap_port));
-			jedis.hset(cbatinfokey, "trapserverip", trapserverip);
-
-			jedis.hset(cbatinfokey, "netmask", netmask);
-			jedis.hset(cbatinfokey, "gateway", gateway);
-
-			JSONObject cbatjson = new JSONObject();
-			cbatjson.put("mvlanenable", mvlanenable);
-			cbatjson.put("mvlanid", mvlanid);
-			cbatjson.put("bootver", hwversion);
-			cbatjson.put("hwversion", hwversion);
-			cbatjson.put("appver", appver);
-			cbatjson.put("netmask", netmask);
-			cbatjson.put("gateway", gateway);
-			cbatjson.put("trapserverip", trapserverip);
-			cbatjson.put("trap_port", trap_port);
-			cbatjson.put("cbatip", cbatip);
-			String jsonString = cbatjson.toJSONString();
+			jedis.hset(cbatinfokey, "mvlanenable", String.valueOf(resultjson.get("mgmtvlansts").toString()));
+			jedis.hset(cbatinfokey, "mvlanid", String.valueOf(resultjson.get("mgmtvlanid").toString()));
+			jedis.hset(cbatinfokey, "bootver", resultjson.get("cbathwver").toString());
+			jedis.hset(cbatinfokey, "appver", resultjson.get("cbatappver").toString());
+			jedis.hset(cbatinfokey, "agentport", String.valueOf(resultjson.get("trapserverport").toString()));
+			jedis.hset(cbatinfokey, "trapserverip", resultjson.get("trapserverip").toString());
+			jedis.hset(cbatinfokey, "netmask", resultjson.get("cbatmask").toString());
+			jedis.hset(cbatinfokey, "gateway", resultjson.get("cbatgw").toString());
+			JSONObject hash = new JSONObject();
+			hash.put("trap_port", String.valueOf(resultjson.get("trapserverport").toString()));
+			hash.put("appver", resultjson.get("cbatappver").toString());
+			hash.put("mvlanid",String.valueOf(resultjson.get("mgmtvlanid").toString()));
+			hash.put("mvlanenable", String.valueOf(resultjson.get("mgmtvlansts").toString()));
+			hash.put("trapserverip", resultjson.get("trapserverip").toString());
+			hash.put("netmask", resultjson.get("cbatmask").toString());
+			hash.put("gateway", resultjson.get("cbatgw").toString());
+			hash.put("hwversion", resultjson.get("cbathwver").toString());
+			hash.put("bootversion", resultjson.get("cbathwver").toString());
+			hash.put("cbatip", cbatip);
 			redisUtil.getJedisPool().returnResource(jedis);
-			jedis.publish("node.tree.cbatsync", jsonString);
-		} catch (Exception e) {
-			// e.printStackTrace();
-			redisUtil.getJedisPool().returnBrokenResource(jedis);
-			jedis.publish("node.tree.cbatsync", "");
-			return;
+			jedis.publish("node.tree.cbatsync", hash.toJSONString());
 		}
+		
 	}
 
 	private static void doCbatModify(String message) throws ParseException {
@@ -4779,14 +4862,7 @@ public class ServiceController {
 
 				return;
 			}
-			// 需要跟设备交互
-			int tmp = (util.getINT32PDU(oldip, "161", new OID(new int[] { 1, 3,
-					6, 1, 4, 1, 36186, 8, 5, 4, 0 })));
-			if (tmp == -1) {
-				redisUtil.getJedisPool().returnBrokenResource(jedis);
-				jedis.publish("node.tree.cbatmodify", "");
-				return;
-			}
+			
 			// 判断Ip地址是否和其它头端冲突
 			Set<String> cbats = jedis.keys("cbatid:*:entity");
 			for (Iterator it = cbats.iterator(); it.hasNext();) {
@@ -4798,46 +4874,91 @@ public class ServiceController {
 					return;
 				}
 			}
+			
+			// 需要跟设备交互
+			if(jedis.hget(cbatkey, "protocal") == null){
+				int tmp = (util.getINT32PDU(oldip, "161", new OID(new int[] { 1, 3,
+						6, 1, 4, 1, 36186, 8, 5, 4, 0 })));
+				if (tmp == -1) {
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
+					jedis.publish("node.tree.cbatmodify", "");
+					return;
+				}
 
-			util.setV2StrPDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
-					1, 36186, 8, 2, 6, 0 }), trapserver);
-			util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1,
-					36186, 8, 2, 7, 0 }),
-					new Integer32(Integer.valueOf(trap_port)));
+				util.setV2StrPDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
+						1, 36186, 8, 2, 6, 0 }), trapserver);
+				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1,
+						36186, 8, 2, 7, 0 }),
+						new Integer32(Integer.valueOf(trap_port)));
 
-			if ((!oldip.equalsIgnoreCase(ip))
-					|| (!netmask.equalsIgnoreCase(jedis.hget(cbatinfokey,
-							"netmask")))
-					|| (!gateway.equalsIgnoreCase(jedis.hget(cbatinfokey,
-							"gateway")))
-					|| (!mvlanenable.equalsIgnoreCase(jedis.hget(cbatinfokey,
-							"mvlanenable")))
-					|| (!mvlanid.equalsIgnoreCase(jedis.hget(cbatinfokey,
-							"mvlanid")))) {
-				util.setV2StrPDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1,
-						4, 1, 36186, 8, 5, 1, 0 }), ip);
-				util.setV2StrPDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1,
-						4, 1, 36186, 8, 5, 4, 0 }), netmask);
-				util.setV2StrPDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1,
-						4, 1, 36186, 8, 5, 3, 0 }), gateway);
-				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
-						1, 36186, 8, 5, 4, 0 }),
-						new Integer32(Integer.valueOf(mvlanenable)));
-				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
-						1, 36186, 8, 5, 5, 0 }),
-						new Integer32(Integer.valueOf(mvlanid)));
-				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
-						1, 36186, 8, 6, 2, 0 }), new Integer32(1));
-				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
-						1, 36186, 8, 6, 1, 0 }), new Integer32(1));
-				jedis.set("devip:" + ip + ":mac", mac);
-				// jedis.hset(cbatkey, "active", "0");
-			} else {
-				// save
-				util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
-						1, 36186, 8, 6, 2, 0 }), new Integer32(1));
+				if ((!oldip.equalsIgnoreCase(ip))
+						|| (!netmask.equalsIgnoreCase(jedis.hget(cbatinfokey,
+								"netmask")))
+						|| (!gateway.equalsIgnoreCase(jedis.hget(cbatinfokey,
+								"gateway")))
+						|| (!mvlanenable.equalsIgnoreCase(jedis.hget(cbatinfokey,
+								"mvlanenable")))
+						|| (!mvlanid.equalsIgnoreCase(jedis.hget(cbatinfokey,
+								"mvlanid")))) {
+					util.setV2StrPDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1,
+							4, 1, 36186, 8, 5, 1, 0 }), ip);
+					util.setV2StrPDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1,
+							4, 1, 36186, 8, 5, 4, 0 }), netmask);
+					util.setV2StrPDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1,
+							4, 1, 36186, 8, 5, 3, 0 }), gateway);
+					util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
+							1, 36186, 8, 5, 4, 0 }),
+							new Integer32(Integer.valueOf(mvlanenable)));
+					util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
+							1, 36186, 8, 5, 5, 0 }),
+							new Integer32(Integer.valueOf(mvlanid)));
+					util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
+							1, 36186, 8, 6, 2, 0 }), new Integer32(1));
+					util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
+							1, 36186, 8, 6, 1, 0 }), new Integer32(1));
+					jedis.set("devip:" + ip + ":mac", mac);
+					// jedis.hset(cbatkey, "active", "0");
+				} else {
+					// save
+					util.setV2PDU(oldip, "161", new OID(new int[] { 1, 3, 6, 1, 4,
+							1, 36186, 8, 6, 2, 0 }), new Integer32(1));
+				}
+			}else{
+				JSONObject datajson = new JSONObject();
+				datajson.put("trapserverport", Integer.valueOf(trap_port));
+				datajson.put("trapserverip", trapserver);
+				if ((!oldip.equalsIgnoreCase(ip))
+						|| (!netmask.equalsIgnoreCase(jedis.hget(cbatinfokey,
+								"netmask")))
+						|| (!gateway.equalsIgnoreCase(jedis.hget(cbatinfokey,
+								"gateway")))
+						|| (!mvlanenable.equalsIgnoreCase(jedis.hget(cbatinfokey,
+								"mvlanenable")))
+						|| (!mvlanid.equalsIgnoreCase(jedis.hget(cbatinfokey,
+								"mvlanid")))) {
+					datajson.put("cbatip", ip);
+					datajson.put("cbatmask", netmask);
+					datajson.put("cbatgw", gateway);
+					datajson.put("mgmtvlansts", Integer.valueOf(mvlanenable));
+					datajson.put("mgmtvlanid", Integer.valueOf(mvlanid));
+					
+					JSONObject resultjson = jpost.post("http://" + oldip + "/setCbatInfo.json",
+							datajson);
+					if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+						redisUtil.getJedisPool().returnBrokenResource(jedis);
+						jedis.publish("node.tree.cbatmodify", "");
+						return;
+					}
+				}else{
+					JSONObject resultjson = jpost.post("http://" + oldip + "/setCbatSnmpInfo.json",
+							datajson);
+					if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+						redisUtil.getJedisPool().returnBrokenResource(jedis);
+						jedis.publish("node.tree.cbatmodify", "");
+						return;
+					}
+				}					
 			}
-
 			// 保存
 			jedis.hset(cbatkey, "ip", ip);
 			jedis.hset(cbatkey, "label", label);
@@ -5900,8 +6021,8 @@ public class ServiceController {
 
 			sjson = JSONValue.toJSONString(jsonmap);
 
-			resultjson = post("http://" + cbatip + "/setcnu.json",
-					(JSONObject) JSONValue.parse(sjson), cbatip);
+			resultjson = jpost.post("http://" + cbatip + "/setcnu.json",
+					(JSONObject) JSONValue.parse(sjson));
 
 			log.info("status====:" + resultjson.get("status").toString());
 
@@ -5912,53 +6033,6 @@ public class ServiceController {
 
 		return (resultjson.get("status").toString().equalsIgnoreCase("0")? true : false);
 
-	}
-
-	public static JSONObject post(String url, JSONObject json, String cbatip) {
-		// String targethost=cbatip;
-		// int targetport=80;
-		HttpClient client = new DefaultHttpClient();
-
-		// ((AbstractHttpClient)
-		// client).getCredentialsProvider().setCredentials(
-		// new AuthScope(targethost, targetport),
-		// new UsernamePasswordCredentials("support", "support"));
-
-		HttpPost post = new HttpPost(url);
-		JSONObject response = new JSONObject();
-		try {
-			StringEntity s = new StringEntity(json.toString());
-
-			s.setContentEncoding("UTF-8");
-			s.setContentType("text/json");
-			post.setEntity(s);
-			HttpResponse res = client.execute(post);
-
-			// System.out.println(((HttpResponse) res).getStatusLine());
-
-			if (res.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-				HttpEntity entity = res.getEntity();
-
-				// String charset = EntityUtils.getContentCharSet(entity);
-
-				// EntityUtils.consume(entity);
-				// System.out.println("----------------------------------Content->>>>>"
-				// +EntityUtils.toString(res.getEntity()));
-				response = (JSONObject) JSONValue.parse(EntityUtils
-						.toString(res.getEntity()));
-				System.out
-						.println("----------------------------------response->>>>>"
-								+ response.toJSONString());
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			response.put("status", "1");
-			// throw new RuntimeException(e);
-		} finally {
-			client.getConnectionManager().shutdown();
-		}
-
-		return response;
 	}
 
 	private static Boolean cnujsonconfig(JSONObject jsondata, String cbatip,
@@ -6024,8 +6098,8 @@ public class ServiceController {
 
 			sjson = JSONValue.toJSONString(jsonmap);
 
-			resultjson = post("http://" + cbatip + "/setcnu.json",
-					(JSONObject) JSONValue.parse(sjson), cbatip);
+			resultjson = jpost.post("http://" + cbatip + "/setcnu.json",
+					(JSONObject) JSONValue.parse(sjson));
 
 		} catch (Exception e) {
 			System.out
@@ -6530,8 +6604,7 @@ public class ServiceController {
 			// 设备不在线
 			cltmac = jedis.hget("cbatid:" + devid + ":entity", "clt" + index);
 		} else {
-			resultjson = post("http://" + cbatip + "/getclt.json", jsondata,
-					cbatip);
+			resultjson = jpost.post("http://" + cbatip + "/getclt.json", jsondata);
 			if (resultjson.get("status").toString() != "0") {
 				// 获取失败,从数据库获取
 				cltmac = jedis.hget("cbatid:" + devid + ":entity", "clt"
@@ -6564,7 +6637,7 @@ public class ServiceController {
 		JSONObject resultjson = new JSONObject();
 		String devid = jedis.get("mac:" + cbatmac + ":deviceid");
 		String cbatip = jedis.hget("cbatid:" + devid + ":entity", "cbatip");
-		resultjson = post("http://" + cbatip + "/delclt.json", jsondata, cbatip);
+		resultjson = jpost.post("http://" + cbatip + "/delclt.json", jsondata);
 		JSONObject optjson = new JSONObject();
 		Date date = new Date();
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -6605,8 +6678,7 @@ public class ServiceController {
 		JSONObject resultjson = new JSONObject();
 		String devid = jedis.get("mac:" + cbatmac + ":deviceid");
 		String cbatip = jedis.hget("cbatid:" + devid + ":entity", "cbatip");
-		resultjson = post("http://" + cbatip + "/registerclt.json", jsondata,
-				cbatip);
+		resultjson = jpost.post("http://" + cbatip + "/registerclt.json", jsondata);
 		JSONObject optjson = new JSONObject();
 		Date date = new Date();
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

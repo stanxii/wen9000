@@ -29,7 +29,7 @@ public class WorkerDiscoveryProcessor{
 
 	
 	private static SnmpUtil util = new SnmpUtil();
-
+	private static JsonPost jpost = new JsonPost();
 	private static RedisUtil redisUtil;
 	private static String dismode;
 
@@ -238,49 +238,65 @@ public class WorkerDiscoveryProcessor{
 		// ///////////////////////////////////////////////////
 		if (devicetype != -1) {
 			String cbatmac = "";
-			try {
-				cbatmac = util.getStrPDU(currentip, "161", new OID(
-						new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 6, 0 }));
-				cbatmac = cbatmac.trim().toUpperCase();
-
-				/////////获取cbatinfo
-				 agetnport = util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					
-				 appver = util.getStrPDU(currentip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
-				 mvlanid =  util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 }));				    				   
-			     mvlanenable = util.getINT32PDU(currentip, "161", new OID(	new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 }));
-			     trapserverip = util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
-			     netmask = (util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,2,0})));
-			     gateway = (util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0})));
-			} catch (IOException e) {
-				System.out.println("get cbatmac error");
-				jedis.publish("node.dis.proc", "");
-				jedis.incr("global:searched");
-				redisUtil.getJedisPool().returnResource(jedis);
-				return;
-			}
-			// write trap server address
-			// //----------
-
-			String msgservice="";
-
+			JSONObject sjson = new JSONObject();
+			JSONObject resultjson = jpost.post("http://" + currentip + "/getCbatInfo.json", sjson);
 			Map cbathash=new LinkedHashMap();
+			if(resultjson.get("status").toString().equalsIgnoreCase("0")){				
+				 cbathash.put("msgcode", "001");
+				 cbathash.put("ip", currentip.toLowerCase().trim());
+				 cbathash.put("cbatmac", cbatmac.toLowerCase().trim());
+				 cbathash.put("cbatdevicetype", Long.toString(devicetype));
+				 cbathash.put("cbatinfo:agentport", String.valueOf(resultjson.get("trapserverport").toString()));
+				 cbathash.put("cbatinfo:appver", resultjson.get("cbatappver").toString());				 
+				 cbathash.put("cbatinfo:mvlanid", String.valueOf(resultjson.get("mgmtvlanid").toString()));
+				 cbathash.put("cbatinfo:mvlanenable", String.valueOf(resultjson.get("mgmtvlansts").toString()));
+				 cbathash.put("cbatinfo:trapserverip", resultjson.get("trapserverip").toString());
+				 cbathash.put("cbatinfo:netmask", resultjson.get("cbatmask").toString());
+				 cbathash.put("cbatinfo:gateway", resultjson.get("cbatgw").toString());
+				 sendToPersist(JSONValue.toJSONString(cbathash),jedis);
+			}else{
+				try {
+					cbatmac = util.getStrPDU(currentip, "161", new OID(
+							new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 6, 0 }));
+					cbatmac = cbatmac.trim().toUpperCase();
 
-			 cbathash.put("msgcode", "001");
-			 cbathash.put("ip", currentip.toLowerCase().trim());
-			 cbathash.put("cbatmac", cbatmac.toLowerCase().trim());
-			 cbathash.put("cbatdevicetype", Long.toString(devicetype));
-			 cbathash.put("cbatinfo:agentport", Integer.toString(agetnport));
-			 cbathash.put("cbatinfo:appver", appver.trim());				 
-			 cbathash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
-			 cbathash.put("cbatinfo:mvlanenable", Integer.toString(mvlanenable));
-			 cbathash.put("cbatinfo:trapserverip", trapserverip);
-			 cbathash.put("cbatinfo:netmask", netmask);
-			 cbathash.put("cbatinfo:gateway", gateway);
-			 msgservice = JSONValue.toJSONString(cbathash);
-			sendToPersist(msgservice,jedis);
-			msgservice = "";
+					/////////获取cbatinfo
+					 agetnport = util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					
+					 appver = util.getStrPDU(currentip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+					 mvlanid =  util.getINT32PDU(currentip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 }));				    				   
+				     mvlanenable = util.getINT32PDU(currentip, "161", new OID(	new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 }));
+				     trapserverip = util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+				     netmask = (util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,2,0})));
+				     gateway = (util.getStrPDU(currentip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0})));
+				     
+				  // write trap server address
+						// //----------
 
-			
+					String msgservice="";
+
+					 cbathash.put("msgcode", "001");
+					 cbathash.put("ip", currentip.toLowerCase().trim());
+					 cbathash.put("cbatmac", cbatmac.toLowerCase().trim());
+					 cbathash.put("cbatdevicetype", Long.toString(devicetype));
+					 cbathash.put("cbatinfo:agentport", Integer.toString(agetnport));
+					 cbathash.put("cbatinfo:appver", appver.trim());				 
+					 cbathash.put("cbatinfo:mvlanid", Integer.toString(mvlanid));
+					 cbathash.put("cbatinfo:mvlanenable", Integer.toString(mvlanenable));
+					 cbathash.put("cbatinfo:trapserverip", trapserverip);
+					 cbathash.put("cbatinfo:netmask", netmask);
+					 cbathash.put("cbatinfo:gateway", gateway);
+					 msgservice = JSONValue.toJSONString(cbathash);
+					sendToPersist(msgservice,jedis);
+					msgservice = "";
+				} catch (IOException e) {
+					System.out.println("get cbatmac error");
+					jedis.publish("node.dis.proc", "");
+					jedis.incr("global:searched");
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
+				
+			}		
 		} else {
 			// log.info(
 			// "#0 ping ping. ip #1........Bu Bu Tong ,Bu tong, Bu tong !",

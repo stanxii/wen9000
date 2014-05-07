@@ -366,13 +366,13 @@ public class ServiceAlarmProcessor {
 		if(result.equalsIgnoreCase("0")){
 			//升级成功
 			//更新版本信息
-			String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+			//String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
 			
-			if(appver != ""){
-				jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", appver);
-			}else{
-				jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", "");
-			}			
+			//if(appver != ""){
+			//	jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", appver);
+			//}else{
+				jedis.hset("cbatid:"+cbatid+":cbatinfo", "appver", "");//清空版本信息，心跳上来时自动更新版本信息
+			//}			
 		}
 		if(!result.equalsIgnoreCase("1")){
 			//已升级头端加1

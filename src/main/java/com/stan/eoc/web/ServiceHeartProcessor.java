@@ -12,6 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -26,6 +34,7 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 
 import com.stan.eoc.web.SnmpUtil;
+import com.stan.eoc.web.JsonPost;
 import com.stan.eoc.action.jedis.util.RedisUtil;
 
 public class ServiceHeartProcessor{	
@@ -38,6 +47,7 @@ public class ServiceHeartProcessor{
 	
 	
 	private static SnmpUtil util = new SnmpUtil();
+	private static JsonPost jpost = new JsonPost();
 	  
 	public static void setRedisUtil(RedisUtil redisUtil) {
 		ServiceHeartProcessor.redisUtil = redisUtil;
@@ -161,13 +171,14 @@ public class ServiceHeartProcessor{
 		String cbatip = "";
 		String cbatmac = "";
 		String cbattype = "";
+		String protocal = "";
 		Map<String,String> clt = new HashMap<String,String>();
 
 		//解析cbat 心跳信息
 		cbatip = heart.get("cbatip");
 		cbatmac = heart.get("cbatmac");
-
 		cbattype = heart.get("cbattype");
+		protocal = heart.get("protocal");
 		if(cbattype.toLowerCase().trim() == "26" || cbattype.toLowerCase().trim() == "27"){
 			//多线卡设备
 			clt.put("clt1", heart.get("clt1"));
@@ -176,7 +187,7 @@ public class ServiceHeartProcessor{
 			clt.put("clt4", heart.get("clt4"));
 		}
 		//处理cbat 心跳信息		
-		doheartcbat(cbatmac, cbatip, cbattype,clt);
+		doheartcbat(cbatmac, cbatip, cbattype,clt,protocal);
 		
 		//解析cnu 心跳信息
 		String cnumac = "";
@@ -198,7 +209,7 @@ public class ServiceHeartProcessor{
 		}
 	}
 	
-	private void doheartcbat(String cbatmac, String cbatip, String type, Map<String,String> clt) throws IOException {
+	private void doheartcbat(String cbatmac, String cbatip, String type, Map<String,String> clt, String protocal) throws IOException {
 			Jedis jedis=null;
 			try {
 			 jedis = redisUtil.getConnection();
@@ -216,11 +227,20 @@ public class ServiceHeartProcessor{
 			String deviceid = jedis.get("mac:"+cbatmac+":deviceid");
 			String cbatkey = "cbatid:"+deviceid+":entity";
 			if(jedis.hget("cbatid:"+deviceid+":cbatinfo", "appver").equalsIgnoreCase("")){
-				String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
-				
-				if(appver != ""){
-					jedis.hset("cbatid:"+deviceid+":cbatinfo", "appver", appver);
-				}
+				if(jedis.hget(cbatkey, "protocal") == null){
+					String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+					if(appver != ""){
+						jedis.hset("cbatid:"+deviceid+":cbatinfo", "appver", appver);
+					}
+				}else{
+					JSONObject resultjson = new JSONObject();
+					JSONObject sjson = new JSONObject();
+					sjson.put("mac", cbatmac);
+					resultjson = jpost.post("http://" + cbatip + "/getCbatInfo.json", sjson);
+					if(resultjson.get("status").toString().equalsIgnoreCase("0")){
+						jedis.hset("cbatid:"+deviceid+":cbatinfo", "appver", resultjson.get("cbatappver").toString());
+					}
+				}				
 			}
 			//更新头端信息			
 			jedis.hset(cbatkey,"ip", cbatip);
@@ -284,6 +304,7 @@ public class ServiceHeartProcessor{
 			cbatentity.put("mac", cbatmac.toLowerCase().trim());
 			cbatentity.put("active", "1");
 			cbatentity.put("treeparentkey", "2");
+			cbatentity.put("protocal", protocal);
 			jedis.sadd("tree:2:eocs", Long.toString(icbatid) );
 			
 			cbatentity.put("ip", cbatip.toLowerCase().trim());
@@ -317,22 +338,39 @@ public class ServiceHeartProcessor{
 			hash.put("upsoftdate", "2012-08-21 15:22:00");
 			//获取设备相关信息
 			try{
-				 int agentport = util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					
-				 String appver = util.getStrPDU(cbatip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
-				 int mvlanid =  util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 }));				    				   
-			     int mvlanenable = util.getINT32PDU(cbatip, "161", new OID(	new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 }));
-			     String trapserverip = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
-			     String netmask = (util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,2,0})));
-			     String gateway = (util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0})));
-				 hash.put("agentport", String.valueOf(agentport));
-				 hash.put("appver", appver);
-				 hash.put("mvlanid",String.valueOf(mvlanid));
-				 hash.put("mvlanenable", String.valueOf(mvlanenable));
-				 hash.put("trapserverip", trapserverip);
-				 hash.put("netmask", netmask);
-				 hash.put("gateway", gateway);
-				 hash.put("dns", "202.101.172.35");
-				 hash.put("telnet", "300");
+				if(protocal != null){
+					JSONObject resultjson = new JSONObject();
+					JSONObject sjson = new JSONObject();
+					sjson.put("mac", cbatmac);
+					resultjson = jpost.post("http://" + cbatip + "/getCbatInfo.json", sjson);
+					hash.put("agentport", String.valueOf(resultjson.get("trapserverport").toString()));
+					 hash.put("appver", resultjson.get("cbatappver").toString());
+					 hash.put("mvlanid",String.valueOf(resultjson.get("mgmtvlanid").toString()));
+					 hash.put("mvlanenable", String.valueOf(resultjson.get("mgmtvlansts").toString()));
+					 hash.put("trapserverip", resultjson.get("trapserverip").toString());
+					 hash.put("netmask", resultjson.get("cbatmask").toString());
+					 hash.put("gateway", resultjson.get("cbatgw").toString());
+					 hash.put("dns", "202.101.172.35");
+					 hash.put("telnet", "300");
+					
+				}else{
+					 int agentport = util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 2, 7, 0 }));					
+					 String appver = util.getStrPDU(cbatip, "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+					 int mvlanid =  util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 5, 0 }));				    				   
+				     int mvlanenable = util.getINT32PDU(cbatip, "161", new OID(	new int[] { 1, 3, 6, 1, 4, 1, 36186, 8, 5, 4, 0 }));
+				     String trapserverip = util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,2,6,0}));
+				     String netmask = (util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,2,0})));
+				     String gateway = (util.getStrPDU(cbatip, "161", new OID(new int[] {1,3,6,1,4,1,36186,8,5,3,0})));
+					 hash.put("agentport", String.valueOf(agentport));
+					 hash.put("appver", appver);
+					 hash.put("mvlanid",String.valueOf(mvlanid));
+					 hash.put("mvlanenable", String.valueOf(mvlanenable));
+					 hash.put("trapserverip", trapserverip);
+					 hash.put("netmask", netmask);
+					 hash.put("gateway", gateway);
+					 hash.put("dns", "202.101.172.35");
+					 hash.put("telnet", "300");
+				}
 			}catch(Exception e){
 				
 			}
@@ -653,5 +691,7 @@ public class ServiceHeartProcessor{
 		String jsonString = json.toJSONString(); 
 	    jedis.publish("node.tree.statuschange", jsonString);
 	}
+	
+	
 	
 }

@@ -442,19 +442,39 @@ public class TrapReceiverBean {
 		String cbatip = "";
 		String cbatmac = "";
 		String cbattype = "";
+		String protocal = "";
 		msgheart.put("code", hearthash.get("code"));
 		try {
-			index1 = ((String) hearthash.get("cbatsys")).indexOf("|");
-			cbatmac = ((String) hearthash.get("cbatsys")).substring(1, index1).trim().toLowerCase();
-			msgheart.put("cbatmac", cbatmac);
-			index2 = ((String) hearthash.get("cbatsys")).indexOf("|", index1 + 1);
-			cbatip = ((String) hearthash.get("cbatsys")).substring(index1 + 1, index2);
-			msgheart.put("cbatip", cbatip);
-			index1 = index2;
-			index2 = ((String) hearthash.get("cbatsys")).indexOf("]");
-			cbattype = ((String) hearthash.get("cbatsys")).substring(
-					index1 + 1, index2);
-			msgheart.put("cbattype", cbattype);
+			if(((String) hearthash.get("cbatsys")).split("\\|").length == 3){
+				index1 = ((String) hearthash.get("cbatsys")).indexOf("|");
+				cbatmac = ((String) hearthash.get("cbatsys")).substring(1, index1).trim().toLowerCase();
+				msgheart.put("cbatmac", cbatmac);
+				index2 = ((String) hearthash.get("cbatsys")).indexOf("|", index1 + 1);
+				cbatip = ((String) hearthash.get("cbatsys")).substring(index1 + 1, index2);
+				msgheart.put("cbatip", cbatip);
+				index1 = index2;
+				index2 = ((String) hearthash.get("cbatsys")).indexOf("]");
+				cbattype = ((String) hearthash.get("cbatsys")).substring(
+						index1 + 1, index2);
+				msgheart.put("cbattype", cbattype);
+			}else{
+				index1 = ((String) hearthash.get("cbatsys")).indexOf("|");
+				cbatmac = ((String) hearthash.get("cbatsys")).substring(1, index1).trim().toLowerCase();
+				msgheart.put("cbatmac", cbatmac);
+				index2 = ((String) hearthash.get("cbatsys")).indexOf("|", index1 + 1);
+				cbatip = ((String) hearthash.get("cbatsys")).substring(index1 + 1, index2);
+				msgheart.put("cbatip", cbatip);
+				index1 = index2;
+				index2 = ((String) hearthash.get("cbatsys")).indexOf("|", index1 + 1);
+				cbattype = ((String) hearthash.get("cbatsys")).substring(index1 + 1, index2);
+				msgheart.put("cbattype", cbattype);
+				index1 = index2;
+				index2 = ((String) hearthash.get("cbatsys")).indexOf("]");
+				protocal = ((String) hearthash.get("cbatsys")).substring(
+						index1 + 1, index2);
+				msgheart.put("protocal", protocal);
+			}
+			
 			
 			index1 = 0;
 			index2 = 0;

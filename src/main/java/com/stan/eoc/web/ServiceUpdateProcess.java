@@ -7,8 +7,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.snmp4j.smi.Integer32;
@@ -24,7 +33,7 @@ public class ServiceUpdateProcess{
 	private static Logger log = Logger.getLogger(ServiceUpdateProcess.class);
 
 	private static SnmpUtil util = new SnmpUtil();
-
+	private static JsonPost jpost = new JsonPost();
 	
 	private static RedisUtil redisUtil;
 
@@ -163,16 +172,62 @@ public class ServiceUpdateProcess{
 			String cbatid = jsondata.get("cbatid").toString();
 			String cbatkey = "cbatid:"+cbatid+":entity";
 			String cbatip = jedis.hget(cbatkey, "ip");
-			try{
-				String isnull = util.getStrPDU(cbatip, "161", new OID(new int[] {
-						1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
-				if(isnull == "")
-				{
+			if(jedis.hget(cbatkey, "protocal") == null){
+				try{				
+					String isnull = util.getStrPDU(cbatip, "161", new OID(new int[] {
+							1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
+					
+					util.setV2StrPDU(cbatip,
+							"161",
+							new OID(new int[] {1,3,6,1,4,1,36186,8,7,2,0}), 
+							ftpip
+							);
+
+					util.setV2PDU(cbatip,
+							"161",
+							new OID(new int[] {1,3,6,1,4,1,36186,8,7,3,0}), 
+							new Integer32(Integer.parseInt(ftpport))
+							);
+					
+					util.setV2StrPDU(cbatip,
+							"161",
+							new OID(new int[] {1,3,6,1,4,1,36186,8,7,4,0}), 
+							username
+							);
+					
+					util.setV2StrPDU(cbatip,
+							"161",
+							new OID(new int[] {1,3,6,1,4,1,36186,8,7,5,0}), 
+							password
+							);
+					
+					util.setV2StrPDU(cbatip,
+							"161",
+							new OID(new int[] {1,3,6,1,4,1,36186,8,7,6,0}), 
+							filename
+							);
+					
+					//save
+					util.setV2PDU(cbatip,
+							"161",
+							new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
+							new Integer32(1)
+							);
+					//proceed
+					util.setV2PDU(cbatip,
+							"161",
+							new OID(new int[] {1,3,6,1,4,1,36186,8,7,7,0}), 
+							new Integer32(1)
+							);
+					
+					redisUtil.getJedisPool().returnResource(jedis);
+					
+				}catch(Exception e){
+					e.printStackTrace();
 					jedis.hset(cbatkey, "upgrade", "4");
 					//已升级头端加1
-					long num_t =jedis.incr("global:updated");
+					long num_t = jedis.incr("global:updated");
 					String num = String.valueOf(num_t);
-					//String total = jedis.get("global:updatedtotal");
 					//删除集合中此头端
 					//jedis.srem("global:updatedcbats", cbatid);
 					//通知前端此头端完成升级
@@ -184,69 +239,32 @@ public class ServiceUpdateProcess{
 					redisUtil.getJedisPool().returnResource(jedis);
 					return;
 				}
-				util.setV2StrPDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,7,2,0}), 
-						ftpip
-						);
-
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,7,3,0}), 
-						new Integer32(Integer.parseInt(ftpport))
-						);
-				
-				util.setV2StrPDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,7,4,0}), 
-						username
-						);
-				
-				util.setV2StrPDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,7,5,0}), 
-						password
-						);
-				
-				util.setV2StrPDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,7,6,0}), 
-						filename
-						);
-				
-				//save
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,6,2,0}), 
-						new Integer32(1)
-						);
-				//proceed
-				util.setV2PDU(cbatip,
-						"161",
-						new OID(new int[] {1,3,6,1,4,1,36186,8,7,7,0}), 
-						new Integer32(1)
-						);
-				
-				redisUtil.getJedisPool().returnResource(jedis);
-				
-			}catch(Exception e){
-				e.printStackTrace();
-				jedis.hset(cbatkey, "upgrade", "4");
-				//已升级头端加1
-				long num_t = jedis.incr("global:updated");
-				String num = String.valueOf(num_t);
-				//删除集合中此头端
-				//jedis.srem("global:updatedcbats", cbatid);
-				//通知前端此头端完成升级
-				String total = jedis.get("global:updatedtotal");
-				JSONObject json = new JSONObject();
-				json.put("proc", num);
-				json.put("total", total);
-				jedis.publish("node.opt.updateproc", json.toJSONString());
-				redisUtil.getJedisPool().returnResource(jedis);
-				return;
-			}
-			
+			}else{
+				JSONObject sjson = new JSONObject();
+				sjson.put("ftpserverip", ftpip);
+				sjson.put("ftpserverport", Integer.parseInt(ftpport));
+				sjson.put("ftpuser", username);
+				sjson.put("ftpkey", password);
+				sjson.put("ftppath", filename);
+				JSONObject resultjson = jpost.post("http://" + cbatip + "/setCbatFtpAndUpdate.json",
+						sjson);
+				if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+					jedis.hset(cbatkey, "upgrade", "4");
+					//已升级头端加1
+					long num_t = jedis.incr("global:updated");
+					String num = String.valueOf(num_t);
+					//删除集合中此头端
+					//jedis.srem("global:updatedcbats", cbatid);
+					//通知前端此头端完成升级
+					String total = jedis.get("global:updatedtotal");
+					JSONObject json = new JSONObject();
+					json.put("proc", num);
+					json.put("total", total);
+					jedis.publish("node.opt.updateproc", json.toJSONString());
+					redisUtil.getJedisPool().returnResource(jedis);
+					return;
+				}
+			}			
 			
 			//更新头端时间戳
 			Date date = new Date();
@@ -257,10 +275,6 @@ public class ServiceUpdateProcess{
 			/////////////////////////////save cbatinfo
 		
 			String scbatinfokey = "cbatid:" + cbatid + ":cbatinfo";
-			jedis.hset(scbatinfokey, "upsoftdate", String.valueOf(logtimes));	
-		
-			
-			
-			
+			jedis.hset(scbatinfokey, "upsoftdate", String.valueOf(logtimes));				
 	  }
 }
