@@ -171,7 +171,7 @@ public class ServiceHeartProcessor{
 		String cbatip = "";
 		String cbatmac = "";
 		String cbattype = "";
-		String protocal = "";
+		String protocal = "false";
 		Map<String,String> clt = new HashMap<String,String>();
 
 		//解析cbat 心跳信息
@@ -179,6 +179,9 @@ public class ServiceHeartProcessor{
 		cbatmac = heart.get("cbatmac");
 		cbattype = heart.get("cbattype");
 		protocal = heart.get("protocal");
+		if(protocal == null){
+			protocal = "false";
+		}
 		if(cbattype.toLowerCase().trim() == "26" || cbattype.toLowerCase().trim() == "27"){
 			//多线卡设备
 			clt.put("clt1", heart.get("clt1"));
@@ -227,7 +230,7 @@ public class ServiceHeartProcessor{
 			String deviceid = jedis.get("mac:"+cbatmac+":deviceid");
 			String cbatkey = "cbatid:"+deviceid+":entity";
 			if(jedis.hget("cbatid:"+deviceid+":cbatinfo", "appver").equalsIgnoreCase("")){
-				if(jedis.hget(cbatkey, "protocal") == null){
+				if(jedis.hget(cbatkey, "protocal").equalsIgnoreCase("false")){
 					String appver = util.getStrPDU(jedis.hget(cbatkey, "ip"), "161", new OID(new int[] {1, 3, 6, 1, 4, 1, 36186, 8, 4, 4, 0 }));
 					if(appver != ""){
 						jedis.hset("cbatid:"+deviceid+":cbatinfo", "appver", appver);
@@ -320,6 +323,7 @@ public class ServiceHeartProcessor{
 			//20 not have upgradestatus
 			cbatentity.put("upgrade", "20");
 			//保存头端信息
+			System.out.println("----->>>>"+ cbatentity.toString());
 			jedis.hmset(scbatentitykey, cbatentity);
 			
 			//更新头端时间戳
@@ -338,7 +342,7 @@ public class ServiceHeartProcessor{
 			hash.put("upsoftdate", "2012-08-21 15:22:00");
 			//获取设备相关信息
 			try{
-				if(protocal != null){
+				if(!protocal.equalsIgnoreCase("false")){
 					JSONObject resultjson = new JSONObject();
 					JSONObject sjson = new JSONObject();
 					sjson.put("mac", cbatmac);

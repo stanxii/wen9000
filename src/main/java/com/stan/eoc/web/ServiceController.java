@@ -2168,7 +2168,7 @@ public class ServiceController {
 		String cbatid = jedis.get("mac:" + mac + ":deviceid");
 		String cbatip = jedis.hget("cbatid:" + cbatid + ":entity", "ip");
 		try {
-			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal") == null){
+			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal").equalsIgnoreCase("false")){
 				String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1,
 						3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
 				if (tmp == "") {
@@ -2225,7 +2225,7 @@ public class ServiceController {
 		String cbatip = jedis.hget("cbatid:" + cbatid + ":entity", "ip");
 
 		try {
-			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal") == null){
+			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal").equalsIgnoreCase("false")){
 				String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1,
 						3, 6, 1, 4, 1, 36186, 8, 2, 6, 0 }));
 				if (tmp == "") {
@@ -3635,7 +3635,7 @@ public class ServiceController {
 									+ ":entity", "profilename"));
 			sendoptlog(jedis, optjson);
 			// 下面是具体节点配置过程或发往其它进程进行异步配置
-			if(jedis.hget("cbatid:" + cid + ":entity","protocal") == null){
+			if(jedis.hget("cbatid:" + cid + ":entity","protocal").equalsIgnoreCase("false")){
 				if (!(devicetype.equalsIgnoreCase("20")
 						|| devicetype.equalsIgnoreCase("21")
 						|| devicetype.equalsIgnoreCase("22")
@@ -4025,7 +4025,7 @@ public class ServiceController {
 			}
 		} else {
 			// 配置6400 CNU			
-			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal") == null){
+			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal").equalsIgnoreCase("false")){
 				// 判断头端是否在线
 				int tmp = (util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
 						1, 4, 1, 36186, 8, 5, 4, 0 })));
@@ -4162,7 +4162,7 @@ public class ServiceController {
 
 		} else {
 			// 判断头端是否在线
-			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal") == null){
+			if(jedis.hget("cbatid:" + cbatid + ":entity", "protocal").equalsIgnoreCase("false")){
 				String tmp = util.getStrPDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
 						1, 4, 1, 36186, 8, 2, 6, 0 }));
 				if (tmp == "") {
@@ -4697,7 +4697,7 @@ public class ServiceController {
 		String cbatip = jedis.hget(cbatkey, "ip");
 		String cbatinfokey = "cbatid:" + cbatid + ":cbatinfo";
 		// 获得设备相关参数(ip/mvlanenable/mvlanid)
-		if(jedis.hget(cbatkey, "protocal") == null){
+		if(jedis.hget(cbatkey, "protocal").equalsIgnoreCase("false")){
 			int tmp = (util.getINT32PDU(cbatip, "161", new OID(new int[] { 1, 3, 6,
 					1, 4, 1, 36186, 8, 5, 4, 0 })));
 			if (tmp == -1) {
@@ -4760,6 +4760,7 @@ public class ServiceController {
 				return;
 			}
 		}else{
+			System.out.println("----------------->>>>222");
 			JSONObject resultjson = new JSONObject();
 			JSONObject sjson = new JSONObject();
 			sjson.put("mac", message);
@@ -4876,7 +4877,7 @@ public class ServiceController {
 			}
 			
 			// 需要跟设备交互
-			if(jedis.hget(cbatkey, "protocal") == null){
+			if(jedis.hget(cbatkey, "protocal").equalsIgnoreCase("false")){
 				int tmp = (util.getINT32PDU(oldip, "161", new OID(new int[] { 1, 3,
 						6, 1, 4, 1, 36186, 8, 5, 4, 0 })));
 				if (tmp == -1) {

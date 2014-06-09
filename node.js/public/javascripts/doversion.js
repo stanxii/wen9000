@@ -29,13 +29,13 @@
 				   '</td></tr>'+
 				   '<tr><td><label>版本号:：</label></td><td>'+
 				   
-				    '<label>v1.2.1</label>'+
+				    '<label>v1.2.7</label>'+
 				    
 				   '</td></tr>'+
 				   '</td></tr>'+
 				   '<tr><td><label>发布时间:：</label></td><td>'+
 				   
-				    '<label>2013-3-5</label>'+
+				    '<label>2014-5-10</label>'+
 				    
 				   '</td></tr>'+
 				   '</div>'

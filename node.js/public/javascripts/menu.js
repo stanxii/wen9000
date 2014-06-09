@@ -2398,11 +2398,13 @@
 				}else if(jsondata.devicemodal == "WEC9720EK E31"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 				}else if(jsondata.devicemodal == "WEC9720EK XD25"){
-					
+					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK XD25.jpg";
 				}else if(jsondata.devicemodal == "WEC9720EK SD220"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
 				}else if(jsondata.devicemodal == "WR1004SJL"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004SJL.jpg";
+				}else if(jsondata.devicemodal == "WR1004JL"){
+					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004JL.jpg";
 				}
 	   }else{
 		   $("#dialog-devinfo").empty();
@@ -2668,11 +2670,13 @@
 				}else if(jsondata.devicemodal == "WEC9720EK E31"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC-3501I C22.jpg";
 				}else if(jsondata.devicemodal == "WEC9720EK XD25"){
-					
+					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK XD25.jpg";
 				}else if(jsondata.devicemodal == "WEC9720EK SD220"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WEC9720EK SD220.jpg";
 				}else if(jsondata.devicemodal == "WR1004SJL"){
 					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004SJL.jpg";
+				}else if(jsondata.devicemodal == "WR1004JL"){
+					document.getElementById('pg_dev').src = "http://localhost:3000/images/WR1004JL.jpg";
 				}
 				
 				$( "#dialog-devinfo" ).dialog({
