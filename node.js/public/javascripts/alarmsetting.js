@@ -8,7 +8,13 @@
 		initAlarmSetting();
 		
 		socket.on('alarmsetting_init', onAlarmSettingInit);
-		
+
+		$("#btn_delalarm").click(function(){
+			var xx = $("#sel_deltime");
+			var vid = $("#sel_deltime")[0].options[$("#sel_deltime")[0].options.selectedIndex].value;
+			var datastring = '{"val":"' + vid + '"}';
+			socket.emit('del_alarm',datastring);
+		});
 		
 		$("#btn_addlevelfilter").click(function(){
 			var alarmlevel = $("#sel_alarmlevel option:selected").val();

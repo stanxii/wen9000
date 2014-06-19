@@ -9,10 +9,25 @@ block content
     div#alarmsettab
       ul
         li
-          a(href="#tabs-1") 告警过滤
+          a(href="#tabs-1") 清除告警
         li
-          a(href="#tabs-2") 定向告警
+          a(href="#tabs-2") 告警过滤
+        li
+          a(href="#tabs-3") 定向告警
       div#tabs-1
+        table
+          tr
+            td(style="width:200px")
+              select(id="sel_deltime")
+                option(value="1") 删除三个月以前的告警
+                option(value="2") 删除一个月以前的告警
+                option(value="3") 删除一星期以前的告警
+                option(value="4") 删除一天前的告警
+                option(value="5") 删除所有告警
+            td(style="width:200px")
+              button#btn_delalarm  确定
+              
+      div#tabs-2
         table
           tr
             td(style="width:200px")
@@ -47,7 +62,7 @@ block content
         hr 已添加到条件      
         div#talarmfilter
         button#btn_clearallfilter 清除所有过滤条件                   
-      div#tabs-2
+      div#tabs-3
         h5 根据条件指定告警只发送到特定告警服务器
         table
           tr

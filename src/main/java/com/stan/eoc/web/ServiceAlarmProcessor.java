@@ -234,7 +234,7 @@ public class ServiceAlarmProcessor {
 			jedis.hmset(alarmkey, alarm);
 			
 			//history alarm sorted sets score is timestamp
-			Double score = (double) System.currentTimeMillis();
+			Long score = System.currentTimeMillis();
 			jedis.zadd(ALARM_HISTORY_QUEUE_NAME, score, salarmid);
 			
 

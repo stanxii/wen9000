@@ -890,6 +890,11 @@ sio.sockets.on('connection', function (socket) {
 	  console.log('nodeserver: topdevices==='+data);
 	  publish.publish('servicecontroller.topdevices', data);
   });
+//删除告警
+  socket.on('del_alarm', function (data) {
+	  console.log('nodeserver: del_alarm==='+data);
+	  publish.publish('servicecontroller.del_alarm', data);
+  });
   socket.on('channel', function(ch) {
       //console.log('channel receive ch=='+ch);
         socket.join(ch);

@@ -51,11 +51,11 @@ import com.stan.eoc.action.jedis.util.RedisUtil;
 public class ServiceController {
 
 	private static Logger log = Logger.getLogger(ServiceController.class);
-
+	private static final String ALARM_HISTORY_QUEUE_NAME = "alarm_history_queue";
 	private static SnmpUtil util = new SnmpUtil();
 	private static JsonPost jpost = new JsonPost();
 	private static RedisUtil redisUtil;
-
+	
 	private static JSONObject resultObj;
 
 	public static void setRedisUtil(RedisUtil redisUtil) {
@@ -313,8 +313,56 @@ public class ServiceController {
 			doAlarmtmpset(message);
 		}else if (pat.equalsIgnoreCase("servicecontroller.topdevices")) {
 			doTopdevices(message);
+		}else if (pat.equalsIgnoreCase("servicecontroller.del_alarm")) {
+			doDelalarms(message);
 		}
 
+	}
+	
+	private static void doDelalarms(String message) throws ParseException {
+		Jedis jedis = null;
+		try {
+			jedis = redisUtil.getConnection();
+		 
+			JSONObject jsondata = (JSONObject) new JSONParser().parse(message);
+			String val = jsondata.get("val").toString();
+			Long now =  System.currentTimeMillis();
+			
+			long lseconds= 0L;
+			if(val.equalsIgnoreCase("1")){
+				lseconds = 3*30*24*60*60*1000;
+			}else if(val.equalsIgnoreCase("2")){
+				lseconds = 1*30*24*60*60*1000;
+			}else if(val.equalsIgnoreCase("3")){
+				lseconds = 7*24*60*60*1000;
+			}else if(val.equalsIgnoreCase("4")){
+				lseconds = 1*24*60*60*1000;
+			}else if(val.equalsIgnoreCase("5")){
+				lseconds = -1;
+				Set<String> alarms = jedis.zrange(ALARM_HISTORY_QUEUE_NAME, 0, lseconds);
+				for(Iterator it = alarms.iterator();it.hasNext(); ){
+					 String alarmid = it.next().toString();
+					 jedis.del("alarmid:"+alarmid+":entity");
+					 jedis.zrem(ALARM_HISTORY_QUEUE_NAME, alarmid);
+				 }		
+				jedis.publish("node.optlog.optresult", "success");
+				redisUtil.getJedisPool().returnResource(jedis);
+				return;
+			}
+			//System.out.println("----------now - lseconds---->>>>" + (now - lseconds));
+			Set<String> alarms = jedis.zrangeByScore(ALARM_HISTORY_QUEUE_NAME, 0, (now - lseconds));
+			for(Iterator it = alarms.iterator();it.hasNext(); ){
+				 String alarmid = it.next().toString();
+				 jedis.del("alarmid:"+alarmid+":entity");
+				 jedis.zrem(ALARM_HISTORY_QUEUE_NAME, alarmid);
+			 }		
+			jedis.publish("node.optlog.optresult", "success");
+			redisUtil.getJedisPool().returnResource(jedis);
+		 }	catch (Exception e) {
+			e.printStackTrace();
+			redisUtil.getJedisPool().returnBrokenResource(jedis);
+			return;
+		}
 	}
 	
 	private static void doTopdevices(String message) throws ParseException {
@@ -1429,7 +1477,7 @@ public class ServiceController {
 		String hfcip = jedis.hget(hfckey, "ip");
 		// 记录hfc实时进程读取的ip地址
 		jedis.set("global:hfcrealtime", hfckey);
-		jedis.bgsave();
+		//jedis.bgsave();
 		JSONObject json = new JSONObject();
 		json.put("flag", flag);
 		json.put("mac", jedis.hget(hfckey, "mac"));
@@ -2779,7 +2827,7 @@ public class ServiceController {
 		jedis.del("preconfig:" + mac + ":entity");
 		// 删除集合中的值
 		jedis.srem("profileid:" + proid + ":cnus", mac);
-		jedis.bgsave();
+		//jedis.bgsave();
 		JSONObject optjson = new JSONObject();
 		Date date = new Date();
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -3634,18 +3682,28 @@ public class ServiceController {
 							+ jedis.hget("profileid:" + proid.trim()
 									+ ":entity", "profilename"));
 			sendoptlog(jedis, optjson);
-			// 下面是具体节点配置过程或发往其它进程进行异步配置
-			if(jedis.hget("cbatid:" + cid + ":entity","protocal").equalsIgnoreCase("false")){
-				if (!(devicetype.equalsIgnoreCase("20")
-						|| devicetype.equalsIgnoreCase("21")
-						|| devicetype.equalsIgnoreCase("22")
-						|| devicetype.equalsIgnoreCase("23")
-						|| devicetype.equalsIgnoreCase("24")
-						|| devicetype.equalsIgnoreCase("36")
-						|| devicetype.equalsIgnoreCase("40")
-						|| devicetype.equalsIgnoreCase("41")
-						|| devicetype.equalsIgnoreCase("26")
-						|| devicetype.equalsIgnoreCase("27"))) {
+			// 下面是具体节点配置过程或发往其它进程进行异步配置			
+			if (devicetype.equalsIgnoreCase("20")
+					|| devicetype.equalsIgnoreCase("21")
+					|| devicetype.equalsIgnoreCase("22")
+					|| devicetype.equalsIgnoreCase("23")
+					|| devicetype.equalsIgnoreCase("24")
+					|| devicetype.equalsIgnoreCase("36")
+					|| devicetype.equalsIgnoreCase("40")
+					|| devicetype.equalsIgnoreCase("41")
+					|| devicetype.equalsIgnoreCase("26")
+					|| devicetype.equalsIgnoreCase("27")) {
+				//74系列设备或无SNMP版本
+				if(!sendjsonconfig(Integer.valueOf(proid), cip, cnumac,
+						jedis)){
+					//配置终端失败
+					jedis.sadd("global:configfailed", cnuid);
+					jedis.publish("node.opt.proc", proc);
+					continue;
+				}
+
+			}else{
+				if(jedis.hget("cbatid:" + cid + ":entity", "protocal").equalsIgnoreCase("false")){
 					// 判断设备是否在线
 					try {
 						String tmp = util.getStrPDU(cip, "161", new OID(new int[] { 1,
@@ -3672,18 +3730,17 @@ public class ServiceController {
 						jedis.publish("node.opt.proc", proc);
 						continue;
 					}
-
+				}else{
+					//74系列设备或无SNMP版本
+					if(!sendjsonconfig(Integer.valueOf(proid), cip, cnumac,
+							jedis)){
+						//配置终端失败
+						jedis.sadd("global:configfailed", cnuid);
+						jedis.publish("node.opt.proc", proc);
+						continue;
+					}
 				}
-			}else{
-				//74系列设备或无SNMP版本
-				if(!sendjsonconfig(Integer.valueOf(proid), cip, cnumac,
-						jedis)){
-					//配置终端失败
-					jedis.sadd("global:configfailed", cnuid);
-					jedis.publish("node.opt.proc", proc);
-					continue;
-				}
-			}
+			}		
 			
 			// 将配置成功的设备id存储
 			jedis.sadd("global:configsuccess", cnuid);
@@ -3708,7 +3765,7 @@ public class ServiceController {
 			jedis.sadd("profileid:" + proid + ":cnus", cnuid);
 
 			// 保存数据到硬盘
-			jedis.bgsave();
+			//jedis.bgsave();
 
 			jedis.publish("node.opt.proc", proc);
 		}
@@ -4076,7 +4133,7 @@ public class ServiceController {
 		jedis.publish("node.tree.cnu_sub", json.toJSONString());
 
 		// 保存数据到硬盘
-		jedis.bgsave();
+		//jedis.bgsave();
 		redisUtil.getJedisPool().returnResource(jedis);
 	}
 	
