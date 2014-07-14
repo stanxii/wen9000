@@ -4817,7 +4817,6 @@ public class ServiceController {
 				return;
 			}
 		}else{
-			System.out.println("----------------->>>>222");
 			JSONObject resultjson = new JSONObject();
 			JSONObject sjson = new JSONObject();
 			sjson.put("mac", message);
