@@ -1910,6 +1910,8 @@
 				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
 			}else if(jsondata.devicemodal == "WEC701 W4"){
 				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
+			}else{
+				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
 			}
 			
 			var node = $("#navtree").dynatree("getActiveNode");
@@ -2065,6 +2067,8 @@
 			}else if(jsondata.devicemodal == "WEC701 L4"){
 				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
 			}else if(jsondata.devicemodal == "WEC701 W4"){
+				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
+			}else{
 				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
 			}
 			var node = $("#navtree").dynatree("getActiveNode");

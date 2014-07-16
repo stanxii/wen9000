@@ -1023,16 +1023,16 @@ public class ServiceController {
 		case 11:
 			key = "global:WR1004SJL";
 			break;
-		case 42:
+		case 12:
 			key = "global:3702I-E4";
 			break;
-		case 43:
+		case 13:
 			key = "global:WEC701-E4";
 			break;
-		case 44:
+		case 14:
 			key = "global:WEC701-L4";
 			break;
-		case 45:
+		case 15:
 			key = "global:WEC701-W4";
 			break;
 		}
@@ -1106,19 +1106,19 @@ public class ServiceController {
 			key = "global:WR1004SJL";
 			optjson.put("desc", "设备类型WR1004SJL将显示为" + value);
 			break;
-		case 42:
+		case 12:
 			key = "global:3702I-E4";
 			optjson.put("desc", "设备类型WEC-3702I E4将显示为" + value);
 			break;
-		case 43:
+		case 13:
 			key = "global:WEC701-E4";
 			optjson.put("desc", "设备类型WEC701 E4将显示为" + value);
 			break;
-		case 44:
+		case 14:
 			key = "global:WEC701-L4";
 			optjson.put("desc", "设备类型WEC701 L4将显示为" + value);
 			break;
-		case 45:
+		case 15:
 			key = "global:WEC701-W4";
 			optjson.put("desc", "设备类型WEC701 W4将显示为" + value);
 			break;
@@ -1186,16 +1186,16 @@ public class ServiceController {
 		case 11:
 			key = "global:WR1004SJL";
 			break;
-		case 42:
+		case 12:
 			key = "global:3702I-E4";
 			break;
-		case 43:
+		case 13:
 			key = "global:WEC701-E4";
 			break;
-		case 44:
+		case 14:
 			key = "global:WEC701-L4";
 			break;
-		case 45:
+		case 15:
 			key = "global:WEC701-W4";
 			break;
 
