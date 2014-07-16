@@ -1763,7 +1763,7 @@
 	   if(jsondata.flag == "menu"){
 		   $("#content").empty();			          				          		
 	     	$("#content").append('<div id="devinfo"><h3 style="background-color:#ccc">终端设备信息</h3>'+
-	     	'<div style="float:left"><img src="http://localhost:3000/images/WEC-3702I C4.jpg" style="width:100px;height:80px"/></div>'+
+	     	'<div style="float:left"><img id="pg_cdev" src="" style="width:100px;height:80px"/></div>'+
 	     	'<div id="cnusts" style="height:80px;width:200px;margin:10px 10px 1px 110px;'+style+'"><lable id="cnusts_l" style="font-size:30px;background-color:black;line-height:80px">'+active +'</lable></div>'+						
 			'<br/><div id="configinfo"><ul>'+
 				'<li><a href="#cnutabs-1">基本信息</a></li>'+
@@ -1903,6 +1903,14 @@
 			document.getElementById('vlan_en').value=jsondata.vlanen;
 			document.getElementById('rxlimitsts').value=jsondata.rxlimitsts;			
 			document.getElementById('txlimitsts').value=jsondata.txlimitsts;
+			
+			if(jsondata.devicemodal == "3702I-C4"){
+				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
+			}else if(jsondata.devicemodal == "WEC701 L4"){
+				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
+			}else if(jsondata.devicemodal == "WEC701 W4"){
+				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
+			}
 			
 			var node = $("#navtree").dynatree("getActiveNode");
 		   if(node.getParent().data.online != "1"){
@@ -1912,7 +1920,7 @@
 	   }else{
 		   $("#dialog-devinfo").empty();			          				          		
 	     	$("#dialog-devinfo").append('<div id="devinfo"><h3 style="background-color:#ccc">终端设备信息</h3>'+
-	     	'<div style="float:left"><img src="http://localhost:3000/images/WEC-3702I C4.jpg" style="width:100px;height:80px"/></div>'+
+	     	'<div style="float:left"><img id="pg_cdev" src="" style="width:100px;height:80px"/></div>'+
 	     	'<div id="cnusts" style="height:80px;width:200px;margin:10px 10px 1px 110px;'+style+'"><lable id="cnusts_l" style="font-size:30px;background-color:black;line-height:80px">'+active +'</lable></div>'+						
 			'<br/><div id="configinfo"><ul>'+
 				'<li><a href="#cnutabs-1">基本信息</a></li>'+
@@ -2047,12 +2055,18 @@
 
 			'</div>'
 			);
-			
 	     	document.getElementById('authorization_en').value=jsondata.authorization;
 			document.getElementById('vlan_en').value=jsondata.vlanen;
 			document.getElementById('rxlimitsts').value=jsondata.rxlimitsts;			
 			document.getElementById('txlimitsts').value=jsondata.txlimitsts;
 			
+			if(jsondata.devicemodal == "3702I-C4"){
+				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
+			}else if(jsondata.devicemodal == "WEC701 L4"){
+				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
+			}else if(jsondata.devicemodal == "WEC701 W4"){
+				document.getElementById('pg_cdev').src = "http://localhost:3000/images/WEC701 L4.jpg";
+			}
 			var node = $("#navtree").dynatree("getActiveNode");
 		   if(node.getParent().data.online != "1"){
 			   $("#btn_cnusync")[0].disabled = "disabled";
