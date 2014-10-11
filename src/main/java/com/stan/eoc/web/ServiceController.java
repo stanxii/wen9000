@@ -1850,14 +1850,9 @@ public class ServiceController {
 			// delete device
 
 			String mac = jsondata.get("mac").toString();
-			String id = jedis.get("mac:" + mac + ":deviceid");
-
-			
-			
-
-			jedis.del("mac:" + mac + ":deviceid");
+			String id = jedis.get("mac:" + mac + ":deviceid");			
 			if (type.equalsIgnoreCase("cbat")) {
-				
+				jedis.del("mac:" + mac + ":deviceid");
 				//del parent eocs
 				String treeparentkey = jedis.hget("cbatid:" + id + ":entity",
 						"treeparentkey");
@@ -1896,7 +1891,19 @@ public class ServiceController {
 				jedis.del("cbatid:" + id + ":entity");
 				jedis.setbit("cbat:alives", Long.parseLong(id), false);
 			} else if (type.equalsIgnoreCase("cnu")) {
+				//删除设备侧CNU
+				JSONObject resultjson = new JSONObject();
+				JSONObject sjson = new JSONObject();
+				sjson.put("mac", mac);
 				String cbatid = jedis.hget("cnuid:" + id + ":entity", "cbatid");
+				resultjson = jpost.post("http://" + jedis.hget("cbatid:" + cbatid + ":entity", "cbatip") + "/delCNU.json", sjson);
+				if(resultjson.get("status").toString().equalsIgnoreCase("1")){
+					redisUtil.getJedisPool().returnBrokenResource(jedis);
+					jedis.publish("node.tree.cbatsync", "");
+					return;
+				}				
+				jedis.del("mac:" + mac + ":deviceid");
+				//String cbatid = jedis.hget("cnuid:" + id + ":entity", "cbatid");
 				jedis.srem("cbatid:" + cbatid + ":cnus", id);
 				jedis.del("mac:" + jedis.hget("cnuid:" + id + ":entity", "mac")
 						+ ":deviceid");
@@ -1909,6 +1916,7 @@ public class ServiceController {
 				jedis.del("cnuid:" + id + ":entity");
 				jedis.setbit("cnu:alives", Long.parseLong(id), false);
 			} else if (type.equalsIgnoreCase("hfc")) {
+				jedis.del("mac:" + mac + ":deviceid");
 				//del parent eocs
 				String treeparentkey = jedis.hget("hfcid:" + id + ":entity",
 						"treeparentkey");
@@ -3581,7 +3589,11 @@ public class ServiceController {
 				json.put("devtype", jedis.get("global:WEC701-W4"));
 				break;
 			default:
-				json.put("devtype", "Unknown");
+				if(jedis.hget(key, "devicetype") != null){
+					json.put("devtype", jedis.hget(key, "devicetype"));
+				}else{
+					json.put("devtype", "Unknown");
+				}				
 				break;
 			}
 			jsonarray.add(json);
@@ -3643,7 +3655,11 @@ public class ServiceController {
 				json.put("devtype", jedis.get("global:WEC701-W4"));
 				break;
 			default:
-				json.put("devtype", "Unknown");
+				if(jedis.hget(key, "devicetype") != null){
+					json.put("devtype", jedis.hget(key, "devicetype"));
+				}else{
+					json.put("devtype", "Unknown");
+				}
 				break;
 			}
 			jsonarray.add(json);
@@ -3908,7 +3924,12 @@ public class ServiceController {
 				json.put("devicetype", jedis.get("global:WEC701-W4"));
 				break;
 			default:
-				json.put("devicetype", "Unknown");
+				if(jedis.hget(cnukey, "othertype")!= null){					
+					json.put("devicetype", jedis.hget(cnukey, "othertype"));
+				}else{
+					json.put("devicetype", "Unknown");
+				}
+				
 				break;
 			}
 			json.put(
@@ -4065,7 +4086,11 @@ public class ServiceController {
 				cnujson.put("devicetype", jedis.get("global:WEC701-W4"));
 				break;	
 			default:
-				cnujson.put("devicetype", "Unknown");
+				if(jedis.hget(prokey, "othertype")!= null){					
+					cnujson.put("devicetype", jedis.hget(prokey, "othertype"));
+				}else{
+					cnujson.put("devicetype", "Unknown");
+				}
 				break;
 			}
 
@@ -5147,7 +5172,12 @@ public class ServiceController {
 			cnujson.put("devicemodal", "WEC701 W4");
 			break;
 		default:
-			cnujson.put("devicetype", "Unknown");
+			if(jedis.hget(cnukey, "othertype")!= null){				
+				cnujson.put("devicetype", jedis.hget(cnukey, "othertype"));
+			}else{
+				cnujson.put("devicetype", "UNKOWN");
+			}
+			
 			break;
 		}
 		cnujson.put("label", jedis.hget(cnukey, "label"));

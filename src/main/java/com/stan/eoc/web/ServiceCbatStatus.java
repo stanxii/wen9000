@@ -220,7 +220,7 @@ public class ServiceCbatStatus{
 		long now = date.getTime();
 		String cbatmac = jedis.hget(message, "mac");
 		String id = jedis.get("mac:"+ cbatmac +":deviceid");
-		if(now - timeticks > 75000){
+		if(now - timeticks > 375000){
 			//log.info("发现设备下线:time====="+date.toString()+"======now==="+now+"======timeticks===="+timeticks+"====timedate==="+new Date(timeticks).toString());
 			//确认设备不在线
 			jedis.hset(message, "active", "0");

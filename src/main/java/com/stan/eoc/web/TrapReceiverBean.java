@@ -483,6 +483,7 @@ public class TrapReceiverBean {
 			String cltindex = "";
 			String cnuindex = "";
 			String active = "";
+			String othertype = "";
 			int count = 0;
 			count = ((String) hearthash.get("cnusys")).length()
 					- ((String) hearthash.get("cnusys")).replace("[", "").length();
@@ -510,10 +511,15 @@ public class TrapReceiverBean {
 					index2 = message.indexOf("|", index1 + 1);
 					cnuindex = message.substring(index1 + 1,index2);
 					msgheart.put("cnuindex"+i, cnuindex);
+					
+					index1 = index2;
+					index2 = message.indexOf("|", index1 + 1);
+					active = message.substring(index1 + 1,index2);
+					msgheart.put("active"+i, cnuindex);
 
 					index1 = index2;
-					active = message.substring(index1 + 1);
-					msgheart.put("active"+i, active);
+					othertype = message.substring(index1 + 1);
+					msgheart.put("othertype"+i, othertype);
 
 					flag += (index1 + 3);
 

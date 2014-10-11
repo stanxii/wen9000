@@ -124,8 +124,8 @@ public class ServiceHeartProcessor{
 	
 	
 		
-		//System.out.println(" [x] ServiceHeartProcessor Received '" + message
-		//		+ "'");
+		System.out.println(" [x] ServiceHeartProcessor Received '" + message
+				+ "'");
 		
 		//long start = System.currentTimeMillis();
 		try{
@@ -198,6 +198,7 @@ public class ServiceHeartProcessor{
 		String cltindex = "";
 		String cnuindex = "";
 		String active = "";
+		String othertype = "";
 		int count = 0;
 		count = Integer.valueOf(heart.get("cnucount"));
 		//遍历所有cnu
@@ -207,8 +208,9 @@ public class ServiceHeartProcessor{
 			cltindex = heart.get("cltindex"+i);
 			cnuindex = heart.get("cnuindex"+i);
 			active = heart.get("active"+i);
+			othertype = heart.get("othertype"+i);
 			//处理cnu心跳信息
-			doheartcnu(cbatmac, cnumac, cnutype, cltindex, cnuindex, active);
+			doheartcnu(cbatmac, cnumac, cnutype, cltindex, cnuindex, active, othertype);
 		}
 	}
 	
@@ -393,22 +395,22 @@ public class ServiceHeartProcessor{
 	}
 	
 	private void doheartcnu(String cbatmac, String cnumac, String type,
-			String cltindex, String cnuindex, String active) {
+			String cltindex, String cnuindex, String active, String othertype) {
 		
 		// CNU上线
 		if (active.equalsIgnoreCase("1")) {
-			doheartOnline(cbatmac, cnumac, type, cnuindex, active);
+			doheartOnline(cbatmac, cnumac, type, cnuindex, active, othertype);
 
 		} else // CNU offline
 		{
-			doOffline_heart(cbatmac, cnuindex, cnumac, type);
+			doOffline_heart(cbatmac, cnuindex, cnumac, type, othertype);
 
 		}		
 		
 	}
 	
 	public void doheartOnline(String cbatmac, String cnumac, String cnutype,
-			String cnuindex, String active) {
+			String cnuindex, String active, String othertype) {
 
 		Jedis jedis=null;
 		try {
@@ -497,6 +499,7 @@ public class ServiceHeartProcessor{
 			cnuentity.put("devcnuid", cnuindex.toLowerCase().trim());//设备上cnu的索引
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
+			cnuentity.put("othertype", othertype.toUpperCase());
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
 			cnuentity.put("address", "");
 			cnuentity.put("contact", "");	
@@ -580,7 +583,7 @@ public class ServiceHeartProcessor{
 	}
 	
 	public void doOffline_heart(String cbatmac, String cnuindex, String cnumac,
-			String cnutype) {
+			String cnutype, String othertype) {
 		
 		Jedis jedis=null;
 		try {
@@ -615,6 +618,7 @@ public class ServiceHeartProcessor{
 			cnuentity.put("devcnuid", cnuindex.toLowerCase().trim());//设备上cnu的索引
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
+			cnuentity.put("othertype", othertype.toUpperCase());
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
 			//暂将profileid置1
 			cnuentity.put("profileid", "1");
