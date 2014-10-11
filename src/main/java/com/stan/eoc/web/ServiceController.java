@@ -3590,7 +3590,7 @@ public class ServiceController {
 				break;
 			default:
 				if(jedis.hget(key, "devicetype") != null){
-					json.put("devtype", jedis.hget(key, "devicetype"));
+					json.put("devtype", jedis.hget(key, "othertype"));
 				}else{
 					json.put("devtype", "Unknown");
 				}				
@@ -3656,7 +3656,7 @@ public class ServiceController {
 				break;
 			default:
 				if(jedis.hget(key, "devicetype") != null){
-					json.put("devtype", jedis.hget(key, "devicetype"));
+					json.put("devtype", jedis.hget(key, "othertype"));
 				}else{
 					json.put("devtype", "Unknown");
 				}
