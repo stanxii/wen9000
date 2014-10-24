@@ -124,8 +124,8 @@ public class ServiceHeartProcessor{
 	
 	
 		
-		System.out.println(" [x] ServiceHeartProcessor Received '" + message
-				+ "'");
+		//System.out.println(" [x] ServiceHeartProcessor Received '" + message
+		//		+ "'");
 		
 		//long start = System.currentTimeMillis();
 		try{
@@ -404,7 +404,6 @@ public class ServiceHeartProcessor{
 		} else // CNU offline
 		{
 			doOffline_heart(cbatmac, cnuindex, cnumac, type, othertype);
-
 		}		
 		
 	}
@@ -499,7 +498,9 @@ public class ServiceHeartProcessor{
 			cnuentity.put("devcnuid", cnuindex.toLowerCase().trim());//设备上cnu的索引
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
-			cnuentity.put("othertype", othertype.toUpperCase());
+			if(othertype != null){
+				cnuentity.put("othertype", othertype.toUpperCase());				
+			}			
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
 			cnuentity.put("address", "");
 			cnuentity.put("contact", "");	
@@ -609,7 +610,6 @@ public class ServiceHeartProcessor{
 			//sum tongji online cnus
 			jedis.setbit("cnu:alives", icnuid, false);
 			
-			
 			//组合cnu信息
 			String scnuentitykey = "cnuid:" + icnuid + ":entity";
 			Map<String , String >  cnuentity = new HashMap<String, String>();			
@@ -618,7 +618,9 @@ public class ServiceHeartProcessor{
 			cnuentity.put("devcnuid", cnuindex.toLowerCase().trim());//设备上cnu的索引
 			cnuentity.put("label", cnumac.toLowerCase().trim());
 			cnuentity.put("devicetype", cnutype.toLowerCase().trim());
-			cnuentity.put("othertype", othertype.toUpperCase());
+			if(othertype != null){
+				cnuentity.put("othertype", othertype.toUpperCase());				
+			}
 			cnuentity.put("cbatid", jedis.get("mac:"+cbatmac+":deviceid"));
 			//暂将profileid置1
 			cnuentity.put("profileid", "1");
@@ -640,12 +642,10 @@ public class ServiceHeartProcessor{
 		}
 		//以下判断是否是所属头端发出的心跳
 		String cnuid = jedis.get("mac:"+cnumac+":deviceid");
-		
 		//sum tongji online cnus
 		jedis.setbit("cnu:alives", Long.parseLong(cnuid), false);
 
 		String cur_cbatid = jedis.hget("cnuid:"+cnuid+":entity", "cbatid");
-
 		if(jedis.hget("cbatid:"+cur_cbatid+":entity", "mac").equalsIgnoreCase(cbatmac)){
 			//是所属头端发出的心跳
 			if(jedis.hget("cnuid:"+cnuid+":entity", "active").equalsIgnoreCase("0")==false){

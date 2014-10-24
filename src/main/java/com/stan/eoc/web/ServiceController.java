@@ -3324,6 +3324,9 @@ public class ServiceController {
 				case 6:
 					cbatjson.put("devicetype", "WEC-3501I S60");
 					break;
+				case 12:
+					cbatjson.put("devicetype", "WEC-3501I XD25");
+					break;
 				case 20:
 					cbatjson.put("devicetype",
 							jedis.get("global:WEC9720EK-C22"));
@@ -5285,6 +5288,10 @@ public class ServiceController {
 			// break;
 		case 8:
 			result = "中文测试";
+			break;
+		case 12:
+			result = "WEC-3501I XD25";
+			cbatjson.put("devicemodal", "WEC-3501I XD25");
 			break;
 		case 20:
 			result = jedis.get("global:WEC9720EK-C22");// "WEC9720EK C22";

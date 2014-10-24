@@ -513,19 +513,27 @@ public class TrapReceiverBean {
 					msgheart.put("cnuindex"+i, cnuindex);
 					
 					index1 = index2;
-					index2 = message.indexOf("|", index1 + 1);
-					active = message.substring(index1 + 1,index2);
-					msgheart.put("active"+i, cnuindex);
+					if(message.lastIndexOf("|") == index1){
+						//兼容老版本设备
+						index1 = index2;
+						active = message.substring(index1 + 1);
+						msgheart.put("active"+i, active);						
+					}else{
+						index2 = message.indexOf("|", index1 + 1);
+						active = message.substring(index1 + 1,index2);
+						msgheart.put("active"+i, cnuindex);
 
-					index1 = index2;
-					othertype = message.substring(index1 + 1);
-					msgheart.put("othertype"+i, othertype);
+						index1 = index2;
+						othertype = message.substring(index1 + 1);
+						msgheart.put("othertype"+i, othertype);						
+					}
+					
 
 					flag += (index1 + 3);
 
 					//doheartcnu(cbatmac, cnumac, cnutype, cltindex, cnuindex, active);
 				} catch (Exception e) {
-					System.out.println("parse cnusys error!");
+					e.printStackTrace();					
 					return;
 				}
 			}
