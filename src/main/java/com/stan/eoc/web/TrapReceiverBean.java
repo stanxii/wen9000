@@ -487,12 +487,10 @@ public class TrapReceiverBean {
 			int count = 0;
 			count = ((String) hearthash.get("cnusys")).length()
 					- ((String) hearthash.get("cnusys")).replace("[", "").length();
-			//System.out.println("============>>count="+count);
 			msgheart.put("cnucount", String.valueOf(count));
 			for (int i = 0; i < count; i++) {
 				String message = ((String) hearthash.get("cnusys")).substring(flag,
 						((String) hearthash.get("cnusys")).indexOf("]", flag + 1));
-
 				try {
 					index1 = message.indexOf("|");
 					cnumac = message.substring(1, index1).trim().toLowerCase();
@@ -521,7 +519,7 @@ public class TrapReceiverBean {
 					}else{
 						index2 = message.indexOf("|", index1 + 1);
 						active = message.substring(index1 + 1,index2);
-						msgheart.put("active"+i, cnuindex);
+						msgheart.put("active"+i, active);
 
 						index1 = index2;
 						othertype = message.substring(index1 + 1);
@@ -529,8 +527,7 @@ public class TrapReceiverBean {
 					}
 					
 
-					flag += (index1 + 3);
-
+					flag += ((String) hearthash.get("cnusys")).indexOf("]", index1)+1;
 					//doheartcnu(cbatmac, cnumac, cnutype, cltindex, cnuindex, active);
 				} catch (Exception e) {
 					e.printStackTrace();					
